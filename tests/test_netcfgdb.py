@@ -1,4 +1,4 @@
-from netcfgdb import __version__
+from netcad import __version__
 
 
 def test_version():

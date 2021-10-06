@@ -1,4 +1,4 @@
-from typing import Optional, AnyStr, List
+from typing import Optional, AnyStr
 from copy import deepcopy
 
 import httpx
@@ -31,7 +31,7 @@ class ArangoClientBase(httpx.AsyncClient):
         self.__initkwargs = deepcopy(kwargs)
         super(ArangoClientBase, self).__init__(**kwargs)
 
-    async def databases(self) -> List[str]:
-        res = await self.get("/_api/database")
+    async def version(self, details=False):
+        res = await self.get("/_api/version", params=dict(details=details))
         res.raise_for_status()
-        return res.json()["result"]
+        return res.json()
