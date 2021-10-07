@@ -1,1 +1,1 @@
-from .client import Aranago
+from .client import ArangoClient
