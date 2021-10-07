@@ -2,11 +2,10 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional, Dict, List, Callable
+from typing import Optional, Dict, List
 import asyncio
 from os import environ
-from operator import itemgetter
-from itertools import chain, starmap
+from itertools import chain
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -142,71 +141,3 @@ class NetboxClient(AsyncClient):
 
         tasks = await self.paginate_tasks(url=url, page_sz=page_sz, params=params)
         return await self.paginate_gather(tasks)
-
-    # -------------------------------------------------------------------------
-    #
-    #                        Device Helper Methods
-    #
-    # -------------------------------------------------------------------------
-
-    async def fetch_device(self, hostname):
-        res = await self.get("/dcim/devices/", params=dict(name=hostname))
-        res.raise_for_status()
-        body = res.json()
-        return [] if not body["count"] else body["results"]
-
-    async def fetch_devices(self, hostname_list, key=None):
-        res = await asyncio.gather(*(map(self.fetch_device, hostname_list)))
-        flat = chain.from_iterable(res)
-        if not key:
-            return list(flat)
-
-        key_fn = key if isinstance(key, Callable) else itemgetter(key)
-        return {key_fn(rec): rec for rec in flat}
-
-    # -------------------------------------------------------------------------
-    #
-    #                        Device Interface Cabling Helper Methods
-    #
-    # -------------------------------------------------------------------------
-
-    async def cable_interfaces(self, if_id_a: int, if_id_b: int) -> dict:
-        res = await self.post(
-            self.API_CABLES,
-            json={
-                "status": "connected",
-                "termination_a_type": "dcim.interface",
-                "termination_a_id": if_id_a,
-                "termination_b_type": "dcim.interface",
-                "termination_b_id": if_id_b,
-            },
-        )
-        if res.is_error:
-            raise RuntimeError(
-                f"cable failured between {if_id_a}:{if_id_b} - {res.text}"
-            )
-
-        return res.json()
-
-    # -------------------------------------------------------------------------
-    #
-    #                        Device Interface Helper Methods
-    #
-    # -------------------------------------------------------------------------
-
-    async def fetch_device_interface(self, hostname, if_name):
-        res = await self.get(
-            "/dcim/interfaces/", params=dict(device=hostname, name=if_name)
-        )
-        res.raise_for_status()
-        body = res.json()
-        return [] if not body["count"] else body["results"]
-
-    async def fetch_devices_interfaces(self, items, key=None):
-        res = await asyncio.gather(*(starmap(self.fetch_device_interface, items)))
-        flat = chain.from_iterable(res)
-        if not key:
-            return list(flat)
-
-        key_fn = key if isinstance(key, Callable) else itemgetter(key)  # noqa
-        return {key_fn(rec): rec for rec in flat}
