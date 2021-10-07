@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "netcfgdb"
+name = "netcad"
 version = "0.1.0"
 description = "Network Configuration Database"
 authors = ["Jeremy Schulman"]
@@ -8,13 +8,33 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.8"
 click = "^8.0.1"
+httpx = "^0.19.0"
+tenacity = "^8.0.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
+invoke = "^1.5.0"
+black = "^21.6b0"
+flake8 = "^3.9.2"
+flake8-breakpoint = "^1.1.0"
+pytest-cov = "^2.12.1"
+pytest-asyncio = "^0.15.1"
+asynctest = "^0.13.0"
+tox = "^3.23.1"
+pre-commit = "^2.13.0"
+interrogate = "^1.4.0"
+
+[tool.interrogate]
+    fail-under = 0
+    verbose = 1
+    color = true
+    ignore-module = true
+    exclude = ["tasks.py", "examples", "build", "venv"]
+
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-    netcfgdb = 'netcfgdb.cli.main:cli'
+    netcfgdb = 'netcad.cli.main:cli'

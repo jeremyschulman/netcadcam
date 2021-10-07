@@ -1,6 +1,6 @@
 import click
 
-from netcfgdb import __version__
+from netcad import __version__
 
 
 @click.group()
