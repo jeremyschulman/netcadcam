@@ -31,6 +31,7 @@ class PortCableMediaType(Enum):
     MMF = enum.auto()
     CAT5 = enum.auto()
     CAT6 = enum.auto()
+    CAT7 = enum.auto()
 
 
 class PortCableTerminationType(Enum):
@@ -47,10 +48,10 @@ class PortTranscieverFormFactorType(Enum):
 
     AOC = enum.auto()
     SFP = enum.auto()
-    SFP_p = enum.auto()  # SFP+
+    SFPp = enum.auto()  # SFP+
     SFP28 = enum.auto()
     QSFP = enum.auto()
-    QSFP_p = enum.auto()  # QSFP+
+    QSFPp = enum.auto()  # QSFP+
     QSFP28 = enum.auto()
     RJ45 = enum.auto()
 
@@ -75,13 +76,20 @@ class PortCable(BaseModel):
     media: PortCableMediaType
     termination: PortCableTerminationType
     length: Optional[PositiveInt] = Field(
-        description="when used, denotes the length of the cable in meters"
+        default=None, description="when used, denotes the length of the cable in meters"
     )
 
 
 class PortTransceiver(BaseModel):
     form_factor: PortTranscieverFormFactorType
     reach: PortTransceiverReachType
+    length: Optional[int] = Field(
+        default=None, description="when used, denotes the length of the cable in meters"
+    )
+    model: Optional[str] = Field(
+        default=None,
+        description="specific vendor model, when used, to match during validation",
+    )
 
 
 class PortProfile(BaseModel):
@@ -102,18 +110,21 @@ class PortProfile(BaseModel):
         description="When used, changes the port default speed (megabits/sec)"  # 1_000 == 1Gbps, for example
     )
 
-    autoneg = Optional[bool] = Field(
-        description="When used, enabled/disables auto-negotiation"
+    autoneg: Optional[bool] = Field(
+        default=None, description="When used, enabled/disables auto-negotiation"
     )
 
     cabling: Optional[PortCable]
 
-    xcvr: Optional[PortTransceiver]
+    transceiver: Optional[PortTransceiver]
 
     poe: Optional[bool] = Field(
-        description="When used, denotes if POE is enabled/disabled"
+        default=None, description="When used, denotes if POE is enabled/disabled"
     )
 
     breakout: Optional[int] = Field(
-        ge=1, le=4, description="When used, indicates the break port number [1-4]"
+        default=None,
+        ge=1,
+        le=4,
+        description="When used, indicates the break port number [1-4]",
     )
