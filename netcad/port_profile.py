@@ -88,6 +88,7 @@ class PortProfile(BaseModel):
     """
     A PortProfile is used to identify the physical port criterial if-and-only-if
     a change from the default port is required.  Common usages of a PortProfile:
+
         - denote the use of a transceiver
         - denote the use of specific fiber cabling
         - denote the use of a breakout cable
@@ -99,6 +100,10 @@ class PortProfile(BaseModel):
 
     speed: Optional[PositiveInt] = Field(
         description="When used, changes the port default speed (megabits/sec)"  # 1_000 == 1Gbps, for example
+    )
+
+    autoneg = Optional[bool] = Field(
+        description="When used, enabled/disables auto-negotiation"
     )
 
     cabling: Optional[PortCable]
