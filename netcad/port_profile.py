@@ -42,7 +42,7 @@ class PortCableTerminationType(Enum):
     RJ45 = enum.auto()
 
 
-class PortTranscieverFormfactorType(Enum):
+class PortTranscieverFormFactorType(Enum):
     """denotes the transciever form-factor type"""
 
     AOC = enum.auto()
@@ -80,7 +80,7 @@ class PortCable(BaseModel):
 
 
 class PortTransceiver(BaseModel):
-    form_factor: PortTranscieverFormfactorType
+    form_factor: PortTranscieverFormFactorType
     reach: PortTransceiverReachType
 
 
