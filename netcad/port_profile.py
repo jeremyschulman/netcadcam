@@ -24,11 +24,12 @@ from pydantic import BaseModel, Field, PositiveInt
 # -----------------------------------------------------------------------------
 
 
-class PortCableType(Enum):
+class PortCableMediaType(Enum):
     """Denotes the physical cable type"""
 
     SMF = enum.auto()
     MMF = enum.auto()
+    CAT5 = enum.auto()
     CAT6 = enum.auto()
 
 
@@ -41,7 +42,9 @@ class PortCableTerminationType(Enum):
     RJ45 = enum.auto()
 
 
-class PortTranscieverType(Enum):
+class PortTranscieverFormfactorType(Enum):
+    """denotes the transciever form-factor type"""
+
     AOC = enum.auto()
     SFP = enum.auto()
     SFP_p = enum.auto()  # SFP+
@@ -50,10 +53,6 @@ class PortTranscieverType(Enum):
     QSFP_p = enum.auto()  # QSFP+
     QSFP28 = enum.auto()
     RJ45 = enum.auto()
-
-
-class PortPoeType(Enum):
-    pass
 
 
 class PortTransceiverReachType(Enum):
@@ -72,15 +71,44 @@ PORT_SPEED_40G = 40_000
 PORT_SPEED_100G = 100_000
 
 
+class PortCable(BaseModel):
+    media: PortCableMediaType
+    termination: PortCableTerminationType
+    length: Optional[PositiveInt] = Field(
+        description="when used, denotes the length of the cable in meters"
+    )
+
+
+class PortTransceiver(BaseModel):
+    form_factor: PortTranscieverFormfactorType
+    reach: PortTransceiverReachType
+
+
 class PortProfile(BaseModel):
-    speed: PositiveInt = Field(
-        description="port speed in megabits/sec"  # 1_000 == 1Gbps, for example
+    """
+    A PortProfile is used to identify the physical port criterial if-and-only-if
+    a change from the default port is required.  Common usages of a PortProfile:
+        - denote the use of a transceiver
+        - denote the use of specific fiber cabling
+        - denote the use of a breakout cable
+        - denote specific speed setting
+
+    A PortProfile would _not_ be used, for exaple if a switch port was 1G copper
+    (RJ-45) and it is used "as-is".
+    """
+
+    speed: Optional[PositiveInt] = Field(
+        description="When used, changes the port default speed (megabits/sec)"  # 1_000 == 1Gbps, for example
     )
-    cable_type: PortCableType
-    cable_termination: PortCableTerminationType
+
+    cabling: Optional[PortCable]
+
+    xcvr: Optional[PortTransceiver]
+
     poe: Optional[bool] = Field(
-        default=False, description="denotes if POE is supported"
+        description="When used, denotes if POE is enabled/disabled"
     )
+
     breakout: Optional[int] = Field(
-        default=0, le=4, description="indicates the break port number when used"
+        ge=1, le=4, description="When used, indicates the break port number [1-4]"
     )
