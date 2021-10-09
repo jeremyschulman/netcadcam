@@ -34,6 +34,15 @@ class DeviceInterface(object):
     used: Optional[bool] = True
     desc: Optional[str] = "UNUSED"
 
+    def __repr__(self):
+        if hasattr(self, "profile"):
+            return self.profile.__class__.__name__
+
+        if self.used is False:
+            return "Unused"
+
+        return super(DeviceInterface, self).__repr__()
+
 
 class Device(object):
     product_model = None
