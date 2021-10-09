@@ -2,7 +2,9 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional, List, Type
+from typing import Optional, List, Set
+from itertools import chain
+
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -22,9 +24,6 @@ from netcad.vlan_profile import VlanProfile
 #                                 CODE BEGINS
 #
 # -----------------------------------------------------------------------------
-
-
-JinjaTemplateType = Type[Template]
 
 
 class InterfaceProfile(object):
@@ -71,7 +70,13 @@ class InterfaceProfile(object):
 class InterfaceL2Access(InterfaceProfile):
     vlan: VlanProfile
 
+    def profile_vlans(self) -> Set[VlanProfile]:
+        return {self.vlan}
+
 
 class InterfaceL2Trunk(InterfaceProfile):
     native_vlan: Optional[VlanProfile]
     vlans: List[VlanProfile]
+
+    def profile_vlans(self) -> Set[VlanProfile]:
+        return set(filter(None, chain([self.native_vlan], self.vlans)))
