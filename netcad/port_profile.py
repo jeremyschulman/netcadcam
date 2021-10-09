@@ -10,7 +10,8 @@ import enum
 # Public Imports
 # -----------------------------------------------------------------------------
 
-from pydantic import BaseModel, Field, PositiveInt
+from pydantic import PositiveInt
+from pydantic.dataclasses import dataclass, Field
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -72,27 +73,38 @@ PORT_SPEED_40G = 40_000
 PORT_SPEED_100G = 100_000
 
 
-class PortCable(BaseModel):
+@dataclass
+class PortCable:
     media: PortCableMediaType
     termination: PortCableTerminationType
-    length: Optional[PositiveInt] = Field(
-        default=None, description="when used, denotes the length of the cable in meters"
-    )
+
+    # `length` - when used, denotes the length of the cable in meters
+
+    length: Optional[PositiveInt] = None
 
 
-class PortTransceiver(BaseModel):
+@dataclass
+class PortTransceiver:
+
+    # `form_factor` denotes the physical format of the transciver
+
     form_factor: PortTranscieverFormFactorType
+
+    # `reach` denotes short or long range (or other tbd)
+
     reach: PortTransceiverReachType
-    length: Optional[int] = Field(
-        default=None, description="when used, denotes the length of the cable in meters"
-    )
-    model: Optional[str] = Field(
-        default=None,
-        description="specific vendor model, when used, to match during validation",
-    )
+
+    # `length` - when used, denotes the length of the cable in meters
+
+    length: Optional[int] = None
+
+    # `model` - when used, specific vendor model, when used, to match during validation"
+
+    model: Optional[str] = None
 
 
-class PortProfile(BaseModel):
+@dataclass
+class PortProfile:
     """
     A PortProfile is used to identify the physical port criterial if-and-only-if
     a change from the default port is required.  Common usages of a PortProfile:
@@ -106,25 +118,34 @@ class PortProfile(BaseModel):
     (RJ-45) and it is used "as-is".
     """
 
-    speed: Optional[PositiveInt] = Field(
-        description="When used, changes the port default speed (megabits/sec)"  # 1_000 == 1Gbps, for example
-    )
-
-    autoneg: Optional[bool] = Field(
-        default=None, description="When used, enabled/disables auto-negotiation"
-    )
+    # `cabling` - when used, identifies the type of cable expected to be used
+    # with this port.  Includes for cable-planning design related tasks.
 
     cabling: Optional[PortCable]
 
+    # `transceiver` - when used, identifies the transceiver expected to be
+    # inserted into the physical port; or use of breakout.
+
     transceiver: Optional[PortTransceiver]
 
-    poe: Optional[bool] = Field(
-        default=None, description="When used, denotes if POE is enabled/disabled"
-    )
+    # `poe` - when used, denotes if POE is enabled/disabled
+
+    poe: Optional[bool] = Field(None)
+
+    # `speed` - when used, changes the port default speed (megabits/sec)
+    # 1_000 == 1Gbps, for example
+
+    speed: Optional[PositiveInt] = Field(None)
+
+    # `autoneg` - when used, enabled/disables auto-negotiation
+
+    autoneg: Optional[bool] = Field(None)
+
+    # `breakout` - when used, indicates the break port number [1-4]
 
     breakout: Optional[int] = Field(
         default=None,
         ge=1,
         le=4,
-        description="When used, indicates the break port number [1-4]",
+        description="",
     )

@@ -2,14 +2,18 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import List, Optional, Dict
-from collections import UserDict
+from typing import List, Optional
+from collections import UserDict, defaultdict
+
+# -----------------------------------------------------------------------------
+# Public Imports
+# -----------------------------------------------------------------------------
+
 
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.port_profile import PortProfile
 from netcad.interface_profile import InterfaceProfile
 
 # -----------------------------------------------------------------------------
@@ -25,15 +29,15 @@ class DevicePorts(UserDict):
         super(DevicePorts, self).__init__()
 
 
-class DeviceInterfaces(UserDict):
-    pass
+class DeviceInterface(object):
+    profile: Optional[InterfaceProfile]
+    used: Optional[bool] = True
+    desc: Optional[str] = "UNUSED"
 
 
 class Device(object):
     product_model = None
-    port_profiles: Optional[Dict[str, PortProfile]] = None
-    interface_profiles = Optional[Dict[str, InterfaceProfile]] = None
-    interfaces = DeviceInterfaces()
+    interfaces = defaultdict(DeviceInterface)
 
     def __init__(self, name: str):
         self.name = name

@@ -1,8 +1,9 @@
 from typing import Optional
-from pydantic import BaseModel, PositiveInt, Field
+from pydantic.dataclasses import dataclass, Field
 
 
-class VlanProfile(BaseModel):
-    name: str = Field(description="VLAN name")
-    vlan_id: PositiveInt = Field(ge=1, le=4094, description="access VLAN ID")
-    description: Optional[str]
+@dataclass
+class VlanProfile:
+    name: str
+    vlan_id: int = Field(..., ge=1, le=4094)
+    description: Optional[str] = Field(None)
