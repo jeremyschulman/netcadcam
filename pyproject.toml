@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "netcad"
-version = "0.1.0"
+version = "0.2.0"
 description = "Network Configuration Database"
 authors = ["Jeremy Schulman"]
 readme = "README.md"
