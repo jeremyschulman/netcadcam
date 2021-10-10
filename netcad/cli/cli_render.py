@@ -1,4 +1,5 @@
 import sys
+from typing import Any
 from pathlib import Path
 from setuptools import find_packages
 from importlib import import_module
@@ -11,12 +12,13 @@ from .main import cli
 
 
 @jinja2.pass_context
-def j2_filter_render(ctx, device: Device, to_render: str, **kwargs):
+def j2_filter_render(ctx, obj: Any, to_render: str, **kwargs):
     meth = f"render_{to_render}"
-    if call_meth := getattr(device, meth, None):
+
+    if call_meth := getattr(obj, meth, None):
         return call_meth(ctx, **kwargs)
 
-    raise RuntimeError(f"device does not support: {meth}")
+    raise RuntimeError(f"object {str(obj)} does not support redner method: {meth}")
 
 
 def j2_filter_ip_gateway(*vargs, **kwargs):
@@ -49,7 +51,11 @@ def cli_render(ctx: click.Context, hostname: str):
 
     template_dir = Path().absolute().joinpath(pkg_list[0], "templates")
 
-    env = jinja2.Environment(loader=jinja2.FileSystemLoader(["/", template_dir]))
+    env = jinja2.Environment(
+        trim_blocks=True,
+        lstrip_blocks=True,
+        loader=jinja2.FileSystemLoader(["/", template_dir]),
+    )
 
     env.filters["render"] = j2_filter_render
     env.filters["ip_gateway"] = j2_filter_ip_gateway

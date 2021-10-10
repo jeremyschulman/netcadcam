@@ -62,8 +62,8 @@ class Device(object):
             if not (if_prof := getattr(iface, "profile", None)):
                 continue
 
-            if hasattr(if_prof, "profile_vlans"):
-                vlans.update(if_prof.profile_vlans())
+            if get_vlans := getattr(if_prof, "if_vlans", None):
+                vlans.update(get_vlans())
 
         return sorted(vlans, key=attrgetter("vlan_id"))
 
