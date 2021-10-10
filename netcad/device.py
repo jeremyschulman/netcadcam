@@ -2,7 +2,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import List, Optional
+from typing import List
 from collections import UserDict, defaultdict
 from operator import attrgetter
 
@@ -15,7 +15,7 @@ from operator import attrgetter
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.interface_profile import InterfaceProfile
+from netcad.device_interface import DeviceInterface
 
 # -----------------------------------------------------------------------------
 #
@@ -36,25 +36,18 @@ class DevicePorts(UserDict):
         super(DevicePorts, self).__init__()
 
 
-class DeviceInterface(object):
-    profile: Optional[InterfaceProfile]
-    used: Optional[bool] = True
-    desc: Optional[str] = "UNUSED"
+class DeviceInterfaces(defaultdict):
+    default_factory = DeviceInterface
 
-    def __repr__(self):
-        if hasattr(self, "profile"):
-            return self.profile.__class__.__name__
-
-        if self.used is False:
-            return "Unused"
-
-        return super(DeviceInterface, self).__repr__()
+    def __missing__(self, key):
+        self[key] = self.default_factory(key)
+        return self[key]
 
 
 class Device(object):
     product_model = None
     template_file = None
-    interfaces = defaultdict(DeviceInterface)
+    interfaces = DeviceInterfaces()
 
     def __init__(self, name: str):
         self.name = name
