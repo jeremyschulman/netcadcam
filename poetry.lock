@@ -319,7 +319,7 @@ python-versions = "*"
 name = "more-itertools"
 version = "8.10.0"
 description = "More routines for operating on iterables, beyond itertools"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.5"
 
@@ -640,7 +640,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "85f49b12c47d66b2c0ae8fb4cd65f5f4bf59a60f96ab9ed87b0ac0641bcd0dd8"
+content-hash = "825a246c38830cd0d9816b50b500047a99dc0415561c427b0f04662ddb7a0838"
 
 [metadata.files]
 anyio = [
