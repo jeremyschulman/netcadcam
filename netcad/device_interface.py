@@ -21,15 +21,6 @@ class DeviceInterface(object):
         self.used = used
         self.desc = desc
 
-    # @property
-    # def profile(self):
-    #     return self._profile
-    #
-    # @profile.setter
-    # def profile(self, assgined: InterfaceProfile):
-    #     self._profile = assgined
-    #     self._profile.if_name = self.name
-
     def __repr__(self):
 
         if self.profile:

@@ -76,18 +76,21 @@ class InterfaceLag(InterfaceProfile):
 
     def __init__(self, **kwargs):
         super(InterfaceLag, self).__init__(**kwargs)
-        self._if_parent = None
+        self._if_parent: Optional[DeviceInterface] = None
+
+    @property
+    def lag_number(self):
+        return self._if_parent.port_numbers[0]
 
     def lag_member(self, if_member: DeviceInterface):
         if_member.profile = self.if_lag_member_profile(if_lag_parent_profile=self)
         if_member.profile.if_parent = self.if_parent
         self.if_lag_members.append(if_member)
 
+    def lag_parent(self, if_parent: DeviceInterface):
+        self._if_parent = if_parent
+        self._if_parent.profile = self
+
     @property
     def if_parent(self):
         return self._if_parent
-
-    @if_parent.setter
-    def if_parent(self, has_parent: DeviceInterface):
-        self._if_parent = has_parent
-        has_parent.profile = self
