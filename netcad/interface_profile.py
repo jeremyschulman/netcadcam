@@ -2,7 +2,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional, List, Set
+from typing import Optional, List, Set, Type
 from itertools import chain
 
 
@@ -64,17 +64,30 @@ class InterfaceL2Trunk(InterfaceProfile):
 
 
 class InterfaceLagMember(InterfaceProfile):
-    template = "{{interface.name}} - InterfaceLagMember: template TBD"
-
-    def __init__(self, if_parent: InterfaceProfile, **kwargs):
+    def __init__(self, if_lag_parent_profile: InterfaceProfile, **kwargs):
         super(InterfaceLagMember, self).__init__(**kwargs)
-        self.if_lag_parent = if_parent
+        self.if_lag_parent_profile = if_lag_parent_profile
+        self.if_parent = kwargs.get("if_parent")
 
 
 class InterfaceLag(InterfaceProfile):
-    template = "{{interface.name}} - InterfaceLag: template TBD"
+    if_lag_member_profile: Optional[Type[InterfaceLagMember]] = InterfaceLagMember
     if_lag_members: List[DeviceInterface] = list()
 
+    def __init__(self, **kwargs):
+        super(InterfaceLag, self).__init__(**kwargs)
+        self._if_parent = None
+
     def lag_member(self, if_member: DeviceInterface):
-        if_member.profile = InterfaceLagMember(if_parent=self)
+        if_member.profile = self.if_lag_member_profile(if_lag_parent_profile=self)
+        if_member.profile.if_parent = self.if_parent
         self.if_lag_members.append(if_member)
+
+    @property
+    def if_parent(self):
+        return self._if_parent
+
+    @if_parent.setter
+    def if_parent(self, has_parent: DeviceInterface):
+        self._if_parent = has_parent
+        has_parent.profile = self

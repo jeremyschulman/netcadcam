@@ -1,7 +1,10 @@
 from typing import Optional, TYPE_CHECKING
+import re
 
 if TYPE_CHECKING:
     from netcad.interface_profile import InterfaceProfile
+
+_re_find_numbers = re.compile(r"\d+")
 
 
 class DeviceInterface(object):
@@ -13,9 +16,19 @@ class DeviceInterface(object):
         desc: Optional[str] = "",
     ):
         self.name = name
+        self.port_numbers = tuple(map(int, _re_find_numbers.findall(name)))
         self.profile = profile
         self.used = used
         self.desc = desc
+
+    # @property
+    # def profile(self):
+    #     return self._profile
+    #
+    # @profile.setter
+    # def profile(self, assgined: InterfaceProfile):
+    #     self._profile = assgined
+    #     self._profile.if_name = self.name
 
     def __repr__(self):
 
