@@ -39,8 +39,15 @@ class DevicePorts(UserDict):
 class DeviceInterfaces(defaultdict):
     default_factory = DeviceInterface
 
+    def __init__(self, **kwargs):
+        super(DeviceInterfaces, self).__init__(
+            default_factory=DeviceInterface, **kwargs
+        )
+        self.device = None
+
     def __missing__(self, key):
         self[key] = self.default_factory(key)
+        self[key].device = self.device
         return self[key]
 
 
@@ -51,6 +58,7 @@ class Device(object):
 
     def __init__(self, name: str):
         self.name = name
+        self.interfaces.device = self
         _DEVICE_REGISTRY[self.name] = self
 
     def vlans(self):
