@@ -6,6 +6,10 @@ if TYPE_CHECKING:
 
 
 _re_find_numbers = re.compile(r"\d+")
+
+# short-name is the first two characters of the name, followed by the remaining
+# interface numbers.  For example, "Ethernet49/1" turns into "Et49/1"
+
 _re_short_name = re.compile(r"(\D\D)\D+(\d.*)")
 
 
@@ -56,17 +60,10 @@ class DeviceInterface(object):
         """
         parent = self.interfaces
         ifn_lc = self.short_name.lower()
-        name = (
-            f"{parent.device.name}-{ifn_lc}"
-            if parent.device
-            else f"{parent.device_cls.__name__}-{ifn_lc}"
+        device_name = (
+            parent.device.name if parent.device else parent.device_cls.__name__
         )
-        return name
-
-        # if not self.device:
-        #     raise RuntimeError("Missing: device not assigned")
-        #
-        # return f"{self.device.name}-{self.short_name.lower()}"
+        return f"{device_name}-{ifn_lc}"
 
     def __repr__(self):
         parent = self.interfaces
