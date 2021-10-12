@@ -53,6 +53,7 @@ def get_env(template_dirs):
     env = jinja2.Environment(
         trim_blocks=True,
         lstrip_blocks=True,
+        keep_trailing_newline=True,
         loader=jinja2.FileSystemLoader(template_dirs),
     )
 
