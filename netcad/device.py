@@ -8,36 +8,17 @@ from operator import attrgetter
 from copy import deepcopy
 
 # -----------------------------------------------------------------------------
-# Public Imports
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
 from netcad.device_interface import DeviceInterface
+from netcad.helpers import Registry
 
 # -----------------------------------------------------------------------------
 #
 #                                 CODE BEGINS
 #
 # -----------------------------------------------------------------------------
-
-
-class Registry(object):
-    __registry = None
-
-    def __init_subclass__(cls, **kwargs):
-        cls.__registry = dict()
-
-    @classmethod
-    def registry_add(cls, name, obj):
-        cls.__registry[name] = obj
-
-    @classmethod
-    def registry_get(cls, name):
-        return cls.__registry.get(name)
 
 
 class DeviceInterfaces(defaultdict):
@@ -47,9 +28,14 @@ class DeviceInterfaces(defaultdict):
         self.device = None
 
     def __missing__(self, key):
-        self[key] = DeviceInterface(key)
-        self[key].interfaces = self
-        return self[key]
+
+        # create a new instance of the device interface. add the back-reference
+        # from the specific interface to this collection so that given any
+        # specific interface instance, the Caller can reach back to find the
+        # associated device object.
+
+        iface = self[key] = DeviceInterface(name=key, interfaces=self)
+        return iface
 
 
 class Device(Registry):

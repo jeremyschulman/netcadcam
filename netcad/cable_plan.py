@@ -2,10 +2,13 @@ from typing import List, Dict
 from collections import defaultdict
 
 from netcad.device import Device, DeviceInterface
+from netcad.helpers import Registry
 
 
-class CablePlanner(object):
+class CablePlanner(Registry):
     def __init__(self, name: str):
+        self.registry_add(name, self)
+
         self.name = name
         self.devices: List[Device] = list()
         self.cables: Dict[str, List[DeviceInterface]] = defaultdict(list)

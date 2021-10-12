@@ -17,6 +17,7 @@ class DeviceInterface(object):
         used: Optional[bool] = True,
         desc: Optional[str] = "",
         label: Optional[str] = None,
+        interfaces=None,
     ):
         self.name = name
         self.port_numbers = tuple(map(int, _re_find_numbers.findall(name)))
@@ -33,7 +34,7 @@ class DeviceInterface(object):
         # the actual interface is instantiated.  This back-reference will then
         # provide access to the parent device.  See __repr__ for example usage.
 
-        self.interfaces = None
+        self.interfaces = interfaces
 
     @property
     def device_ifname(self) -> str:
