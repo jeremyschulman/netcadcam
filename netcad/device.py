@@ -2,20 +2,17 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import List
-from collections import UserDict, defaultdict
+from typing import Dict
+from collections import defaultdict
 from operator import attrgetter
-
-# -----------------------------------------------------------------------------
-# Public Imports
-# -----------------------------------------------------------------------------
-
+from copy import deepcopy
 
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
 from netcad.device_interface import DeviceInterface
+from netcad.helpers import Registry
 
 # -----------------------------------------------------------------------------
 #
@@ -23,35 +20,61 @@ from netcad.device_interface import DeviceInterface
 #
 # -----------------------------------------------------------------------------
 
-_DEVICE_REGISTRY = dict()
-
-
-def get_device(name: str) -> "Device":
-    return _DEVICE_REGISTRY.get(name)
-
-
-class DevicePorts(UserDict):
-    def __init__(self, device: "Device"):
-        self.device = device
-        super(DevicePorts, self).__init__()
-
 
 class DeviceInterfaces(defaultdict):
-    default_factory = DeviceInterface
+    def __init__(self, default_factory, **kwargs):
+        super(DeviceInterfaces, self).__init__(default_factory, **kwargs)
+        self.device_cls = None
+        self.device = None
 
     def __missing__(self, key):
-        self[key] = self.default_factory(key)
-        return self[key]
+
+        # create a new instance of the device interface. add the back-reference
+        # from the specific interface to this collection so that given any
+        # specific interface instance, the Caller can reach back to find the
+        # associated device object.
+
+        iface = self[key] = DeviceInterface(name=key, interfaces=self)
+        return iface
 
 
-class Device(object):
+class Device(Registry):
     product_model = None
     template_file = None
-    interfaces = DeviceInterfaces()
+    interfaces: Dict[str, DeviceInterface] = None
+
+    def __init_subclass__(cls, **kwargs):
+        """
+        Upon Device sub-class definition we a unique set of interface
+        definitions.  This step ensures that sub-classes do not *step on each
+        other* when declaring interface definitions at the class level.  Each
+        Device _instance_ will get a deepcopy of these interfaces so that they
+        can make one-off adjustments to the device standard.
+        """
+        Registry.__init_subclass__()
+        cls.interfaces = DeviceInterfaces(DeviceInterface)
+        cls.interfaces.device_cls = cls
 
     def __init__(self, name: str):
         self.name = name
-        _DEVICE_REGISTRY[self.name] = self
+
+        # make a copy of the device class interfaces so that the instance can
+        # make any specific changes; i.e. handle the various "one-off" cases
+        # that happen in real-world networks.
+
+        self.interfaces = deepcopy(self.__class__.interfaces)
+        self.interfaces.device = self
+        self.registry_add(self.name, self)
+
+    def get_source(self) -> str:
+        """
+        Returns the Jinja2 template source to render the device configuration.
+
+        Returns
+        -------
+        """
+        # TODO!
+        pass
 
     def vlans(self):
         """return the set of VlanProfile instances used by this device"""
@@ -66,8 +89,3 @@ class Device(object):
                 vlans.update(get_vlans())
 
         return sorted(vlans, key=attrgetter("vlan_id"))
-
-
-class RedundantPairDevices(object):
-    def __init__(self, devices: List[Device]):
-        pass

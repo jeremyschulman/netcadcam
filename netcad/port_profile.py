@@ -33,6 +33,7 @@ class PortCableMediaType(Enum):
     CAT5 = enum.auto()
     CAT6 = enum.auto()
     CAT7 = enum.auto()
+    AOC = enum.auto()
 
 
 class PortCableTerminationType(Enum):
@@ -42,6 +43,7 @@ class PortCableTerminationType(Enum):
     SC = enum.auto()
     ST = enum.auto()
     RJ45 = enum.auto()
+    AOC = enum.auto()
 
 
 class PortTranscieverFormFactorType(Enum):
