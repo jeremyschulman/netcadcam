@@ -41,6 +41,11 @@ class DeviceInterface(object):
         self.interfaces = interfaces
 
     @property
+    def device(self):
+        """return the device instance associated with this interface"""
+        return self.interfaces.device
+
+    @property
     def device_ifname(self) -> str:
         """
         Returns the short-form device interface name.  The format is the

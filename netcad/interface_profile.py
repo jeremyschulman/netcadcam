@@ -48,19 +48,38 @@ class InterfaceProfile(object):
             setattr(self, attr, value)
 
 
-class InterfaceL2Access(InterfaceProfile):
+# -----------------------------------------------------------------------------
+#
+#                       Layer-2 (VLAN) Interface Profiles
+#
+# -----------------------------------------------------------------------------
+
+
+class InterfaceL2(InterfaceProfile):
+    def vlans_used(self):
+        raise NotImplementedError()
+
+
+class InterfaceL2Access(InterfaceL2):
     vlan: VlanProfile
 
-    def if_vlans(self) -> Set[VlanProfile]:
+    def vlans_used(self) -> Set[VlanProfile]:
         return {self.vlan}
 
 
-class InterfaceL2Trunk(InterfaceProfile):
+class InterfaceL2Trunk(InterfaceL2):
     native_vlan: Optional[VlanProfile]
     vlans: List[VlanProfile]
 
-    def if_vlans(self) -> Set[VlanProfile]:
+    def vlans_used(self) -> Set[VlanProfile]:
         return set(filter(None, chain([self.native_vlan], self.vlans)))
+
+
+# -----------------------------------------------------------------------------
+#
+#                Link Aggregation / Port-Channel Interface Profiles
+#
+# -----------------------------------------------------------------------------
 
 
 class InterfaceLagMember(InterfaceProfile):
