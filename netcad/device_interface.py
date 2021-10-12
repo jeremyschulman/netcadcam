@@ -54,10 +54,19 @@ class DeviceInterface(object):
             defaultdict process of the Device object.  Added this raise for
             dev-testing purposes.
         """
-        if not self.device:
-            raise RuntimeError("Missing: device not assigned")
+        parent = self.interfaces
+        ifn_lc = self.short_name.lower()
+        name = (
+            f"{parent.device.name}-{ifn_lc}"
+            if parent.device
+            else f"{parent.device_cls.__name__}-{ifn_lc}"
+        )
+        return name
 
-        return f"{self.device.name}-{self.short_name.lower()}"
+        # if not self.device:
+        #     raise RuntimeError("Missing: device not assigned")
+        #
+        # return f"{self.device.name}-{self.short_name.lower()}"
 
     def __repr__(self):
         parent = self.interfaces
