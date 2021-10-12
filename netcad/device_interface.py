@@ -3,7 +3,6 @@ import re
 
 if TYPE_CHECKING:
     from netcad.interface_profile import InterfaceProfile
-    from netcad.device import Device
 
 
 _re_find_numbers = re.compile(r"\d+")
@@ -26,8 +25,15 @@ class DeviceInterface(object):
         self.used = used
         self.desc = desc
         self.label = label
+
         self.cable_peer: Optional[DeviceInterface] = None
-        self.device: Optional["Device"] = None
+
+        # `interfaces` is a back-reference to the collection of all interfaces;
+        # see Interfaces class definition.  This instance will be assigned when
+        # the actual interface is instantiated.  This back-reference will then
+        # provide access to the parent device.  See __repr__ for example usage.
+
+        self.interfaces = None
 
     @property
     def device_ifname(self) -> str:
@@ -53,11 +59,17 @@ class DeviceInterface(object):
         return f"{self.device.name}-{self.short_name.lower()}"
 
     def __repr__(self):
+        parent = self.interfaces
+        name = (
+            f"{parent.device.name}.{self.name}"
+            if parent.device
+            else f"{parent.device_cls.__name__}.{self.name}"
+        )
 
         if self.profile:
-            return f"{self.name}:{self.profile.__class__.__name__}"
+            return f"{name} {self.profile.__class__.__name__}"
 
         if self.used is False:
-            return "Unused"
+            return f"{name} Unused"
 
-        return f"{self.name}:{self.__class__.__name__}"
+        return f"{name} Unassigned-Profile"

@@ -32,17 +32,14 @@ def get_device(name: str) -> "Device":
 
 
 class DeviceInterfaces(defaultdict):
-    default_factory = DeviceInterface
-
-    def __init__(self, **kwargs):
-        super(DeviceInterfaces, self).__init__(
-            default_factory=DeviceInterface, **kwargs
-        )
+    def __init__(self, default_factory, **kwargs):
+        super(DeviceInterfaces, self).__init__(default_factory, **kwargs)
+        self.device_cls = None
         self.device = None
 
     def __missing__(self, key):
-        self[key] = self.default_factory(key)
-        self[key].device = self.device
+        self[key] = DeviceInterface(key)
+        self[key].interfaces = self
         return self[key]
 
 
@@ -59,7 +56,8 @@ class Device(object):
         Device _instance_ will get a deepcopy of these interfaces so that they
         can make one-off adjustments to the device standard.
         """
-        cls.interfaces = DeviceInterfaces()
+        cls.interfaces = DeviceInterfaces(DeviceInterface)
+        cls.interfaces.device_cls = cls
 
     def __init__(self, name: str):
         self.name = name

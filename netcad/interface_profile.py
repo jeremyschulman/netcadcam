@@ -2,7 +2,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional, List, Set, Type
+from typing import Optional, List, Set, Type, Sequence
 from itertools import chain
 
 
@@ -74,18 +74,30 @@ class InterfaceLag(InterfaceProfile):
     if_lag_member_profile: Optional[Type[InterfaceLagMember]] = InterfaceLagMember
     if_lag_members: List[DeviceInterface] = list()
 
-    def __init__(self, **kwargs):
+    def __init__(
+        self,
+        if_parent: Optional[DeviceInterface] = None,
+        if_members: Optional[Sequence[DeviceInterface]] = None,
+        **kwargs
+    ):
         super(InterfaceLag, self).__init__(**kwargs)
         self._if_parent: Optional[DeviceInterface] = None
+
+        if if_parent:
+            self.lag_parent(if_parent)
+
+        if if_members:
+            self.lag_members(*if_members)
 
     @property
     def lag_number(self):
         return self._if_parent.port_numbers[0]
 
-    def lag_member(self, if_member: DeviceInterface):
-        if_member.profile = self.if_lag_member_profile(if_lag_parent_profile=self)
-        if_member.profile.if_parent = self.if_parent
-        self.if_lag_members.append(if_member)
+    def lag_members(self, *if_members: DeviceInterface):
+        for if_member in if_members:
+            if_member.profile = self.if_lag_member_profile(if_lag_parent_profile=self)
+            if_member.profile.if_parent = self.if_parent
+            self.if_lag_members.append(if_member)
 
     def lag_parent(self, if_parent: DeviceInterface):
         self._if_parent = if_parent
