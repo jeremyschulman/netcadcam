@@ -2,7 +2,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import List
+from typing import List, Dict
 from collections import UserDict, defaultdict
 from operator import attrgetter
 
@@ -54,7 +54,7 @@ class DeviceInterfaces(defaultdict):
 class Device(object):
     product_model = None
     template_file = None
-    interfaces = DeviceInterfaces()
+    interfaces: Dict[str, DeviceInterface] = DeviceInterfaces()
 
     def __init__(self, name: str):
         self.name = name
