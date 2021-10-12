@@ -24,11 +24,20 @@ from netcad.device_interface import DeviceInterface
 #
 # -----------------------------------------------------------------------------
 
-_DEVICE_REGISTRY = dict()
 
+class Registry(object):
+    __registry = None
 
-def get_device(name: str) -> "Device":
-    return _DEVICE_REGISTRY.get(name)
+    def __init_subclass__(cls, **kwargs):
+        cls.__registry = dict()
+
+    @classmethod
+    def registry_add(cls, name, obj):
+        cls.__registry[name] = obj
+
+    @classmethod
+    def registry_get(cls, name):
+        return cls.__registry.get(name)
 
 
 class DeviceInterfaces(defaultdict):
@@ -43,7 +52,7 @@ class DeviceInterfaces(defaultdict):
         return self[key]
 
 
-class Device(object):
+class Device(Registry):
     product_model = None
     template_file = None
     interfaces: Dict[str, DeviceInterface] = None
@@ -56,6 +65,7 @@ class Device(object):
         Device _instance_ will get a deepcopy of these interfaces so that they
         can make one-off adjustments to the device standard.
         """
+        Registry.__init_subclass__()
         cls.interfaces = DeviceInterfaces(DeviceInterface)
         cls.interfaces.device_cls = cls
 
@@ -68,7 +78,7 @@ class Device(object):
 
         self.interfaces = deepcopy(self.__class__.interfaces)
         self.interfaces.device = self
-        _DEVICE_REGISTRY[self.name] = self
+        self.registry_add(self.name, self)
 
     def get_source(self) -> str:
         """
