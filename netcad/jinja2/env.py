@@ -13,7 +13,7 @@ import jinja2
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
-
+from netcad.helpers import range_string
 from .filters.vlans_used import j2_filter_vlans_used
 from .filters.render import j2_filter_render
 from .funcs.lookup import j2_func_lookup
@@ -30,7 +30,11 @@ __all__ = ["get_env"]
 #
 # -----------------------------------------------------------------------------
 
-_env_filters = {"vlans_used": j2_filter_vlans_used, "render": j2_filter_render}
+_env_filters = {
+    "vlans_used": j2_filter_vlans_used,
+    "render": j2_filter_render,
+    "ranges": range_string,
+}
 _env_globals = {"lookup": j2_func_lookup}
 
 
@@ -49,7 +53,7 @@ def _funcloader_get_source(source: str):
         return None
 
     if source.startswith("str:"):
-        return source[4:].strip()
+        return source[4:].lstrip()
 
     return None
 

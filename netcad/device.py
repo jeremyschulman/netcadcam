@@ -2,21 +2,30 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Dict, Optional, TypeVar
+from typing import Dict, Optional, TypeVar, List, TYPE_CHECKING
 from collections import defaultdict
 from operator import attrgetter
 from copy import deepcopy
 from pathlib import Path
 
 # -----------------------------------------------------------------------------
+# Public Imports
+# -----------------------------------------------------------------------------
+
+import jinja2
+
+# -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
-import jinja2
 
 from netcad.device_interface import DeviceInterface
 from netcad.interface_profile import InterfaceL2
 from netcad.vlan_profile import SENTIAL_ALL_VLANS
 from netcad.helpers import Registry
+
+if TYPE_CHECKING:
+    from vlan_profile import VlanProfile
+
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -121,7 +130,7 @@ class Device(Registry):
 
         return env.get_template(str(as_path))
 
-    def vlans(self):
+    def vlans(self) -> List["VlanProfile"]:
         """return the set of VlanProfile instances used by this device"""
 
         vlans = set()

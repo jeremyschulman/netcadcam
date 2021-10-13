@@ -20,7 +20,7 @@ class StrEnum(str, Enum):
         return name
 
 
-def vlan_range_string(vlan_ids: List[int]) -> str:
+def range_string(vlan_ids: List[int]) -> str:
     """
     Given a *sorted* list of numbers (VLAN-IDs), return a string that
     converts consecuitve numbers into comma separated ranges.  For example:
