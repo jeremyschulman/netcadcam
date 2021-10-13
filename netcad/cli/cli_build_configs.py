@@ -22,7 +22,20 @@ from netcad.device import Device
 from netcad.jinja2.env import get_env
 from netcad.logger import get_logger
 
-from .cli_build import clig_build
+from .main import clig_build
+
+
+# -----------------------------------------------------------------------------
+# Exports (none)
+# -----------------------------------------------------------------------------
+
+__all__ = []
+
+# -----------------------------------------------------------------------------
+#
+#                                 CODE BEGINS
+#
+# -----------------------------------------------------------------------------
 
 
 @clig_build.command(name="configs")
@@ -38,11 +51,10 @@ from .cli_build import clig_build
 @click.option(
     "--console", "output_console", help="display output to console", is_flag=True
 )
-@click.pass_context
 def cli_render(
-    ctx: click.Context, hostnames: Tuple[str], configs_dir: Path, output_console: bool
+    hostnames: Tuple[str], configs_dir: Path, output_console: bool
 ):
-    """Render the configuration for a given device"""
+    """Build device configuration files"""
 
     log = get_logger()
 
