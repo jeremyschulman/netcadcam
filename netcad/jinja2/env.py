@@ -2,8 +2,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Any
-from importlib import import_module
+import typing as t
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -15,8 +14,9 @@ import jinja2
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.device import Device
-
+from .filters.vlans_used import j2_filter_vlans_used
+from .filters.render import j2_filter_render
+from .funcs.lookup import j2_func_lookup
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -24,28 +24,34 @@ from netcad.device import Device
 
 __all__ = ["get_env"]
 
+# -----------------------------------------------------------------------------
+#
+#                                 CODE BEGINS
+#
+# -----------------------------------------------------------------------------
 
-@jinja2.pass_context
-def j2_filter_render(ctx, obj: Any, to_render: str, **kwargs):
-    meth = f"render_{to_render}"
-
-    if call_meth := getattr(obj, meth, None):
-        return call_meth(ctx, **kwargs)
-
-    raise RuntimeError(f"object {str(obj)} does not support redner method: {meth}")
-
-
-def j2_filter_ip_gateway(*vargs, **kwargs):
-    return ""
+_env_filters = {"vlans_used": j2_filter_vlans_used, "render": j2_filter_render}
+_env_globals = {"lookup": j2_func_lookup}
 
 
-@jinja2.pass_context
-def j2_func_lookup(ctx, module, var_attr):
-    device: Device = ctx["device"]
-    package = device.__class__.__module__.split(".")[0]
-    mod_name = f"{package}.{module}"
-    mod = import_module(mod_name)
-    return getattr(mod, var_attr)
+class StringLoader(jinja2.BaseLoader):
+    def get_source(
+        self, environment: "jinja2.Environment", template: str
+    ) -> t.Tuple[str, t.Optional[str], t.Optional[t.Callable[[], bool]]]:
+        def uptodate() -> bool:
+            return True
+
+        return template, str(id(template)), uptodate
+
+
+def _funcloader_get_source(source: str):
+    if not isinstance(source, str):
+        return None
+
+    if source.startswith("str:"):
+        return source[4:].strip()
+
+    return None
 
 
 def get_env(template_dirs):
@@ -54,11 +60,15 @@ def get_env(template_dirs):
         trim_blocks=True,
         lstrip_blocks=True,
         keep_trailing_newline=True,
-        loader=jinja2.FileSystemLoader(template_dirs),
+        loader=jinja2.ChoiceLoader(
+            loaders=[
+                jinja2.FunctionLoader(_funcloader_get_source),
+                jinja2.FileSystemLoader(template_dirs),
+            ]
+        ),
     )
 
-    env.filters["render"] = j2_filter_render
-    env.filters["ip_gateway"] = j2_filter_ip_gateway
-    env.globals["lookup"] = j2_func_lookup
+    env.filters.update(_env_filters)
+    env.globals.update(_env_globals)
 
     return env

@@ -11,8 +11,11 @@ from pathlib import Path
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
+import jinja2
 
 from netcad.device_interface import DeviceInterface
+from netcad.interface_profile import InterfaceL2
+from netcad.vlan_profile import SENTIAL_ALL_VLANS
 from netcad.helpers import Registry
 
 # -----------------------------------------------------------------------------
@@ -54,7 +57,7 @@ class Device(Registry):
     # The `template_file` stores the reference to the Jinja2 template file that
     # is used to render the specific device configuration.
 
-    template_file: Optional[PathLike] = None
+    template: Optional[PathLike] = None
 
     def __init_subclass__(cls, **kwargs):
         """
@@ -79,15 +82,44 @@ class Device(Registry):
         self.interfaces.device = self
         self.registry_add(self.name, self)
 
-    def get_source(self) -> str:
+    def get_template(self, env: jinja2.Environment) -> jinja2.Template:
         """
-        Returns the Jinja2 template source to render the device configuration.
+        Return the absolute file-path to the device Jinja2 file.
 
         Returns
         -------
+        str - as described.
+
+        Raises
+        ------
+        RuntimeError:
+            When the `template` value is not a str or Path.
+
+        FileNotFoundError:
+            When the template value is not a valid filesystem file.
         """
-        # TODO!
-        pass
+        if not self.template:
+            raise RuntimeError(
+                f"Missing template assignment: {self.__class__.__name__}"
+            )
+
+        if isinstance(self.template, str):
+            as_path = Path(self.template)
+
+        elif isinstance(self.template, Path):
+            as_path = self.template
+
+        else:
+            raise RuntimeError(
+                f"Unexpected template type on {self.__class__.__class__}: {type(self.template)}"
+            )
+
+        if not as_path.is_file():
+            raise FileNotFoundError(
+                f"Missing template {self.__class__.__name__}: {self.template}"
+            )
+
+        return env.get_template(str(as_path))
 
     def vlans(self):
         """return the set of VlanProfile instances used by this device"""
@@ -97,15 +129,18 @@ class Device(Registry):
         # TODO: move this to a function; so that it can be called
         #       by the Jinja2 enviornment.
 
-        # TODO: find all interfaces that are subclasses of InterfaceL2
-        #       all L2 interfaces need to be subclassed from this.
-
         for if_name, iface in self.interfaces.items():
             if not (if_prof := getattr(iface, "profile", None)):
                 continue
 
-            if get_vlans := getattr(if_prof, "if_vlans", None):
-                vlans.update(get_vlans())
+            if not isinstance(if_prof, InterfaceL2):
+                continue
+
+            used = if_prof.vlans_used()
+            if SENTIAL_ALL_VLANS in used:
+                used.remove(SENTIAL_ALL_VLANS)
+
+            vlans.update(used)
 
         return sorted(vlans, key=attrgetter("vlan_id"))
 

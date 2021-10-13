@@ -51,9 +51,7 @@ __all__ = []
 @click.option(
     "--console", "output_console", help="display output to console", is_flag=True
 )
-def cli_render(
-    hostnames: Tuple[str], configs_dir: Path, output_console: bool
-):
+def cli_render(hostnames: Tuple[str], configs_dir: Path, output_console: bool):
     """Build device configuration files"""
 
     log = get_logger()
@@ -80,8 +78,10 @@ def cli_render(
     for dev_obj in device_objs:
         config_file = configs_dir.joinpath(dev_obj.name + ".cfg")
         log.debug(f"BUILD config for device {dev_obj.name}")
-        template = env.get_template(name=str(dev_obj.template_file))
+
+        template = dev_obj.get_template(env=env)
         config_text = template.render(device=dev_obj)
+
         log.info(f"SAVE: {dev_obj.name} config: {config_file.name}")
         with config_file.open("w+") as ofile:
             ofile.write(config_text)

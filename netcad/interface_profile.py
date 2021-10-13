@@ -56,7 +56,7 @@ class InterfaceProfile(object):
 
 
 class InterfaceL2(InterfaceProfile):
-    def vlans_used(self):
+    def vlans_used(self) -> Set[VlanProfile]:
         raise NotImplementedError()
 
 
