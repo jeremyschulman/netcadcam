@@ -70,6 +70,10 @@ class InterfaceProfile(object):
             f"{self.__class__.__name__}: {type(self.template)}"
         )
 
+    @property
+    def name(self):
+        return self.__class__.__name__
+
 
 # -----------------------------------------------------------------------------
 #
