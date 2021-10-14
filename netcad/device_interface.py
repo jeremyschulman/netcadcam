@@ -26,10 +26,12 @@ class DeviceInterface(object):
         self.name = name
         self.port_numbers = tuple(map(int, _re_find_numbers.findall(name)))
         self.short_name = "".join(_re_short_name.match(name).groups())
-        self.profile = profile
+        self._profile = None
         self.used = used
         self.desc = desc
         self.label = label
+
+        self.profile = profile
 
         self.cable_peer: Optional[DeviceInterface] = None
 
@@ -39,6 +41,25 @@ class DeviceInterface(object):
         # provide access to the parent device.  See __repr__ for example usage.
 
         self.interfaces = interfaces
+
+    @property
+    def profile(self):
+        return self._profile
+
+    @profile.setter
+    def profile(self, profile: "InterfaceProfile"):
+        if not profile:
+            self._profile = profile
+            return
+
+        if profile.interface:
+            raise RuntimeError(
+                f"Forbid to assign profile {profile.__class__.__class__} "
+                f"to multiple interfaces: {self.device_ifname}"
+            )
+
+        self._profile = profile
+        profile.interface = self
 
     @property
     def device(self):

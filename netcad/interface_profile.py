@@ -45,6 +45,11 @@ class InterfaceProfile(object):
     desc: Optional[str] = ""
 
     def __init__(self, **kwargs):
+        # the device instance this profile is bound to.  This value is assigned
+        # by the DeviceInterface.profile propery
+
+        self.interface: Optional[DeviceInterface] = None
+
         for attr, value in kwargs.items():
             setattr(self, attr, value)
 
@@ -74,14 +79,14 @@ class InterfaceProfile(object):
 
 
 class InterfaceL2(InterfaceProfile):
-    def vlans_used(self, interface: DeviceInterface) -> Set[vp.VlanProfile]:
+    def vlans_used(self) -> Set[vp.VlanProfile]:
         raise NotImplementedError()
 
 
 class InterfaceL2Access(InterfaceL2):
     vlan: vp.VlanProfile
 
-    def vlans_used(self, interface: DeviceInterface) -> Set[vp.VlanProfile]:
+    def vlans_used(self) -> Set[vp.VlanProfile]:
         return {self.vlan}
 
 
@@ -89,7 +94,7 @@ class InterfaceL2Trunk(InterfaceL2):
     native_vlan: Optional[vp.VlanProfile]
     vlans: List[vp.VlanProfile]
 
-    def vlans_used(self, interface: DeviceInterface) -> Set[vp.VlanProfile]:
+    def vlans_used(self) -> Set[vp.VlanProfile]:
         return set(filter(None, chain([self.native_vlan], self.vlans)))
 
 

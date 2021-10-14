@@ -1,5 +1,4 @@
 from typing import Optional, TYPE_CHECKING
-import inspect
 
 from pydantic.dataclasses import dataclass, Field
 
@@ -46,11 +45,7 @@ class VlanProfileFromPeer:
         if self._profile_vlans:
             return self._profile_vlans
 
-        # TODO: a little crafty to interrogate the stack
-        c_frame = inspect.currentframe()
-        parent_locals = c_frame.f_back.f_locals
-        if_active: DeviceInterface = parent_locals["interface"]
-
+        if_active: DeviceInterface = instance.interface
         if_peer = if_active.cable_peer
         vlan_prof_attr = getattr(if_peer.profile, self._attr_name, None)
 

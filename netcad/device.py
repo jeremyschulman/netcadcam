@@ -149,7 +149,7 @@ class Device(Registry):
             if not isinstance(if_prof, InterfaceL2):
                 continue
 
-            used = if_prof.vlans_used(iface)
+            used = if_prof.vlans_used()
 
             if SENTIAL_ALL_VLANS in used:
                 used.remove(SENTIAL_ALL_VLANS)
