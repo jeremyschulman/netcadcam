@@ -15,9 +15,19 @@ def clig_build():
     """build subcommands ..."""
 
 
+# -----------------------------------------------------------------------------
+# get command
+# -----------------------------------------------------------------------------
+
+
 @cli.command(name="get")
 def cli_get():
     """get required artifacts used by design"""
+
+
+# -----------------------------------------------------------------------------
+# config subcommands
+# -----------------------------------------------------------------------------
 
 
 @cli.group(name="config")
@@ -26,9 +36,20 @@ def clig_config():
     pass
 
 
-@cli.command(name="design")
+# -----------------------------------------------------------------------------
+# design subcommands
+# -----------------------------------------------------------------------------
+
+
+@cli.group(name="design")
 def clig_design():
     """design subcommands ..."""
+    pass
+
+
+@clig_design.group(name="report")
+def clig_design_report():
+    """design report subcommands ..."""
     pass
 
 

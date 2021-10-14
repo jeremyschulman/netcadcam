@@ -134,6 +134,11 @@ class Device(Registry):
 
         return env.get_template(str(as_path))
 
+    def sorted_interfaces(self) -> List[DeviceInterface]:
+        return sorted(
+            self.interfaces.values(), key=lambda i: (i.name[0:2], *i.port_numbers)
+        )
+
     def vlans(self) -> List["VlanProfile"]:
         """return the set of VlanProfile instances used by this device"""
 

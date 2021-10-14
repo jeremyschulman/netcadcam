@@ -3,7 +3,6 @@
 # -----------------------------------------------------------------------------
 
 from typing import Optional
-from enum import Enum
 import enum
 
 # -----------------------------------------------------------------------------
@@ -12,6 +11,12 @@ import enum
 
 from pydantic import PositiveInt
 from pydantic.dataclasses import dataclass, Field
+
+# -----------------------------------------------------------------------------
+# Private Imports
+# -----------------------------------------------------------------------------
+
+from netcad.helpers import StrEnum
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -25,7 +30,7 @@ from pydantic.dataclasses import dataclass, Field
 # -----------------------------------------------------------------------------
 
 
-class PortCableMediaType(Enum):
+class PortCableMediaType(StrEnum):
     """Denotes the physical cable type"""
 
     SMF = enum.auto()
@@ -36,7 +41,7 @@ class PortCableMediaType(Enum):
     AOC = enum.auto()
 
 
-class PortCableTerminationType(Enum):
+class PortCableTerminationType(StrEnum):
     """denotes the physical connector termitnating the cable"""
 
     LC = enum.auto()
@@ -46,7 +51,7 @@ class PortCableTerminationType(Enum):
     AOC = enum.auto()
 
 
-class PortTranscieverFormFactorType(Enum):
+class PortTranscieverFormFactorType(StrEnum):
     """denotes the transciever form-factor type"""
 
     AOC = enum.auto()
@@ -59,7 +64,7 @@ class PortTranscieverFormFactorType(Enum):
     RJ45 = enum.auto()
 
 
-class PortTransceiverReachType(Enum):
+class PortTransceiverReachType(StrEnum):
     short = enum.auto()
     long = enum.auto()
 
@@ -119,6 +124,8 @@ class PortProfile:
     A PortProfile would _not_ be used, for exaple if a switch port was 1G copper
     (RJ-45) and it is used "as-is".
     """
+
+    name: str
 
     # `cabling` - when used, identifies the type of cable expected to be used
     # with this port.  Includes for cable-planning design related tasks.

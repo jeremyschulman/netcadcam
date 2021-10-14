@@ -70,6 +70,10 @@ class InterfaceProfile(object):
             f"{self.__class__.__name__}: {type(self.template)}"
         )
 
+    @property
+    def name(self):
+        return self.__class__.__name__
+
 
 # -----------------------------------------------------------------------------
 #
@@ -105,6 +109,10 @@ class InterfaceL2Trunk(InterfaceL2):
 # -----------------------------------------------------------------------------
 
 
+class InterfaceVirtual(InterfaceProfile):
+    is_virtual = True
+
+
 class InterfaceLagMember(InterfaceProfile):
     def __init__(self, if_lag_parent_profile: InterfaceProfile, **kwargs):
         super(InterfaceLagMember, self).__init__(**kwargs)
@@ -112,7 +120,7 @@ class InterfaceLagMember(InterfaceProfile):
         self.if_parent = kwargs.get("if_parent")
 
 
-class InterfaceLag(InterfaceProfile):
+class InterfaceLag(InterfaceVirtual):
     if_lag_member_profile: Optional[Type[InterfaceLagMember]] = InterfaceLagMember
     if_lag_members: List[DeviceInterface] = list()
 
