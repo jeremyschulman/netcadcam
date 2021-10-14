@@ -19,6 +19,8 @@ from rich.table import Table
 
 from netcad.device import Device
 from netcad.config import loader
+from netcad import interface_profile as ip
+
 from .main import clig_design_report
 from .common_opts import opt_devices
 
@@ -47,6 +49,9 @@ def show_device_interfaces(device: Device):
                 pp_name = "[red]MISSING[/red]"
             else:
                 pp_name = port_prof.name
+
+            if isinstance(if_prof, ip.InterfaceVirtual):
+                pp_name = '[blue]virtual[/blue]'
 
         if not iface.used:
             if_prof_name = "[yellow]UNUSED[/yellow]"
