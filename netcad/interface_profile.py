@@ -17,7 +17,7 @@ from pathlib import Path
 import jinja2
 
 from netcad.port_profile import PortProfile
-from netcad.vlan_profile import VlanProfile
+from netcad import vlan_profile as vp
 from netcad.device_interface import DeviceInterface
 
 # -----------------------------------------------------------------------------
@@ -74,22 +74,22 @@ class InterfaceProfile(object):
 
 
 class InterfaceL2(InterfaceProfile):
-    def vlans_used(self) -> Set[VlanProfile]:
+    def vlans_used(self, interface: DeviceInterface) -> Set[vp.VlanProfile]:
         raise NotImplementedError()
 
 
 class InterfaceL2Access(InterfaceL2):
-    vlan: VlanProfile
+    vlan: vp.VlanProfile
 
-    def vlans_used(self) -> Set[VlanProfile]:
+    def vlans_used(self, interface: DeviceInterface) -> Set[vp.VlanProfile]:
         return {self.vlan}
 
 
 class InterfaceL2Trunk(InterfaceL2):
-    native_vlan: Optional[VlanProfile]
-    vlans: List[VlanProfile]
+    native_vlan: Optional[vp.VlanProfile]
+    vlans: List[vp.VlanProfile]
 
-    def vlans_used(self) -> Set[VlanProfile]:
+    def vlans_used(self, interface: DeviceInterface) -> Set[vp.VlanProfile]:
         return set(filter(None, chain([self.native_vlan], self.vlans)))
 
 

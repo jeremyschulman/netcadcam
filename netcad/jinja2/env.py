@@ -31,8 +31,8 @@ __all__ = ["get_env"]
 # -----------------------------------------------------------------------------
 
 _env_filters = {
-    "vlan_id": vlan_filters.j2_filter_vlan_id,
-    "vlans_id_list": vlan_filters.j2_filter_vlans_id_list,
+    "vlans": vlan_filters.j2_filter_vlans,
+    "vlan_ranges": vlan_filters.j2_filter_vlans_id_list,
     "render": j2_filter_render,
 }
 
