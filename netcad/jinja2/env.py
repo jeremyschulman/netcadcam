@@ -13,8 +13,8 @@ import jinja2
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
-from netcad.helpers import range_string
-from .filters.vlans_used import j2_filter_vlans_used
+
+from .filters import vlan_filters
 from .filters.render import j2_filter_render
 from .funcs.lookup import j2_func_lookup
 
@@ -31,10 +31,11 @@ __all__ = ["get_env"]
 # -----------------------------------------------------------------------------
 
 _env_filters = {
-    "vlans_used": j2_filter_vlans_used,
+    'vlan_id': vlan_filters.j2_filter_vlan_id,
+    "vlans_id_list": vlan_filters.j2_filter_vlans_id_list,
     "render": j2_filter_render,
-    "ranges": range_string,
 }
+
 _env_globals = {"lookup": j2_func_lookup}
 
 
