@@ -2,9 +2,9 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional, List, Set, Type, Sequence
+from typing import Optional, List, Set, Type, Sequence, Union
 from itertools import chain
-
+from pathlib import Path
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -14,6 +14,7 @@ from itertools import chain
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
+import jinja2
 
 from netcad.port_profile import PortProfile
 from netcad.vlan_profile import VlanProfile
@@ -31,7 +32,7 @@ class InterfaceProfile(object):
     # `template` stores the Jinja2 template text that is used to render the
     # interface specicifc configuration text.
 
-    template: Optional[str] = None
+    template: Optional[Union[str, Path]] = None
 
     # `port_profile` stores the physical layer information that is associated to
     # this interface.
@@ -46,6 +47,23 @@ class InterfaceProfile(object):
     def __init__(self, **kwargs):
         for attr, value in kwargs.items():
             setattr(self, attr, value)
+
+    def get_template(self, env: jinja2.Environment) -> jinja2.Template:
+        if not self.template:
+            raise RuntimeError(
+                f"Interface profile missing template: {self.__class__.__name__}"
+            )
+
+        if isinstance(self.template, Path):
+            return env.get_template(str(self.template))
+
+        if isinstance(self.template, str):
+            return env.get_template("str:" + self.template)
+
+        raise RuntimeError(
+            "Interface profile unexpected template type: "
+            f"{self.__class__.__name__}: {type(self.template)}"
+        )
 
 
 # -----------------------------------------------------------------------------
@@ -97,7 +115,7 @@ class InterfaceLag(InterfaceProfile):
         self,
         if_parent: Optional[DeviceInterface] = None,
         if_members: Optional[Sequence[DeviceInterface]] = None,
-        **kwargs
+        **kwargs,
     ):
         super(InterfaceLag, self).__init__(**kwargs)
         self._if_parent: Optional[DeviceInterface] = None
