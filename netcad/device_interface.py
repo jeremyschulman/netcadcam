@@ -1,8 +1,24 @@
+# -----------------------------------------------------------------------------
+# System Imports
+# -----------------------------------------------------------------------------
+
 from typing import Optional, TYPE_CHECKING
 import re
 
 if TYPE_CHECKING:
     from netcad.interface_profile import InterfaceProfile
+
+# -----------------------------------------------------------------------------
+# Exports
+# -----------------------------------------------------------------------------
+
+__all__ = ["DeviceInterface"]
+
+# -----------------------------------------------------------------------------
+#
+#                                 CODE BEGINS
+#
+# -----------------------------------------------------------------------------
 
 
 _re_find_numbers = re.compile(r"\d+")
@@ -42,6 +58,15 @@ class DeviceInterface(object):
 
         self.interfaces = interfaces
 
+    # -------------------------------------------------------------------------
+    # Property: profile (RW)
+    #
+    #   The `profile` property is used so that the interface instance can get
+    #   assigned back into the profile so that there is a bi-directional
+    #   relationship between the two objects.  This is necessary so references
+    #   can be such that from a given profile -> interface -> device.
+    # -------------------------------------------------------------------------
+
     @property
     def profile(self):
         return self._profile
@@ -61,10 +86,26 @@ class DeviceInterface(object):
         self._profile = profile
         profile.interface = self
 
+    # -------------------------------------------------------------------------
+    # Property: device (RO)
+    #
+    #   The `device` allows the Caller to back reference the associated Device
+    #   instance.  The device instance is bound to the device interfaces
+    #   collection, such that: interface -> interfaces -> device.
+    # -------------------------------------------------------------------------
+
     @property
     def device(self):
         """return the device instance associated with this interface"""
         return self.interfaces.device
+
+    # -------------------------------------------------------------------------
+    # Property: device_ifname (RO)
+    #
+    #   The `device_ifname` was created so that Callers that want to use a
+    #   "device + interface naem" representation on an interface description
+    #   setting have a builtin mechanism to do so.
+    # -------------------------------------------------------------------------
 
     @property
     def device_ifname(self) -> str:
