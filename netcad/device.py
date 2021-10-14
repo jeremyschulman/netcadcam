@@ -63,8 +63,12 @@ class Device(Registry):
 
     interfaces: Dict[str, DeviceInterface] = None
 
-    # The `template_file` stores the reference to the Jinja2 template file that
-    # is used to render the specific device configuration.
+    # The `template` stores the reference to the Jinja2 template file that
+    # is used to render the specific device configuration.  If provided this
+    # value is used by the `get_template` method.  If not provided, then the
+    # Developer is expected to subclass Device and implement a `get_template`
+    # method that returns the Template dynamically base on runtime values, such
+    # as the device OS, model, etc.
 
     template: Optional[PathLike] = None
 
@@ -146,6 +150,7 @@ class Device(Registry):
                 continue
 
             used = if_prof.vlans_used()
+
             if SENTIAL_ALL_VLANS in used:
                 used.remove(SENTIAL_ALL_VLANS)
 

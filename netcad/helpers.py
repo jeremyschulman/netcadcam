@@ -20,7 +20,7 @@ class StrEnum(str, Enum):
         return name
 
 
-def range_string(vlan_ids: List[int]) -> str:
+def range_string(numbers: List[int]) -> str:
     """
     Given a *sorted* list of numbers (VLAN-IDs), return a string that
     converts consecuitve numbers into comma separated ranges.  For example:
@@ -28,7 +28,7 @@ def range_string(vlan_ids: List[int]) -> str:
 
     Parameters
     ----------
-    vlan_ids: List[int]
+    numbers: List[int]
         The *sorted* list of vlan ID numbers.
 
     Returns
@@ -38,7 +38,7 @@ def range_string(vlan_ids: List[int]) -> str:
 
     range_strings = list()
 
-    for _, num_gen in groupby(enumerate(vlan_ids), key=lambda x: x[0] - x[1]):
+    for _, num_gen in groupby(enumerate(numbers), key=lambda x: x[0] - x[1]):
         num_list = tuple(num_gen)
         first, last = num_list[0], num_list[-1]
         range_strings.append(
