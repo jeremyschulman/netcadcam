@@ -3,7 +3,7 @@
 # -----------------------------------------------------------------------------
 
 from typing import Tuple
-from operator import itemgetter
+from operator import attrgetter
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -64,10 +64,10 @@ def report_cabling_per_device(device: Device):
         for cable in cables
     ]
 
-    # now sort his arranged list so that the device interfaces are in sorted
-    # order; using the device interface `sort_key` attribute value.
+    # now sort this arranged list so that the device interfaces are in sorted
+    # order.
 
-    cables.sort(key=lambda c: c[1].sort_key)
+    cables.sort(key=lambda c: c[1])
 
     # Populate the report table using this sorted collection of cables.
 
@@ -84,6 +84,7 @@ def report_cabling_per_device(device: Device):
         "Remote Profile",
         "Remote Interface",
         "Remote Device",
+        "Cable-ID",
     ]:
 
         table.add_column(column)
@@ -97,6 +98,7 @@ def report_cabling_per_device(device: Device):
             *reversed(interface_profile_names(rmt_if)),
             rmt_if.name,
             rmt_if.device.name,
+            cable_id,
         )
 
     console.print(table)
@@ -109,8 +111,17 @@ def report_cabling_per_network(cabling: CablePlanner, network: str):
         console.print(f"[yellow]{network}: No cables.[/yellow]")
         return
 
-    # sort the cables using the cable-id value.
-    cables = sorted(cabling.cables.items(), key=itemgetter(0))
+    # orient each cable row (left-device, right-device) based on their sorting
+    # property (User defined, or hostname by default)
+
+    cables = [
+        [cable[0], *sorted(cable[1], key=attrgetter("device"))]
+        for cable in cabling.cables.items()
+    ]
+
+    # then sort the table based on the device-name, and interface sort-key
+
+    cables.sort(key=lambda c: (c[1].device.name, c[1], c[2].device.name, c[2]))
 
     table = Table(
         title=f"Network Cabling: {network}",
@@ -119,7 +130,6 @@ def report_cabling_per_network(cabling: CablePlanner, network: str):
     )
 
     for column in [
-        "Cable-ID",
         "Device",
         "Interface",
         "Profile",
@@ -128,19 +138,20 @@ def report_cabling_per_network(cabling: CablePlanner, network: str):
         "Remote Profile",
         "Remote Interface",
         "Remote Device",
+        "Cable-ID",
     ]:
 
         table.add_column(column)
 
-    for cable_id, (dev_if, rmt_if) in cables:
+    for cable_id, dev_if, rmt_if in cables:
         table.add_row(
-            cable_id,
             dev_if.device.name,
             dev_if.name,
             *interface_profile_names(dev_if),
             *reversed(interface_profile_names(rmt_if)),
             rmt_if.name,
             rmt_if.device.name,
+            cable_id,
         )
 
     console.print(table)

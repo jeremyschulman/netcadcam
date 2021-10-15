@@ -84,7 +84,7 @@ class Device(Registry):
         cls.interfaces = _DeviceInterfaces(DeviceInterface)
         cls.interfaces.device_cls = cls
 
-    def __init__(self, name: str):
+    def __init__(self, name: str, **kwargs):
         self.name = name
 
         # make a copy of the device class interfaces so that the instance can
@@ -94,6 +94,10 @@ class Device(Registry):
         self.interfaces = deepcopy(self.__class__.interfaces)
         self.interfaces.device = self
         self.registry_add(self.name, self)
+
+        # assign any User provided values
+        for attr, value in kwargs.items():
+            setattr(self, attr, value)
 
     def get_template(self, env: jinja2.Environment) -> jinja2.Template:
         """
@@ -162,6 +166,16 @@ class Device(Registry):
             vlans.update(used)
 
         return sorted(vlans, key=attrgetter("vlan_id"))
+
+    def __lt__(self, other):
+        """
+        For Device sortability purposes implement the less-than comparitor.  Subclasses
+        can change this behavior for their own specific strategies.  A common one could
+        follow a "chess-board" like (rank, file) value system.
+
+        The default comparison will be based on the device name.
+        """
+        return self.name < other.name
 
 
 class _DeviceInterfaces(defaultdict):

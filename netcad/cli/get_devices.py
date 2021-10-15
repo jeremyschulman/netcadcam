@@ -27,7 +27,7 @@ __all__ = ["get_devices"]
 def get_devices(device_list: Sequence[str]) -> List[Device]:
     dev_objs: List[Device] = list()
 
-    for dev_name in set(device_list):
+    for dev_name in device_list:
         if not (dev_obj := Device.registry_get(dev_name)):
             raise RuntimeError(f"Device not found in registry: {dev_name}")
 

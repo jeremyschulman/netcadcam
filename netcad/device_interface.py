@@ -179,3 +179,6 @@ class DeviceInterface(object):
             return f"{name} Unused"
 
         return f"{name} Unassigned-Profile"
+
+    def __lt__(self, other: "DeviceInterface"):
+        return self.sort_key < other.sort_key
