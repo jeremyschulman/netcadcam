@@ -2,13 +2,12 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Tuple, List
+from typing import Tuple
 
 # -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
 
-import click
 from rich.console import Console
 from rich.table import Table
 
@@ -18,11 +17,13 @@ from rich.table import Table
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device
-from netcad.config import loader
 from netcad import interface_profile as ip
+
+# CLI specific imports
 
 from .main import clig_design_report
 from .common_opts import opt_devices
+from .get_devices import get_devices
 
 
 # -----------------------------------------------------------------------------
@@ -51,7 +52,7 @@ def show_device_interfaces(device: Device):
                 pp_name = port_prof.name
 
             if isinstance(if_prof, ip.InterfaceVirtual):
-                pp_name = '[blue]virtual[/blue]'
+                pp_name = "[blue]virtual[/blue]"
 
         if not iface.used:
             if_prof_name = "[yellow]UNUSED[/yellow]"
@@ -63,21 +64,12 @@ def show_device_interfaces(device: Device):
 
 @clig_design_report.command(name="interfaces")
 @opt_devices(required=True)
-@click.pass_context
-def cli_design_report_interfaces(ctx: click.Context, devices: Tuple[str]):
+def cli_design_report_interfaces(devices: Tuple[str]):
     """report device interface usage and parts"""
 
-    netcad_config = loader.load()
-    loader.network_importer(netcad_config)
-
-    dev_objs: List[Device] = list()
-
-    for dev_name in set(devices):
-        if not (dev_obj := Device.registry_get(dev_name)):
-            ctx.fail(f"Device not found in registry: {dev_name}")
-            return
-        dev_objs.append(dev_obj)
+    dev_objs = get_devices(device_list=devices)
 
     print(f"Checking {len(dev_objs)} devices ...")
+
     for each_dev in dev_objs:
         show_device_interfaces(each_dev)

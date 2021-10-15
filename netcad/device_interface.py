@@ -51,6 +51,12 @@ class DeviceInterface(object):
         numerical sorting purpose. An interface with name "GigabitEtherent1/0/2"
         would have port_numbers = (1,0,2).
 
+    sort_key: Tuple[str, int, ...]
+        A tuple that can be used for sorting a list of interfaces.  The first
+        value in the tuple is the first two characters of the name.  The
+        remaning values are the port_numbers.  An interface name "Ethernet49"
+        would have a sort_key ("et", 49), for example.
+
     cable_peer: DeviceInterface
         The instance of the device-interface on the far end of a cable
         relationship.
@@ -76,6 +82,7 @@ class DeviceInterface(object):
         self.name = name
         self.port_numbers = tuple(map(int, _re_find_numbers.findall(name)))
         self.short_name = "".join(_re_short_name.match(name).groups())
+        self.sort_key = (self.name[0:2].lower(), *self.port_numbers)
         self._profile = None
         self.used = used
         self.desc = desc
@@ -172,3 +179,6 @@ class DeviceInterface(object):
             return f"{name} Unused"
 
         return f"{name} Unassigned-Profile"
+
+    def __lt__(self, other: "DeviceInterface"):
+        return self.sort_key < other.sort_key
