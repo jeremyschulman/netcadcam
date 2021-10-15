@@ -1,13 +1,19 @@
 import click
 
 from netcad import __version__
+from netcad import config
 
 
 @click.group()
 @click.version_option(version=__version__)
 def cli():
     """NetCAD - a declarative approach to network lifecycle management"""
-    pass
+    config.loader.load()
+
+    # TODO: replace root_path default of dot to something from the
+    #       environment variable, for example: NETCAD_PROJECTDIR
+
+    config.loader.import_networks(root_path=".")
 
 
 @cli.group("build")
