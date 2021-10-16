@@ -72,7 +72,7 @@ def report_cabling_per_device(device: Device):
     # Populate the report table using this sorted collection of cables.
 
     table = Table(
-        title=f"{device.name} Cabling", show_header=True, header_style="bold magenta"
+        title=f"Device Cabling: {device.name}", show_header=True, header_style="bold magenta"
     )
 
     for column in [

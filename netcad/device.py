@@ -155,10 +155,10 @@ class Device(Registry):
             if not (if_prof := getattr(iface, "profile", None)):
                 continue
 
-            if not isinstance(if_prof, InterfaceL2):
+            if not (vlans_used := getattr(if_prof, 'vlans_used', None)):
                 continue
 
-            used = if_prof.vlans_used()
+            used = vlans_used()
 
             if SENTIAL_ALL_VLANS in used:
                 used.remove(SENTIAL_ALL_VLANS)

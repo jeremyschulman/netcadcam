@@ -174,3 +174,6 @@ class InterfaceVlan(InterfaceVirtual):
     def __init__(self, ipaddress: Optional[IPv4Address] = None, **params):
         super(InterfaceVlan, self).__init__(**params)
         self.ipaddress = ipaddress
+
+    def vlans_used(self) -> Set[vp.VlanProfile]:
+        return {self.vlan}
