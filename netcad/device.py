@@ -21,7 +21,7 @@ import jinja2
 from netcad.device_interface import DeviceInterface
 from netcad.interface_profile import InterfaceL2
 from netcad.vlan_profile import SENTIAL_ALL_VLANS
-from netcad.helpers import Registry
+from netcad.registry import Registry
 
 if TYPE_CHECKING:
     from vlan_profile import VlanProfile

@@ -2,7 +2,7 @@ from typing import Dict, Hashable, Set
 from collections import defaultdict
 
 from netcad.device import Device, DeviceInterface
-from netcad.helpers import Registry
+from netcad.registry import Registry
 
 
 class CablePlanner(Registry):

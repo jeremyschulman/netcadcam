@@ -98,7 +98,7 @@ class DeviceInterface(object):
     # -------------------------------------------------------------------------
 
     @property
-    def profile(self):
+    def profile(self) -> "InterfaceProfile":
         """
         The `profile` property is used so that the interface instance can get
         assigned back into the profile so that there is a bi-directional
