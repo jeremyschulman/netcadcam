@@ -12,10 +12,10 @@ import asyncio
 DEFAULT_MAX_TASKS = 100
 
 
-__all__ = ["igather", "iawait"]
+__all__ = ["as_completed", "igather"]
 
 
-async def igather(coros, limit=None):
+async def as_completed(coros, limit=None):
     coros = iter(coros)
 
     buf = asyncio.Queue()
@@ -68,6 +68,6 @@ async def igather(coros, limit=None):
         raise exc
 
 
-async def iawait(coros, limit=None):
-    async for _ in igather(coros, limit or DEFAULT_MAX_TASKS):
+async def igather(coros, limit=None):
+    async for _ in as_completed(coros, limit or DEFAULT_MAX_TASKS):
         pass

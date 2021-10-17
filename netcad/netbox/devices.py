@@ -2,7 +2,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Dict, Callable
+from typing import Dict, Callable, Optional
 import asyncio
 from operator import itemgetter
 from itertools import chain, starmap
@@ -60,10 +60,14 @@ class NetboxDevices(NetboxClient):
         res.raise_for_status()
         return res.json()
 
-    async def fetch_device_template(self, slug: str) -> Dict:
-        res = await self.get(self.API_DEVICE_TYPES, params=dict(slug=slug))
+    async def fetch_device_template(self, **params) -> Optional[Dict]:
+
+        res = await self.get(self.API_DEVICE_TYPES, params=params)
         res.raise_for_status()
-        device_type = res.json()["results"][0]
+        if not (payload := res.json()["results"]):
+            return None
+
+        device_type = payload[0]
 
         res = await self.get(
             self.API_INTERFACE_TEMPLATES, params=dict(devicetype_id=device_type["id"])

@@ -22,7 +22,7 @@ from netcad.device import Device
 from netcad.jinja2.env import get_env
 from netcad.logger import get_logger
 
-from .main import clig_build
+from netcad.cli.main import clig_build
 
 
 # -----------------------------------------------------------------------------
@@ -58,7 +58,7 @@ def cli_render(hostnames: Tuple[str], configs_dir: Path, output_console: bool):
 
     # TODO: change this importing based on the .netcad/config.toml file.
 
-    sys.path.insert(0, ".")
+    sys.path.insert(0, "..")
     pkg_list = find_packages()
     for pkg in pkg_list:
         import_module(pkg)

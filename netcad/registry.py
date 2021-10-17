@@ -1,4 +1,4 @@
-from typing import Optional, Any, Set
+from typing import Optional, Any, Set, Dict, AnyStr
 
 
 class Registry(object):
@@ -49,7 +49,7 @@ class Registry(object):
         )
 
     @classmethod
-    def registry_list(cls, subclasses=True) -> Set[str]:
+    def registry_list(cls, subclasses=False) -> Set[str]:
         """
         Return a list of the named objects in the registry.  By default all
         items including subclasses of the registry are returned.  If the Caller
@@ -72,3 +72,30 @@ class Registry(object):
             for each_cls in (cls, *cls.__subclasses__())
             for name in each_cls.__registry.keys()
         }
+
+    @classmethod
+    def registry_items(cls, subclasses=False) -> Dict[AnyStr, Any]:
+        """
+        Return a list of the named objects in the registry.  By default all
+        items including subclasses of the registry are returned.  If the Caller
+        wants only _this class_ registry, then set subclass=False.
+
+        Parameters
+        ----------
+        subclasses: bool
+            Determines whether or not to include subclassed registries.
+
+        Returns
+        -------
+        List of the registered names.
+        """
+        if not subclasses:
+            return set(cls.__registry)
+
+        items = {
+            item
+            for each_cls in (cls, *cls.__subclasses__())
+            for item in each_cls.__registry.items()
+        }
+
+        return dict(items)
