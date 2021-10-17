@@ -46,10 +46,16 @@ class VlanProfileFromPeer:
             return self._profile_vlans
 
         if_active: DeviceInterface = instance.interface
-        if_peer = if_active.cable_peer
-        vlan_prof_attr = getattr(if_peer.profile, self._attr_name, None)
+        if not (if_peer := if_active.cable_peer):
+            raise RuntimeError(
+                f"Unexpected missing interface peer on: {if_active.device_ifname}"
+            )
 
-        # TODO: check for None
+        if not (vlan_prof_attr := getattr(if_peer.profile, self._attr_name, None)):
+            raise RuntimeError(
+                f"Unexpected missing profile attribute: {self._attr_name} "
+                f"on peer interface porfile: {if_peer.device_ifname}"
+            )
 
         if isinstance(vlan_prof_attr, list) and SENTIAL_ALL_VLANS in vlan_prof_attr:
             self._profile_vlans = if_peer.device.vlans()

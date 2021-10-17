@@ -19,7 +19,7 @@ from rich.console import Console
 
 from netcad.device import Device, DeviceInterface
 from netcad.interface_profile import InterfaceVirtual
-from netcad.cable_plan import CablePlanner
+from netcad.cabling.cable_plan import CablePlanner
 
 from .main import clig_design_report
 from .common_opts import opt_devices, opt_network
@@ -72,7 +72,9 @@ def report_cabling_per_device(device: Device):
     # Populate the report table using this sorted collection of cables.
 
     table = Table(
-        title=f"Device Cabling: {device.name}", show_header=True, header_style="bold magenta"
+        title=f"Device Cabling: {device.name}",
+        show_header=True,
+        header_style="bold magenta",
     )
 
     for column in [

@@ -19,7 +19,6 @@ import jinja2
 # -----------------------------------------------------------------------------
 
 from netcad.device_interface import DeviceInterface
-from netcad.interface_profile import InterfaceL2
 from netcad.vlan_profile import SENTIAL_ALL_VLANS
 from netcad.registry import Registry
 
@@ -155,7 +154,7 @@ class Device(Registry):
             if not (if_prof := getattr(iface, "profile", None)):
                 continue
 
-            if not (vlans_used := getattr(if_prof, 'vlans_used', None)):
+            if not (vlans_used := getattr(if_prof, "vlans_used", None)):
                 continue
 
             used = vlans_used()

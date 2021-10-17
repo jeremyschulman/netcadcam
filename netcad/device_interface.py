@@ -119,7 +119,7 @@ class DeviceInterface(object):
 
         if profile.interface:
             raise RuntimeError(
-                f"Forbid to assign profile {profile.__class__.__class__} "
+                f"Forbid to assign profile {profile.__class__.__name__} "
                 f"to multiple interfaces: {self.device_ifname}"
             )
 
