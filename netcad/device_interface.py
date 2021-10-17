@@ -98,7 +98,7 @@ class DeviceInterface(object):
     # -------------------------------------------------------------------------
 
     @property
-    def profile(self):
+    def profile(self) -> "InterfaceProfile":
         """
         The `profile` property is used so that the interface instance can get
         assigned back into the profile so that there is a bi-directional
@@ -119,7 +119,7 @@ class DeviceInterface(object):
 
         if profile.interface:
             raise RuntimeError(
-                f"Forbid to assign profile {profile.__class__.__class__} "
+                f"Forbid to assign profile {profile.__class__.__name__} "
                 f"to multiple interfaces: {self.device_ifname}"
             )
 

@@ -5,6 +5,7 @@
 from typing import Optional, List, Set, Type, Sequence, Union
 from itertools import chain
 from pathlib import Path
+from ipaddress import IPv4Address
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -19,6 +20,8 @@ import jinja2
 from netcad.port_profile import PortProfile
 from netcad import vlan_profile as vp
 from netcad.device_interface import DeviceInterface
+from netcad.vlan_profile import VlanProfile
+
 
 # -----------------------------------------------------------------------------
 #
@@ -156,3 +159,21 @@ class InterfaceLag(InterfaceVirtual):
     @property
     def if_parent(self):
         return self._if_parent
+
+
+# -----------------------------------------------------------------------------
+#
+#                        Interface Profiles for VLANs
+#
+# -----------------------------------------------------------------------------
+
+
+class InterfaceVlan(InterfaceVirtual):
+    vlan: VlanProfile
+
+    def __init__(self, ipaddress: Optional[IPv4Address] = None, **params):
+        super(InterfaceVlan, self).__init__(**params)
+        self.ipaddress = ipaddress
+
+    def vlans_used(self) -> Set[vp.VlanProfile]:
+        return {self.vlan}
