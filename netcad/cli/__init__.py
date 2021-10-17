@@ -1,4 +1,5 @@
 import sys
+import os
 
 from .main import cli
 from . import cli_build_configs
@@ -10,7 +11,9 @@ def script():
     try:
         cli()
     except RuntimeError as exc:
-        import traceback
+        if ("--debug" in sys.argv) or os.getenv("NETCAD_DEBUG"):
+            import traceback
 
-        traceback.print_exc()
+            traceback.print_exc()
+
         sys.exit("ERROR: " + exc.args[0])
