@@ -50,24 +50,11 @@ def interface_profile_names(iface: DeviceInterface) -> Tuple[str, str]:
 def report_cabling_per_device(device: Device):
     console = Console()
 
-    if not (cables := CablePlanner.find_cables_by_device(device)):
-        console.print(f"[red]{device.name}: No cables found.[/red]")
-        return
-
-    # arrange the cables so that we have a List[List] such that each list item:
-    #  [0] = cable_id
-    #  [1] = the device endpoint
-    #  [2] = the remote endpoint
-
-    cables = [
-        [cable[0], *sorted(cable[1], key=lambda e: 0 if e.device is device else 1)]
-        for cable in cables
+    if_cables = [
+        interface for interface in device.interfaces.values() if interface.cable_peer
     ]
 
-    # now sort this arranged list so that the device interfaces are in sorted
-    # order.
-
-    cables.sort(key=lambda c: c[1])
+    if_cables.sort()
 
     # Populate the report table using this sorted collection of cables.
 
@@ -91,7 +78,8 @@ def report_cabling_per_device(device: Device):
 
         table.add_column(column)
 
-    for cable_id, dev_if, rmt_if in cables:
+    for dev_if in if_cables:
+        rmt_if = dev_if.cable_peer
 
         table.add_row(
             device.name,
@@ -100,7 +88,8 @@ def report_cabling_per_device(device: Device):
             *reversed(interface_profile_names(rmt_if)),
             rmt_if.name,
             rmt_if.device.name,
-            cable_id,
+            # check either end, for the case of an MLAG.
+            dev_if.label or rmt_if.label,
         )
 
     console.print(table)
