@@ -1,19 +1,13 @@
 import click
 
 from netcad import __version__
-from netcad import config
+from netcad.init import init
 
 
 @click.group()
 @click.version_option(version=__version__)
 def cli():
-    """NetCAD - a declarative approach to network lifecycle management"""
-    config.loader.load()
-
-    # TODO: replace root_path default of dot to something from the
-    #       environment variable, for example: NETCAD_PROJECTDIR
-
-    config.loader.import_networks(root_path=".")
+    init()
 
 
 @cli.group("build")
@@ -26,8 +20,8 @@ def clig_build():
 # -----------------------------------------------------------------------------
 
 
-@cli.command(name="get")
-def cli_get():
+@cli.group(name="get")
+def clig_get():
     """get required artifacts used by design"""
 
 
@@ -38,7 +32,7 @@ def cli_get():
 
 @cli.group(name="config")
 def clig_config():
-    """configure NetCAD project settings ..."""
+    """configure netcad project settings ..."""
     pass
 
 
@@ -61,7 +55,7 @@ def clig_design_report():
 
 @cli.command(name="init")
 def cli_init():
-    """initialize NetCAD project files"""
+    """initialize netcad project files"""
 
 
 @cli.group("push")

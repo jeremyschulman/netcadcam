@@ -21,9 +21,9 @@ from netcad.device import Device, DeviceInterface
 from netcad.interface_profile import InterfaceVirtual
 from netcad.cabling.cable_plan import CablePlanner
 
-from .main import clig_design_report
-from .common_opts import opt_devices, opt_network
-from .get_devices import get_devices
+from netcad.cli.main import clig_design_report
+from netcad.cli.common_opts import opt_devices, opt_network
+from netcad.cli.get_devices import get_devices
 
 NOT_USED = "[grey]UNUSED[/grey]"
 NOT_ASSIGNED = "[grey]N/A[/grey]"
