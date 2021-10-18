@@ -2,25 +2,23 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional, AnyStr
+from typing import Optional, AnyStr, List
+from types import ModuleType
 import sys
 import os
-from pathlib import Path
 from importlib import import_module
 
 # -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
 
-import toml
 
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.defaults import DEFAULT_NETCAD_CONFIG_FILE
-
 from netcad.config import netcad_globals
+from netcad.config.envvars import Environment
 
 # -----------------------------------------------------------------------------
 #
@@ -29,27 +27,22 @@ from netcad.config import netcad_globals
 # -----------------------------------------------------------------------------
 
 
-def load(config_filepath: Optional[AnyStr] = None):
+def import_networks(root_path: Optional[AnyStr] = None) -> List[ModuleType]:
 
-    config_filepath = Path(config_filepath or DEFAULT_NETCAD_CONFIG_FILE)
-    if not config_filepath.is_file():
-        raise FileNotFoundError(str(config_filepath.absolute()))
+    # Add the User's project directory for python import path.
 
-    netcad_globals.g_config_file = config_filepath
-    netcad_globals.g_config = toml.load(config_filepath.open())
+    sys.path.insert(0, root_path or os.environ[Environment.NETCAD_PROJECTDIR])
 
-    project_dir = os.environ.setdefault(
-        "NETCAD_PROJECTDIR", str(config_filepath.parent.absolute())
-    )
+    # the config file should have a networks section that defines the list of
+    # python modules to import.
 
-    project_dir = Path(project_dir)
-    netcad_globals.g_netcad_project_dir = project_dir
+    if not (pkg_list := netcad_globals.g_config.get("networks")):
+        config_file = os.environ[Environment.NETCAD_CONFIGFILE]
+        raise RuntimeError(
+            f'Missing "networks" definition in config-file: {config_file}'
+        )
 
-    return netcad_globals.g_config
-
-
-def import_networks(root_path: Path):
-    sys.path.insert(0, str(root_path))
-    pkg_list = netcad_globals.g_config["networks"]
-    for pkg in pkg_list:
-        import_module(pkg)
+    try:
+        return [import_module(pkg) for pkg in pkg_list]
+    except ImportError as exc:
+        raise RuntimeError(f"Unable to load network module: {exc.args[0]}")

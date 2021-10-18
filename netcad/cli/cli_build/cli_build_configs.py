@@ -21,7 +21,7 @@ import click
 from netcad.device import Device
 from netcad.jinja2.env import get_env
 from netcad.logger import get_logger
-
+from netcad.config import loader
 from netcad.cli.main import clig_build
 
 
@@ -55,6 +55,7 @@ def cli_render(hostnames: Tuple[str], configs_dir: Path, output_console: bool):
     """Build device configuration files"""
 
     log = get_logger()
+    loader.import_networks()
 
     # TODO: change this importing based on the .netcad/config.toml file.
 
