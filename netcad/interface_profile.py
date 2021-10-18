@@ -102,7 +102,9 @@ class InterfaceL2Trunk(InterfaceL2):
     vlans: List[vp.VlanProfile]
 
     def vlans_used(self) -> Set[vp.VlanProfile]:
-        return set(filter(None, chain([self.native_vlan], self.vlans)))
+        return set(
+            filter(None, chain([getattr(self, "native_vlan", None)], self.vlans))
+        )
 
 
 # -----------------------------------------------------------------------------

@@ -23,7 +23,7 @@ from .devices import NetboxDevices
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ['OriginNetbox']
+__all__ = ["OriginNetbox"]
 
 
 # -----------------------------------------------------------------------------
@@ -69,6 +69,7 @@ class OriginNetbox(Origin):
                 model = tasks[orig_coro]
                 if not model_payload:
                     log.error(f"Execpted device-type {model} not found in Netbox")
+                    continue
 
                 log.info(f"Saving device-type: {model}")
                 await self.save_file(dt_dir.joinpath(f"{model}.json"), model_payload)

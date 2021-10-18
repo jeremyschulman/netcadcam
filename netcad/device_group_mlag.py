@@ -5,7 +5,8 @@ from netcad.device import Device
 
 
 class DeviceGroupMLagPair(Device):
-    is_group = True
+    no_config = True  # do no render a configuration
+    is_group = True  # refers to a group
 
     def __init__(self, name: str, devices: List[Device], **kwargs):
         super(DeviceGroupMLagPair, self).__init__(name, **kwargs)

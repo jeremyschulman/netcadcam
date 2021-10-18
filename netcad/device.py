@@ -3,6 +3,7 @@
 # -----------------------------------------------------------------------------
 
 from typing import Dict, Optional, TypeVar, List, TYPE_CHECKING
+import os
 from collections import defaultdict
 from operator import attrgetter
 from copy import deepcopy
@@ -21,6 +22,8 @@ import jinja2
 from netcad.device_interface import DeviceInterface
 from netcad.vlan_profile import SENTIAL_ALL_VLANS
 from netcad.registry import Registry
+from netcad.config.cache import cache_load_device_type
+from netcad.config import Environment
 
 if TYPE_CHECKING:
     from vlan_profile import VlanProfile
@@ -83,7 +86,31 @@ class Device(Registry):
         cls.interfaces = _DeviceInterfaces(DeviceInterface)
         cls.interfaces.device_cls = cls
 
+        # configure the state of the interfaces by default to unused. this
+        # settings will be determined by the `init_interfaces()` class method.
+        # By default, will set interfaces to unused. This behavior could be
+        # changed by the sublcass.
+
+        if getattr(cls, "product_model", None) and not os.getenv(
+            Environment.NETCAD_NOVALIDATE
+        ):
+            cls.init_interfaces()
+
     def __init__(self, name: str, **kwargs):
+        """
+        Device initialization creates a specific device instance for the given
+        subclass.
+
+        Parameters
+        ----------
+        name: str
+            The device hostname value.
+
+        Other Parameters
+        ----------------
+        key-values that override the class attributes.
+        """
+
         self.name = name
 
         # make a copy of the device class interfaces so that the instance can
@@ -91,10 +118,19 @@ class Device(Registry):
         # that happen in real-world networks.
 
         self.interfaces = deepcopy(self.__class__.interfaces)
+
+        # create the back-references from the interfaces instance to this
+        # device.
+
         self.interfaces.device = self
+
+        # register this device hostname to the subclass.
+
         self.registry_add(self.name, self)
 
-        # assign any User provided values
+        # for any Caller provided values, override the class attributes; or set
+        # new attributes (TODO: rethink this approach)
+
         for attr, value in kwargs.items():
             setattr(self, attr, value)
 
@@ -138,6 +174,13 @@ class Device(Registry):
         return env.get_template(str(as_path))
 
     def sorted_interfaces(self) -> List[DeviceInterface]:
+        """
+        Returns a list of interface instances sorted using a
+        Returns
+        -------
+
+        """
+        # TODO: change this to sorted(self.interfaces) and test.
         return sorted(
             self.interfaces.values(), key=lambda i: (i.name[0:2], *i.port_numbers)
         )
@@ -166,6 +209,26 @@ class Device(Registry):
 
         return sorted(vlans, key=attrgetter("vlan_id"))
 
+    @classmethod
+    def init_interfaces(cls):
+        """ """
+        try:
+            dt_model = cache_load_device_type(product_model=cls.product_model)
+        except FileNotFoundError:
+            raise RuntimeError(
+                f"Missing device-type file for {cls.__name__}, product-model: {cls.product_model}.  "
+                'Try running "netcad get device-types" to fetch definitions.'
+            )
+
+        for if_def in dt_model["interfaces"]:
+            cls.interfaces[if_def["name"]].used = False
+
+    # -------------------------------------------------------------------------
+    #
+    #                           Dunder methods
+    #
+    # -------------------------------------------------------------------------
+
     def __lt__(self, other):
         """
         For Device sortability purposes implement the less-than comparitor.  Subclasses
@@ -193,5 +256,6 @@ class _DeviceInterfaces(defaultdict):
         # from the specific interface to this collection so that given any
         # specific interface instance, the Caller can reach back to find the
         # associated device object.
-        iface = self[key] = DeviceInterface(name=key, interfaces=self)
-        return iface
+
+        self[key] = DeviceInterface(name=key, interfaces=self)
+        return self[key]

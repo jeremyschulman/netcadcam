@@ -124,6 +124,7 @@ class DeviceInterface(object):
             )
 
         self._profile = profile
+        self.used = True
         profile.interface = self
 
     @property

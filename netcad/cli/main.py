@@ -2,6 +2,7 @@ import click
 
 from netcad import __version__
 from netcad.init import init
+from netcad.config import loader
 
 
 @click.group()
@@ -13,6 +14,7 @@ def cli():
 @cli.group("build")
 def clig_build():
     """build subcommands ..."""
+    loader.import_networks()
 
 
 # -----------------------------------------------------------------------------
@@ -26,7 +28,9 @@ def clig_get():
 
 
 # -----------------------------------------------------------------------------
-# config subcommands
+#
+#                                  config
+#
 # -----------------------------------------------------------------------------
 
 
@@ -37,14 +41,16 @@ def clig_config():
 
 
 # -----------------------------------------------------------------------------
-# design subcommands
+#
+#                                  design
+#
 # -----------------------------------------------------------------------------
 
 
 @cli.group(name="design")
 def clig_design():
     """design subcommands ..."""
-    pass
+    loader.import_networks()
 
 
 @clig_design.group(name="report")
@@ -56,6 +62,13 @@ def clig_design_report():
 @cli.command(name="init")
 def cli_init():
     """initialize netcad project files"""
+
+
+# -----------------------------------------------------------------------------
+#
+#                                   push
+#
+# -----------------------------------------------------------------------------
 
 
 @cli.group("push")

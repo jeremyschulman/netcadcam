@@ -70,7 +70,8 @@ class NetboxDevices(NetboxClient):
         device_type = payload[0]
 
         res = await self.get(
-            self.API_INTERFACE_TEMPLATES, params=dict(devicetype_id=device_type["id"])
+            self.API_INTERFACE_TEMPLATES,
+            params=dict(devicetype_id=device_type["id"], limit=0),
         )
         res.raise_for_status()
         interfaces = list()
