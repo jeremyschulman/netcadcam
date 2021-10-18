@@ -3,10 +3,7 @@
 # -----------------------------------------------------------------------------
 import os
 from typing import Tuple
-import sys
 from pathlib import Path
-from setuptools import find_packages
-from importlib import import_module
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -52,7 +49,9 @@ __all__ = []
 @click.option(
     "--console", "output_console", help="display output to console", is_flag=True
 )
-def cli_render(devices: Tuple[str], networks: Tuple[str], configs_dir: Path, output_console: bool):
+def cli_render(
+    devices: Tuple[str], networks: Tuple[str], configs_dir: Path, output_console: bool
+):
     """Build device configuration files"""
 
     log = get_logger()
@@ -88,15 +87,17 @@ def cli_render(devices: Tuple[str], networks: Tuple[str], configs_dir: Path, out
     # purposes. for example the device representing an MLAG redundant pair. Then
     # sort the devices based on their sorting mechanism.
 
-    device_objs = sorted(filter(lambda d: not hasattr(d, 'no_config'), device_objs))
+    device_objs = sorted(filter(lambda d: not hasattr(d, "no_config"), device_objs))
 
     # Find all of the template directories walking down the $NETCAD_PROJECTDIR.
     # Reverse this list so that the "nearest" template directory is used first;
     # presuming there could be a filename clash.  TODO: rethink this approach.
 
-    template_dirs = list(Path(os.environ[Environment.NETCAD_PROJECTDIR]).rglob('**/templates'))
+    template_dirs = list(
+        Path(os.environ[Environment.NETCAD_PROJECTDIR]).rglob("**/templates")
+    )
     template_dirs.reverse()
-    template_dirs.append('/')
+    template_dirs.append("/")
     env = get_env(template_dirs)
 
     log.info(f"Building device configs into directory: {configs_dir.absolute()}")
