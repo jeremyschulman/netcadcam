@@ -85,7 +85,7 @@ class DeviceInterface(object):
         self.sort_key = (self.name[0:2].lower(), *self.port_numbers)
         self._profile = None
         self.used = used
-        self.desc = desc
+        self._desc = desc
         self.label = label
         self.profile = profile
         self.cable_peer: Optional[DeviceInterface] = None
@@ -96,6 +96,14 @@ class DeviceInterface(object):
     #                                Properties
     #
     # -------------------------------------------------------------------------
+
+    @property
+    def desc(self):
+        return self._desc or (self.profile.desc if self.profile else None)
+
+    @desc.setter
+    def desc(self, value):
+        self._desc = value
 
     @property
     def profile(self) -> "InterfaceProfile":
