@@ -7,7 +7,7 @@ from typing import Tuple
 # -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
-
+import click
 from rich.console import Console
 from rich.table import Table
 
@@ -24,7 +24,7 @@ from netcad import interface_profile as ip
 from netcad.cli.main import clig_design_report
 from netcad.cli.common_opts import opt_devices
 from netcad.cli.get_devices import get_devices
-
+from .. import keywords
 
 # -----------------------------------------------------------------------------
 #
@@ -33,43 +33,81 @@ from netcad.cli.get_devices import get_devices
 # -----------------------------------------------------------------------------
 
 
-def show_device_interfaces(device: Device):
+def show_device_interfaces(device: Device, **options):
     console = Console()
     table = Table(show_header=True, header_style="bold magenta")
     table.add_column("Name")
-    table.add_column("Interface-Profile")
-    table.add_column("Port-Profile")
+    table.add_column("Description")
+    table.add_column("Profile")
+    table.add_column("Port")
+
+    def add_row(*columns):
+        table.add_row(*columns)
+
+    # -------------------------------------------------------------------------
+    # If the User only wants to see the unused interfaces ...
+    # -------------------------------------------------------------------------
+
+    if options["show_unused"]:
+        for iface in device.sorted_interfaces():
+            if not iface.used:
+                add_row(iface.name, None, None, keywords.NOT_USED)
+
+        console.print(table)
+        return
+
+    # -------------------------------------------------------------------------
+    # Show interfaces, optionally including unused ....
+    # -------------------------------------------------------------------------
 
     for iface in device.sorted_interfaces():
-        if not (if_prof := iface.profile):
-            pp_name = "[yellow]NONE[/yellow]"
-            if_prof_name = "NONE"
-        else:
-            if_prof_name = if_prof.name
-            if not (port_prof := if_prof.port_profile):
-                pp_name = "[red]MISSING[/red]"
-            else:
-                pp_name = port_prof.name
-
-            if isinstance(if_prof, ip.InterfaceVirtual):
-                pp_name = "[blue]virtual[/blue]"
-
         if not iface.used:
-            if_prof_name = "[yellow]UNUSED[/yellow]"
+            if options["show_all"]:
+                add_row(iface.name, None, None, keywords.NOT_USED)
+            continue
 
-        table.add_row(iface.name, if_prof_name, pp_name)
+        if not (if_prof := getattr(iface, "profile", None)):
+            add_row(iface.name, iface.desc, None, keywords.NOT_USED)
+            continue
+
+        if_prof_name = if_prof.name
+        if not (port_prof := if_prof.port_profile):
+            pp_name = keywords.MISSING
+        else:
+            pp_name = port_prof.name
+
+        if isinstance(if_prof, ip.InterfaceVirtual):
+            pp_name = keywords.VIRTUAL
+
+        add_row(iface.name, iface.desc, if_prof_name, pp_name)
 
     console.print(table)
 
 
 @clig_design_report.command(name="interfaces")
+@click.option(
+    "--unused", "show_unused", help="only show unused interfaces", is_flag=True
+)
+@click.option(
+    "--all", "show_all", help="show all interfaces, including unused", is_flag=True
+)
 @opt_devices(required=True)
-def cli_design_report_interfaces(devices: Tuple[str]):
-    """report device interface usage and parts"""
+def cli_design_report_interfaces(devices: Tuple[str], **flags):
+    """
+        report device interfaces usage
+
+    \b
+        The output includes the interface name, description, assigned profile, and
+        physical port type.  By default this command will show only interfaces that
+        are used in the design.  Any unused interfaces will be omitted.  Additonal
+        flag options:
+           --all : show the unused interfaces
+           --unused : show only the unused interfaces
+    """
 
     dev_objs = get_devices(device_list=devices)
 
     print(f"Checking {len(dev_objs)} devices ...")
 
     for each_dev in dev_objs:
-        show_device_interfaces(each_dev)
+        show_device_interfaces(each_dev, **flags)

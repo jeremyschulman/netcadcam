@@ -45,7 +45,11 @@ class CablePlanner(Registry):
             raise RuntimeError("No cabling", self, ifs_by_counts)
 
         if ifs_by_counts:
-            raise RuntimeError("Improper cabling peer counts", self, ifs_by_counts)
+            raise RuntimeError(
+                f"Cable plan: {self.name}: Improper cabling peer counts",
+                self,
+                ifs_by_counts,
+            )
 
         self.validated = True
         return len(self.cables)
