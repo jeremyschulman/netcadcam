@@ -14,9 +14,10 @@ def script():
 
             traceback.print_exc()
 
-        obj_data = ''
+        obj_data = ""
         if len(exc.args) > 1:
             from pprint import pformat as pp
-            obj_data = '\n'.join([pp(obj) for obj in exc.args[1:]])
+
+            obj_data = "\n".join([pp(obj) for obj in exc.args[1:]])
 
         sys.exit("ERROR: " + exc.args[0] + "\n" + obj_data)
