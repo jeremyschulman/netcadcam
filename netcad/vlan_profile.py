@@ -29,7 +29,6 @@ VLANS_ALL = [SENTIAL_ALL_VLANS]
 class VlanProfileFromPeer:
     def __init__(self):
         self._attr_name = None
-        self._profile_vlans = None
 
     def __set_name__(self, owner, name):
         self._attr_name = name
@@ -38,12 +37,6 @@ class VlanProfileFromPeer:
         # if no instance, then class lookup, return descriptor
         if instance is None:
             return self
-
-        # if the peer profile vlans have already been bound to this descriptor,
-        # then return the values now.
-
-        if self._profile_vlans:
-            return self._profile_vlans
 
         if_active: DeviceInterface = instance.interface
         if not (if_peer := if_active.cable_peer):
@@ -58,8 +51,6 @@ class VlanProfileFromPeer:
             )
 
         if isinstance(vlan_prof_attr, list) and SENTIAL_ALL_VLANS in vlan_prof_attr:
-            self._profile_vlans = if_peer.device.vlans()
-        else:
-            self._profile_vlans = vlan_prof_attr
+            return if_peer.device.vlans()
 
-        return self._profile_vlans
+        return vlan_prof_attr
