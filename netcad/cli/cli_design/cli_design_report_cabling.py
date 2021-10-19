@@ -155,7 +155,7 @@ def report_cabling_per_network(cabling: CablePlanner, network: str):
 def cli_design_report_cabling(
     ctx: click.Context, devices: Tuple[str], networks: Tuple[str]
 ):
-    """report device interface cabling"""
+    """report cabling between devices"""
 
     if devices:
         dev_objs = get_devices(device_list=devices)
