@@ -1,23 +1,9 @@
-from typing import Optional, TYPE_CHECKING
-
-from pydantic.dataclasses import dataclass, Field
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from netcad.device import DeviceInterface
 
-
-@dataclass(frozen=True)
-class VlanProfile:
-    name: str
-    vlan_id: int = Field(..., ge=1, le=4094)
-    description: Optional[str] = Field(None)
-
-
-# declare a sentinal instance to indicate that all VLANs defined on a device
-# should be used. this is a common use-case for uplink trunk ports.
-
-SENTIAL_ALL_VLANS = VlanProfile(name="*", vlan_id=1)
-VLANS_ALL = [SENTIAL_ALL_VLANS]
+from .vlan_all import SENTIAL_ALL_VLANS
 
 # declare a mechanism to indicate that that the profile is using the same value
 # as the peer interface.  We will use a technique called a Python descriptor to

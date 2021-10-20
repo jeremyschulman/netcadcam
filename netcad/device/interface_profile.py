@@ -18,9 +18,9 @@ from ipaddress import IPv4Address
 import jinja2
 
 from netcad.port_profile import PortProfile
-from netcad import vlan_profile as vp
+from netcad.vlan import vlan_profile as vp
 from netcad.device.device_interface import DeviceInterface
-from netcad.vlan_profile import VlanProfile
+from netcad.vlan.vlan_profile import VlanProfile
 
 
 # -----------------------------------------------------------------------------

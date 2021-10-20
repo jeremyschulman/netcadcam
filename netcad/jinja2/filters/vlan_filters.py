@@ -8,7 +8,7 @@ from typing import Union, Set, List
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.vlan_profile import VlanProfile, SENTIAL_ALL_VLANS
+from netcad.vlan import VlanProfile, SENTIAL_ALL_VLANS
 from netcad.device import DeviceInterface, Device
 from netcad.helpers import range_string
 

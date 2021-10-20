@@ -20,13 +20,13 @@ import jinja2
 # -----------------------------------------------------------------------------
 
 from netcad.device.device_interface import DeviceInterface
-from netcad.vlan_profile import SENTIAL_ALL_VLANS
+from netcad.vlan import SENTIAL_ALL_VLANS
 from netcad.registry import Registry
 from netcad.config.cache import cache_load_device_type
 from netcad.config import Environment
 
 if TYPE_CHECKING:
-    from netcad.vlan_profile import VlanProfile
+    from netcad.vlan.vlan_profile import VlanProfile
 
 
 # -----------------------------------------------------------------------------
