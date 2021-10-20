@@ -11,9 +11,15 @@ def cli():
     init()
 
 
+@cli.group("audit")
+def clig_audit():
+    """audit configs, network tests, ..."""
+    pass
+
+
 @cli.group("build")
 def clig_build():
-    """build subcommands ..."""
+    """build configs, tests, ..."""
     loader.import_networks()
 
 
@@ -49,7 +55,7 @@ def clig_config():
 
 @cli.group(name="design")
 def clig_design():
-    """design subcommands ..."""
+    """design report, ..."""
     loader.import_networks()
 
 
