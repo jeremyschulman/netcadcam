@@ -17,7 +17,7 @@ import toml
 
 from netcad.config import netcad_globals
 from netcad.config.envvars import Environment
-from netcad.defaults import DEFAULT_NETCAD_CONFIG_FILE
+from netcad import defaults as d
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -42,25 +42,35 @@ def init():
     # file. by default this is "netcad.toml" in the $CWD.
 
     config_filepath = environ.setdefault(
-        Environment.NETCAD_CONFIGFILE, DEFAULT_NETCAD_CONFIG_FILE
+        Environment.NETCAD_CONFIGFILE, d.DEFAULT_NETCAD_CONFIG_FILE
     )
     config_filepath = Path(config_filepath).absolute()
     environ[Environment.NETCAD_CONFIGFILE] = str(config_filepath)
 
     netcad_globals.g_config = toml.load(config_filepath.open())
 
-    # The NETCAD_PROJECTDIR, by default is the parent of the config-file.
+    # NETCAD_PROJECTDIR, by default is the parent of the config-file.
 
-    project_dir = Path(
+    project_dir = netcad_globals.g_netcad_project_dir = Path(
         environ.setdefault(
             Environment.NETCAD_PROJECTDIR, str(config_filepath.parent.absolute())
         )
     )
 
-    netcad_globals.g_netcad_project_dir = project_dir
+    # NETCAD_TESTCASESDIR
 
-    # The NETCAD_CACHDIR, by default is ".netcad" located in the NETCAD_PROJDIR.
+    netcad_globals.g_netcad_testcases_dir = Path(
+        environ.setdefault(
+            Environment.NETCAD_TESTCASESDIR,
+            str(project_dir.joinpath(d.DEFAULT_NETCAD_TESTCASESDIR).absolute()),
+        )
+    )
 
-    environ.setdefault(
-        Environment.NETCAD_CACHEDIR, str(project_dir.joinpath(".netcad").absolute())
+    # NETCAD_CACHDIR
+
+    netcad_globals.g_netcad_cache_dir = Path(
+        environ.setdefault(
+            Environment.NETCAD_CACHEDIR,
+            str(project_dir.joinpath(d.DEFAULT_NETCAD_CACHEDIR).absolute()),
+        )
     )

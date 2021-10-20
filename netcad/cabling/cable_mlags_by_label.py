@@ -1,7 +1,7 @@
 from typing import Optional
 
 from netcad.device import DeviceInterface
-from netcad.device_group_mlag import DeviceGroupMLagPair
+from netcad.device.device_group_mlag import DeviceGroupMLagPair
 
 from .cable_plan import CablePlanner
 
