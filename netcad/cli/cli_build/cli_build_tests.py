@@ -32,22 +32,22 @@ def cli_build_tests(
     devices: Tuple[str], networks: Tuple[str], configs_dir: Path, output_console: bool
 ):
     """
-        Build device test cases to audit live network
-    \n\b
-        This command generates the device audit test cases.  These are collections
-        of JSON files that indicate each of the specific tests that will be run
-        against the live network.  The command to execute these tests is
-        `netcad audit device` or `netcad audit network`.
+    Build device test cases to audit live network
 
+    This command generates the device audit test cases.  These are collections
+    of JSON files that indicate each of the specific tests that will be run
+    against the live network.  The command to execute these tests is `netcad
+    audit device` or `netcad audit network`.
     \f
-        Parameters
-        ----------
-        devices
-        networks
-        configs_dir
-        output_console
 
-        Returns
-        -------
+    Parameters
+    ----------
+    devices
+    networks
+    configs_dir
+    output_console
 
+    Returns
+    -------
     """
+    pass

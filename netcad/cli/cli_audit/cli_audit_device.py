@@ -32,16 +32,16 @@ from netcad.cli.common_opts import opt_devices, opt_network
 )
 def cli_audit_device(devices: Tuple[str], networks: Tuple[str], tests_dir: Path):
     """
-        Execute device tests on live network
-    \n\b
-        This command will use the device test cases to validate the running state
-        compared to the expected states defined by the tests.
+    Execute device tests on live network
+
+    This command will use the device test cases to validate the running state
+    compared to the expected states defined by the tests.
 
     \f
-        Parameters
-        ----------
-        devices
-        networks
-        tests_dir
+    Parameters
+    ----------
+    devices
+    networks
+    tests_dir
     """
     pass
