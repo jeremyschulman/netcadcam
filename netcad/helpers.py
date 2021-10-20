@@ -22,28 +22,47 @@ class StrEnum(str, Enum):
 
 
 def range_string(numbers: List[int]) -> str:
-    """
-    Given a *sorted* list of numbers (VLAN-IDs), return a string that
-    converts consecuitve numbers into comma separated ranges.  For example:
-        [1,2,3,4,5,7,10,11,12] -> "1-5,7,10-12"
 
-    Parameters
-    ----------
-    numbers: List[int]
-        The *sorted* list of vlan ID numbers.
+    # if the list is empty, return an empty string
+    if not len(numbers):
+        return ""
 
-    Returns
-    -------
-    The string as described.
-    """
+    values = list()
+    for _, members in groupby(enumerate(numbers), key=lambda ele: ele[0] - ele[1]):
+        *start, (_, last) = members
+        if not start:
+            values.append(str(last))
+        else:
+            sep = "," if len(start) == 1 else "-"
+            values.append(f"{start[0][1]}{sep}{last}")
 
-    range_strings = list()
+    return ",".join(values)
 
-    for _, num_gen in groupby(enumerate(numbers), key=lambda x: x[0] - x[1]):
-        num_list = tuple(num_gen)
-        first, last = num_list[0], num_list[-1]
-        range_strings.append(
-            str(first[1]) if first is last else f"{first[1]}-{last[1]}"
-        )
 
-    return ",".join(range_strings)
+# TODO: remove, depreciated in favor of above ^
+# def range_string(numbers: List[int]) -> str:
+#     """
+#     Given a *sorted* list of numbers (VLAN-IDs), return a string that
+#     converts consecuitve numbers into comma separated ranges.  For example:
+#         [1,2,3,4,5,7,10,11,12] -> "1-5,7,10-12"
+#
+#     Parameters
+#     ----------
+#     numbers: List[int]
+#         The *sorted* list of vlan ID numbers.
+#
+#     Returns
+#     -------
+#     The string as described.
+#     """
+#
+#     range_strings = list()
+#
+#     for _, num_gen in groupby(enumerate(numbers), key=lambda x: x[0] - x[1]):
+#         num_list = tuple(num_gen)
+#         first, last = num_list[0], num_list[-1]
+#         range_strings.append(
+#             str(first[1]) if first is last else f"{first[1]}-{last[1]}"
+#         )
+#
+#     return ",".join(range_strings)
