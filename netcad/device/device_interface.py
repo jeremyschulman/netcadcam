@@ -6,7 +6,7 @@ from typing import Optional, TYPE_CHECKING
 import re
 
 if TYPE_CHECKING:
-    from netcad.interface_profile import InterfaceProfile
+    from netcad.device.interface_profile import InterfaceProfile
 
 # -----------------------------------------------------------------------------
 # Exports

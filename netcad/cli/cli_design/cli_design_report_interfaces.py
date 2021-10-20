@@ -16,8 +16,7 @@ from rich.table import Table
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.device import Device
-from netcad import interface_profile as ip
+from netcad.device import Device, interface_profile as ip
 
 # CLI specific imports
 

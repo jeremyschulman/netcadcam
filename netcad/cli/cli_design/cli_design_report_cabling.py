@@ -18,7 +18,7 @@ from rich.console import Console
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device, DeviceInterface
-from netcad.interface_profile import InterfaceVirtual
+from netcad.device.interface_profile import InterfaceVirtual
 from netcad.cabling.cable_plan import CablePlanner
 
 from netcad.cli.main import clig_design_report

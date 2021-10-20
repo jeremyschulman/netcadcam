@@ -19,7 +19,7 @@ import jinja2
 
 from netcad.port_profile import PortProfile
 from netcad import vlan_profile as vp
-from netcad.device_interface import DeviceInterface
+from netcad.device.device_interface import DeviceInterface
 from netcad.vlan_profile import VlanProfile
 
 
