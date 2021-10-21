@@ -2,7 +2,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import List, Optional
+from typing import List, Optional, Any
 from pathlib import Path
 import json
 
@@ -39,3 +39,7 @@ class TestCases(BaseModel):
     async def load(cls, testcase_dir: Path, service: str):
         async with aiofiles.open(cls.filepath(testcase_dir, service)) as infile:
             return parse_obj_as(cls, json.loads(await infile.read()))
+
+    @classmethod
+    def build(cls, obj: Any) -> "TestCases":
+        raise NotImplementedError()

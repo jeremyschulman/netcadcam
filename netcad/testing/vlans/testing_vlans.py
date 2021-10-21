@@ -2,8 +2,8 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import List
-
+from typing import List, Optional
+from collections import defaultdict
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -24,7 +24,6 @@ from netcad.vlan import VlanProfile
 # -----------------------------------------------------------------------------
 
 __all__ = [
-    "build_vlan_tests",
     "VlanTestCase",
     "VlanTestParams",
     "VlanTestExpectations",
@@ -57,26 +56,37 @@ class VlanTestCase(TestCase):
 
 
 class VlanTestCases(TestCases):
-    tests: List[VlanTestCase]
+    service = "vlans"
+    tests: Optional[List[VlanTestCase]]
 
+    @classmethod
+    def build(cls, device: Device) -> "VlanTestCases":
 
-def build_vlan_tests(device: Device) -> VlanTestCases:
+        # vlans = device.vlans()
+        vlan_interfaces = defaultdict(list)
 
-    vlans = device.vlans()
+        for if_name, interface in device.interfaces.items():
+            if not interface.profile:
+                continue
 
-    test_cases = TestCases(service="vlans")
-    test_cases.tests.extend(
-        [
-            TestCase(
-                test_case="vlan-exists",
-                device=device.name,
-                test_params=VlanTestParams(vlan_id=each_vlan.vlan_id),
-                expected_results=VlanTestExpectations(
-                    vlan=each_vlan, interfaces=["one", "two"]
-                ),
-            )
-            for each_vlan in vlans
-        ]
-    )
+            if not (vlans_used := getattr(interface.profile, "vlans_used", None)):
+                continue
 
-    return test_cases
+            for vlan in vlans_used():
+                vlan_interfaces[vlan].append(if_name)
+
+        test_cases = VlanTestCases(
+            tests=[
+                VlanTestCase(
+                    test_case="vlan-exists",
+                    device=device.name,
+                    test_params=VlanTestParams(vlan_id=vlan_p.vlan_id),
+                    expected_results=VlanTestExpectations(
+                        vlan=vlan_p, interfaces=if_names
+                    ),
+                )
+                for vlan_p, if_names in vlan_interfaces.items()
+            ]
+        )
+
+        return test_cases

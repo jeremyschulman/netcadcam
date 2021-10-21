@@ -2,26 +2,30 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional, List, Set, Type, Sequence, Union
-from itertools import chain
+from typing import Optional, Union
 from pathlib import Path
-from ipaddress import IPv4Address
 
 # -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
 
+import jinja2
 
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
-import jinja2
 
 from netcad.device.port_profile import PortProfile
-from netcad.vlan import vlan_profile as vp
 from netcad.device.device_interface import DeviceInterface
-from netcad.vlan.vlan_profile import VlanProfile
 
+# -----------------------------------------------------------------------------
+# Exports
+# -----------------------------------------------------------------------------
+
+__all__ = [
+    "InterfaceProfile",
+    "InterfaceVirtual",
+]
 
 # -----------------------------------------------------------------------------
 #
@@ -78,104 +82,11 @@ class InterfaceProfile(object):
         return self.__class__.__name__
 
 
-# -----------------------------------------------------------------------------
-#
-#                       Layer-2 (VLAN) Interface Profiles
-#
-# -----------------------------------------------------------------------------
-
-
-class InterfaceL2(InterfaceProfile):
-    def vlans_used(self) -> Set[vp.VlanProfile]:
-        raise NotImplementedError()
-
-
-class InterfaceL2Access(InterfaceL2):
-    vlan: vp.VlanProfile
-
-    def vlans_used(self) -> Set[vp.VlanProfile]:
-        return {self.vlan}
-
-
-class InterfaceL2Trunk(InterfaceL2):
-    native_vlan: Optional[vp.VlanProfile]
-    vlans: List[vp.VlanProfile]
-
-    def vlans_used(self) -> Set[vp.VlanProfile]:
-        return set(
-            filter(None, chain([getattr(self, "native_vlan", None)], self.vlans))
-        )
-
-
-# -----------------------------------------------------------------------------
-#
-#                Link Aggregation / Port-Channel Interface Profiles
-#
-# -----------------------------------------------------------------------------
-
-
 class InterfaceVirtual(InterfaceProfile):
+    """
+    Mixin to denote that the interface is virtual / logical rather
+    than a physical port.  Examples of virtual interfaces inlucde
+    VLAN interfaces (SVIs) and Loopbacks.
+    """
+
     is_virtual = True
-
-
-class InterfaceLagMember(InterfaceProfile):
-    def __init__(self, if_lag_parent_profile: InterfaceProfile, **kwargs):
-        super(InterfaceLagMember, self).__init__(**kwargs)
-        self.if_lag_parent_profile = if_lag_parent_profile
-        self.if_parent = kwargs.get("if_parent")
-
-
-class InterfaceLag(InterfaceVirtual):
-    if_lag_member_profile: Optional[Type[InterfaceLagMember]] = InterfaceLagMember
-    if_lag_members: List[DeviceInterface] = list()
-
-    def __init__(
-        self,
-        if_parent: Optional[DeviceInterface] = None,
-        if_members: Optional[Sequence[DeviceInterface]] = None,
-        **kwargs,
-    ):
-        super(InterfaceLag, self).__init__(**kwargs)
-        self._if_parent: Optional[DeviceInterface] = None
-
-        if if_parent:
-            self.set_lag_parent(if_parent)
-
-        if if_members:
-            self.add_lag_members(*if_members)
-
-    @property
-    def lag_number(self):
-        return self._if_parent.port_numbers[0]
-
-    def add_lag_members(self, *if_members: DeviceInterface):
-        for if_member in if_members:
-            if_member.profile = self.if_lag_member_profile(if_lag_parent_profile=self)
-            if_member.profile.if_parent = self.if_parent
-            self.if_lag_members.append(if_member)
-
-    def set_lag_parent(self, if_parent: DeviceInterface):
-        self._if_parent = if_parent
-        self._if_parent.profile = self
-
-    @property
-    def if_parent(self):
-        return self._if_parent
-
-
-# -----------------------------------------------------------------------------
-#
-#                        Interface Profiles for VLANs
-#
-# -----------------------------------------------------------------------------
-
-
-class InterfaceVlan(InterfaceVirtual):
-    vlan: VlanProfile
-
-    def __init__(self, ipaddress: Optional[IPv4Address] = None, **params):
-        super(InterfaceVlan, self).__init__(**params)
-        self.ipaddress = ipaddress
-
-    def vlans_used(self) -> Set[vp.VlanProfile]:
-        return {self.vlan}
