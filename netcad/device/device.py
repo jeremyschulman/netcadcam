@@ -2,7 +2,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Dict, Optional, TypeVar, List, TYPE_CHECKING
+from typing import Dict, Optional, TypeVar, List, TYPE_CHECKING, Set
 import os
 from collections import defaultdict
 from operator import attrgetter
@@ -20,7 +20,6 @@ import jinja2
 # -----------------------------------------------------------------------------
 
 from netcad.device.device_interface import DeviceInterface
-from netcad.vlan import SENTIAL_ALL_VLANS
 from netcad.registry import Registry
 from netcad.config.cache import cache_load_device_type
 from netcad.config import Environment
@@ -188,26 +187,18 @@ class Device(Registry):
     def vlans(self) -> List["VlanProfile"]:
         """return the set of VlanProfile instances used by this device"""
 
-        vlans = set()
-
-        # TODO: move this to a function; so that it can be called
-        #       by the Jinja2 enviornment.
+        all_vlans: Set[VlanProfile] = set()
 
         for if_name, iface in self.interfaces.items():
-            if not (if_prof := getattr(iface, "profile", None)):
+            if not iface.profile:
                 continue
 
-            if not (vlans_used := getattr(if_prof, "vlans_used", None)):
+            if not (vlans_used := getattr(iface.profile, "vlans_used", None)):
                 continue
 
-            used = vlans_used()
+            all_vlans.update(vlans_used())
 
-            if SENTIAL_ALL_VLANS in used:
-                used.remove(SENTIAL_ALL_VLANS)
-
-            vlans.update(used)
-
-        return sorted(vlans, key=attrgetter("vlan_id"))
+        return sorted(all_vlans, key=attrgetter("vlan_id"))
 
     @classmethod
     def init_interfaces(cls):
