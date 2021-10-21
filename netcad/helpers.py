@@ -7,10 +7,16 @@ from itertools import groupby
 from enum import Enum
 
 # -----------------------------------------------------------------------------
+# Public Imports
+# -----------------------------------------------------------------------------
+
+from pydantic import BaseModel
+
+# -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["range_string", "StrEnum"]
+__all__ = ["range_string", "StrEnum", "HashableModel"]
 
 # -----------------------------------------------------------------------------
 #
@@ -52,3 +58,18 @@ def range_string(numbers: List[int]) -> str:
             values.append(f"{start[0][1]}{sep}{last}")
 
     return ",".join(values)
+
+
+class HashableModel(BaseModel):
+    """
+    A pydantic quali-basemodel that allows for hashing.  This allows specific
+    instances to be used as keys in dictionaries, added to sets, and other
+    hashable applications.
+
+    References
+    ----------
+    https://github.com/samuelcolvin/pydantic/issues/1303
+    """
+
+    def __hash__(self):
+        return hash((type(self),) + tuple(self.__dict__.values()))
