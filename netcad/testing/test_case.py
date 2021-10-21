@@ -1,7 +1,23 @@
+# -----------------------------------------------------------------------------
+# Public Imports
+# -----------------------------------------------------------------------------
+
 from pydantic import BaseModel
 
-# disabling pycharm inspections because: https://youtrack.jetbrains.com/issue/PY-16760)
+# -----------------------------------------------------------------------------
+# Exports
+# -----------------------------------------------------------------------------
 
+__all__ = ["TestCase"]
+
+# -----------------------------------------------------------------------------
+#
+#                                 CODE BEGINS
+#
+# -----------------------------------------------------------------------------
+
+
+# disabling pycharm inspections because: https://youtrack.jetbrains.com/issue/PY-16760)
 
 # noinspection PyUnresolvedReferences
 class TestCase(BaseModel):
@@ -32,5 +48,9 @@ class TestCase(BaseModel):
     expected_results: BaseModel
 
     def test_case_id(self) -> str:
-        """Returns a humaized string form to identify the test case"""
+        """
+        Returns a humaized string form to identify the test case.  This value
+        will be used in testing reports and testing engines that may need an ID
+        like value.  pytest comest to mind.
+        """
         raise NotImplementedError()
