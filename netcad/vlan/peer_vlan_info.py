@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from netcad.device import DeviceInterface
 
-from .vlan_all import SENTIAL_ALL_VLANS
+# from .vlan_all import SENTIAL_ALL_VLANS
 
 # declare a mechanism to indicate that that the profile is using the same value
 # as the peer interface.  We will use a technique called a Python descriptor to
@@ -36,7 +36,9 @@ class VlanProfileFromPeer:
                 f"on peer interface porfile: {if_peer.device_ifname}"
             )
 
-        if isinstance(vlan_prof_attr, list) and SENTIAL_ALL_VLANS in vlan_prof_attr:
-            return if_peer.device.vlans()
+        # TODO: moving to descriptor approach, the val_prof_attr "getter" should
+        #       do the right thing here. :fingerscrossed:
+        # if isinstance(vlan_prof_attr, list) and SENTIAL_ALL_VLANS in vlan_prof_attr:
+        #     return if_peer.device.vlans()
 
         return vlan_prof_attr
