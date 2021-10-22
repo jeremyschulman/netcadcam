@@ -15,14 +15,13 @@ import click
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.cabling import CablePlanner
-from netcad.device import Device
 from netcad.jinja2.env import get_env
 from netcad.logger import get_logger
 from netcad.config import Environment
 from netcad.cli.main import clig_build
 
 from netcad.cli.common_opts import opt_devices, opt_network
+from netcad.cli import device_inventory
 
 # -----------------------------------------------------------------------------
 # Exports (none)
@@ -62,32 +61,20 @@ def cli_render(
     device_objs = set()
 
     if devices:
-        for each_name in devices:
-            if not (dev_obj := Device.registry_get(name=each_name)):
-                log.error(f"Device not found: {each_name}")
-                return
-
-            device_objs.add(dev_obj)
+        device_objs.update(device_inventory.get_devices(devices))
 
     if networks:
-        for each_network in networks:
-            cabler: CablePlanner
-
-            if not (cabler := CablePlanner.registry_get(name=each_network)):
-                log.error(f"Network not found: {each_network}")
-                return
-
-            if not cabler.devices:
-                log.error(f"No devices found in network: {each_network}")
-                return
-
-            device_objs.update(cabler.devices)
+        device_objs.update(device_inventory.get_network_devices(networks))
 
     # Filter out any device that is not a "real" device for configuration
     # purposes. for example the device representing an MLAG redundant pair. Then
     # sort the devices based on their sorting mechanism.
 
-    device_objs = sorted(filter(lambda d: not hasattr(d, "no_config"), device_objs))
+    if not (device_objs := sorted((dev for dev in device_objs if not dev.is_pseudo))):
+        log.error("No devices for config building")
+        return
+
+    log.info(f"Building {len(device_objs)} device configurations.")
 
     # Find all of the template directories walking down the $NETCAD_PROJECTDIR.
     # Reverse this list so that the "nearest" template directory is used first;

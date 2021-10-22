@@ -256,6 +256,33 @@ class Device(Registry):
     #
     # -------------------------------------------------------------------------
 
+    def __getattr__(self, item):
+        """
+        Impement a mechanism that allows a Caller to check for the existance of
+        an attribute that has the form "is_xxxx".  For example:
+
+            if device.is_pseudo:
+                ...
+
+        Would safely check if the device instance has the attribute. This
+        mechanism allows for a syntatic sugar usage so that the caller does not
+        need to do hasattr(device, "is_pseudo").
+
+        Parameters
+        ----------
+        item: str
+            The attribute name the Caller is referencing.
+
+        Returns
+        -------
+        bool - True when the instance has the attribute, False otherwise
+        """
+
+        if item.startswith("is_"):
+            return False
+
+        raise AttributeError(item)
+
     def __lt__(self, other):
         """
         For Device sortability purposes implement the less-than comparitor.  Subclasses
