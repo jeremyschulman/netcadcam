@@ -87,7 +87,7 @@ class Registry(object):
 
         Returns
         -------
-        Set of the registered names.
+        Dictionary of registered items.
         """
         if not subclasses:
             return cls.__registry

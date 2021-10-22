@@ -36,8 +36,14 @@ class TestCases(BaseModel):
             await ofile.write(json.dumps(self.dict(), indent=3))
 
     @classmethod
-    async def load(cls, testcase_dir: Path, service: str):
-        async with aiofiles.open(cls.filepath(testcase_dir, service)) as infile:
+    def get_service_name(cls):
+        return cls.__dict__["__fields__"]["service"].default
+
+    @classmethod
+    async def load(cls, testcase_dir: Path):
+        async with aiofiles.open(
+            cls.filepath(testcase_dir, cls.get_service_name())
+        ) as infile:
             return parse_obj_as(cls, json.loads(await infile.read()))
 
     @classmethod

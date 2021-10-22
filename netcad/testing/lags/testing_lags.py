@@ -15,9 +15,11 @@ from pydantic import BaseModel
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.device import Device
+from netcad.device import Device, DeviceInterface
 from netcad.testing import TestCases, TestCase
 from netcad.device import InterfaceLag
+
+from netcad.testing import testing_service
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -49,6 +51,7 @@ class LagTestCase(TestCase):
         return str(self.test_params.if_name)
 
 
+@testing_service
 class LagTestCases(TestCases):
     service = "lags"
     tests: Optional[List[LagTestCase]]
@@ -61,6 +64,7 @@ class LagTestCases(TestCases):
         for if_name, interface in device.interfaces.iter_used():
             if not isinstance(interface.profile, InterfaceLag):
                 continue
+
             if_lag = interface.profile.lag_parent
             lag_interfaces[if_lag.name].extend(
                 iface.name for iface in interface.profile.if_lag_members
@@ -83,4 +87,6 @@ class LagTestCases(TestCases):
             ]
         )
 
+        # return the test cases sorted by the lag interface name
+        test_cases.tests.sort(key=lambda tc: DeviceInterface(tc.test_params.if_name))
         return test_cases
