@@ -26,6 +26,23 @@ __all__ = ["get_devices", "get_network_devices"]
 
 
 def get_devices(devices: Sequence[str]) -> Set[Device]:
+    """
+    Returns a set of Device objects corresponding to the list of
+    hostnames provided.
+
+    Parameters
+    ----------
+    devices: sequence[str]
+        Set or list of strings
+
+    Returns
+    -------
+    Set[Devices]
+
+    Raises
+    ------
+    RuntimeError if any given device does not exist in the netcad inventory.
+    """
     device_objs = set()
 
     for each_name in devices:
@@ -38,6 +55,24 @@ def get_devices(devices: Sequence[str]) -> Set[Device]:
 
 
 def get_network_devices(networks: Sequence[str]) -> Set[Device]:
+    """
+    Returns a set of Device objects that are members in any of the provided
+    networks.
+
+    Parameters
+    ----------
+    networks: sequence[str]
+        Set or list of strings
+
+    Returns
+    -------
+    Set[Devices]
+
+    Raises
+    ------
+    RuntimeError if any given device does not exist in the netcad inventory.
+    """
+
     device_objs = set()
 
     for each_network in networks:
