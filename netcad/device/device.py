@@ -150,18 +150,6 @@ class Device(Registry):
 
         return env.get_template(str(as_path))
 
-    def sorted_interfaces(self) -> List[DeviceInterface]:
-        """
-        Returns a list of interface instances sorted using a
-        Returns
-        -------
-
-        """
-        # TODO: change this to sorted(self.interfaces) and test.
-        return sorted(
-            self.interfaces.values(), key=lambda i: (i.name[0:2], *i.port_numbers)
-        )
-
     def vlans(self) -> List["VlanProfile"]:
         """return the set of VlanProfile instances used by this device"""
 
