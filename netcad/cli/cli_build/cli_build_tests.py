@@ -43,9 +43,15 @@ AvailableTestCases = Dict[str, TestCases]
 
 
 async def build_device_tests(
-    device: Device, available_test_cases: AvailableTestCases, log: Logger
+    device: Device, available_test_cases: AvailableTestCases, tc_dir: Path, log: Logger
 ):
     log.info(f"Building tests for device: {device.name}")
+    dev_tc_dir = tc_dir.joinpath(device.name)
+    dev_tc_dir.mkdir(exist_ok=True)
+
+    for service_name, testing_service in available_test_cases.items():
+        test_cases = testing_service.build(device)
+        await test_cases.save(dev_tc_dir)
 
 
 @clig_build.command(name="tests")
@@ -101,7 +107,10 @@ def cli_build_tests(devices: Tuple[str], networks: Tuple[str], tests_dir: Path):
         tasks = [
             asyncio.create_task(
                 build_device_tests(
-                    device=device, available_test_cases=available_test_cases, log=log
+                    device=device,
+                    available_test_cases=available_test_cases,
+                    tc_dir=tests_dir,
+                    log=log,
                 )
             )
             for device in device_objs
