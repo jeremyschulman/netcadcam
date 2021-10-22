@@ -14,7 +14,8 @@ from importlib import import_module
 from netcad.origin import Origin
 from netcad.logger import get_logger
 from netcad.cli.main import clig_get
-from netcad.config import netcad_globals, loader, Environment
+from netcad.config import netcad_globals, Environment
+from netcad.init import loader
 from netcad.device import Device
 
 

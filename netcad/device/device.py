@@ -72,28 +72,6 @@ class Device(Registry):
 
     template: Optional[PathLike] = None
 
-    def __init_subclass__(cls, **kwargs):
-        """
-        Upon Device sub-class definition create a unique set of interface
-        definitions.  This step ensures that sub-classes do not *step on each
-        other* when declaring interface definitions at the class level.  Each
-        Device _instance_ will get a deepcopy of these interfaces so that they
-        can make one-off adjustments to the device standard.
-        """
-        Registry.__init_subclass__()
-        cls.interfaces = DeviceInterfaces(DeviceInterface)
-        cls.interfaces.device_cls = cls
-
-        # configure the state of the interfaces by default to unused. this
-        # settings will be determined by the `init_interfaces()` class method.
-        # By default, will set interfaces to unused. This behavior could be
-        # changed by the sublcass.
-
-        if getattr(cls, "product_model", None) and not os.getenv(
-            Environment.NETCAD_NOVALIDATE
-        ):
-            cls.init_interfaces()
-
     def __init__(self, name: str, **kwargs):
         """
         Device initialization creates a specific device instance for the given
@@ -198,6 +176,52 @@ class Device(Registry):
             all_vlans.update(vlans_used())
 
         return sorted(all_vlans, key=attrgetter("vlan_id"))
+
+    # noinspection PyMethodMayBeStatic
+    def testing_services(self) -> List[str]:
+        """
+        This function returs the list of TestCases service names that will be
+        used for creating the device's network state audits.  The Device base
+        class will always return the following (and showing their associated
+        TestCases class for reference).
+
+           * "interfaces" -> InterfaceTeestCases
+           * "vlans" -> VlanTestCases
+           * "lags" -> LagTestCases
+
+        Returns
+        -------
+        List[str] as described.
+        """
+        return ["vlans", "lags"]
+
+    # -------------------------------------------------------------------------
+    #
+    #                            Class Methods
+    #
+    # -------------------------------------------------------------------------
+
+    def __init_subclass__(cls, **kwargs):
+        """
+        Upon Device sub-class definition create a unique set of interface
+        definitions.  This step ensures that sub-classes do not *step on each
+        other* when declaring interface definitions at the class level.  Each
+        Device _instance_ will get a deepcopy of these interfaces so that they
+        can make one-off adjustments to the device standard.
+        """
+        Registry.__init_subclass__()
+        cls.interfaces = DeviceInterfaces(DeviceInterface)
+        cls.interfaces.device_cls = cls
+
+        # configure the state of the interfaces by default to unused. this
+        # settings will be determined by the `init_interfaces()` class method.
+        # By default, will set interfaces to unused. This behavior could be
+        # changed by the sublcass.
+
+        if getattr(cls, "product_model", None) and not os.getenv(
+            Environment.NETCAD_NOVALIDATE
+        ):
+            cls.init_interfaces()
 
     @classmethod
     def init_interfaces(cls):

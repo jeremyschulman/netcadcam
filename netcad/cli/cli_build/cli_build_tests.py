@@ -24,6 +24,7 @@ from netcad.testing import TestingServices, TestCases
 
 from netcad.cli.main import clig_build
 from netcad.cli.common_opts import opt_devices, opt_network
+from netcad.cli import device_inventory
 
 # -----------------------------------------------------------------------------
 # Exports (none)
@@ -49,9 +50,14 @@ async def build_device_tests(
     dev_tc_dir = tc_dir.joinpath(device.name)
     dev_tc_dir.mkdir(exist_ok=True)
 
-    for service_name, testing_service in available_test_cases.items():
+    for service_name in device.testing_services():
+        testing_service = available_test_cases.get(service_name)
         test_cases = testing_service.build(device)
         await test_cases.save(dev_tc_dir)
+
+    # for service_name, testing_service in available_test_cases.items():
+    #     test_cases = testing_service.build(device)
+    #     await test_cases.save(dev_tc_dir)
 
 
 @clig_build.command(name="tests")
@@ -90,12 +96,10 @@ def cli_build_tests(devices: Tuple[str], networks: Tuple[str], tests_dir: Path):
     device_objs = set()
 
     if devices:
-        for each_name in devices:
-            if not (dev_obj := Device.registry_get(name=each_name)):
-                log.error(f"Device not found: {each_name}")
-                return
+        device_objs.update(device_inventory.get_devices(devices))
 
-            device_objs.add(dev_obj)
+    if networks:
+        device_objs.update(device_inventory.get_network_devices(networks))
 
     device_objs = list(device_objs)
     device_objs.sort()
