@@ -101,10 +101,10 @@ def cli_build_tests(devices: Tuple[str], networks: Tuple[str], tests_dir: Path):
     if networks:
         device_objs.update(device_inventory.get_network_devices(networks))
 
-    device_objs = list(device_objs)
+    device_objs = [dev for dev in device_objs if not hasattr(dev, "is_group")]
     device_objs.sort()
 
-    log.info(f"Building device audits for {len(devices)} devices")
+    log.info(f"Building device audits for {len(device_objs)} devices")
     available_test_cases = TestingServices.registry_items()
 
     async def run():

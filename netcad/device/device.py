@@ -1,6 +1,7 @@
 # -----------------------------------------------------------------------------
 # System Imports
 # -----------------------------------------------------------------------------
+
 from typing import Dict, Optional, TypeVar, List, TYPE_CHECKING, Set
 import os
 from operator import attrgetter
@@ -193,7 +194,7 @@ class Device(Registry):
         -------
         List[str] as described.
         """
-        return ["vlans", "lags"]
+        return ["interfaces", "vlans", "lags"]
 
     # -------------------------------------------------------------------------
     #

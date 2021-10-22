@@ -1,10 +1,31 @@
-from typing import List, Set, Sequence
+# -----------------------------------------------------------------------------
+# System Imports
+# -----------------------------------------------------------------------------
+
+from typing import Set, Sequence
+
+# -----------------------------------------------------------------------------
+# Private Imports
+# -----------------------------------------------------------------------------
 
 from netcad.device import Device
 from netcad.cabling import CablePlanner
 
+# -----------------------------------------------------------------------------
+# Exports
+# -----------------------------------------------------------------------------
 
-def get_devices(devices: Sequence[str]) -> List[Device]:
+__all__ = ["get_devices", "get_network_devices"]
+
+
+# -----------------------------------------------------------------------------
+#
+#                                 CODE BEGINS
+#
+# -----------------------------------------------------------------------------
+
+
+def get_devices(devices: Sequence[str]) -> Set[Device]:
     device_objs = set()
 
     for each_name in devices:
