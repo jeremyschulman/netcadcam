@@ -35,7 +35,10 @@ _re_short_name = re.compile(r"(\D\D)\D+(\d.*)")
 class DeviceInterface(object):
     """
     DeviceInterface models the properties of a network device interface as it is
-    used in a design.
+    used in a design.  A DeviceInterface exists for each interface in the
+    device-type specification.  For example "Ethernet1" is an interface name for
+    a DeviceInterface.  "Port-Channel5" could also be a DeviceInterface, even
+    though it is not a physical interface.
 
     Attributes
     ----------
@@ -47,7 +50,6 @@ class DeviceInterface(object):
         two letters, followed by the numberical portion. An interface name
         "Ethernet50/1" would have a short_name "Et50/1".
 
-
     port_numbers: Tuple[Int]
         A tuple of only the numbers in the interface name. These are useful for
         numerical sorting purpose. An interface with name "GigabitEtherent1/0/2"
@@ -58,6 +60,11 @@ class DeviceInterface(object):
         value in the tuple is the first two characters of the name.  The
         remaning values are the port_numbers.  An interface name "Ethernet49"
         would have a sort_key ("et", 49), for example.
+
+    cable_id: str
+        A name that unqiuely identifies a cable within a cabling plan.  The
+        cabling plan will "match-up" interfaces that have the same cable_id to
+        create both physical and logical "cable_peer" relationships.
 
     cable_peer: DeviceInterface
         The instance of the device-interface on the far end of a cable
@@ -76,6 +83,7 @@ class DeviceInterface(object):
         profile: Optional["InterfaceProfile"] = None,
         enabled: Optional[bool] = False,  # interfaces are disabled by deafult
         desc: Optional[str] = "",
+        cable_id: Optional[str] = None,
         label: Optional[str] = None,
         interfaces=None,
     ):
@@ -84,10 +92,10 @@ class DeviceInterface(object):
         self.short_name = "".join(_re_short_name.match(name).groups())
         self.sort_key = (self.name[0:2].lower(), *self.port_numbers)
         self._profile = None
-        # self.used = used
         self.enabled = enabled
-        self._desc = desc
         self.label = label
+        self._desc = desc
+        self.cable_id = cable_id
         self.profile = profile
         self.cable_peer: Optional[DeviceInterface] = None
         self.interfaces = interfaces
