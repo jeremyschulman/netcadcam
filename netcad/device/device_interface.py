@@ -2,8 +2,11 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, Generator
+from typing import TYPE_CHECKING
+
 import re
+from collections import defaultdict
 
 if TYPE_CHECKING:
     from netcad.device.interface_profile import InterfaceProfile
@@ -12,7 +15,7 @@ if TYPE_CHECKING:
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["DeviceInterface"]
+__all__ = ["DeviceInterface", "DeviceInterfaces"]
 
 # -----------------------------------------------------------------------------
 #
@@ -31,6 +34,8 @@ _re_short_name = re.compile(r"(\D\D)\D+(\d.*)")
 
 class DeviceInterface(object):
     """
+    DeviceInterface models the properties of a network device interface as it is
+    used in a design.
 
     Attributes
     ----------
@@ -42,9 +47,6 @@ class DeviceInterface(object):
         two letters, followed by the numberical portion. An interface name
         "Ethernet50/1" would have a short_name "Et50/1".
 
-    used : bool
-        Denotes whether or not the interface should be administratively
-        enabled(True) or disabled(False).
 
     port_numbers: Tuple[Int]
         A tuple of only the numbers in the interface name. These are useful for
@@ -66,15 +68,13 @@ class DeviceInterface(object):
         class definition.  This instance will be assigned when the actual
         interface is instantiated.  This back-reference will then provide access
         to the parent device.  See __repr__ for example usage.
-
-
     """
 
     def __init__(
         self,
         name: str,
         profile: Optional["InterfaceProfile"] = None,
-        used: Optional[bool] = True,
+        enabled: Optional[bool] = False,  # interfaces are disabled by deafult
         desc: Optional[str] = "",
         label: Optional[str] = None,
         interfaces=None,
@@ -84,7 +84,8 @@ class DeviceInterface(object):
         self.short_name = "".join(_re_short_name.match(name).groups())
         self.sort_key = (self.name[0:2].lower(), *self.port_numbers)
         self._profile = None
-        self.used = used
+        # self.used = used
+        self.enabled = enabled
         self._desc = desc
         self.label = label
         self.profile = profile
@@ -93,47 +94,14 @@ class DeviceInterface(object):
 
     # -------------------------------------------------------------------------
     #
-    #                                Properties
+    #                          Properties Read-Only
     #
     # -------------------------------------------------------------------------
 
     @property
-    def desc(self):
-        return self._desc or (self.profile.desc if self.profile else None)
-
-    @desc.setter
-    def desc(self, value):
-        self._desc = value
-
-    @property
-    def profile(self) -> "InterfaceProfile":
-        """
-        The `profile` property is used so that the interface instance can get
-        assigned back into the profile so that there is a bi-directional
-        relationship between the two objects.  This is necessary so references
-        can be such that from a given profile -> interface -> device.
-
-        Returns
-        -------
-        InterfaceProfile
-        """
-        return self._profile
-
-    @profile.setter
-    def profile(self, profile: "InterfaceProfile"):
-        if not profile:
-            self._profile = profile
-            return
-
-        if profile.interface:
-            raise RuntimeError(
-                f"Forbid to assign profile {profile.__class__.__name__} "
-                f"to multiple interfaces: {self.device_ifname}"
-            )
-
-        self._profile = profile
-        self.used = True
-        profile.interface = self
+    def used(self):
+        """An interface is used by the design if it has an assigned profile."""
+        return bool(self.profile)
 
     @property
     def device(self):
@@ -173,6 +141,67 @@ class DeviceInterface(object):
         )
         return f"{device_name}-{ifn_lc}"
 
+    # -------------------------------------------------------------------------
+    #
+    #                          Properties Read-Write
+    #
+    # -------------------------------------------------------------------------
+
+    @property
+    def desc(self):
+        return self._desc or (self.profile.desc if self.profile else None)
+
+    @desc.setter
+    def desc(self, value):
+        self._desc = value
+
+    @property
+    def profile(self) -> "InterfaceProfile":
+        """
+        The `profile` property is used so that the interface instance can get
+        assigned back into the profile so that there is a bi-directional
+        relationship between the two objects.  This is necessary so references
+        can be such that from a given profile -> interface -> device.
+
+        Returns
+        -------
+        InterfaceProfile
+        """
+        return self._profile
+
+    @profile.setter
+    def profile(self, profile: "InterfaceProfile"):
+
+        # when a profile is set to None, then the interface.enabled is set to
+
+        if not profile:
+            self._profile = None
+            self.enabled = False
+            return
+
+        if profile.interface:
+            raise RuntimeError(
+                f"Forbid to assign profile {profile.__class__.__name__} "
+                f"to multiple interfaces: {self.device_ifname}"
+            )
+
+        # when a profile is assigned to an interface, then the enabled attribute
+        # is set to True by default.  A Designer could then set .enabled=False
+        # to indicate that the interface should be configured to be
+        # admin-disabled; but keep the profile so that the interface config
+        # rendering still is peformed.
+
+        self._profile = profile
+        self.enabled = True
+
+        profile.interface = self
+
+    # -------------------------------------------------------------------------
+    #
+    #                               Dunder Overrides
+    #
+    # -------------------------------------------------------------------------
+
     def __repr__(self):
         parent = self.interfaces
         name = (
@@ -191,3 +220,66 @@ class DeviceInterface(object):
 
     def __lt__(self, other: "DeviceInterface"):
         return self.sort_key < other.sort_key
+
+
+class DeviceInterfaces(defaultdict):
+    """
+    The collection of interfaces bound to a Device.  Subclasses a defaultdict so
+    that the Caller can create ad-hoc interfaces that are not originally part of
+    the device-type specification.
+
+    Ad-hoc, for example, could be Port-Channel interfaces or Vlan interfaces
+    (SVI).
+    """
+
+    def __init__(self, default_factory, **kwargs):
+        super(DeviceInterfaces, self).__init__(default_factory, **kwargs)
+        self.device_cls: Optional[DeviceInterface] = None
+        self.device = None
+
+    def __missing__(self, key):
+        # create a new instance of the device interface. add the back-reference
+        # from the specific interface to this collection so that given any
+        # specific interface instance, the Caller can reach back to find the
+        # associated device object.
+
+        self[key] = DeviceInterface(name=key, interfaces=self)
+        return self[key]
+
+    def iter_used(self, exclude_disabled=False) -> Generator:
+        """
+        Return an iterator that allows the Caller to iterate over each of the
+        device interfaces for those that are in use.  The term "in use" means
+        that the interface is used in the design, but does not necessarily mean
+        that the interface is designed to be up.  To iterate over only those
+        interfaces that are in use AND enabled, then set the `exclude_disabled`
+        parameter to True.
+
+        Parameters
+        ----------
+        exclude_disabled: bool, optional
+            When True the iter_used will not include any interfaces that are
+            disabled, even though used, in the design.
+
+        Returns
+        -------
+        ItemsView - a dictioary items iterator
+        """
+        interface: DeviceInterface
+        for if_name, interface in self.items():
+
+            # if there is no profile bound to the interface, then it is not part
+            # of the design; so skip it.
+
+            if not interface.profile:
+                continue
+
+            # if the interface is in the design, but the design indicates to
+            # disable ("shutdown") the interface, then by default include it in
+            # the generator.  If the Caller set `exclude_disabled` to True then
+            # skip it.
+
+            if not interface.enabled and exclude_disabled:
+                continue
+
+            yield if_name, interface
