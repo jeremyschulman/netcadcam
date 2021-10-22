@@ -1,8 +1,7 @@
 import click
 
 from netcad import __version__
-from netcad.init import init
-from netcad.config import loader
+from netcad.init import init, loader
 
 
 @click.group()

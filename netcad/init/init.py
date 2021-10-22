@@ -16,8 +16,9 @@ import toml
 # -----------------------------------------------------------------------------
 
 from netcad.config import netcad_globals
-from netcad.config.envvars import Environment
+from netcad.config import Environment
 from netcad import defaults as d
+from netcad.testing import init_import_testing_services
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -74,3 +75,5 @@ def init():
             str(project_dir.joinpath(d.DEFAULT_NETCAD_CACHEDIR).absolute()),
         )
     )
+
+    init_import_testing_services.on_init()

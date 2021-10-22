@@ -18,6 +18,7 @@ from pydantic import BaseModel
 from netcad.device import Device
 from netcad.testing import TestCases, TestCase
 from netcad.vlan import VlanProfile
+from netcad.testing.testing_registry import testing_service
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -55,6 +56,13 @@ class VlanTestCase(TestCase):
         return str(self.test_params.vlan_id)
 
 
+# -----------------------------------------------------------------------------
+#
+#
+# -----------------------------------------------------------------------------
+
+
+@testing_service
 class VlanTestCases(TestCases):
     service = "vlans"
     tests: Optional[List[VlanTestCase]]
@@ -62,7 +70,6 @@ class VlanTestCases(TestCases):
     @classmethod
     def build(cls, device: Device) -> "VlanTestCases":
 
-        # vlans = device.vlans()
         vlan_interfaces = defaultdict(list)
 
         for if_name, interface in device.interfaces.items():
@@ -89,4 +96,6 @@ class VlanTestCases(TestCases):
             ]
         )
 
+        # return the test-cases sorted by VLAN-ID
+        test_cases.tests.sort(key=lambda tc: tc.test_params.vlan_id)
         return test_cases

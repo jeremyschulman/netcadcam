@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 # # https://adamj.eu/tech/2021/10/13/how-to-create-a-transparent-attribute-alias-in-python/
 
 
-class VlanProfileFromPeer:
+class VlansFromPeer:
     def __init__(self):
         self._attr_name = None
 

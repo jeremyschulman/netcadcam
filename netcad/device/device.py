@@ -4,7 +4,6 @@
 
 from typing import Dict, Optional, TypeVar, List, TYPE_CHECKING, Set
 import os
-from collections import defaultdict
 from operator import attrgetter
 from copy import deepcopy
 from pathlib import Path
@@ -19,7 +18,7 @@ import jinja2
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.device.device_interface import DeviceInterface
+from netcad.device.device_interface import DeviceInterfaces, DeviceInterface
 from netcad.registry import Registry
 from netcad.config.cache import cache_load_device_type
 from netcad.config import Environment
@@ -42,6 +41,7 @@ __all__ = ["Device", "DeviceInterface"]
 
 
 PathLike = TypeVar("PathLike", str, Path)
+DeviceInterfacesLike = TypeVar("DeviceInterfacesLike", DeviceInterfaces, dict)
 
 
 class Device(Registry):
@@ -73,28 +73,6 @@ class Device(Registry):
 
     template: Optional[PathLike] = None
 
-    def __init_subclass__(cls, **kwargs):
-        """
-        Upon Device sub-class definition create a unique set of interface
-        definitions.  This step ensures that sub-classes do not *step on each
-        other* when declaring interface definitions at the class level.  Each
-        Device _instance_ will get a deepcopy of these interfaces so that they
-        can make one-off adjustments to the device standard.
-        """
-        Registry.__init_subclass__()
-        cls.interfaces = _DeviceInterfaces(DeviceInterface)
-        cls.interfaces.device_cls = cls
-
-        # configure the state of the interfaces by default to unused. this
-        # settings will be determined by the `init_interfaces()` class method.
-        # By default, will set interfaces to unused. This behavior could be
-        # changed by the sublcass.
-
-        if getattr(cls, "product_model", None) and not os.getenv(
-            Environment.NETCAD_NOVALIDATE
-        ):
-            cls.init_interfaces()
-
     def __init__(self, name: str, **kwargs):
         """
         Device initialization creates a specific device instance for the given
@@ -116,7 +94,7 @@ class Device(Registry):
         # make any specific changes; i.e. handle the various "one-off" cases
         # that happen in real-world networks.
 
-        self.interfaces = deepcopy(self.__class__.interfaces)
+        self.interfaces: DeviceInterfacesLike = deepcopy(self.__class__.interfaces)
 
         # create the back-references from the interfaces instance to this
         # device.
@@ -200,19 +178,77 @@ class Device(Registry):
 
         return sorted(all_vlans, key=attrgetter("vlan_id"))
 
+    # noinspection PyMethodMayBeStatic
+    def testing_services(self) -> List[str]:
+        """
+        This function returs the list of TestCases service names that will be
+        used for creating the device's network state audits.  The Device base
+        class will always return the following (and showing their associated
+        TestCases class for reference).
+
+           * "interfaces" -> InterfaceTeestCases
+           * "vlans" -> VlanTestCases
+           * "lags" -> LagTestCases
+
+        Returns
+        -------
+        List[str] as described.
+        """
+        return ["interfaces", "vlans", "lags"]
+
+    # -------------------------------------------------------------------------
+    #
+    #                            Class Methods
+    #
+    # -------------------------------------------------------------------------
+
+    def __init_subclass__(cls, **kwargs):
+        """
+        Upon Device sub-class definition create a unique set of interface
+        definitions.  This step ensures that sub-classes do not *step on each
+        other* when declaring interface definitions at the class level.  Each
+        Device _instance_ will get a deepcopy of these interfaces so that they
+        can make one-off adjustments to the device standard.
+        """
+        Registry.__init_subclass__()
+        cls.interfaces = DeviceInterfaces(DeviceInterface)
+        cls.interfaces.device_cls = cls
+
+        # configure the state of the interfaces by default to unused. this
+        # settings will be determined by the `init_interfaces()` class method.
+        # By default, will set interfaces to unused. This behavior could be
+        # changed by the sublcass.
+
+        if getattr(cls, "product_model", None) and not os.getenv(
+            Environment.NETCAD_NOVALIDATE
+        ):
+            cls.init_interfaces()
+
     @classmethod
     def init_interfaces(cls):
-        """ """
+        """
+        Called from __init_subclass__, this function is used to retrieve the
+        device-type specification using the designated product-model.
+
+        A subclass could override this method to perform any specific further
+        device-product design initialization or validation.
+        """
+
         try:
-            dt_model = cache_load_device_type(product_model=cls.product_model)
+            spec = cls.device_type_spec = cache_load_device_type(
+                product_model=cls.product_model
+            )
         except FileNotFoundError:
             raise RuntimeError(
                 f"Missing device-type file for {cls.__name__}, product-model: {cls.product_model}.  "
                 'Try running "netcad get device-types" to fetch definitions.'
             )
 
-        for if_def in dt_model["interfaces"]:
-            cls.interfaces[if_def["name"]].used = False
+        # initialize the interfaces in the device so that those defined in the
+        # spec exist; initializing the profile value to None.
+
+        for if_def in spec["interfaces"]:
+            cls.interfaces[if_def["name"]].profile = None
 
     # -------------------------------------------------------------------------
     #
@@ -229,24 +265,3 @@ class Device(Registry):
         The default comparison will be based on the device name.
         """
         return self.name < other.name
-
-
-class _DeviceInterfaces(defaultdict):
-    """
-    Private class definition that represents the collection of interfaces bound
-    to a Device.
-    """
-
-    def __init__(self, default_factory, **kwargs):
-        super(_DeviceInterfaces, self).__init__(default_factory, **kwargs)
-        self.device_cls = None
-        self.device = None
-
-    def __missing__(self, key):
-        # create a new instance of the device interface. add the back-reference
-        # from the specific interface to this collection so that given any
-        # specific interface instance, the Caller can reach back to find the
-        # associated device object.
-
-        self[key] = DeviceInterface(name=key, interfaces=self)
-        return self[key]
