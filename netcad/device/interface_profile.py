@@ -70,7 +70,7 @@ class InterfaceProfile(object):
             return env.get_template(str(self.template))
 
         if isinstance(self.template, str):
-            return env.get_template("str:" + self.template)
+            return env.from_string(self.template.lstrip())
 
         raise RuntimeError(
             "Interface profile unexpected template type: "

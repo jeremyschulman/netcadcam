@@ -2,8 +2,6 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-import typing as t
-
 # -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
@@ -41,38 +39,13 @@ _env_filters = {
 _env_globals = {"lookup": j2_func_lookup}
 
 
-class StringLoader(jinja2.BaseLoader):
-    def get_source(
-        self, environment: "jinja2.Environment", template: str
-    ) -> t.Tuple[str, t.Optional[str], t.Optional[t.Callable[[], bool]]]:
-        def uptodate() -> bool:
-            return True
-
-        return template, str(id(template)), uptodate
-
-
-def _funcloader_get_source(source: str):
-    if not isinstance(source, str):
-        return None
-
-    if source.startswith("str:"):
-        return source[4:].lstrip()
-
-    return None
-
-
 def get_env(template_dirs):
 
     env = jinja2.Environment(
         trim_blocks=True,
         lstrip_blocks=True,
         keep_trailing_newline=True,
-        loader=jinja2.ChoiceLoader(
-            loaders=[
-                jinja2.FunctionLoader(_funcloader_get_source),
-                jinja2.FileSystemLoader(template_dirs),
-            ]
-        ),
+        loader=jinja2.FileSystemLoader(template_dirs),
     )
 
     env.filters.update(_env_filters)
