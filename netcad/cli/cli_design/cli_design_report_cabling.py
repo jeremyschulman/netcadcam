@@ -89,7 +89,7 @@ def report_cabling_per_device(device: Device):
             rmt_if.name,
             rmt_if.device.name,
             # check either end, for the case of an MLAG.
-            dev_if.label or rmt_if.label,
+            dev_if.cable_id or rmt_if.cable_id,
         )
 
     console.print(table)

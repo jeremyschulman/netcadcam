@@ -48,7 +48,7 @@ def show_device_interfaces(device: Device, **options):
     # -------------------------------------------------------------------------
 
     if options["show_unused"]:
-        for iface in device.sorted_interfaces():
+        for iface in sorted(device.interfaces.values()):
             if not iface.used:
                 add_row(iface.name, None, None, keywords.NOT_USED)
 
@@ -59,7 +59,7 @@ def show_device_interfaces(device: Device, **options):
     # Show interfaces, optionally including unused ....
     # -------------------------------------------------------------------------
 
-    for iface in device.sorted_interfaces():
+    for iface in sorted(device.interfaces.values()):
         if not iface.used:
             if options["show_all"]:
                 add_row(iface.name, None, None, keywords.NOT_USED)

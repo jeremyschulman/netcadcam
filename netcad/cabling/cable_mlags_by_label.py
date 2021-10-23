@@ -42,9 +42,9 @@ class CableMLagsByLabel(CablePlanner):
         # is using that matches the list of allowed labels
 
         mlag_references = {
-            interface.label: interface
+            interface.cable_id: interface
             for interface in mlag_dev.interfaces.values()
-            if interface.label and interface.label in self.labels
+            if interface.cable_id and interface.cable_id in self.labels
         }
 
         devices = self.devices.copy()
@@ -55,11 +55,11 @@ class CableMLagsByLabel(CablePlanner):
 
         for device in devices:
             for if_name, iface in device.interfaces.items():
-                if not iface.label:
+                if not iface.cable_id:
                     continue
 
-                if iface.label in mlag_references:
-                    self.add_endpoint(cable_id=iface.label, interface=iface)
+                if iface.cable_id in mlag_references:
+                    self.add_endpoint(cable_id=iface.cable_id, interface=iface)
 
         # now bind each of the devices in the mlag-pair to the remotes.  This
         # means that each of the referenced interfaces in two devices in the

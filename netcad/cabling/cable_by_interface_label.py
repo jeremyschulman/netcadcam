@@ -24,10 +24,10 @@ class CableByInterfaceLabel(CablePlanner):
 
         for device in self.devices:
             for if_name, iface in device.interfaces.items():
-                if not iface.label:
+                if not iface.cable_id:
                     continue
 
-                self.add_endpoint(cable_id=iface.label, interface=iface)
+                self.add_endpoint(cable_id=iface.cable_id, interface=iface)
 
         # now invoke the validate() method directly before associating the cable
         # peering relationships.

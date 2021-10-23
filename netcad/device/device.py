@@ -150,18 +150,6 @@ class Device(Registry):
 
         return env.get_template(str(as_path))
 
-    def sorted_interfaces(self) -> List[DeviceInterface]:
-        """
-        Returns a list of interface instances sorted using a
-        Returns
-        -------
-
-        """
-        # TODO: change this to sorted(self.interfaces) and test.
-        return sorted(
-            self.interfaces.values(), key=lambda i: (i.name[0:2], *i.port_numbers)
-        )
-
     def vlans(self) -> List["VlanProfile"]:
         """return the set of VlanProfile instances used by this device"""
 
@@ -255,6 +243,33 @@ class Device(Registry):
     #                           Dunder methods
     #
     # -------------------------------------------------------------------------
+
+    def __getattr__(self, item):
+        """
+        Impement a mechanism that allows a Caller to check for the existance of
+        an attribute that has the form "is_xxxx".  For example:
+
+            if device.is_pseudo:
+                ...
+
+        Would safely check if the device instance has the attribute. This
+        mechanism allows for a syntatic sugar usage so that the caller does not
+        need to do hasattr(device, "is_pseudo").
+
+        Parameters
+        ----------
+        item: str
+            The attribute name the Caller is referencing.
+
+        Returns
+        -------
+        bool - True when the instance has the attribute, False otherwise
+        """
+
+        if item.startswith("is_"):
+            return False
+
+        raise AttributeError(item)
 
     def __lt__(self, other):
         """

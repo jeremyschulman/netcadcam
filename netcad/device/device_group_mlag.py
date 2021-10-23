@@ -4,8 +4,23 @@ from copy import deepcopy
 from netcad.device import Device
 
 
-class DeviceGroupMLagPair(Device):
-    no_config = True  # do no render a configuration
+# noinspection PyUnresolvedReferences
+class PseudoDevice(Device):
+    """
+    Attributes
+    ---------
+    is_pseudo: bool, always True
+        Denotes that this device is not real, but rather is used to represent a
+        logical construct that is used for programmatic processing.  A Designer
+        could use a PseudoDevice, for example, to create a Device subclass that
+        represents a redundant-pair of devices, a group of spines, a group of
+        leafs, etc.   Such is the case for the DeviceGroupMLagPair.
+    """
+
+    is_pseudo = True
+
+
+class DeviceGroupMLagPair(PseudoDevice):
     is_group = True  # refers to a group
 
     def __init__(self, name: str, devices: List[Device], **kwargs):
