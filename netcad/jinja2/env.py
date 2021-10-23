@@ -31,7 +31,6 @@ __all__ = ["get_env"]
 
 _env_filters = {
     "ipam_interface": ipam.ipam_interface,
-    # "vlans": vlan_filters.j2_filter_vlans,
     "vlan_ranges": vlan_filters.j2_filter_vlans_id_list,
     "render": j2_filter_render,
 }

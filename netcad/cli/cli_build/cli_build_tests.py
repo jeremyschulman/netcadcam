@@ -101,7 +101,7 @@ def cli_build_tests(devices: Tuple[str], networks: Tuple[str], tests_dir: Path):
     if networks:
         device_objs.update(device_inventory.get_network_devices(networks))
 
-    device_objs = [dev for dev in device_objs if not hasattr(dev, "is_group")]
+    device_objs = [dev for dev in device_objs if not dev.is_pseudo]
     device_objs.sort()
 
     log.info(f"Building device audits for {len(device_objs)} devices")
