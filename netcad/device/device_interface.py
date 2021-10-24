@@ -267,7 +267,7 @@ class DeviceInterfaces(defaultdict):
         self[key] = DeviceInterface(name=key, interfaces=self)
         return self[key]
 
-    def iter_used(self, exclude_disabled=False) -> Dict[str, DeviceInterface]:
+    def iter_used(self, include_disabled=True) -> Dict[str, DeviceInterface]:
         """
         Return an iterator that allows the Caller to iterate over each of the
         device interfaces for those that are in use.  The term "in use" means
@@ -278,13 +278,13 @@ class DeviceInterfaces(defaultdict):
 
         Parameters
         ----------
-        exclude_disabled: bool, optional
-            When True the iter_used will not include any interfaces that are
+        include_disabled: bool, optional
+            When False the iter_used will not include any interfaces that are
             disabled, even though used, in the design.
 
         Returns
         -------
-        ItemsView - a dictioary items iterator
+        dict
         """
         used_interfaces = dict()
 
@@ -299,10 +299,10 @@ class DeviceInterfaces(defaultdict):
 
             # if the interface is in the design, but the design indicates to
             # disable ("shutdown") the interface, then by default include it in
-            # the generator.  If the Caller set `exclude_disabled` to True then
+            # the return.  If the Caller set `include_disabled` to False then
             # skip it.
 
-            if not interface.enabled and exclude_disabled:
+            if interface.enabled is False and include_disabled is False:
                 continue
 
             used_interfaces[if_name] = interface
