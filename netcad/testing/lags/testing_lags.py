@@ -35,7 +35,7 @@ __all__ = ["LagTestCases", "LagTestCase", "LagTestParams", "LagTestExpectations"
 
 
 class LagTestParams(BaseModel):
-    if_name: str
+    interface: str
 
 
 class LagTestExpectedInterfaceStatus(BaseModel):
@@ -53,7 +53,7 @@ class LagTestCase(TestCase):
     expected_results: LagTestExpectations
 
     def test_case_id(self) -> str:
-        return str(self.test_params.if_name)
+        return str(self.test_params.interface)
 
 
 @testing_service
@@ -81,11 +81,11 @@ class LagTestCases(TestCases):
         # create the list of test-cases using the formulated dictionary.
 
         test_cases = LagTestCases(
+            device=device.name,
             tests=[
                 LagTestCase(
                     test_case="lag",
-                    device=device.name,
-                    test_params=LagTestParams(if_name=lag_name),
+                    test_params=LagTestParams(interface=lag_name),
                     expected_results=LagTestExpectations(
                         enabled=device.interfaces[lag_name].enabled,
                         interfaces=[
@@ -98,9 +98,9 @@ class LagTestCases(TestCases):
                     ),
                 )
                 for lag_name, lag_interfaces in lag_interfaces.items()
-            ]
+            ],
         )
 
         # return the test cases sorted by the lag interface name
-        test_cases.tests.sort(key=lambda tc: DeviceInterface(tc.test_params.if_name))
+        test_cases.tests.sort(key=lambda tc: DeviceInterface(tc.test_params.interface))
         return test_cases

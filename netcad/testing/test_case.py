@@ -57,3 +57,15 @@ class TestCase(BaseModel):
         like value.  pytest comest to mind.
         """
         raise NotImplementedError()
+
+    # -------------------------------------------------------------------------
+    #
+    #                         BaseModel Overrides
+    #
+    # -------------------------------------------------------------------------
+
+    def dict(self, **kwargs):
+        """By default exclude any optional/None fields from serialization"""
+        # TODO: may rethink this default.
+        kwargs["exclude_none"] = True
+        return super(TestCase, self).dict(**kwargs)

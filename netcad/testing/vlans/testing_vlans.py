@@ -83,17 +83,17 @@ class VlanTestCases(TestCases):
                 vlan_interfaces[vlan].append(if_name)
 
         test_cases = VlanTestCases(
+            device=device.name,
             tests=[
                 VlanTestCase(
                     test_case="vlan-exists",
-                    device=device.name,
                     test_params=VlanTestParams(vlan_id=vlan_p.vlan_id),
                     expected_results=VlanTestExpectations(
                         vlan=vlan_p, interfaces=if_names
                     ),
                 )
                 for vlan_p, if_names in vlan_interfaces.items()
-            ]
+            ],
         )
 
         # return the test-cases sorted by VLAN-ID
