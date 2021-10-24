@@ -22,6 +22,7 @@ from netcad.device.device_interface import DeviceInterfaces, DeviceInterface
 from netcad.registry import Registry
 from netcad.config.cache import cache_load_device_type
 from netcad.config import Environment
+from netcad.testing import DEFAULT_TESTING_SERVICES
 
 if TYPE_CHECKING:
     from netcad.vlan.vlan_profile import VlanProfile
@@ -50,26 +51,39 @@ class Device(Registry):
     representations, also referred to as "roles", "templates", 'stencils", etc.
     A Caller would then create multiple instances of the specific Device classes
     to declare muliple copies of the same role/etc.
+
+    Attributes
+    ----------
+    os_name: str
+        Unqiue indentifies the device operating system name.  Arista, for
+        example, this value would likely be "eos".  The Designer can use any
+        values they choose (i.e. does not need to be eos for Arista), but they
+        must use names that are unqiue within their SOT.
+
+    product_model: str
+        Must exist in the source of truth (SoT) defined as-is.  For example, if
+        the product_model was "DCS-7050SX3-48YC12", then that device-model/type
+        must exist in the SOT.
+
+    interfaces: dict[str, DeviceInterface]
+        Store the specific usage declaration for each of the interfaces defined
+        in the `product_model`.  All interfaces must be declared, even if
+        unused.
+
+    template: PathLike
+        The `template` stores the reference to the Jinja2 template file that is
+        used to render the specific device configuration.  If provided this
+        value is used by the `get_template` method.  If not provided, then the
+        Developer is expected to subclass Device and implement a `get_template`
+        method that returns the Template dynamically base on runtime values,
+        such as the device OS, model, etc.
     """
 
-    # the `product_model` must exist in the SoT defined as-is.  For example, if
-    # the product_model was "DCS-7050SX3-48YC12", then that device-model/type
-    # must exist in the SoT.
+    os_name: Optional[str] = None
 
     product_model: Optional[str] = None
 
-    # The `interfaces` store the specific usage declaration for each of the
-    # interfaces defined in the `product_model`.  All interfaces must be
-    # declared, even if unused.
-
     interfaces: Dict[str, DeviceInterface] = None
-
-    # The `template` stores the reference to the Jinja2 template file that
-    # is used to render the specific device configuration.  If provided this
-    # value is used by the `get_template` method.  If not provided, then the
-    # Developer is expected to subclass Device and implement a `get_template`
-    # method that returns the Template dynamically base on runtime values, such
-    # as the device OS, model, etc.
 
     template: Optional[PathLike] = None
 
@@ -94,7 +108,7 @@ class Device(Registry):
         # make any specific changes; i.e. handle the various "one-off" cases
         # that happen in real-world networks.
 
-        self.interfaces: DeviceInterfacesLike = deepcopy(self.__class__.interfaces)
+        self.interfaces: DeviceInterfaces = deepcopy(self.__class__.interfaces)  # noqa
 
         # create the back-references from the interfaces instance to this
         # device.
@@ -174,16 +188,11 @@ class Device(Registry):
         class will always return the following (and showing their associated
         TestCases class for reference).
 
-           * "interfaces" -> InterfaceTeestCases
-           * "cabling" -> InterfaceCablingTestCases
-           * "vlans" -> VlanTestCases
-           * "lags" -> LagTestCases
-
         Returns
         -------
         List[str] as described.
         """
-        return ["interfaces", "cabling", "vlans", "lags"]
+        return list(DEFAULT_TESTING_SERVICES)
 
     # -------------------------------------------------------------------------
     #
@@ -238,6 +247,16 @@ class Device(Registry):
 
         for if_def in spec["interfaces"]:
             cls.interfaces[if_def["name"]].profile = None
+
+    def render_interface_unused(
+        self, env: jinja2.Environment, interface: "DeviceInterface"
+    ):
+        raise NotImplementedError()
+
+    def render_interface_used(
+        self, env: jinja2.Environment, interface: "DeviceInterface"
+    ):
+        raise NotImplementedError()
 
     # -------------------------------------------------------------------------
     #

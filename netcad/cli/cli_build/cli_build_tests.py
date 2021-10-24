@@ -52,7 +52,9 @@ async def build_device_tests(
 
     for service_name in device.testing_services():
         if not (testing_service := available_test_cases.get(service_name)):
-            raise RuntimeError(f"Missing test cases service: {service_name}")
+            raise RuntimeError(
+                f"Unable to located test cases service in registry: {service_name}"
+            )
 
         test_cases = testing_service.build(device)
         await test_cases.save(dev_tc_dir)

@@ -25,7 +25,13 @@ from netcad.testing import testing_service
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["LagTestCases", "LagTestCase", "LagTestParams", "LagTestExpectations"]
+__all__ = [
+    "LagTestCases",
+    "LagTestCase",
+    "LagTestParams",
+    "LagTestExpectations",
+    "LagTestExpectedInterfaceStatus",
+]
 
 # -----------------------------------------------------------------------------
 #

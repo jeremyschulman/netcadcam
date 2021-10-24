@@ -1,31 +1,41 @@
-from typing import List
+# -----------------------------------------------------------------------------
+# System Imports
+# -----------------------------------------------------------------------------
+
+from typing import List, Optional
 from copy import deepcopy
 
-from netcad.device import Device
+# -----------------------------------------------------------------------------
+# Private Imports
+# -----------------------------------------------------------------------------
+
+from .device_group import DeviceGroup, DeviceGroupMember
+
+# -----------------------------------------------------------------------------
+# Exports
+# -----------------------------------------------------------------------------
+
+__all__ = ["DeviceMLagPairGroup", "DeviceMLagPairMember"]
 
 
-# noinspection PyUnresolvedReferences
-class PseudoDevice(Device):
-    """
-    Attributes
-    ---------
-    is_pseudo: bool, always True
-        Denotes that this device is not real, but rather is used to represent a
-        logical construct that is used for programmatic processing.  A Designer
-        could use a PseudoDevice, for example, to create a Device subclass that
-        represents a redundant-pair of devices, a group of spines, a group of
-        leafs, etc.   Such is the case for the DeviceGroupMLagPair.
-    """
-
-    is_pseudo = True
+# -----------------------------------------------------------------------------
+#
+#                                 CODE BEGINS
+#
+# -----------------------------------------------------------------------------
 
 
-class DeviceGroupMLagPair(PseudoDevice):
-    is_group = True  # refers to a group
+class DeviceMLagPairGroup(DeviceGroup):
+    def __init__(
+        self,
+        name: str,
+        devices: Optional[List["DeviceMLagPairMember"]] = None,
+        **kwargs,
+    ):
 
-    def __init__(self, name: str, devices: List[Device], **kwargs):
-        super(DeviceGroupMLagPair, self).__init__(name, **kwargs)
-        self.devices = devices
+        super(DeviceMLagPairGroup, self).__init__(name, **kwargs)
+        for dev in devices:
+            self.add_group_member(dev)
 
     def plan(self):
         """
@@ -33,7 +43,7 @@ class DeviceGroupMLagPair(PseudoDevice):
         primary function is to find all of the interfaces with profiles and copy
         them to the actual devices in the group.
         """
-        if not (count := len(self.devices)) == 2:
+        if not (count := len(self.group_members)) == 2:
             raise RuntimeError(
                 f"Unexpected number of devices in device group: {self.name}: {count}"
             )
@@ -42,7 +52,7 @@ class DeviceGroupMLagPair(PseudoDevice):
         # rendudant pair and the associated concrete devices.from
 
         for if_name, interface in self.interfaces.items():
-            for device in self.devices:
+            for device in self.group_members:
                 dev_if = device.interfaces[if_name]
                 if not (if_prof := getattr(interface, "profile", None)):
                     continue
@@ -50,3 +60,18 @@ class DeviceGroupMLagPair(PseudoDevice):
                 copy_if_pro = deepcopy(if_prof)
                 copy_if_pro.interface = None
                 dev_if.profile = copy_if_pro
+
+
+class DeviceMLagPairMember(DeviceGroupMember):
+
+    # -------------------------------------------------------------------------
+    #
+    #                            Device Overrides
+    #
+    # -------------------------------------------------------------------------
+
+    def testing_services(self) -> List[str]:
+        """DeviceGroupMLagPair devices have 'mlags' test cases"""
+        tests = super(DeviceMLagPairMember, self).testing_services()
+        tests.append("mlags")
+        return tests

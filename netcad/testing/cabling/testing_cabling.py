@@ -62,11 +62,14 @@ class InterfaceCablingTestCases(TestCases):
     def build(cls, device: Device) -> "InterfaceCablingTestCases":
 
         # only used physical interfaces that have a cabling peer relationship.
+        # exclude any interfaces that are disabled, since the cabling tests will
+        # use a layer-2 protocol (LLDP or CDP) to validate the neighbor
+        # relationship.
 
         interfaces = sorted(
             filter(
                 lambda iface: iface.cable_peer and not iface.profile.is_virtual,
-                device.interfaces.iter_used().values(),
+                device.interfaces.iter_used(include_disabled=False).values(),
             )
         )
 

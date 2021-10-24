@@ -4,12 +4,18 @@
 
 from typing import Optional, Dict
 from typing import TYPE_CHECKING
-
+from io import StringIO
 import re
 from collections import defaultdict
 
 if TYPE_CHECKING:
     from netcad.device.interface_profile import InterfaceProfile
+
+# -----------------------------------------------------------------------------
+# Public Imports
+# -----------------------------------------------------------------------------
+
+import jinja2
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -230,6 +236,13 @@ class DeviceInterface(object):
         return self.sort_key < other.sort_key
 
 
+# -----------------------------------------------------------------------------
+#
+#                    DeviceInterfaces Collection
+#
+# -----------------------------------------------------------------------------
+
+
 class DeviceInterfaces(defaultdict):
     """
     The collection of interfaces bound to a Device.  Subclasses a defaultdict so
@@ -254,7 +267,7 @@ class DeviceInterfaces(defaultdict):
         self[key] = DeviceInterface(name=key, interfaces=self)
         return self[key]
 
-    def iter_used(self, exclude_disabled=False) -> Dict:
+    def iter_used(self, include_disabled=True) -> Dict[str, DeviceInterface]:
         """
         Return an iterator that allows the Caller to iterate over each of the
         device interfaces for those that are in use.  The term "in use" means
@@ -265,13 +278,13 @@ class DeviceInterfaces(defaultdict):
 
         Parameters
         ----------
-        exclude_disabled: bool, optional
-            When True the iter_used will not include any interfaces that are
+        include_disabled: bool, optional
+            When False the iter_used will not include any interfaces that are
             disabled, even though used, in the design.
 
         Returns
         -------
-        ItemsView - a dictioary items iterator
+        dict
         """
         used_interfaces = dict()
 
@@ -286,12 +299,62 @@ class DeviceInterfaces(defaultdict):
 
             # if the interface is in the design, but the design indicates to
             # disable ("shutdown") the interface, then by default include it in
-            # the generator.  If the Caller set `exclude_disabled` to True then
+            # the return.  If the Caller set `include_disabled` to False then
             # skip it.
 
-            if not interface.enabled and exclude_disabled:
+            if interface.enabled is False and include_disabled is False:
                 continue
 
             used_interfaces[if_name] = interface
 
         return used_interfaces
+
+    def render(self, ctx: jinja2.runtime.Context, prefix: Optional[str] = None):
+        env = ctx.environment
+        content = StringIO()
+
+        device = self.device
+
+        # we want the interfaces output in numerical order, so sort the
+        # collection using the designated interface port numbers (tuple). we
+        # also want the sort to be based on the prefix of the first two
+        # characters of the interface name, so that "Ethernet1" comes before
+        # "Management1", for exmaple.
+
+        interfaces = sorted(self.values())
+        if prefix:
+            interfaces = sorted(
+                iface for iface in interfaces if iface.name.startswith(prefix)
+            )
+
+        for interface in interfaces:
+
+            # if the interface is not used at all, then use the "unused
+            # interface" template, and then done processing this interface into
+            # the config build process.
+
+            if not interface.used:
+                if_content = device.render_interface_unused(
+                    env=env, interface=interface
+                )
+
+            # if the interface is used, then it MUST have an assigned profile.
+            # If it does not, then raise an exception.
+
+            elif not interface.profile:
+                raise RuntimeError(
+                    f"Unexpected missing interface profile on: {interface.name}"
+                )
+
+            else:
+                if_content = device.render_interface_used(env=env, interface=interface)
+
+            content.write(if_content)
+
+        # rewind the IO buffer and return back everything except the final
+        # newline since that will be added by the in template including this
+        # render.
+
+        content.seek(0)
+        as_str = content.read()
+        return as_str[:-1]

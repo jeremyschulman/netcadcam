@@ -10,6 +10,7 @@ from pathlib import Path
 # -----------------------------------------------------------------------------
 
 import click
+import jinja2
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -93,7 +94,14 @@ def cli_render(
         log.debug(f"BUILD config for device {dev_obj.name}")
 
         template = dev_obj.get_template(env=env)
-        config_text = template.render(device=dev_obj)
+
+        try:
+            config_text = template.render(device=dev_obj)
+
+        except jinja2.exceptions.UndefinedError as exc:
+            raise RuntimeError(
+                f"Jinja2 undefined error: {dev_obj.name} {dev_obj.template}  -  {str(exc)}"
+            )
 
         log.info(f"SAVE: {dev_obj.name} config: {config_file.name}")
         with config_file.open("w+") as ofile:
