@@ -16,14 +16,19 @@ import jinja2
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device, DeviceInterface
+from netcad.device.device_interface import DeviceInterfaces
 
 
 @jinja2.pass_context
-def j2_filter_render(ctx, obj: Any, render_target: str, **kwargs):
+def j2_filter_render(ctx, obj: Any, render_target="render", **kwargs):
 
     if isinstance(obj, Device):
         ref_obj = obj
         call_meth_name = f"render_{render_target}"
+
+    elif isinstance(obj, DeviceInterfaces):
+        ref_obj = obj
+        call_meth_name = "render"
 
     elif isinstance(obj, DeviceInterface):
         ref_obj = obj.device
