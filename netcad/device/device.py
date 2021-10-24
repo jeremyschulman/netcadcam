@@ -22,6 +22,7 @@ from netcad.device.device_interface import DeviceInterfaces, DeviceInterface
 from netcad.registry import Registry
 from netcad.config.cache import cache_load_device_type
 from netcad.config import Environment
+from netcad.testing import DEFAULT_TESTING_SERVICES
 
 if TYPE_CHECKING:
     from netcad.vlan.vlan_profile import VlanProfile
@@ -187,17 +188,11 @@ class Device(Registry):
         class will always return the following (and showing their associated
         TestCases class for reference).
 
-           * "transceivers" -> TransceiverTestCases
-           * "interfaces" -> InterfaceTeestCases
-           * "cabling" -> InterfaceCablingTestCases
-           * "vlans" -> VlanTestCases
-           * "lags" -> LagTestCases
-
         Returns
         -------
         List[str] as described.
         """
-        return ["transceivers", "interfaces", "cabling", "vlans", "lags"]
+        return list(DEFAULT_TESTING_SERVICES)
 
     # -------------------------------------------------------------------------
     #
