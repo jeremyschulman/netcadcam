@@ -45,6 +45,7 @@ def get_env(template_dirs):
         lstrip_blocks=True,
         keep_trailing_newline=True,
         loader=jinja2.FileSystemLoader(template_dirs),
+        undefined=jinja2.StrictUndefined,
     )
 
     env.filters.update(_env_filters)
