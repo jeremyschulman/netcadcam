@@ -108,7 +108,7 @@ class Device(Registry):
         # make any specific changes; i.e. handle the various "one-off" cases
         # that happen in real-world networks.
 
-        self.interfaces: DeviceInterfacesLike = deepcopy(self.__class__.interfaces)
+        self.interfaces: DeviceInterfaces = deepcopy(self.__class__.interfaces)  # noqa
 
         # create the back-references from the interfaces instance to this
         # device.
