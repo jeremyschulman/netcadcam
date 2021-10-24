@@ -1,7 +1,7 @@
 from typing import Optional
 
 from netcad.device import DeviceInterface
-from netcad.device.device_group_mlag import DeviceGroupMLagPair
+from netcad.device.device_group_mlag import DeviceMLagPairGroup
 
 from .cable_plan import CablePlanner
 
@@ -21,9 +21,9 @@ class CableMLagsByLabel(CablePlanner):
         # an attribute called `is_group`
 
         find_mlag_dev = filter(
-            lambda d: isinstance(d, DeviceGroupMLagPair), self.devices
+            lambda d: isinstance(d, DeviceMLagPairGroup), self.devices
         )
-        mlag_dev: Optional[DeviceGroupMLagPair]
+        mlag_dev: Optional[DeviceMLagPairGroup]
 
         if not (mlag_dev := next(find_mlag_dev, None)):
             raise RuntimeError(
@@ -68,7 +68,7 @@ class CableMLagsByLabel(CablePlanner):
 
         for cable_id, (if_remote,) in self.cables.items():
             if_mlag_ref: DeviceInterface = mlag_references[cable_id]
-            for dev in mlag_dev.devices:
+            for dev in mlag_dev.group_members:
                 if_dev = dev.interfaces[if_mlag_ref.name]
                 if_dev.cable_peer = if_remote
                 self.add_endpoint(cable_id=cable_id, interface=if_dev)

@@ -254,7 +254,7 @@ class DeviceInterfaces(defaultdict):
         self[key] = DeviceInterface(name=key, interfaces=self)
         return self[key]
 
-    def iter_used(self, exclude_disabled=False) -> Dict:
+    def iter_used(self, exclude_disabled=False) -> Dict[str, DeviceInterface]:
         """
         Return an iterator that allows the Caller to iterate over each of the
         device interfaces for those that are in use.  The term "in use" means
