@@ -1,4 +1,10 @@
 # -----------------------------------------------------------------------------
+# System Imports
+# -----------------------------------------------------------------------------
+
+from typing import Optional
+
+# -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
 
@@ -27,11 +33,9 @@ class TestCase(BaseModel):
 
     Attributes
     ----------
-    test_case: str
-        Uniquely identifies the type of the test case within the service.
-
-    device: str
-        The device hostname value
+    test_case: str, optional
+        Uniquely identifies the type of the test case within the service.  If
+        not provided, defaults to the test cases service name.
 
     test_params: BaseModel
         A pydantic model that defines the required test-case parameters that
@@ -42,8 +46,7 @@ class TestCase(BaseModel):
         testing system knows the "correct answer".
     """
 
-    test_case: str
-    device: str
+    test_case: Optional[str]
     test_params: BaseModel
     expected_results: BaseModel
 

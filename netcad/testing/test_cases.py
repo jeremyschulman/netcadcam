@@ -20,8 +20,36 @@ import aiofiles
 from . import TestCase
 
 
+# noinspection PyUnresolvedReferences
 class TestCases(BaseModel):
-    service: str  # the name definiting the service
+    """
+    Attributes
+    ----------
+    service: str
+        The name of the testing service, "cabling" for example, that allows the
+        Designer to register/retrieve test-cases by name.
+
+    device: str
+        The name of the device for which the tests will be executed against by
+        the testing engine.  The `device` attribute could also be used as a
+        "device under test" (DUT) or "system under test" (SUT) depending on the
+        specific use of the test cases.
+
+    exclusive: bool, optional
+        When True (default) indicates that the list of tests are the exclude set
+        of items that should be present on the device/dut.  For example if the
+        "interfaces" test-cases is exclusive, and the device has an interface
+        not in the tests list, then an exception will be raised by the testing
+        engine.
+
+    tests: List[TestCases], optional
+        The list of specific test cases that will be executed by the testing
+        engine.
+
+    """
+
+    service: str
+    device: str
     exclusive: Optional[bool] = Field(default=True)
     tests: Optional[List[TestCase]] = Field(default_factory=list)
 

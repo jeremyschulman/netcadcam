@@ -72,10 +72,9 @@ class InterfaceCablingTestCases(TestCases):
 
         test_cases = InterfaceCablingTestCases(
             exclusive=False,
+            device=device.name,
             tests=[
                 InterfaceCablingTestCase(
-                    test_case="cabling",
-                    device=device.name,
                     test_params=InterfaceCablingTestParams(interface=interface.name),
                     expected_results=InterfaceCablingdExpectations(
                         device=interface.cable_peer.device.name,
