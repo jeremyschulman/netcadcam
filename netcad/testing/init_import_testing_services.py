@@ -7,3 +7,4 @@ def on_init():
     import_module("netcad.testing.vlans")
     import_module("netcad.testing.lags")
     import_module("netcad.testing.mlags")
+    import_module("netcad.testing.transceivers")
