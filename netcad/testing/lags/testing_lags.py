@@ -69,7 +69,7 @@ class LagTestCases(TestCases):
 
         lag_interfaces = defaultdict(list)
 
-        for if_name, interface in device.interfaces.iter_used():
+        for if_name, interface in device.interfaces.iter_used().items():
             if not isinstance(interface.profile, InterfaceLag):
                 continue
 
