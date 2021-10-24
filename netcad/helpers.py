@@ -16,7 +16,7 @@ from pydantic import BaseModel
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["range_string", "StrEnum", "HashableModel"]
+__all__ = ["range_string", "StrEnum", "HashableModel", "SafeIsAttribute"]
 
 # -----------------------------------------------------------------------------
 #
@@ -73,3 +73,11 @@ class HashableModel(BaseModel):
 
     def __hash__(self):
         return hash((type(self),) + tuple(self.__dict__.values()))
+
+
+class SafeIsAttribute(object):
+    def __getattr__(self, item):
+        if item.startswith("is_"):
+            return False
+
+        raise AttributeError(item)

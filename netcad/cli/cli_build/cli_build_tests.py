@@ -51,7 +51,9 @@ async def build_device_tests(
     dev_tc_dir.mkdir(exist_ok=True)
 
     for service_name in device.testing_services():
-        testing_service = available_test_cases.get(service_name)
+        if not (testing_service := available_test_cases.get(service_name)):
+            raise RuntimeError(f"Missing test cases service: {service_name}")
+
         test_cases = testing_service.build(device)
         await test_cases.save(dev_tc_dir)
 
@@ -101,7 +103,7 @@ def cli_build_tests(devices: Tuple[str], networks: Tuple[str], tests_dir: Path):
     if networks:
         device_objs.update(device_inventory.get_network_devices(networks))
 
-    device_objs = [dev for dev in device_objs if not hasattr(dev, "is_group")]
+    device_objs = [dev for dev in device_objs if not dev.is_pseudo]
     device_objs.sort()
 
     log.info(f"Building device audits for {len(device_objs)} devices")

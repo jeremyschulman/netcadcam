@@ -20,6 +20,7 @@ from netcad.device import Device
 
 
 async def get_device_types(origin: Origin, product_models: Iterable[AnyStr]):
+
     await origin.get_device_types(product_models)
 
 
@@ -41,8 +42,8 @@ def clig_get_device_types():
 
     config = netcad_globals.g_config
     try:
-        origin = config["get"]["device-types"]
-        origin_module = import_module(name=origin)
+        origin_name = config["get"]["device-types"]
+        origin_module = import_module(name=origin_name)
 
     except ModuleNotFoundError as exc:
         raise RuntimeError(
@@ -56,7 +57,9 @@ def clig_get_device_types():
         )
 
     if not (origin_cls := getattr(origin_module, "Origin", None)):
-        raise RuntimeError(f"Origin module: {origin} does not define Origin class.")
+        raise RuntimeError(
+            f"Origin module: {origin_name} does not define Origin class."
+        )
 
     # find all devices in the design
 
@@ -89,4 +92,5 @@ def clig_get_device_types():
 
     # Run the processing in async model for performance benefits.
 
+    log.info(f"Fetching from {origin_name}, device-types: {','.join(product_models)}")
     asyncio.run(get_device_types(origin=origin_cls(), product_models=product_models))

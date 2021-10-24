@@ -32,7 +32,7 @@ __all__ = []
 
 
 class InterfaceTestParams(BaseModel):
-    if_name: str
+    interface: str
 
 
 class InterfaceTestUsedExpectations(BaseModel):
@@ -53,7 +53,7 @@ class InterfaceTestCase(TestCase):
     ]
 
     def test_case_id(self) -> str:
-        return str(self.test_params.if_name)
+        return str(self.test_params.interface)
 
 
 @testing_service
@@ -86,19 +86,18 @@ class InterfaceTestCases(TestCases):
                 )
 
             return InterfaceTestCase(
-                test_case="interface",
-                device=device.name,
-                test_params=InterfaceTestParams(if_name=iface.name),
+                test_params=InterfaceTestParams(interface=iface.name),
                 expected_results=expected_results,
             )
 
         test_cases = InterfaceTestCases(
+            device=device.name,
             tests=[
                 build_test_case(iface=interface)
                 for if_name, interface in device.interfaces.items()
-            ]
+            ],
         )
 
         # return the test cases sorted by the lag interface name
-        test_cases.tests.sort(key=lambda tc: DeviceInterface(tc.test_params.if_name))
+        test_cases.tests.sort(key=lambda tc: DeviceInterface(tc.test_params.interface))
         return test_cases

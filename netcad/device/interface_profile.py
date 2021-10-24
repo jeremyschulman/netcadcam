@@ -17,6 +17,7 @@ import jinja2
 
 from netcad.device.port_profile import PortProfile
 from netcad.device.device_interface import DeviceInterface
+from netcad.helpers import SafeIsAttribute
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -34,7 +35,7 @@ __all__ = [
 # -----------------------------------------------------------------------------
 
 
-class InterfaceProfile(object):
+class InterfaceProfile(SafeIsAttribute):
 
     # `template` stores the Jinja2 template text that is used to render the
     # interface specicifc configuration text.

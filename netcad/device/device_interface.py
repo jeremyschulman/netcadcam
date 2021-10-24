@@ -2,7 +2,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional, Generator
+from typing import Optional, Dict
 from typing import TYPE_CHECKING
 
 import re
@@ -254,7 +254,7 @@ class DeviceInterfaces(defaultdict):
         self[key] = DeviceInterface(name=key, interfaces=self)
         return self[key]
 
-    def iter_used(self, exclude_disabled=False) -> Generator:
+    def iter_used(self, exclude_disabled=False) -> Dict:
         """
         Return an iterator that allows the Caller to iterate over each of the
         device interfaces for those that are in use.  The term "in use" means
@@ -273,6 +273,8 @@ class DeviceInterfaces(defaultdict):
         -------
         ItemsView - a dictioary items iterator
         """
+        used_interfaces = dict()
+
         interface: DeviceInterface
         for if_name, interface in self.items():
 
@@ -290,4 +292,6 @@ class DeviceInterfaces(defaultdict):
             if not interface.enabled and exclude_disabled:
                 continue
 
-            yield if_name, interface
+            used_interfaces[if_name] = interface
+
+        return used_interfaces

@@ -175,6 +175,7 @@ class Device(Registry):
         TestCases class for reference).
 
            * "interfaces" -> InterfaceTeestCases
+           * "cabling" -> InterfaceCablingTestCases
            * "vlans" -> VlanTestCases
            * "lags" -> LagTestCases
 
@@ -182,7 +183,7 @@ class Device(Registry):
         -------
         List[str] as described.
         """
-        return ["interfaces", "vlans", "lags"]
+        return ["interfaces", "cabling", "vlans", "lags"]
 
     # -------------------------------------------------------------------------
     #
