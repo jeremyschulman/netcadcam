@@ -20,6 +20,43 @@ class CablePlanner(Registry):
     def add_endpoint(self, cable_id, interface: DeviceInterface):
         self.cables[cable_id].add(interface)
 
+    def validate_endpoints(self):
+        """
+        This routine validates that, for each cable, all of the endpoints
+        associated with that cable have a matching interface enabled
+        setting, and a matching interface speed setting.
+
+        Returns
+        -------
+        True when validated
+
+        Raises
+        ------
+        RuntimeErrror
+            Upon finding an invalid cable.
+        """
+
+        def if_list_info():
+            return ", ".join(
+                [
+                    "{}:{} {}".format(
+                        iface.device.name,
+                        iface.name,
+                        "enabled" if iface.enabled else "disabled",
+                    )
+                    for iface in if_endpoints
+                ]
+            )
+
+        for cable_id, if_endpoints in self.cables.items():
+
+            if len(set(ep.enabled for ep in if_endpoints)) != 1:
+
+                raise RuntimeError(
+                    f"Not all interfaces in cable id {cable_id} are set "
+                    f"to the same enabled value: {if_list_info()}"
+                )
+
     def validate(self):
         """
         Validates the cabling plan by ensureing that each cable contains exactly
@@ -51,6 +88,7 @@ class CablePlanner(Registry):
                 ifs_by_counts,
             )
 
+        self.validate_endpoints()
         self.validated = True
         return len(self.cables)
 
