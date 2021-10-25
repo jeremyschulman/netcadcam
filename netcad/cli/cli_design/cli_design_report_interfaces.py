@@ -47,10 +47,18 @@ def show_device_interfaces(device: Device, **options):
     # If the User only wants to see the unused interfaces ...
     # -------------------------------------------------------------------------
 
+    def _get_if_spec(if_name):
+        return next(
+            _if_spec
+            for _if_spec in device.device_type_spec["interfaces"]
+            if _if_spec["name"] == if_name
+        )
+
     if options["show_unused"]:
         for iface in sorted(device.interfaces.values()):
             if not iface.used:
-                add_row(iface.name, None, None, keywords.NOT_USED)
+                if_spec = _get_if_spec(iface.name)
+                add_row(iface.name, None, keywords.NOT_USED, if_spec["type"]["label"])
 
         console.print(table)
         return
@@ -62,7 +70,8 @@ def show_device_interfaces(device: Device, **options):
     for iface in sorted(device.interfaces.values()):
         if not iface.used:
             if options["show_all"]:
-                add_row(iface.name, None, None, keywords.NOT_USED)
+                if_spec = _get_if_spec(iface.name)
+                add_row(iface.name, None, keywords.NOT_USED, if_spec["type"]["label"])
             continue
 
         if not (if_prof := getattr(iface, "profile", None)):
@@ -93,15 +102,21 @@ def show_device_interfaces(device: Device, **options):
 @opt_devices(required=True)
 def cli_design_report_interfaces(devices: Tuple[str], **flags):
     """
-        report device interfaces usage
+    report device interfaces usage
 
     \b
-        The output includes the interface name, description, assigned profile, and
-        physical port type.  By default this command will show only interfaces that
-        are used in the design.  Any unused interfaces will be omitted.  Additonal
-        flag options:
-           --all : show the unused interfaces
-           --unused : show only the unused interfaces
+    The output includes the interface name, description, assigned profile, and
+    physical port type.  By default this command will show only interfaces that
+    are used in the design.  Any unused interfaces will be omitted.  Additonal
+    flag options:
+       --all : show the unused interfaces
+       --unused : show only the unused interfaces
+
+    \f
+    Parameters
+    ----------
+    devices: tuple[str]
+        A tuple of device names provided by the User
     """
 
     dev_objs = get_devices(device_list=devices)

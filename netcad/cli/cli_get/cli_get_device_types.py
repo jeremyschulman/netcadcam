@@ -27,12 +27,12 @@ async def get_device_types(origin: Origin, product_models: Iterable[AnyStr]):
 @clig_get.command(name="device-types")
 def clig_get_device_types():
     """
-        Fetch the device product-model type definitions
+    Fetch the device product-model type definitions
 
     \b
-        This command examines the device definitions for the declared
-        product-models.  From that set of product module this command will then
-        fetch the defintions from your SOT system, for example Netbox.
+    This command examines the device definitions for the declared
+    product-models.  From that set of product module this command will then
+    fetch the defintions from your SOT system, for example Netbox.
     """
     log = get_logger()
 
