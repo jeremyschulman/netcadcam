@@ -50,7 +50,8 @@ def show_device_interfaces(device: Device, **options):
     if options["show_unused"]:
         for iface in sorted(device.interfaces.values()):
             if not iface.used:
-                add_row(iface.name, None, None, keywords.NOT_USED)
+                if_spec = device.device_type_spec.get_interface(if_name=iface.name)
+                add_row(iface.name, None, keywords.NOT_USED, if_spec.if_type_label)
 
         console.print(table)
         return
@@ -62,7 +63,8 @@ def show_device_interfaces(device: Device, **options):
     for iface in sorted(device.interfaces.values()):
         if not iface.used:
             if options["show_all"]:
-                add_row(iface.name, None, None, keywords.NOT_USED)
+                if_spec = device.device_type_spec.get_interface(if_name=iface.name)
+                add_row(iface.name, None, keywords.NOT_USED, if_spec.if_type_label)
             continue
 
         if not (if_prof := getattr(iface, "profile", None)):
@@ -93,15 +95,21 @@ def show_device_interfaces(device: Device, **options):
 @opt_devices(required=True)
 def cli_design_report_interfaces(devices: Tuple[str], **flags):
     """
-        report device interfaces usage
+    report device interfaces usage
 
     \b
-        The output includes the interface name, description, assigned profile, and
-        physical port type.  By default this command will show only interfaces that
-        are used in the design.  Any unused interfaces will be omitted.  Additonal
-        flag options:
-           --all : show the unused interfaces
-           --unused : show only the unused interfaces
+    The output includes the interface name, description, assigned profile, and
+    physical port type.  By default this command will show only interfaces that
+    are used in the design.  Any unused interfaces will be omitted.  Additonal
+    flag options:
+       --all : show the unused interfaces
+       --unused : show only the unused interfaces
+
+    \f
+    Parameters
+    ----------
+    devices: tuple[str]
+        A tuple of device names provided by the User
     """
 
     dev_objs = get_devices(device_list=devices)

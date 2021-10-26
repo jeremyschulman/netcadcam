@@ -1,31 +1,38 @@
-from typing import Optional
+# -----------------------------------------------------------------------------
+# Private Imports
+# -----------------------------------------------------------------------------
 
 from netcad.device import DeviceInterface
-from netcad.device.device_group_mlag import DeviceMLagPairGroup
-
 from .cable_plan import CablePlanner
 
-__all__ = ["CableMLagsByLabel"]
+# -----------------------------------------------------------------------------
+# Exports
+# -----------------------------------------------------------------------------
+
+__all__ = ["CableMLagsByCableId"]
 
 
-class CableMLagsByLabel(CablePlanner):
+# -----------------------------------------------------------------------------
+#
+#                                 CODE BEGINS
+#
+# -----------------------------------------------------------------------------
+
+
+class CableMLagsByCableId(CablePlanner):
     def __init__(self, lables, *vargs, **kwargs):
-        super(CableMLagsByLabel, self).__init__(*vargs, **kwargs)
+        super(CableMLagsByCableId, self).__init__(*vargs, **kwargs)
         self.labels = lables
 
     def validate(self):
-        pass
+        self.validate_endpoints()
 
     def apply(self):
-        # find the pseudo-device activing as the MLAG redundant pair.  It will have
-        # an attribute called `is_group`
 
-        find_mlag_dev = filter(
-            lambda d: isinstance(d, DeviceMLagPairGroup), self.devices
-        )
-        mlag_dev: Optional[DeviceMLagPairGroup]
+        # find the pseudo-device activing as the MLAG redundant pair.  If one is
+        # not found, then raise an exception.
 
-        if not (mlag_dev := next(find_mlag_dev, None)):
+        if not (found_mlag_dev := [dev for dev in self.devices if dev.is_pseudo]):
             raise RuntimeError(
                 f"Unexpected missing a designated mlag device in cable plan: {self.name}"
             )
@@ -33,7 +40,7 @@ class CableMLagsByLabel(CablePlanner):
         # check if there is more than one, there should not be, but if there is,
         # then it's an error
 
-        if next(find_mlag_dev, None):
+        if len(found_mlag_dev) > 1:
             raise RuntimeError(
                 f"Unxpected found more than one designated mlag device in cable plan: {self.name}"
             )
@@ -41,6 +48,7 @@ class CableMLagsByLabel(CablePlanner):
         # find the set of interfaces (and labels) that the designated mlag-dev
         # is using that matches the list of allowed labels
 
+        mlag_dev = found_mlag_dev[0]
         mlag_references = {
             interface.cable_id: interface
             for interface in mlag_dev.interfaces.values()
@@ -78,5 +86,4 @@ class CableMLagsByLabel(CablePlanner):
         # that will verify this plan.
 
         self.validate()
-
         return len(self.cables)

@@ -1,2 +1,2 @@
 from .client import NetboxClient
-from .origin import OriginNetbox as Origin
+from .netbox_origin import OriginNetbox as Origin

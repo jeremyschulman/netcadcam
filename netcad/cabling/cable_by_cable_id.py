@@ -1,7 +1,7 @@
 from .cable_plan import CablePlanner
 
 
-class CableByInterfaceLabel(CablePlanner):
+class CableByCableId(CablePlanner):
     def apply(self):
         """
         The `apply` function will create the cable associations between
