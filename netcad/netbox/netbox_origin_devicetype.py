@@ -23,6 +23,8 @@ from .devices import NetboxDevices
 
 
 class NetboxOriginDeviceType(OriginDeviceType):
+    package = __package__
+
     def __init__(self, *vargs, **kwargs):
         super(NetboxOriginDeviceType, self).__init__(*vargs, **kwargs)
         self._if_name2obj = {
@@ -87,11 +89,11 @@ class NetboxOriginDeviceType(OriginDeviceType):
                     log.error(f"Execpted device-type {model} not found in Netbox")
                     continue
 
-                model_payload["netcad.origin"] = origin_cls.name
+                model_payload["netcad.origin"] = origin_cls.register_name
                 log.info(f"Saving device-type: {model}")
 
                 o_dt = NetboxOriginDeviceType(
-                    origin_name=origin_cls.name, origin_spec=model_payload
+                    origin_name=origin_cls.register_name, origin_spec=model_payload
                 )
 
                 await o_dt.cache_save()

@@ -50,13 +50,15 @@ def clig_get_device_types():
 
     try:
         origin_name = config["get"]["device-types"]
+        origin_package = config["origin"][origin_name]["package"]
+        origin_cls = Origin.import_origin(package=origin_package)
+        origin_cls.device_type.origin_cls = origin_cls
+
     except KeyError:
         raise RuntimeError(
             "Unable to find [get.device-types] in configuration file: "
             f"{netcad_globals.g_netcad_config_file.absolute()}"
         )
-
-    origin_cls = Origin.import_origin(origin_name)
 
     # find all devices in the design
 

@@ -2,10 +2,9 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Iterable, AnyStr
+from typing import Iterable, AnyStr, Optional
 from functools import lru_cache
 import json
-
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -36,6 +35,8 @@ class OriginDeviceTypeInterfaceSpec:
 
 
 class OriginDeviceType(object):
+    package: Optional[str] = None
+
     def __init__(self, origin_name, origin_spec):
         self.origin_name = origin_name
         self.origin_spec = origin_spec
@@ -61,14 +62,16 @@ class OriginDeviceType(object):
         payload = json.load(pm_file.open())
 
         try:
-            origin_name = payload["netcad.origin"]
+            origin = payload["netcad.origin"]
         except KeyError:
             raise RuntimeError(
                 f'Missing expected "netcad.origin" key in device-type file: {pm_file}'
             )
 
-        origin_cls = Origin.import_origin(origin_name)
-        return origin_cls.device_type(origin_name=origin_cls.name, origin_spec=payload)
+        origin_cls = Origin.import_origin(origin)
+        return origin_cls.device_type(
+            origin_name=origin_cls.register_name, origin_spec=payload
+        )
 
         # cache_dir = netcad_globals.g_netcad_cache_dir
         # dt_dir = cache_dir.joinpath("device-types")
@@ -80,7 +83,7 @@ class OriginDeviceType(object):
         cache_dir = netcad_globals.g_netcad_cache_dir
         dt_dir = cache_dir.joinpath("device-types")
         pm_file = dt_dir.joinpath(f"{self.product_model}.json")
-        self.origin_spec["netcad.origin"] = self.origin_name
+        self.origin_spec["netcad.origin"] = f"{self.package}:{self.origin_name}"
 
         async with aiofiles.open(str(pm_file.absolute()), "w+") as ofile:
             await ofile.write(json.dumps(self.origin_spec, indent=3))

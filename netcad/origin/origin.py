@@ -14,16 +14,16 @@ from .origin_device_type import OriginDeviceType
 
 
 class Origin(Registry):
-    name = None
+    register_name = "origin"
     device_type: Optional[Type[OriginDeviceType]] = None
 
-    def __init_subclass__(cls, **kwargs):
-        cls.registry_add(cls.name, cls)
-
     @classmethod
-    def import_origin(cls, name) -> "Origin":
+    def import_origin(cls, package: str) -> "Origin":
+        module, _, name = package.rpartition(":")
+
         try:
-            import_module(name=name)
+            import_module(module)
+
         except ModuleNotFoundError:
             raise RuntimeError(f"Unable to import device-types origin module: {name}")
 

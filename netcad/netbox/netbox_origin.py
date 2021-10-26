@@ -21,5 +21,6 @@ from .netbox_origin_devicetype import NetboxOriginDeviceType
 
 
 class OriginNetbox(Origin):
-    name = "netcad.netbox"
+    package = __package__
+    register_name = "netbox"
     device_type = NetboxOriginDeviceType

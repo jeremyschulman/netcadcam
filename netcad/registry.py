@@ -12,6 +12,8 @@ class Registry(object):
     def __init_subclass__(cls, **kwargs):
         """each subclass will be given a unique registry dictionary"""
         cls.__registry = dict()
+        if hasattr(cls, "register_name"):
+            cls.registry_add(cls.register_name, cls)
 
     @classmethod
     def registry_add(cls, name, obj):
