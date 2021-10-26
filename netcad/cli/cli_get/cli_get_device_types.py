@@ -14,7 +14,7 @@ from netcad.cli.main import clig_get
 from netcad.config import netcad_globals, Environment
 from netcad.init import loader
 from netcad.device import Device
-from netcad.origin import Origin
+from netcad.origin import OriginDeviceType
 
 
 # -----------------------------------------------------------------------------
@@ -51,8 +51,7 @@ def clig_get_device_types():
     try:
         origin_name = config["get"]["device-types"]
         origin_package = config["origin"][origin_name]["package"]
-        origin_cls = Origin.import_origin(package=origin_package)
-        origin_cls.device_type.origin_cls = origin_cls
+        origin_cls = OriginDeviceType.import_origin(package=origin_package)
 
     except KeyError:
         raise RuntimeError(
@@ -93,6 +92,4 @@ def clig_get_device_types():
 
     log.info(f"Fetching from {origin_name}, device-types: {','.join(product_models)}")
 
-    asyncio.run(
-        origin_cls.device_type.get(origin_cls=origin_cls, product_models=product_models)
-    )
+    asyncio.run(origin_cls.get(product_models=product_models))

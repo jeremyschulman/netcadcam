@@ -233,9 +233,10 @@ class Device(Registry):
         """
 
         try:
-            spec = cls.device_type_spec = OriginDeviceType.cache_load(
+            spec = cls.device_type_spec = OriginDeviceType.load(
                 product_model=cls.product_model
             )
+
         except FileNotFoundError:
             raise RuntimeError(
                 f"Missing device-type file for {cls.__name__}, product-model: {cls.product_model}.  "

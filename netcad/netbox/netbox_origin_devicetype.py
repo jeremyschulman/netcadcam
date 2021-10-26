@@ -17,14 +17,13 @@ from httpx import Response
 from netcad.config import netcad_globals
 from netcad.igather import as_completed
 from netcad.logger import get_logger
-from netcad.origin import Origin, OriginDeviceType, OriginDeviceTypeInterfaceSpec
+from netcad.origin import OriginDeviceType, OriginDeviceTypeInterfaceSpec
 
 from .devices import NetboxDevices
+from .netbox_origin import NetboxOrigin
 
 
-class NetboxOriginDeviceType(OriginDeviceType):
-    package = __package__
-
+class NetboxOriginDeviceType(OriginDeviceType, NetboxOrigin):
     def __init__(self, *vargs, **kwargs):
         super(NetboxOriginDeviceType, self).__init__(*vargs, **kwargs)
         self._if_name2obj = {
@@ -54,7 +53,7 @@ class NetboxOriginDeviceType(OriginDeviceType):
     # -------------------------------------------------------------------------
 
     @classmethod
-    async def get(cls, origin_cls: Origin, product_models: Iterable[AnyStr]):
+    async def get(cls, product_models: Iterable[AnyStr]):
         """
         This function is used to fetch the specified device-types given the list
         of provided `product_models`.  Each of these device-type definitons will
@@ -64,8 +63,6 @@ class NetboxOriginDeviceType(OriginDeviceType):
 
         Parameters
         ----------
-        origin_cls
-
         product_models:
             expected Sequences of strings used for the purpose of fetching the
             device-type definitions from the origin.
@@ -89,11 +86,8 @@ class NetboxOriginDeviceType(OriginDeviceType):
                     log.error(f"Execpted device-type {model} not found in Netbox")
                     continue
 
-                model_payload["netcad.origin"] = origin_cls.register_name
-                log.info(f"Saving device-type: {model}")
+                model_payload["netcad.origin"] = cls.register_name
+                log.info(f"Saving {cls.register_name} device-type: {model}")
 
-                o_dt = NetboxOriginDeviceType(
-                    origin_name=origin_cls.register_name, origin_spec=model_payload
-                )
-
-                await o_dt.cache_save()
+                o_dt = cls(origin_spec=model_payload)
+                await o_dt.save()

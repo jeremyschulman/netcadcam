@@ -8,7 +8,7 @@ from netcad.origin import Origin
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["OriginNetbox"]
+__all__ = ["NetboxOrigin"]
 
 
 # -----------------------------------------------------------------------------
@@ -17,10 +17,7 @@ __all__ = ["OriginNetbox"]
 #
 # -----------------------------------------------------------------------------
 
-from .netbox_origin_devicetype import NetboxOriginDeviceType
 
-
-class OriginNetbox(Origin):
+class NetboxOrigin(Origin):
     package = __package__
     register_name = "netbox"
-    device_type = NetboxOriginDeviceType
