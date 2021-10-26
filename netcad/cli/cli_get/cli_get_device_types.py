@@ -4,24 +4,30 @@
 
 import asyncio
 import os
-from typing import AnyStr, Iterable
-from importlib import import_module
 
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.origin import Origin
 from netcad.logger import get_logger
 from netcad.cli.main import clig_get
 from netcad.config import netcad_globals, Environment
 from netcad.init import loader
 from netcad.device import Device
+from netcad.origin import Origin
 
 
-async def get_device_types(origin: Origin, product_models: Iterable[AnyStr]):
+# -----------------------------------------------------------------------------
+# Exports (none)
+# -----------------------------------------------------------------------------
 
-    await origin.get_device_types(product_models)
+__all__ = []
+
+# -----------------------------------------------------------------------------
+#
+#                                 CODE BEGINS
+#
+# -----------------------------------------------------------------------------
 
 
 @clig_get.command(name="device-types")
@@ -41,32 +47,23 @@ def clig_get_device_types():
     loader.import_networks()
 
     config = netcad_globals.g_config
+
     try:
         origin_name = config["get"]["device-types"]
-        origin_module = import_module(name=origin_name)
-
-    except ModuleNotFoundError as exc:
-        raise RuntimeError(
-            f"Unable to import device-types origin module: {exc.args[0]}"
-        )
-
     except KeyError:
         raise RuntimeError(
             "Unable to find [get.device-types] in configuration file: "
             f"{netcad_globals.g_netcad_config_file.absolute()}"
         )
 
-    if not (origin_cls := getattr(origin_module, "Origin", None)):
-        raise RuntimeError(
-            f"Origin module: {origin_name} does not define Origin class."
-        )
+    origin_cls = Origin.import_origin(origin_name)
 
     # find all devices in the design
 
     if not (devices := Device.registry_items(subclasses=True)):
         log.warning(
             "No devices found in this design.  "
-            f"Check config-file: {os.environ[Environment.NETCAD_CONFIGFILE]}"
+            f"Check config-file: {netcad_globals.g_netcad_config_file}"
         )
         return
 
@@ -93,4 +90,7 @@ def clig_get_device_types():
     # Run the processing in async model for performance benefits.
 
     log.info(f"Fetching from {origin_name}, device-types: {','.join(product_models)}")
-    asyncio.run(get_device_types(origin=origin_cls(), product_models=product_models))
+
+    asyncio.run(
+        origin_cls.device_type.get(origin_cls=origin_cls, product_models=product_models)
+    )

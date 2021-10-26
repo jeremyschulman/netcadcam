@@ -2,30 +2,29 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Iterable, AnyStr
-from os import environ
-from pathlib import Path
-import json
-
-# -----------------------------------------------------------------------------
-# Public Imports
-# -----------------------------------------------------------------------------
-
-import aiofiles
+from typing import Optional, Type
+from importlib import import_module
 
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
+from netcad.registry import Registry
+from .origin_device_type import OriginDeviceType
 
-class Origin(object):
-    def __init__(self):
-        self.cache_dir = Path(environ["NETCAD_CACHEDIR"])
 
-    @staticmethod
-    async def save_file(filepath: Path, content):
-        async with aiofiles.open(filepath.absolute(), "w+") as ofile:
-            await ofile.write(json.dumps(content, indent=3))
+class Origin(Registry):
+    name = None
+    device_type: Optional[Type[OriginDeviceType]] = None
 
-    async def get_device_types(self, product_models: Iterable[AnyStr]):
-        raise NotImplementedError()
+    def __init_subclass__(cls, **kwargs):
+        cls.registry_add(cls.name, cls)
+
+    @classmethod
+    def import_origin(cls, name) -> "Origin":
+        try:
+            import_module(name=name)
+        except ModuleNotFoundError:
+            raise RuntimeError(f"Unable to import device-types origin module: {name}")
+
+        return Origin.registry_get(name)

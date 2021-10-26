@@ -20,9 +20,9 @@ import jinja2
 
 from netcad.device.device_interface import DeviceInterfaces, DeviceInterface
 from netcad.registry import Registry
-from netcad.config.cache import cache_load_device_type
 from netcad.config import Environment
 from netcad.testing import DEFAULT_TESTING_SERVICES
+from netcad.origin import OriginDeviceType
 
 if TYPE_CHECKING:
     from netcad.vlan.vlan_profile import VlanProfile
@@ -233,7 +233,7 @@ class Device(Registry):
         """
 
         try:
-            spec = cls.device_type_spec = cache_load_device_type(
+            spec = cls.device_type_spec = OriginDeviceType.cache_load(
                 product_model=cls.product_model
             )
         except FileNotFoundError:
@@ -245,8 +245,8 @@ class Device(Registry):
         # initialize the interfaces in the device so that those defined in the
         # spec exist; initializing the profile value to None.
 
-        for if_def in spec["interfaces"]:
-            cls.interfaces[if_def["name"]].profile = None
+        for if_name in spec.interface_names:
+            cls.interfaces[if_name].profile = None
 
     def render_interface_unused(
         self, env: jinja2.Environment, interface: "DeviceInterface"

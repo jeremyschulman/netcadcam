@@ -47,18 +47,11 @@ def show_device_interfaces(device: Device, **options):
     # If the User only wants to see the unused interfaces ...
     # -------------------------------------------------------------------------
 
-    def _get_if_spec(if_name):
-        return next(
-            _if_spec
-            for _if_spec in device.device_type_spec["interfaces"]
-            if _if_spec["name"] == if_name
-        )
-
     if options["show_unused"]:
         for iface in sorted(device.interfaces.values()):
             if not iface.used:
-                if_spec = _get_if_spec(iface.name)
-                add_row(iface.name, None, keywords.NOT_USED, if_spec["type"]["label"])
+                if_spec = device.device_type_spec.get_interface(if_name=iface.name)
+                add_row(iface.name, None, keywords.NOT_USED, if_spec.if_type_label)
 
         console.print(table)
         return
@@ -70,8 +63,8 @@ def show_device_interfaces(device: Device, **options):
     for iface in sorted(device.interfaces.values()):
         if not iface.used:
             if options["show_all"]:
-                if_spec = _get_if_spec(iface.name)
-                add_row(iface.name, None, keywords.NOT_USED, if_spec["type"]["label"])
+                if_spec = device.device_type_spec.get_interface(if_name=iface.name)
+                add_row(iface.name, None, keywords.NOT_USED, if_spec.if_type_label)
             continue
 
         if not (if_prof := getattr(iface, "profile", None)):
