@@ -37,12 +37,12 @@ def import_networks(root_path: Optional[AnyStr] = None) -> List[ModuleType]:
     # python modules to import.
 
     if not (pkg_list := netcad_globals.g_config.get("networks")):
-        config_file = os.environ[Environment.NETCAD_CONFIGFILE]
         raise RuntimeError(
-            f'Missing "networks" definition in config-file: {config_file}'
+            f'Missing "networks" definition in config-file: {netcad_globals.g_netcad_config_file}'
         )
 
     try:
         return [import_module(pkg) for pkg in pkg_list]
+
     except ImportError as exc:
         raise RuntimeError(f"Unable to load network module: {exc.args[0]}")
