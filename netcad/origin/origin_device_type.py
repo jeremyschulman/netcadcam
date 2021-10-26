@@ -73,12 +73,6 @@ class OriginDeviceType(object):
             origin_name=origin_cls.register_name, origin_spec=payload
         )
 
-        # cache_dir = netcad_globals.g_netcad_cache_dir
-        # dt_dir = cache_dir.joinpath("device-types")
-        # pm_file = dt_dir.joinpath(f"{product_model}.json")
-        # payload = json.load(pm_file.open())
-        # origin_name = payload["netcad.origin"]
-
     async def cache_save(self):
         cache_dir = netcad_globals.g_netcad_cache_dir
         dt_dir = cache_dir.joinpath("device-types")
