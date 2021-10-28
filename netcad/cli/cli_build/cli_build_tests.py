@@ -22,9 +22,10 @@ from netcad.device import Device
 from netcad.config import Environment
 from netcad.testing import TestingServices, TestCases
 
-from netcad.cli.main import clig_build
 from netcad.cli.common_opts import opt_devices, opt_network
 from netcad.cli import device_inventory
+
+from .clig_build import clig_build
 
 # -----------------------------------------------------------------------------
 # Exports (none)
