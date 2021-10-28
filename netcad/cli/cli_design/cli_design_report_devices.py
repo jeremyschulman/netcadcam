@@ -19,9 +19,10 @@ from rich.table import Table
 from netcad.logger import get_logger
 from netcad.device import Device
 
-from netcad.cli.main import clig_design_report
 from netcad.cli.common_opts import opt_network
 from netcad.cli.device_inventory import get_network_devices
+
+from .clig_design import clig_design_report
 
 # -----------------------------------------------------------------------------
 # Exports (none)
