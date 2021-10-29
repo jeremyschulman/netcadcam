@@ -19,10 +19,10 @@ import jinja2
 from netcad.jinja2.env import get_env
 from netcad.logger import get_logger
 from netcad.config import Environment
-from netcad.cli.main import clig_build
-
 from netcad.cli.common_opts import opt_devices, opt_network
 from netcad.cli import device_inventory
+
+from .clig_build import clig_build
 
 # -----------------------------------------------------------------------------
 # Exports (none)

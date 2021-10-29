@@ -1,4 +1,4 @@
-from typing import Dict, Hashable, Set
+from typing import Dict, Hashable, Set, Sequence
 from collections import defaultdict
 
 from netcad.device import Device, DeviceInterface
@@ -14,7 +14,7 @@ class CablePlanner(Registry):
         self.cables: Dict[Hashable, set] = defaultdict(set)
         self.validated = False
 
-    def add_devices(self, *devices: Device):
+    def add_devices(self, devices: Sequence[Device]):
         self.devices.update(devices)
 
     def add_endpoint(self, cable_id, interface: DeviceInterface):
@@ -107,7 +107,7 @@ class CablePlanner(Registry):
 
         return device_cables
 
-    def apply(self):
+    def build(self):
         """
         Apply the algorithm of performing the cable plan.  The Subclass must
         implement this method to perform the actual "cabling plan".   The Caller

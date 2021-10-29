@@ -16,12 +16,6 @@ def clig_audit():
     pass
 
 
-@cli.group("build")
-def clig_build():
-    """build configs, tests, ..."""
-    loader.import_networks()
-
-
 # -----------------------------------------------------------------------------
 # get command
 # -----------------------------------------------------------------------------
@@ -45,23 +39,6 @@ def clig_config():
     pass
 
 
-# -----------------------------------------------------------------------------
-#
-#                                  design
-#
-# -----------------------------------------------------------------------------
-
-
-@cli.group(name="design")
-def clig_design():
-    """design report, ..."""
-    loader.import_networks()
-
-
-@clig_design.group(name="report")
-def clig_design_report():
-    """design report subcommands ..."""
-    pass
 
 
 @cli.command(name="init")

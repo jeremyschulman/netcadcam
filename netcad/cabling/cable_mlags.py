@@ -1,4 +1,10 @@
 # -----------------------------------------------------------------------------
+# System Imports
+# -----------------------------------------------------------------------------
+
+from typing import Sequence
+
+# -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
@@ -20,14 +26,15 @@ __all__ = ["CableMLagsByCableId"]
 
 
 class CableMLagsByCableId(CablePlanner):
-    def __init__(self, lables, *vargs, **kwargs):
-        super(CableMLagsByCableId, self).__init__(*vargs, **kwargs)
-        self.labels = lables
+    def __init__(self, name: str, cable_ids=Sequence[str]):
+        super(CableMLagsByCableId, self).__init__(name=name)
+        self.cable_ids = cable_ids
 
     def validate(self):
         self.validate_endpoints()
 
-    def apply(self):
+    def build(self, cable_ids=None):
+        only_cables = cable_ids or self.cable_ids
 
         # find the pseudo-device activing as the MLAG redundant pair.  If one is
         # not found, then raise an exception.
@@ -52,7 +59,7 @@ class CableMLagsByCableId(CablePlanner):
         mlag_references = {
             interface.cable_id: interface
             for interface in mlag_dev.interfaces.values()
-            if interface.cable_id and interface.cable_id in self.labels
+            if interface.cable_id and interface.cable_id in self.cable_ids
         }
 
         devices = self.devices.copy()
