@@ -38,7 +38,7 @@ class TopologyService(DesignerService):
         self.cabling.add_devices(*devices)
 
     async def build(self):
-        self.cabling.apply()
+        self.cabling.build()
 
     async def validate(self):
         pass
