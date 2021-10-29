@@ -16,7 +16,7 @@ def clig_design():
     modules = loader.import_networks()
 
     design_tasks = [
-        getattr(mod, 'design')()
+        getattr(mod, "design")()
         for mod in modules
         if hasattr(mod, "design") and asyncio.iscoroutinefunction(mod.design)
     ]

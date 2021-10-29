@@ -2,7 +2,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Sequence
+from typing import Sequence, Optional
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -33,7 +33,7 @@ class CableMLagsByCableId(CablePlanner):
     def validate(self):
         self.validate_endpoints()
 
-    def build(self, cable_ids=None):
+    def build(self, cable_ids: Optional[Sequence[str]] = None):
         only_cables = cable_ids or self.cable_ids
 
         # find the pseudo-device activing as the MLAG redundant pair.  If one is
@@ -59,7 +59,7 @@ class CableMLagsByCableId(CablePlanner):
         mlag_references = {
             interface.cable_id: interface
             for interface in mlag_dev.interfaces.values()
-            if interface.cable_id and interface.cable_id in self.cable_ids
+            if interface.cable_id and interface.cable_id in only_cables
         }
 
         devices = self.devices.copy()

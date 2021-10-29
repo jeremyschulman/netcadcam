@@ -1,7 +1,7 @@
 import click
 
 from netcad import __version__
-from netcad.init import init, loader
+from netcad.init import init
 
 
 @click.group()
@@ -37,8 +37,6 @@ def clig_get():
 def clig_config():
     """configure netcad project settings ..."""
     pass
-
-
 
 
 @cli.command(name="init")
