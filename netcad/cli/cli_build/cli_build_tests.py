@@ -20,7 +20,7 @@ import click
 from netcad.logger import get_logger
 from netcad.device import Device
 from netcad.config import Environment
-from netcad.testing import TestingServices, TestCases
+from netcad.test_services import TestingService, TestCases
 
 from netcad.cli.common_opts import opt_devices, opt_network
 from netcad.cli import device_inventory
@@ -110,7 +110,7 @@ def cli_build_tests(devices: Tuple[str], networks: Tuple[str], tests_dir: Path):
     device_objs.sort()
 
     log.info(f"Building device audits for {len(device_objs)} devices")
-    available_test_cases = TestingServices.registry_items()
+    available_test_cases = TestingService.registry_items()
 
     async def run():
         tasks = [

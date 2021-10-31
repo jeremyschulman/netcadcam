@@ -21,14 +21,26 @@ from netcad.config import netcad_globals
 from netcad.registry import Registry
 
 
-class Origin(Registry):
+class Origin(Registry, registry_name="origins"):
     package: Optional[str] = None
-    register_name: Optional[str] = None
+    origin_name: Optional[str] = None
+
+    # -------------------------------------------------------------------------
+    #
+    #                            CLASS METHODS
+    #
+    # -------------------------------------------------------------------------
+
+    def __init_subclass__(cls, **kwargs):
+        if not cls.origin_name:
+            super().__init_subclass__(**kwargs)
+            return
+
+        cls.registry_add(name=cls.origin_name, obj=cls)
 
     @classmethod
     def import_origin(cls, package: str):
         module, _, name = package.rpartition(":")
-
         try:
             import_module(module)
 
@@ -67,7 +79,7 @@ class Origin(Registry):
         cache_dir = netcad_globals.g_netcad_cache_dir
         dt_dir = cache_dir.joinpath(cache_subdir)
         pm_file = dt_dir.joinpath(f"{cache_item_name}.json")
-        payload["netcad.origin"] = self.register_name
+        payload["netcad.origin"] = self.origin_name
 
         async with aiofiles.open(str(pm_file.absolute()), "w+") as ofile:
             await ofile.write(json.dumps(payload, indent=3))

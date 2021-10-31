@@ -1,10 +1,10 @@
 from netcad.registry import Registry
 from .test_cases import TestCases
 
-__all__ = ["TestingServices", "testing_service"]
+__all__ = ["TestingService", "testing_service"]
 
 
-class TestingServices(Registry):
+class TestingService(Registry, registry_name="test_services"):
     """
     TestingServices registry used to register TestCases class so that they can
     be looked up by name for the purposes of building tests, ...
@@ -49,4 +49,4 @@ class TestingServices(Registry):
 
 
 # decorator function is the registration, see __call__ usage above.
-testing_service = TestingServices()
+testing_service = TestingService()

@@ -21,7 +21,7 @@ import jinja2
 from netcad.device.device_interface import DeviceInterfaces, DeviceInterface
 from netcad.registry import Registry
 from netcad.config import Environment
-from netcad.testing import DEFAULT_TESTING_SERVICES
+from netcad.test_services import DEFAULT_TESTING_SERVICES
 from netcad.origin import OriginDeviceType
 
 if TYPE_CHECKING:
@@ -45,7 +45,7 @@ PathLike = TypeVar("PathLike", str, Path)
 DeviceInterfacesLike = TypeVar("DeviceInterfacesLike", DeviceInterfaces, dict)
 
 
-class Device(Registry):
+class Device(Registry, registry_name="devices"):
     """
     Device base class that is used by Caller to define specific Device useage
     representations, also referred to as "roles", "templates", 'stencils", etc.
@@ -208,7 +208,8 @@ class Device(Registry):
         Device _instance_ will get a deepcopy of these interfaces so that they
         can make one-off adjustments to the device standard.
         """
-        Registry.__init_subclass__()
+        super().__init_subclass__(**kwargs)
+
         cls.interfaces = DeviceInterfaces(DeviceInterface)
         cls.interfaces.device_cls = cls
 

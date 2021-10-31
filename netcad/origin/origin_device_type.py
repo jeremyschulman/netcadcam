@@ -34,6 +34,11 @@ class OriginDeviceType(Origin):
     def __init__(self, origin_spec):
         self.origin_spec = origin_spec
 
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        if cls.origin_name:
+            cls.registry_add(cls.origin_name, cls)
+
     @property
     def product_model(self) -> str:
         raise NotImplementedError()

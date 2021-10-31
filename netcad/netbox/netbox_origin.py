@@ -20,4 +20,4 @@ __all__ = ["NetboxOrigin"]
 
 class NetboxOrigin(Origin):
     package = __package__
-    register_name = "netbox"
+    origin_name = "netbox"

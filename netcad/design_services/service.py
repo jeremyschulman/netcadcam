@@ -3,6 +3,7 @@
 # -----------------------------------------------------------------------------
 
 from typing import List
+from netcad.device import Device
 
 # -----------------------------------------------------------------------------
 # Pubic Imports
@@ -13,7 +14,6 @@ from typing import List
 # -----------------------------------------------------------------------------
 
 from netcad.registry import Registry
-from netcad.device import Device
 
 # -----------------------------------------------------------------------------
 # Exports`
@@ -22,9 +22,7 @@ from netcad.device import Device
 __all__ = ["DesignerService"]
 
 
-class DesignerService(Registry):
-    register_name = "designer_service"
-
+class DesignerService(Registry, registry_name="design_services"):
     def __init__(self):
         self.devices = set()
 

@@ -15,8 +15,8 @@ from pydantic import BaseModel, PositiveInt
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device, DeviceInterface
-from netcad.testing import TestCases, TestCase
-from netcad.testing import testing_service
+from netcad.test_services import TestCases, TestCase
+from netcad.test_services import testing_service
 
 # -----------------------------------------------------------------------------
 # Exports

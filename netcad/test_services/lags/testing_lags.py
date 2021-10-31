@@ -16,10 +16,10 @@ from pydantic import BaseModel
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device, DeviceInterface
-from netcad.testing import TestCases, TestCase
+from netcad.test_services import TestCases, TestCase
 from netcad.device import InterfaceLag
 
-from netcad.testing import testing_service
+from netcad.test_services import testing_service
 
 # -----------------------------------------------------------------------------
 # Exports
