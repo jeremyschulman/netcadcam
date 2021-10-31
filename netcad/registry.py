@@ -132,15 +132,7 @@ class _RegistryFactory(object):
 
 class Registry(_RegistryFactory):
     def __init_subclass__(cls, registry_name: Optional[str] = None, **kwargs):
-        # print(f"new class is {cls.__name__}")`
-        # print(f"Registry is {id(Registry._registry)}")
-        orig_r = cls._registry
-        # print(f"orig_r is {id(orig_r)}")
-        new_r = dict()
-        # print(f"new_r is {id(new_r)}")
-
         if registry_name:
-            orig_r[registry_name] = cls
+            cls._registry[registry_name] = cls
 
-        setattr(cls, "_registry", new_r)
-        # print(f"Registry after is {id(Registry._registry)}")
+        cls._registry = dict()
