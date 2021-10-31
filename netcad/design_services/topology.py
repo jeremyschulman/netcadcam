@@ -11,7 +11,7 @@ from typing import List
 from netcad.device import Device
 from netcad.cabling import CableByCableId
 
-from .service import DesignerService
+from .service import DesignService
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -26,7 +26,7 @@ __all__ = ["TopologyService"]
 # -----------------------------------------------------------------------------
 
 
-class TopologyService(DesignerService, registry_name="topology_services"):
+class TopologyService(DesignService, registry_name="topology_services"):
     def __init__(self, network: str):
         super(TopologyService, self).__init__()
         self.network = network

@@ -19,10 +19,10 @@ from netcad.registry import Registry
 # Exports`
 # -----------------------------------------------------------------------------
 
-__all__ = ["DesignerService"]
+__all__ = ["DesignService"]
 
 
-class DesignerService(Registry, registry_name="design_services"):
+class DesignService(Registry, registry_name="design_services"):
     def __init__(self):
         self.devices = set()
 
