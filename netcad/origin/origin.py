@@ -20,22 +20,58 @@ import aiofiles
 from netcad.config import netcad_globals
 from netcad.registry import Registry
 
+# -----------------------------------------------------------------------------
+# Exports
+# -----------------------------------------------------------------------------
 
-class Origin(Registry):
+__all__ = ["Origin"]
+
+# -----------------------------------------------------------------------------
+#
+#                                 CODE BEGINS
+#
+# -----------------------------------------------------------------------------
+
+
+class Origin(Registry, registry_name="origins"):
     package: Optional[str] = None
-    register_name: Optional[str] = None
+    origin_name: Optional[str] = None
+
+    # -------------------------------------------------------------------------
+    #
+    #                               Class Methods
+    #
+    # -------------------------------------------------------------------------
 
     @classmethod
     def import_origin(cls, package: str):
-        module, _, name = package.rpartition(":")
+        """
+        import_origin is used to import a given origin python module using the
+        standard dot-colon nation.
 
+        Parameters
+        ----------
+        package: str
+            The package name is dot-colon format.
+
+        Returns
+        -------
+        The class representing the origin so that the Caller can use the class for
+        class specific functions/instance creation.
+        """
+        module, _, name = package.rpartition(":")
         try:
             import_module(module)
 
         except ModuleNotFoundError:
-            raise RuntimeError(f"Unable to import device-types origin module: {name}")
+            raise RuntimeError(f"Unable to import origin module: {module}")
 
-        return cls.registry_get(name)
+        if not (origin_cls := cls.registry_get(name)):
+            raise RuntimeError(
+                f"Missing expected class: {name} for origin module: {module}"
+            )
+
+        return origin_cls
 
     @classmethod
     @lru_cache
@@ -67,7 +103,26 @@ class Origin(Registry):
         cache_dir = netcad_globals.g_netcad_cache_dir
         dt_dir = cache_dir.joinpath(cache_subdir)
         pm_file = dt_dir.joinpath(f"{cache_item_name}.json")
-        payload["netcad.origin"] = self.register_name
+        payload["netcad.origin"] = self.origin_name
 
         async with aiofiles.open(str(pm_file.absolute()), "w+") as ofile:
             await ofile.write(json.dumps(payload, indent=3))
+
+    # -------------------------------------------------------------------------
+    #
+    #                   Registry __dunder__ Overrides
+    #
+    # -------------------------------------------------------------------------
+
+    def __init_subclass__(cls, **kwargs):
+        """
+        Automatically registger subclasses of Origin by the `origin_name`
+        attribute value. This mechanism allows for the specific instances of
+        Origin, NetboxOrigin, for example, to be registgered by their name for
+        import/usage purposes.
+        """
+        if not cls.origin_name:
+            super().__init_subclass__(**kwargs)
+            return
+
+        cls.registry_add(name=cls.origin_name, obj=cls)

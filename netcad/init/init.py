@@ -18,7 +18,7 @@ import toml
 from netcad.config import netcad_globals
 from netcad.config import Environment
 from netcad import defaults as d
-from netcad.testing import init_import_testing_services
+from netcad.test_services import init_import_testing_services
 
 # -----------------------------------------------------------------------------
 # Exports

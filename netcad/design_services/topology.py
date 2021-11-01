@@ -11,7 +11,8 @@ from typing import List
 from netcad.device import Device
 from netcad.cabling import CableByCableId
 
-from .service import DesignerService
+from .design_service import DesignService
+from netcad.test_services import device, interfaces, lags, vlans, transceivers, cabling
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -26,12 +27,21 @@ __all__ = ["TopologyService"]
 # -----------------------------------------------------------------------------
 
 
-class TopologyService(DesignerService):
+class TopologyService(DesignService, registry_name="topology_services"):
     def __init__(self, network: str):
         super(TopologyService, self).__init__()
         self.network = network
         self.cabling = CableByCableId(name=network)
         self.registry_add(name=network, obj=self)
+
+        self.testing_services = [
+            device.DeviceInformationTestCases,
+            interfaces.InterfaceTestCases,
+            transceivers.TransceiverTestCases,
+            vlans.VlanTestCases,
+            cabling.InterfaceCablingTestCases,
+            lags.LagTestCases,
+        ]
 
     def add_devices(self, devices: List[Device]):
         super(TopologyService, self).add_devices(devices)
@@ -41,7 +51,4 @@ class TopologyService(DesignerService):
         self.cabling.build()
 
     async def validate(self):
-        pass
-
-    async def generate_tests(self, device: Device):
         pass

@@ -10,10 +10,10 @@ from typing import List, Optional
 
 from netcad.device import DeviceMLagPairMember, DeviceMLagPairGroup
 from netcad.device import InterfaceLag
-from netcad.testing import TestCases
-from netcad.testing import testing_service
+from netcad.test_services import TestCases
+from netcad.test_services import testing_service
 
-from netcad.testing import lags
+from netcad.test_services import lags
 
 
 # -----------------------------------------------------------------------------
@@ -39,8 +39,10 @@ class MLagTestCases(TestCases):
 
         # find all of the LAG interfaces defined on the psuedo MLAG devic
 
-        mlag_dev: DeviceMLagPairGroup = device.device_group
+        if not hasattr(device, "device_group"):
+            return None
 
+        mlag_dev: DeviceMLagPairGroup = device.device_group
         mlag_interfaces = sorted(
             (
                 interface
