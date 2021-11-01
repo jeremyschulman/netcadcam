@@ -2,7 +2,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Tuple, Dict, List
+from typing import Tuple, List
 import asyncio
 from pathlib import Path
 from logging import Logger
@@ -20,7 +20,6 @@ import click
 from netcad.logger import get_logger
 from netcad.device import Device
 from netcad.config import Environment
-from netcad.test_services import TestingService, TestCases
 
 from netcad.cli.common_opts import opt_devices, opt_network
 from netcad.cli import device_inventory
@@ -41,28 +40,19 @@ __all__ = []
 # -----------------------------------------------------------------------------
 
 DevicesList = List[Device]
-AvailableTestCases = Dict[str, TestCases]
 
 
-async def build_device_tests(
-    device: Device, available_test_cases: AvailableTestCases, tc_dir: Path, log: Logger
-):
+async def build_device_tests(device: Device, tc_dir: Path, log: Logger):
     log.info(f"Building tests for device: {device.name}")
     dev_tc_dir = tc_dir.joinpath(device.name)
     dev_tc_dir.mkdir(exist_ok=True)
 
-    for service_name in device.testing_services():
-        if not (testing_service := available_test_cases.get(service_name)):
-            raise RuntimeError(
-                f"Unable to located test cases service in registry: {service_name}"
-            )
+    for service_obj in device.services:
+        for tc_svccls in service_obj.testing_services:
+            if not (test_cases := tc_svccls.build(device)):
+                continue
 
-        test_cases = testing_service.build(device)
-        await test_cases.save(dev_tc_dir)
-
-    # for service_name, testing_service in available_test_cases.items():
-    #     test_cases = testing_service.build(device)
-    #     await test_cases.save(dev_tc_dir)
+            await test_cases.save(dev_tc_dir)
 
 
 @clig_build.command(name="tests")
@@ -110,14 +100,12 @@ def cli_build_tests(devices: Tuple[str], networks: Tuple[str], tests_dir: Path):
     device_objs.sort()
 
     log.info(f"Building device audits for {len(device_objs)} devices")
-    available_test_cases = TestingService.registry_items()
 
     async def run():
         tasks = [
             asyncio.create_task(
                 build_device_tests(
                     device=device,
-                    available_test_cases=available_test_cases,
                     tc_dir=tests_dir,
                     log=log,
                 )

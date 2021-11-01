@@ -39,8 +39,10 @@ class MLagTestCases(TestCases):
 
         # find all of the LAG interfaces defined on the psuedo MLAG devic
 
-        mlag_dev: DeviceMLagPairGroup = device.device_group
+        if not hasattr(device, "device_group"):
+            return None
 
+        mlag_dev: DeviceMLagPairGroup = device.device_group
         mlag_interfaces = sorted(
             (
                 interface

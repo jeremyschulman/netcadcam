@@ -22,6 +22,19 @@ from netcad.origin import OriginDeviceType, OriginDeviceTypeInterfaceSpec
 from .devices import NetboxDevices
 from .netbox_origin import NetboxOrigin
 
+# -----------------------------------------------------------------------------
+# Exports
+# -----------------------------------------------------------------------------
+
+__all__ = ["NetboxOriginDeviceType"]
+
+
+# -----------------------------------------------------------------------------
+#
+#                                 CODE BEGINS
+#
+# -----------------------------------------------------------------------------
+
 
 class NetboxOriginDeviceType(OriginDeviceType, NetboxOrigin):
     def __init__(self, *vargs, **kwargs):
@@ -29,6 +42,12 @@ class NetboxOriginDeviceType(OriginDeviceType, NetboxOrigin):
         self._if_name2obj = {
             iface["name"]: iface for iface in self.origin_spec["interfaces"]
         }
+
+    # -------------------------------------------------------------------------
+    #
+    #                OriginDeviceType ABC Implementations
+    #
+    # -------------------------------------------------------------------------
 
     @property
     def product_model(self) -> str:
@@ -86,8 +105,8 @@ class NetboxOriginDeviceType(OriginDeviceType, NetboxOrigin):
                     log.error(f"Execpted device-type {model} not found in Netbox")
                     continue
 
-                model_payload["netcad.origin"] = cls.register_name
-                log.info(f"Saving {cls.register_name} device-type: {model}")
+                model_payload["netcad.origin"] = cls.origin_name
+                log.info(f"Saving {cls.origin_name} device-type: {model}")
 
                 o_dt = cls(origin_spec=model_payload)
                 await o_dt.save()

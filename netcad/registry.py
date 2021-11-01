@@ -132,6 +132,23 @@ class _RegistryFactory(object):
 
 class Registry(_RegistryFactory):
     def __init_subclass__(cls, registry_name: Optional[str] = None, **kwargs):
+        """
+        This method is called when a new subclass of Registry, or its
+        decendants, is declared in code.
+
+        Parameters
+        ----------
+        registry_name
+        kwargs
+
+        Returns
+        -------
+
+        """
+        # if the subclass definition cantqains the keyword `registry_name` then
+        # register this new class with the parent class.  At this point the
+        # _registry will be in the parent getattr resolution.
+
         if registry_name:
             cls._registry[registry_name] = cls
 

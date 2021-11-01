@@ -1,1 +1,1 @@
-from . import testing_mlags
+from .testing_mlags import MLagTestCases

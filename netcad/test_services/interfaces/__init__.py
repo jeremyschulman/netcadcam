@@ -1,1 +1,1 @@
-from . import testing_interfaces
+from .testing_interfaces import InterfaceTestCases

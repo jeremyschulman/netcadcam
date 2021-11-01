@@ -1,1 +1,1 @@
-from . import testing_device_info
+from .testing_device_info import DeviceInformationTestCases

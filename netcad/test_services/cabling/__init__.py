@@ -1,1 +1,1 @@
-from . import testing_cabling
+from .testing_cabling import InterfaceCablingTestCases

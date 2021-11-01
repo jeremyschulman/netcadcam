@@ -16,7 +16,7 @@ from netcad.vlan import VlanProfile
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["InterfaceL2", "InterfaceL2Access", "InterfaceL2Trunk"]
+__all__ = ["InterfaceL2", "InterfaceL2Access", "InterfaceL2Trunk", "VlanProfile"]
 
 # -----------------------------------------------------------------------------
 #

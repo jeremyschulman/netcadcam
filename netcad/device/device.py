@@ -26,6 +26,7 @@ from netcad.origin import OriginDeviceType
 
 if TYPE_CHECKING:
     from netcad.vlan.vlan_profile import VlanProfile
+    from netcad.design_services import DesignService
 
 
 # -----------------------------------------------------------------------------
@@ -118,6 +119,11 @@ class Device(Registry, registry_name="devices"):
         # register this device hostname to the subclass.
 
         self.registry_add(self.name, self)
+
+        # services is a list of DesignService instances bound to this device.
+        # These services will later be used to generate test cases.
+
+        self.services: List["DesignService"] = list()
 
         # for any Caller provided values, override the class attributes; or set
         # new attributes (TODO: rethink this approach)

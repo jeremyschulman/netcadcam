@@ -1,2 +1,2 @@
-from .service import DesignService
+from .design_service import DesignService
 from .topology import TopologyService
