@@ -267,19 +267,20 @@ class DeviceInterfaces(defaultdict):
         self[key] = DeviceInterface(name=key, interfaces=self)
         return self[key]
 
-    def iter_used(self, include_disabled=True) -> Dict[str, DeviceInterface]:
+    def used(self, include_disabled=True) -> Dict[str, DeviceInterface]:
         """
-        Return an iterator that allows the Caller to iterate over each of the
-        device interfaces for those that are in use.  The term "in use" means
-        that the interface is used in the design, but does not necessarily mean
-        that the interface is designed to be up.  To iterate over only those
-        interfaces that are in use AND enabled, then set the `exclude_disabled`
-        parameter to True.
+        Return dictionary that allows the Caller to iterate over each of the
+        device interfaces for those that are in use.  The term "used" means that
+        the interface is used in the design, but does not necessarily mean that
+        the interface is designed to be up.  By default the "disabled"
+        interfaces WILL be included in the returned dictionary.  If the Caller
+        does not want the disabled interfaces, then set the `include_disabled`
+        param to False.
 
         Parameters
         ----------
         include_disabled: bool, optional
-            When False the iter_used will not include any interfaces that are
+            When False the function will not include any interfaces that are
             disabled, even though used, in the design.
 
         Returns

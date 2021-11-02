@@ -65,7 +65,7 @@ class TransceiverTestCases(TestCases):
 
         interfaces = [
             iface
-            for iface in device.interfaces.iter_used().values()
+            for iface in device.interfaces.used().values()
             if iface.profile.port_profile and iface.profile.port_profile.transceiver
         ]
 

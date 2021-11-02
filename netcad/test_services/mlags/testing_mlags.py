@@ -46,7 +46,7 @@ class MLagTestCases(TestCases):
         mlag_interfaces = sorted(
             (
                 interface
-                for interface in mlag_dev.interfaces.iter_used().values()
+                for interface in mlag_dev.interfaces.used().values()
                 if isinstance(interface.profile, InterfaceLag)
             )
         )

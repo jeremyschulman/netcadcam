@@ -69,7 +69,7 @@ class InterfaceCablingTestCases(TestCases):
         interfaces = sorted(
             filter(
                 lambda iface: iface.cable_peer and not iface.profile.is_virtual,
-                device.interfaces.iter_used(include_disabled=False).values(),
+                device.interfaces.used(include_disabled=False).values(),
             )
         )
 
