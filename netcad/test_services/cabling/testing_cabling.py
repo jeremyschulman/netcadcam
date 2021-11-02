@@ -59,7 +59,7 @@ class InterfaceCablingTestCases(TestCases):
     tests: Optional[List[InterfaceCablingTestCase]]
 
     @classmethod
-    def build(cls, device: Device) -> "InterfaceCablingTestCases":
+    def build(cls, device: Device, **kwargs) -> "InterfaceCablingTestCases":
 
         # only used physical interfaces that have a cabling peer relationship.
         # exclude any interfaces that are disabled, since the cabling tests will

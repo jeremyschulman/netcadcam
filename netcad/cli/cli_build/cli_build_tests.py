@@ -5,7 +5,6 @@
 from typing import Tuple, List
 import asyncio
 from pathlib import Path
-from logging import Logger
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -42,14 +41,39 @@ __all__ = []
 DevicesList = List[Device]
 
 
-async def build_device_tests(device: Device, tc_dir: Path, log: Logger):
+async def build_device_tests(device: Device, tc_dir: Path):
+    """
+    This function is used to build the collection of test-case files for the
+    given device.  The collection of test-cases will be stored as JSON files,
+    the directory will be the name name as the device.name.
+
+    Parameters
+    ----------
+    device:
+        The specific device instance.  Note that the device.name must not
+        contain any special characters that would complicate the directory
+        creation process.
+
+    tc_dir: Path
+        The path instance to the top-level test-case directory where the
+        device-specific directory will be created.
+    """
+    log = get_logger()
+
     log.info(f"Building tests for device: {device.name}")
+
+    # create a per-device directory to store the collection of test-case files.
+
     dev_tc_dir = tc_dir.joinpath(device.name)
     dev_tc_dir.mkdir(exist_ok=True)
 
+    # for each service that is bound on the device, iterate over each of the
+    # testing services associated with that service; build the test-cases for
+    # the device and save to a JSON data file.
+
     for service_obj in device.services:
         for tc_svccls in service_obj.testing_services:
-            if not (test_cases := tc_svccls.build(device)):
+            if not (test_cases := tc_svccls.build(device, service=service_obj)):
                 continue
 
             await test_cases.save(dev_tc_dir)
@@ -60,7 +84,7 @@ async def build_device_tests(device: Device, tc_dir: Path, log: Logger):
 @opt_network()
 @click.option(
     "--tests-dir",
-    help="location to store configs",
+    help="location to store test-cases",
     type=click.Path(path_type=Path, resolve_path=True, exists=True, writable=True),
     envvar=Environment.NETCAD_TESTCASESDIR,
 )
@@ -79,9 +103,6 @@ def cli_build_tests(devices: Tuple[str], networks: Tuple[str], tests_dir: Path):
     devices
     networks
     tests_dir
-
-    Returns
-    -------
     """
     log = get_logger()
 
@@ -107,7 +128,6 @@ def cli_build_tests(devices: Tuple[str], networks: Tuple[str], tests_dir: Path):
                 build_device_tests(
                     device=device,
                     tc_dir=tests_dir,
-                    log=log,
                 )
             )
             for device in device_objs

@@ -68,7 +68,7 @@ class LagTestCases(TestCases):
     tests: Optional[List[LagTestCase]]
 
     @classmethod
-    def build(cls, device: Device) -> "LagTestCases":
+    def build(cls, device: Device, **kwargs) -> "LagTestCases":
 
         # scan the device interfaces looking for LAGs.  Create a dictionary
         # key=lag-if-name, value=list of member interfaces.

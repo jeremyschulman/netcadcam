@@ -68,7 +68,7 @@ class VlanTestCases(TestCases):
     tests: Optional[List[VlanTestCase]]
 
     @classmethod
-    def build(cls, device: Device) -> "VlanTestCases":
+    def build(cls, device: Device, **kwargs) -> "VlanTestCases":
 
         vlan_interfaces = defaultdict(list)
 

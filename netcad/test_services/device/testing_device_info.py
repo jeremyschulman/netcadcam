@@ -65,7 +65,7 @@ class DeviceInformationTestCases(TestCases):
     interfaces: Dict[str, DeviceInterfaceInfo]
 
     @classmethod
-    def build(cls, device: Device) -> "DeviceInformationTestCases":
+    def build(cls, device: Device, **kwargs) -> "DeviceInformationTestCases":
 
         return DeviceInformationTestCases(
             device=device.name,
