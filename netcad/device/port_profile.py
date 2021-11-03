@@ -39,6 +39,7 @@ class PortCableMediaType(StrEnum):
     CAT6 = enum.auto()
     CAT7 = enum.auto()
     AOC = enum.auto()
+    TWX = enum.auto()  # twinaxial
 
 
 class PortCableTerminationType(StrEnum):
@@ -49,6 +50,7 @@ class PortCableTerminationType(StrEnum):
     ST = enum.auto()
     RJ45 = enum.auto()
     AOC = enum.auto()
+    TWX = enum.auto()
 
 
 class PortTranscieverFormFactorType(StrEnum):

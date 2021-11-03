@@ -58,14 +58,14 @@ class TransceiverTestCases(TestCases):
     tests: Optional[List[TransceiverTestCase]]
 
     @classmethod
-    def build(cls, device: Device) -> "TransceiverTestCases":
+    def build(cls, device: Device, **kwargs) -> "TransceiverTestCases":
 
         # find all interfaces that have a designed transceiver assicated to the
         # interface profile -> port-profile.
 
         interfaces = [
             iface
-            for iface in device.interfaces.iter_used().values()
+            for iface in device.interfaces.used().values()
             if iface.profile.port_profile and iface.profile.port_profile.transceiver
         ]
 

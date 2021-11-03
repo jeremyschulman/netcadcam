@@ -62,7 +62,7 @@ class InterfaceTestCases(TestCases):
     tests: Optional[List[InterfaceTestCase]]
 
     @classmethod
-    def build(cls, device: Device) -> "InterfaceTestCases":
+    def build(cls, device: Device, **kwargs) -> "InterfaceTestCases":
         def build_test_case(iface: DeviceInterface):
 
             # if the interface is not used, meaning it is not part of the

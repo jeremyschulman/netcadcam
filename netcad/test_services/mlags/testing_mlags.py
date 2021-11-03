@@ -35,7 +35,7 @@ class MLagTestCases(TestCases):
     tests: Optional[List[lags.LagTestCase]]
 
     @classmethod
-    def build(cls, device: DeviceMLagPairMember) -> "MLagTestCases":
+    def build(cls, device: DeviceMLagPairMember, **kwargs) -> "MLagTestCases":
 
         # find all of the LAG interfaces defined on the psuedo MLAG devic
 
@@ -46,7 +46,7 @@ class MLagTestCases(TestCases):
         mlag_interfaces = sorted(
             (
                 interface
-                for interface in mlag_dev.interfaces.iter_used().values()
+                for interface in mlag_dev.interfaces.used().values()
                 if isinstance(interface.profile, InterfaceLag)
             )
         )

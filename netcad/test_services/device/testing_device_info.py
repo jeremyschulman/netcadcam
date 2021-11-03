@@ -46,7 +46,7 @@ class DeviceInterfaceInfo(BaseModel):
 def _interfaces_as_dict(device: Device) -> dict:
     as_dict = dict()
 
-    for if_name, iface in device.interfaces.iter_used().items():
+    for if_name, iface in device.interfaces.used().items():
         port_type = (
             iface.profile.port_profile.name if iface.profile.port_profile else None
         )
@@ -65,7 +65,7 @@ class DeviceInformationTestCases(TestCases):
     interfaces: Dict[str, DeviceInterfaceInfo]
 
     @classmethod
-    def build(cls, device: Device) -> "DeviceInformationTestCases":
+    def build(cls, device: Device, **kwargs) -> "DeviceInformationTestCases":
 
         return DeviceInformationTestCases(
             device=device.name,
