@@ -15,12 +15,11 @@ import jinja2
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.device import Device, DeviceInterface
-from netcad.device.device_interface import DeviceInterfaces
-
 
 @jinja2.pass_context
 def j2_filter_render(ctx, obj: Any, render_target="render", **kwargs):
+    from netcad.device import Device, DeviceInterface
+    from netcad.device.device_interface import DeviceInterfaces
 
     if isinstance(obj, Device):
         ref_obj = obj

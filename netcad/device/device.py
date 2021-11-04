@@ -21,8 +21,10 @@ import jinja2
 from netcad.device.device_interface import DeviceInterfaces, DeviceInterface
 from netcad.registry import Registry
 from netcad.config import Environment
+from netcad.config import netcad_globals
 from netcad.test_services import DEFAULT_TESTING_SERVICES
 from netcad.origin import OriginDeviceType
+from netcad.jinja2.env import get_env
 
 if TYPE_CHECKING:
     from netcad.vlan.vlan_profile import VlanProfile
@@ -131,7 +133,15 @@ class Device(Registry, registry_name="devices"):
         for attr, value in kwargs.items():
             setattr(self, attr, value)
 
-    def get_template(self, env: jinja2.Environment) -> jinja2.Template:
+        self.template_env: Optional[jinja2.Environment] = None
+
+    def init_template_env(self):
+        template_dirs = list(netcad_globals.g_netcad_project_dir.rglob("**/templates"))
+        template_dirs.reverse()
+        template_dirs.append("/")
+        self.template_env = get_env(template_dirs)
+
+    def get_template(self) -> jinja2.Template:
         """
         Return the absolute file-path to the device Jinja2 file.
 
@@ -163,12 +173,7 @@ class Device(Registry, registry_name="devices"):
                 f"Unexpected template type on {self.__class__.__class__}: {type(self.template)}"
             )
 
-        if not as_path.is_file():
-            raise FileNotFoundError(
-                f"Missing template {self.__class__.__name__}: {self.template}"
-            )
-
-        return env.get_template(str(as_path))
+        return self.template_env.get_template(str(as_path))
 
     def vlans(self) -> List["VlanProfile"]:
         """return the set of VlanProfile instances used by this device"""

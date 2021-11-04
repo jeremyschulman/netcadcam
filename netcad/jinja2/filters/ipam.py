@@ -1,7 +1,10 @@
-from netcad.device import DeviceInterface
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from netcad.device import DeviceInterface
 
 
-def ipam_interface(interface: DeviceInterface):
+def ipam_interface(interface: "DeviceInterface"):
     ipaddress = getattr(interface, "ipaddress", None)
 
     if not ipaddress:
