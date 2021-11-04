@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # System Imports
 # -----------------------------------------------------------------------------
-import os
+
 from typing import Tuple
 from pathlib import Path
 
@@ -16,9 +16,7 @@ import jinja2
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.jinja2.env import get_env
 from netcad.logger import get_logger
-from netcad.config import Environment
 from netcad.cli.common_opts import opt_devices, opt_network
 from netcad.cli import device_inventory
 
@@ -76,27 +74,23 @@ def cli_render(
         return
 
     log.info(f"Building {len(device_objs)} device configurations.")
-
-    # Find all of the template directories walking down the $NETCAD_PROJECTDIR.
-    # Reverse this list so that the "nearest" template directory is used first;
-    # presuming there could be a filename clash.  TODO: rethink this approach.
-
-    template_dirs = list(
-        Path(os.environ[Environment.NETCAD_PROJECTDIR]).rglob("**/templates")
-    )
-    template_dirs.reverse()
-    template_dirs.append("/")
-    env = get_env(template_dirs)
-
     log.info(f"Building device configs into directory: {configs_dir.absolute()}")
+
     for dev_obj in device_objs:
+
         config_file = configs_dir.joinpath(dev_obj.name + ".cfg")
         log.debug(f"BUILD config for device {dev_obj.name}")
 
-        template = dev_obj.get_template(env=env)
+        dev_obj.init_template_env()
 
         try:
+            template = dev_obj.get_template()
             config_text = template.render(device=dev_obj)
+
+        except jinja2.exceptions.TemplateNotFound as exc:
+            raise RuntimeError(
+                f"Jinja2 template not found error: {dev_obj.name} {dev_obj.template}  -  {str(exc)}"
+            )
 
         except jinja2.exceptions.UndefinedError as exc:
             raise RuntimeError(

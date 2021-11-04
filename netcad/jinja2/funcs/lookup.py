@@ -1,7 +1,11 @@
+from typing import TYPE_CHECKING
+
 import jinja2
+
 from importlib import import_module
 
-from netcad.device import Device
+if TYPE_CHECKING:
+    from netcad.device import Device
 
 
 @jinja2.pass_context

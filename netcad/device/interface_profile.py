@@ -63,8 +63,10 @@ class InterfaceProfile(SafeIsAttribute):
 
     def get_template(self, env: jinja2.Environment) -> jinja2.Template:
         if not self.template:
+            dev_name = self.interface.device.name
+            if_name = self.interface.name
             raise RuntimeError(
-                f"Interface profile missing template: {self.__class__.__name__}"
+                f"Interface {dev_name}:{if_name} profile missing template: {self.__class__.__name__}"
             )
 
         if isinstance(self.template, Path):
