@@ -52,8 +52,8 @@ class Device(Registry, registry_name="devices"):
     """
     Device base class that is used by Caller to define specific Device useage
     representations, also referred to as "roles", "templates", 'stencils", etc.
-    A Caller would then create multiple instances of the specific Device classe
-    sto declare muliple copies of the same role/etc.
+    A Caller would then create multiple instances of the specific Device classes
+    to declare muliple copies of the same role/etc.
 
     Attributes
     ----------
