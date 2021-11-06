@@ -107,6 +107,8 @@ class Device(Registry, registry_name="devices"):
 
         self.name = name
 
+        self.primary_ip = None
+
         # make a copy of the device class interfaces so that the instance can
         # make any specific changes; i.e. handle the various "one-off" cases
         # that happen in real-world networks.
@@ -140,6 +142,10 @@ class Device(Registry, registry_name="devices"):
         template_dirs.reverse()
         template_dirs.append("/")
         self.template_env = get_env(template_dirs)
+
+    def render_config(self):
+        template = self.get_template()
+        return template.render(device=self)
 
     def get_template(self) -> jinja2.Template:
         """
@@ -261,15 +267,15 @@ class Device(Registry, registry_name="devices"):
         for if_name in spec.interface_names:
             cls.interfaces[if_name].profile = None
 
-    def render_interface_unused(
-        self, env: jinja2.Environment, interface: "DeviceInterface"
-    ):
-        raise NotImplementedError()
-
-    def render_interface_used(
-        self, env: jinja2.Environment, interface: "DeviceInterface"
-    ):
-        raise NotImplementedError()
+    # def render_interface_unused(
+    #     self, env: jinja2.Environment, interface: "DeviceInterface"
+    # ):
+    #     raise NotImplementedError()
+    #
+    # def render_interface_used(
+    #     self, env: jinja2.Environment, interface: "DeviceInterface"
+    # ):
+    #     raise NotImplementedError()
 
     # -------------------------------------------------------------------------
     #

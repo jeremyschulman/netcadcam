@@ -84,8 +84,9 @@ def cli_render(
         dev_obj.init_template_env()
 
         try:
-            template = dev_obj.get_template()
-            config_text = template.render(device=dev_obj)
+            config_text = dev_obj.render_config()
+            # template = dev_obj.get_template()
+            # config_text = template.render(device=dev_obj)
 
         except jinja2.exceptions.TemplateNotFound as exc:
             raise RuntimeError(

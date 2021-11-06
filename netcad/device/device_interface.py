@@ -94,9 +94,21 @@ class DeviceInterface(object):
         interfaces=None,
     ):
         self.name = name
-        self.port_numbers = tuple(map(int, _re_find_numbers.findall(name)))
-        self.short_name = "".join(_re_short_name.match(name).groups())
-        self.sort_key = (self.name[0:2].lower(), *self.port_numbers)
+
+        # some device ports are just numbers.  In these instances set the
+        # interface attributes accordinly.  Otherse deconstruct the interface
+        # names, for example "Ethernet1/0/2" into their respective attribute
+        # parts.
+
+        if name.isdigit():
+            self.port_numbers = int(name)
+            self.sort_key = self.port_numbers
+            self.short_name = name
+        else:
+            self.port_numbers = tuple(map(int, _re_find_numbers.findall(name)))
+            self.short_name = "".join(_re_short_name.match(name).groups())
+            self.sort_key = (self.name[0:2].lower(), *self.port_numbers)
+
         self._profile = None
         self.enabled = enabled
         self.label = label

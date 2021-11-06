@@ -9,7 +9,7 @@ from typing import Tuple
 # -----------------------------------------------------------------------------
 import click
 from rich.console import Console
-from rich.table import Table
+from rich.table import Table, Text
 
 
 # -----------------------------------------------------------------------------
@@ -80,7 +80,8 @@ def show_device_interfaces(device: Device, **options):
         if isinstance(if_prof, ip.InterfaceVirtual):
             pp_name = keywords.VIRTUAL
 
-        add_row(iface.name, iface.desc, if_prof_name, pp_name)
+        if_desc = Text(iface.desc, "yellow") if if_prof.is_reserved else iface.desc
+        add_row(iface.name, if_desc, if_prof_name, pp_name)
 
     console.print(table)
 
