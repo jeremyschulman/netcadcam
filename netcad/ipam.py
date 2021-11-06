@@ -63,10 +63,12 @@ class IPAMNetwork(UserDict):
         )
 
 
-class IPAM(Registry):
+class IPAM(Registry, UserDict):
     def __init__(self, name: str):
+        super().__init__()
         self.name = name
         self.registry_add(name, self)
 
-    def network(self, prefix: str):
-        return IPAMNetwork(self, prefix)
+    def network(self, name: str, prefix: str):
+        ip_net = self[name] = IPAMNetwork(self, prefix)
+        return ip_net

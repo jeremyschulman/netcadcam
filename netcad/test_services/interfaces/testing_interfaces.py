@@ -37,7 +37,7 @@ class InterfaceTestParams(BaseModel):
 
 class InterfaceTestUsedExpectations(BaseModel):
     used: Literal[True]
-    oper_up: bool
+    oper_up: Optional[bool]
     desc: str
     speed: Optional[PositiveInt]
 
@@ -84,6 +84,9 @@ class InterfaceTestCases(TestCases):
                     oper_up=iface.enabled,
                     speed=port_profile.speed if port_profile else None,
                 )
+
+                if iface.profile.is_reserved:
+                    expected_results.oper_up = None
 
             return InterfaceTestCase(
                 test_params=InterfaceTestParams(interface=iface.name),
