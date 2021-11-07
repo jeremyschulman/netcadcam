@@ -96,23 +96,32 @@ class DeviceInterface(object):
         self.name = name
 
         # some device ports are just numbers.  In these instances set the
-        # interface attributes accordinly.  Otherse deconstruct the interface
-        # names, for example "Ethernet1/0/2" into their respective attribute
-        # parts.
+        # interface attributes accordinly.
 
         if name.isdigit():
             self.port_numbers = int(name)
             self.sort_key = self.port_numbers
             self.short_name = name
-        else:
-            self.port_numbers = tuple(map(int, _re_find_numbers.findall(name)))
+
+        # if the name contains numbers then break these numbers out for
+        # sorting purposes.
+
+        elif mo_has_numbers := _re_find_numbers.findall(name):
+            self.port_numbers = tuple(map(int, mo_has_numbers))
             self.short_name = "".join(_re_short_name.match(name).groups())
             self.sort_key = (self.name[0:2].lower(), *self.port_numbers)
 
+        # the name is not a number nor does it contain numbers, for example "mgmt",
+        # then set the number value to 0 for default purposes.
+        else:
+            self.short_name = name
+            self.sort_key = 0
+            self.port_numbers = None
+
         self._profile = None
+        self._desc = desc
         self.enabled = enabled
         self.label = label
-        self._desc = desc
         self.cable_id = cable_id
         self.profile = profile
         self.cable_peer: Optional[DeviceInterface] = None
@@ -279,7 +288,9 @@ class DeviceInterfaces(defaultdict):
         self[key] = DeviceInterface(name=key, interfaces=self)
         return self[key]
 
-    def used(self, include_disabled=True) -> Dict[str, DeviceInterface]:
+    def used(
+        self, include_disabled=True, include_unused=False
+    ) -> Dict[str, DeviceInterface]:
         """
         Return dictionary that allows the Caller to iterate over each of the
         device interfaces for those that are in use.  The term "used" means that
@@ -291,9 +302,15 @@ class DeviceInterfaces(defaultdict):
 
         Parameters
         ----------
-        include_disabled: bool, optional
+        include_disabled: bool, optional(default=True)
             When False the function will not include any interfaces that are
             disabled, even though used, in the design.
+
+        include_unused: bool, optional(default=False)
+            When True the function will include an interface even though it is
+            not used in a design.  For example, if a management port is not used
+            in the design, but the Caller does want to include it for some
+            reason, then they would set this parameter to True.
 
         Returns
         -------
@@ -305,9 +322,9 @@ class DeviceInterfaces(defaultdict):
         for if_name, interface in self.items():
 
             # if there is no profile bound to the interface, then it is not part
-            # of the design; so skip it.
+            # of the design; so skip it unless the caller wants to include disabled
 
-            if not interface.profile:
+            if not interface.profile and include_unused is False:
                 continue
 
             # if the interface is in the design, but the design indicates to

@@ -27,7 +27,7 @@ __all__ = ["TopologyService"]
 # -----------------------------------------------------------------------------
 
 
-class TopologyService(DesignService, registry_name="topology_services"):
+class TopologyService(DesignService, registry_name="topology"):
     def __init__(self, network: str):
         super(TopologyService, self).__init__()
         self.network = network
