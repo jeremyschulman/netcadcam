@@ -256,6 +256,9 @@ class DeviceInterface(object):
     def __lt__(self, other: "DeviceInterface"):
         return self.sort_key < other.sort_key
 
+    def __enter__(self):
+        return self
+
 
 # -----------------------------------------------------------------------------
 #

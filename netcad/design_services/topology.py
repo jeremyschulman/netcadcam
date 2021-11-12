@@ -45,7 +45,7 @@ class TopologyService(DesignService, registry_name="topology"):
 
     def add_devices(self, devices: List[Device]):
         super(TopologyService, self).add_devices(devices)
-        self.cabling.add_devices(*devices)
+        self.cabling.add_devices(devices)
 
     async def build(self):
         self.cabling.build()
