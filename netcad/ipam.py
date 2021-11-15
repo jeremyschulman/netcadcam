@@ -15,6 +15,9 @@ class IPAMNetwork(UserDict):
         self.ip_network: IPAMNetworkType = ipaddress.ip_network(address=prefx)
         self._gateway_host_octet: int = gateway
 
+    def gateway_interface(self, name) -> IPAMInterfaceType:
+        return self.interface(name=name, last_octet=self._gateway_host_octet)
+
     def interface(self, name, last_octet) -> IPAMInterfaceType:
         """record an IP interface address for the given name"""
 
@@ -69,6 +72,6 @@ class IPAM(Registry, UserDict):
         self.name = name
         self.registry_add(name, self)
 
-    def network(self, name: str, prefix: str):
+    def network(self, name: str, prefix: str) -> IPAMNetwork:
         ip_net = self[name] = IPAMNetwork(self, prefix)
         return ip_net
