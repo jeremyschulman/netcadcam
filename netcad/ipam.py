@@ -16,13 +16,13 @@ class IPAMNetwork(UserDict):
         self._gateway_host_octet: int = gateway
 
     def gateway_interface(self, name) -> IPAMInterfaceType:
-        return self.interface(name=name, last_octet=self._gateway_host_octet)
+        return self.interface(name=name, offset_octet=self._gateway_host_octet)
 
-    def interface(self, name, last_octet) -> IPAMInterfaceType:
+    def interface(self, name, offset_octet) -> IPAMInterfaceType:
         """record an IP interface address for the given name"""
 
         self[name] = ipaddress.ip_interface(
-            f"{self.ip_network.network_address + last_octet}/{self.ip_network.netmask}"
+            f"{self.ip_network.network_address + offset_octet}/{self.ip_network.netmask}"
         )
 
         return self[name]

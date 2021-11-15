@@ -5,7 +5,7 @@ if TYPE_CHECKING:
 
 
 def ipam_interface(interface: "DeviceInterface"):
-    ipaddress = getattr(interface, "ipaddress", None)
+    ipaddress = getattr(interface, "ipaddress", None) or getattr(interface.profile, "ipaddress", None)
 
     if not ipaddress:
         raise RuntimeError(
