@@ -1,7 +1,7 @@
 import click
 
 opt_devices = lambda **params: click.option(
-    "-h",
+    "-n",
     "--device",
     "devices",
     metavar="[DEVICE-NAME]",
