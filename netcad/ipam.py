@@ -67,12 +67,43 @@ class IPAMNetwork(UserDict):
 
 
 class IPAM(Registry, UserDict):
-    def __init__(self, name: str):
+    def __init__(self, name: t.Hashable):
+        """
+        Creates an IPAM instance by name and registers that name with the IPAM
+        registry.  The IPAM instance can then be used to define further
+        networks, and interfaces & hosts therein.
+
+        Parameters
+        ----------
+        name:
+            Any hashable value that can be used as an index into the Registry
+            dictionary.
+        """
         super().__init__()
         self.name = name
         self.registry_add(name, self)
 
-    def network(self, name: str, prefix: str) -> IPAMNetwork:
+    def network(self, name: t.Hashable, prefix: str) -> IPAMNetwork:
+        """
+        This function creates an new network instance within the IPAM,
+        designated by the name value.  This network can then be retrieve using
+        "getitem" via the designated name.
+
+        Parameters
+        ----------
+        name:
+            Any hashable value that can be used as a key in the UserDict
+            dictionary that underpins the IPAM instance.
+
+        prefix:
+            The IP address network with prefix, for example "192.168.12.0/24".
+            The netmask could alternatively be provided, for example:
+            "192.168.12.0/255.255.255.0"
+
+        Returns
+        -------
+        IPAMNetwork instance for the given prefix.
+        """
         ip_net = self[name] = IPAMNetwork(self, prefix)
         return ip_net
 
