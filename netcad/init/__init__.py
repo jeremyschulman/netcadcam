@@ -1,2 +1,2 @@
 from .init import init
-from netcad.init.loader import import_networks
+from netcad.init.loader import import_designs_packages

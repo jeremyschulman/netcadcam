@@ -17,7 +17,7 @@ from .interface_profile import InterfaceVirtual
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["InterfaceVlan"]
+__all__ = ["InterfaceVlan", "InterfaceLoopback"]
 
 # -----------------------------------------------------------------------------
 #

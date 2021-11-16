@@ -17,8 +17,8 @@ from rich.table import Table
 # -----------------------------------------------------------------------------
 
 from netcad.logger import get_logger
+from netcad.config import netcad_globals
 from netcad.device import Device
-
 from netcad.cli.common_opts import opt_network
 from netcad.cli.device_inventory import get_network_devices
 
@@ -40,9 +40,13 @@ __all__ = []
 
 def show_network_devices(network: str, devices: List[Device], **flags):
     console = Console()
+    design = netcad_globals.g_netcad_designs[network]
+    design_desc = design.get("description") or ""
 
     table = Table(
-        show_header=True, header_style="bold magenta", title=f"Network: {network}"
+        show_header=True,
+        header_style="bold magenta",
+        title=f"Design '{network}', {design_desc}",
     )
     table.add_column("Device")
     table.add_column("OS Name")
@@ -98,10 +102,10 @@ def cli_design_report_devices(networks: Tuple[str], **flags):
     for each_net in networks:
         net_devs = network_devices[each_net] = sorted(get_network_devices((each_net,)))
         if not net_devs:
-            log.info("No devices found in the given networks")
+            log.info("No devices found in the given design")
             return
         total_devs += len(net_devs)
 
-    log.info(f"Reporting on {len(networks)} networks, {total_devs} devices.")
+    log.info(f"Reporting on {len(networks)} designs, {total_devs} devices.")
     for net_name, net_devs in network_devices.items():
         show_network_devices(net_name, net_devs, **flags)

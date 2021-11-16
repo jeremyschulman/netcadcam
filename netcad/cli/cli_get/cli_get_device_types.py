@@ -44,7 +44,8 @@ def clig_get_device_types():
 
     os.environ[Environment.NETCAD_NOVALIDATE] = "1"
 
-    loader.import_networks()
+    modules = loader.import_designs_packages()
+    loader.run_designs(modules)
 
     config = netcad_globals.g_config
 

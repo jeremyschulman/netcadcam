@@ -1,5 +1,3 @@
-import asyncio
-
 from netcad.cli.main import cli
 from netcad.init import loader
 
@@ -8,16 +6,5 @@ from netcad.init import loader
 def clig_build():
     """build configs, tests, ..."""
 
-    modules = loader.import_networks()
-
-    design_tasks = [
-        mod.design()
-        for mod in modules
-        if hasattr(mod, "design") and asyncio.iscoroutinefunction(mod.design)
-    ]
-
-    async def run_design(tasks):
-        await asyncio.gather(tasks)
-
-    if design_tasks:
-        asyncio.run(run_design(*design_tasks))
+    designs = loader.import_designs_packages()
+    loader.run_designs(designs)
