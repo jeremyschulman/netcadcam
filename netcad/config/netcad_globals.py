@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict
 from pathlib import Path
 
 
@@ -7,3 +7,4 @@ g_netcad_config_file: Optional[Path] = None
 g_netcad_testcases_dir: Optional[Path] = None
 g_netcad_project_dir: Optional[Path] = None
 g_netcad_cache_dir: Optional[Path] = None
+g_netcad_designs: Optional[Dict] = None

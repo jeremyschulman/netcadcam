@@ -60,7 +60,9 @@ def init():
     config_filepath = environ.setdefault(
         Environment.NETCAD_CONFIGFILE, d.DEFAULT_NETCAD_CONFIG_FILE
     )
-    config_filepath = Path(config_filepath).absolute()
+    config_filepath = netcad_globals.g_netcad_config_file = Path(
+        config_filepath
+    ).absolute()
     environ[Environment.NETCAD_CONFIGFILE] = str(config_filepath)
 
     netcad_globals.g_config = toml.load(config_filepath.open())

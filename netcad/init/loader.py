@@ -2,16 +2,11 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional, AnyStr, List
-from types import ModuleType
+import asyncio
+from typing import Optional, AnyStr, Dict
 import sys
 import os
 from importlib import import_module
-
-# -----------------------------------------------------------------------------
-# Public Imports
-# -----------------------------------------------------------------------------
-
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -27,22 +22,41 @@ from netcad.config.envvars import Environment
 # -----------------------------------------------------------------------------
 
 
-def import_networks(root_path: Optional[AnyStr] = None) -> List[ModuleType]:
-
+def import_designs_packages(root_path: Optional[AnyStr] = None) -> Dict:
     # Add the User's project directory for python import path.
 
     sys.path.insert(0, root_path or os.environ[Environment.NETCAD_PROJECTDIR])
 
-    # the config file should have a networks section that defines the list of
-    # python modules to import.
-
-    if not (pkg_list := netcad_globals.g_config.get("networks")):
+    if not (design_configs := netcad_globals.g_config.get("design")):
         raise RuntimeError(
-            f'Missing "networks" definition in config-file: {netcad_globals.g_netcad_config_file}'
+            f'Missing "design" definitions in config-file: {netcad_globals.g_netcad_config_file}'
         )
 
-    try:
-        return [import_module(pkg) for pkg in pkg_list]
+    for name, details in design_configs.items():
+        pkg = details["package"]
+        try:
+            details["module"] = import_module(pkg)
 
-    except ImportError as exc:
-        raise RuntimeError(f"Unable to load network module: {exc.args[0]}")
+        except ImportError as exc:
+            raise RuntimeError(f"Unable to load network module: {exc.args[0]}")
+
+    netcad_globals.g_netcad_designs = design_configs
+    return design_configs
+
+
+def run_designs(designs: Dict):
+
+    design_tasks = [
+        mod.design()
+        for design_details in designs.values()
+        if (
+            hasattr((mod := design_details["module"]), "design")
+            and asyncio.iscoroutinefunction(mod.design)
+        )
+    ]
+
+    async def run_design(tasks):
+        await asyncio.gather(tasks)
+
+    if design_tasks:
+        asyncio.run(run_design(*design_tasks))

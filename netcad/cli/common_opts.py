@@ -1,10 +1,10 @@
 import click
 
 opt_devices = lambda **params: click.option(
-    "-d",
+    "-h",
     "--device",
     "devices",
-    metavar="[NAME]",
+    metavar="[DEVICE-NAME]",
     help="device hostname(s)",
     multiple=True,
     **params
@@ -12,11 +12,11 @@ opt_devices = lambda **params: click.option(
 
 
 opt_network = lambda **params: click.option(
-    "-n",
-    "--network",
+    "-d",
+    "--design",
     "networks",
     multiple=True,
-    metavar="[NETWORK]",
-    help="network(s)",
+    metavar="[DESIGN]",
+    help="design(s)",
     **params
 )

@@ -17,6 +17,7 @@ from rich.console import Console
 # Private Imports
 # -----------------------------------------------------------------------------
 
+from netcad.config import netcad_globals
 from netcad.device import Device, DeviceInterface
 from netcad.device.interface_profile import InterfaceVirtual
 from netcad.cabling.cable_plan import CablePlanner
@@ -111,6 +112,9 @@ def report_cabling_per_network(cabling: CablePlanner, network: str):
         console.print(f"[yellow]{network}: No cables.[/yellow]")
         return
 
+    design = netcad_globals.g_netcad_designs[network]
+    design_desc = design.get("description") or ""
+
     # orient each cable row (left-device, right-device) based on their sorting
     # property (User defined, or hostname by default)
 
@@ -124,7 +128,7 @@ def report_cabling_per_network(cabling: CablePlanner, network: str):
     cables.sort(key=lambda c: (c[1].device.name, c[1], c[2].device.name, c[2]))
 
     table = Table(
-        title=f"Network Cabling: {network}",
+        title=f"Design Cabling '{network}', {design_desc}",
         show_header=True,
         header_style="bold magenta",
     )
@@ -178,11 +182,11 @@ def cli_design_report_cabling(
         for network in networks:
             cabler: CablePlanner
             if not (cabler := CablePlanner.registry_get(name=network)):
-                ctx.fail(f"No cabling found for network: {network}")
+                ctx.fail(f"No cabling found for design: {network}")
                 return
 
             report_cabling_per_network(network=network, cabling=cabler)
 
         return
 
-    ctx.fail("Missing option: --device or --network")
+    ctx.fail("Missing option: --device or --design")

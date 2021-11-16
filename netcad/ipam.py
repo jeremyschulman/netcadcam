@@ -27,7 +27,7 @@ class IPAMNetwork(UserDict):
 
         return self[name]
 
-    def host(self, name: t.Hashable, last_octet: int) -> IPAMAddressType:
+    def host(self, name: t.Hashable, offset_octet: int) -> IPAMAddressType:
         """
         Create a host IP address for the given name usig the `last_octet`
         combined with the subnet address.
@@ -38,7 +38,7 @@ class IPAMNetwork(UserDict):
             Used to uniquely identify the name of the host; does not need to be a string but
             must be a hashable value.
 
-        last_octet: int
+        offset_octet: int
             The last octet of the IP address
 
         Returns
@@ -46,7 +46,7 @@ class IPAMNetwork(UserDict):
         The ipaddress instance for the IP address.
         """
         self[name] = ipaddress.ip_address(
-            f"{self.ip_network.network_address + last_octet}/{self.ip_network.netmask}"
+            f"{self.ip_network.network_address + offset_octet}/{self.ip_network.netmask}"
         )
 
         return self[name]
