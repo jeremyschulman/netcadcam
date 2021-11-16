@@ -46,7 +46,7 @@ class IPAMNetwork(UserDict):
         The ipaddress instance for the IP address.
         """
         self[name] = ipaddress.ip_address(
-            f"{self.ip_network.network_address + offset_octet}/{self.ip_network.netmask}"
+            f"{self.ip_network.network_address + offset_octet}"
         )
 
         return self[name]
@@ -75,3 +75,9 @@ class IPAM(Registry, UserDict):
     def network(self, name: str, prefix: str) -> IPAMNetwork:
         ip_net = self[name] = IPAMNetwork(self, prefix)
         return ip_net
+
+    def __getitem__(self, name: t.Hashable) -> IPAMNetwork:
+        """Return the network by name"""
+        # only calling super.  This method is declared so that the type-hinting
+        # knows the return value is an IPAMNetwork instance.
+        return super(IPAM, self).__getitem__(name)
