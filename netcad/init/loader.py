@@ -55,8 +55,8 @@ def run_designs(designs: Dict):
         )
     ]
 
-    async def run_design(tasks):
-        await asyncio.gather(tasks)
+    async def run_design():
+        await asyncio.gather(*design_tasks)
 
     if design_tasks:
-        asyncio.run(run_design(*design_tasks))
+        asyncio.run(run_design())

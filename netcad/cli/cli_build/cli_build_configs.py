@@ -79,8 +79,13 @@ def cli_render(
     for dev_obj in device_objs:
 
         config_file = configs_dir.joinpath(dev_obj.name + ".cfg")
-        log.debug(f"BUILD config for device {dev_obj.name}")
+        if not dev_obj.template:
+            log.warning(
+                f"BUILD SKIP: device {dev_obj.name} - no template file defined."
+            )
+            continue
 
+        log.debug(f"BUILD config for device {dev_obj.name}")
         dev_obj.init_template_env()
 
         try:
