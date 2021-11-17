@@ -7,13 +7,10 @@ from netcad.init import init
 @click.group()
 @click.version_option(version=__version__)
 def cli():
+    """
+    Network Computer Aided Design (CAD)
+    """
     init()
-
-
-@cli.group("audit")
-def clig_audit():
-    """audit configs, network tests, ..."""
-    pass
 
 
 # -----------------------------------------------------------------------------
@@ -33,15 +30,16 @@ def clig_get():
 # -----------------------------------------------------------------------------
 
 
-@cli.group(name="config")
-def clig_config():
-    """configure netcad project settings ..."""
-    pass
+# @cli.group(name="config")
+# def clig_config():
+#     """configure netcad project settings ..."""
+#     pass
 
 
 @cli.command(name="init")
 def cli_init():
     """initialize netcad project files"""
+    pass
 
 
 # -----------------------------------------------------------------------------

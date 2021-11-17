@@ -22,8 +22,8 @@ from netcad.device import Device, DeviceInterface
 from netcad.device.interface_profile import InterfaceVirtual
 from netcad.cabling.cable_plan import CablePlanner
 
-from netcad.cli.common_opts import opt_devices, opt_network
-from netcad.cli.get_devices import get_devices
+from netcad.netcad_cli.common_opts import opt_devices, opt_network
+from netcad.netcad_cli.get_devices import get_devices
 
 from .clig_design import clig_design_report
 

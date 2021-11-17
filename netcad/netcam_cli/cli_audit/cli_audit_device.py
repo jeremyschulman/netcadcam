@@ -15,8 +15,8 @@ import click
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.cli.main import clig_audit
-from netcad.cli.common_opts import opt_devices, opt_network
+from netcad.netcad_cli.common_opts import opt_devices, opt_network
+from .clig_audit import clig_audit
 
 # -----------------------------------------------------------------------------
 # Exports (none)
