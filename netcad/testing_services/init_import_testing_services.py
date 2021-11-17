@@ -4,4 +4,4 @@ from . import BUILTIN_TESTING_SERVICES
 
 def on_init():
     for service in BUILTIN_TESTING_SERVICES:
-        import_module(f"netcad.test_services.{service}")
+        import_module(f"netcad.testing_services.{service}")

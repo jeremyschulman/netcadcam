@@ -15,14 +15,20 @@ from pydantic import BaseModel, PositiveInt
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device, DeviceInterface
-from netcad.test_services import TestCases, TestCase
-from netcad.test_services import testing_service
+from netcad.testing_services import TestCases, TestCase
+from netcad.testing_services import testing_service
 
 # -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = []
+__all__ = [
+    "InterfaceTestCases",
+    "InterfaceTestCase",
+    "InterfaceTestParams",
+    "InterfaceTestUsedExpectations",
+    "InterfaceTestNotUsedExpectations",
+]
 
 # -----------------------------------------------------------------------------
 #
