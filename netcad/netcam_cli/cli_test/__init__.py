@@ -1,2 +1,2 @@
 from . import cli_audit_configs
-from . import cli_audit_device
+from . import cli_test_devices

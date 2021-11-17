@@ -7,7 +7,7 @@ from netcad.netcam_cli.main import cli
 # -----------------------------------------------------------------------------
 
 
-@cli.group("audit")
-def clig_audit():
+@cli.group("test")
+def clig_test():
     """audit configs, network tests, ..."""
     pass

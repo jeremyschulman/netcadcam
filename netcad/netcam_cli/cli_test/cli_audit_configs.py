@@ -17,10 +17,10 @@ import click
 
 
 from netcad.netcad_cli.common_opts import opt_devices, opt_network
-from .clig_audit import clig_audit
+from .clig_test import clig_test
 
 
-@clig_audit.command(name="configs")
+@clig_test.command(name="configs")
 @opt_devices()
 @opt_network()
 @click.option(

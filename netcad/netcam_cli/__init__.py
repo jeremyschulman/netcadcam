@@ -1,2 +1,2 @@
 from .script import script
-from . import cli_audit
+from . import cli_test

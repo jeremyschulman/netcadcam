@@ -1,6 +1,7 @@
 import click
 
 from netcad import __version__
+from netcad.init import init
 
 
 @click.group()
@@ -9,4 +10,4 @@ def cli():
     """
     Network Computer Aided Manufacturing (CAM)
     """
-    pass
+    init()
