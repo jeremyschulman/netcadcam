@@ -10,10 +10,10 @@ from typing import List, Optional
 
 from netcad.device import DeviceMLagPairMember, DeviceMLagPairGroup
 from netcad.device import InterfaceLag
-from netcad.test_services import TestCases
-from netcad.test_services import testing_service
+from netcad.testing_services import TestCases
+from netcad.testing_services import testing_service
 
-from netcad.test_services import lags
+from netcad.testing_services import lags
 
 
 # -----------------------------------------------------------------------------

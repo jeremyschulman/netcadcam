@@ -16,9 +16,9 @@ from pydantic import BaseModel
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device
-from netcad.test_services import TestCases, TestCase
+from netcad.testing_services import TestCases, TestCase
 from netcad.vlan import VlanProfile
-from netcad.test_services.testing_registry import testing_service
+from netcad.testing_services.testing_registry import testing_service
 
 # -----------------------------------------------------------------------------
 # Exports

@@ -12,7 +12,14 @@ from netcad.device import Device
 from netcad.cabling import CableByCableId
 
 from .design_service import DesignService
-from netcad.test_services import device, interfaces, lags, vlans, transceivers, cabling
+from netcad.testing_services import (
+    device,
+    interfaces,
+    lags,
+    vlans,
+    transceivers,
+    cabling,
+)
 
 # -----------------------------------------------------------------------------
 # Exports

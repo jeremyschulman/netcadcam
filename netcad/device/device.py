@@ -22,7 +22,7 @@ from netcad.device.device_interface import DeviceInterfaces, DeviceInterface
 from netcad.registry import Registry
 from netcad.config import Environment
 from netcad.config import netcad_globals
-from netcad.test_services import DEFAULT_TESTING_SERVICES
+from netcad.testing_services import DEFAULT_TESTING_SERVICES
 from netcad.origin import OriginDeviceType
 from netcad.jinja2.env import get_env
 

@@ -14,7 +14,7 @@ from netcad.device import Device
 # -----------------------------------------------------------------------------
 
 from netcad.registry import Registry
-from netcad.test_services import TestCases
+from netcad.testing_services import TestCases
 
 # -----------------------------------------------------------------------------
 # Exports`
