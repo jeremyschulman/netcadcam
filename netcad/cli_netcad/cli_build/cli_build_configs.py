@@ -17,8 +17,8 @@ import jinja2
 # -----------------------------------------------------------------------------
 
 from netcad.logger import get_logger
-from netcad.cli.common_opts import opt_devices, opt_network
-from netcad.cli import device_inventory
+from netcad.cli_netcad.common_opts import opt_devices, opt_designs
+from netcad.cli_netcad import device_inventory
 
 from .clig_build import clig_build
 
@@ -37,7 +37,7 @@ __all__ = []
 
 @clig_build.command(name="configs")
 @opt_devices()
-@opt_network()
+@opt_designs()
 @click.option(
     "--configs-dir",
     help="location to store configs",
@@ -48,7 +48,7 @@ __all__ = []
     "--console", "output_console", help="display output to console", is_flag=True
 )
 def cli_render(
-    devices: Tuple[str], networks: Tuple[str], configs_dir: Path, output_console: bool
+    devices: Tuple[str], designs: Tuple[str], configs_dir: Path, output_console: bool
 ):
     """Build device configuration files"""
 
@@ -62,8 +62,8 @@ def cli_render(
     if devices:
         device_objs.update(device_inventory.get_devices(devices))
 
-    if networks:
-        device_objs.update(device_inventory.get_network_devices(networks))
+    if designs:
+        device_objs.update(device_inventory.get_network_devices(designs))
 
     # Filter out any device that is not a "real" device for configuration
     # purposes. for example the device representing an MLAG redundant pair. Then

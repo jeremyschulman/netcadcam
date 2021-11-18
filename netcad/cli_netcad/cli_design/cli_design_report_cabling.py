@@ -22,8 +22,8 @@ from netcad.device import Device, DeviceInterface
 from netcad.device.interface_profile import InterfaceVirtual
 from netcad.cabling.cable_plan import CablePlanner
 
-from netcad.cli.common_opts import opt_devices, opt_network
-from netcad.cli.get_devices import get_devices
+from netcad.cli_netcad.common_opts import opt_devices, opt_designs
+from netcad.cli_netcad.get_devices import get_devices
 
 from .clig_design import clig_design_report
 
@@ -163,10 +163,10 @@ def report_cabling_per_network(cabling: CablePlanner, network: str):
 
 @clig_design_report.command(name="cabling")
 @opt_devices()
-@opt_network()
+@opt_designs()
 @click.pass_context
 def cli_design_report_cabling(
-    ctx: click.Context, devices: Tuple[str], networks: Tuple[str]
+    ctx: click.Context, devices: Tuple[str], designs: Tuple[str]
 ):
     """report cabling between devices"""
 
@@ -178,8 +178,8 @@ def cli_design_report_cabling(
 
         return
 
-    if networks:
-        for network in networks:
+    if designs:
+        for network in designs:
             cabler: CablePlanner
             if not (cabler := CablePlanner.registry_get(name=network)):
                 ctx.fail(f"No cabling found for design: {network}")

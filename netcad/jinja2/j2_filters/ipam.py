@@ -4,7 +4,7 @@ if TYPE_CHECKING:
     from netcad.device import DeviceInterface
 
 
-def ipam_interface(interface: "DeviceInterface"):
+def j2_ipam_interface(interface: "DeviceInterface"):
     ipaddress = getattr(interface, "ipaddress", None) or getattr(
         interface.profile, "ipaddress", None
     )

@@ -1,4 +1,4 @@
-from netcad.cli.main import cli
+from netcad.cli_netcad.main import cli
 from netcad.init import loader
 
 

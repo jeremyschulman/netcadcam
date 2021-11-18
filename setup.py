@@ -5,11 +5,12 @@ packages = [
     "netcad",
     "netcad.arango",
     "netcad.cabling",
-    "netcad.cli",
-    "netcad.cli.cli_audit",
-    "netcad.cli.cli_build",
-    "netcad.cli.cli_design",
-    "netcad.cli.cli_get",
+    "netcad.cli_netcad",
+    "netcad.cli_netcad.cli_build",
+    "netcad.cli_netcad.cli_design",
+    "netcad.cli_netcad.cli_get",
+    "netcad.cli_netcam",
+    "netcad.cli_netcam.cli_test",
     "netcad.config",
     "netcad.design_services",
     "netcad.device",
@@ -19,14 +20,14 @@ packages = [
     "netcad.jinja2.funcs",
     "netcad.netbox",
     "netcad.origin",
-    "netcad.test_services",
-    "netcad.test_services.cabling",
-    "netcad.test_services.device",
-    "netcad.test_services.interfaces",
-    "netcad.test_services.lags",
-    "netcad.test_services.mlags",
-    "netcad.test_services.transceivers",
-    "netcad.test_services.vlans",
+    "netcad.testing_services",
+    "netcad.testing_services.cabling",
+    "netcad.testing_services.device",
+    "netcad.testing_services.interfaces",
+    "netcad.testing_services.lags",
+    "netcad.testing_services.mlags",
+    "netcad.testing_services.transceivers",
+    "netcad.testing_services.vlans",
     "netcad.vlan",
 ]
 
@@ -44,11 +45,16 @@ install_requires = [
     "toml>=0.10.2,<0.11.0",
 ]
 
-entry_points = {"console_scripts": ["netcad = netcad.cli:script"]}
+entry_points = {
+    "console_scripts": [
+        "netcad = netcad.cli_netcad:script",
+        "netcam = netcad.cli_netcam:script",
+    ]
+}
 
 setup_kwargs = {
     "name": "netcad",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "description": "Network Configuration Database",
     "long_description": "# Network Configuration Database\n",
     "author": "Jeremy Schulman",

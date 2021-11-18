@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "netcad"
-version = "0.3.0"
+version = "0.4.0"
 description = "Network Configuration Database"
 authors = ["Jeremy Schulman"]
 readme = "README.md"
@@ -43,4 +43,5 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-    netcad = 'netcad.cli:script'
+    netcad = 'netcad.cli_netcad:script'
+    netcam = 'netcad.cli_netcam:script'

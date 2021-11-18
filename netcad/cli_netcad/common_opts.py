@@ -1,7 +1,7 @@
 import click
 
 opt_devices = lambda **params: click.option(
-    "-n",
+    "-d",
     "--device",
     "devices",
     metavar="[DEVICE-NAME]",
@@ -11,10 +11,10 @@ opt_devices = lambda **params: click.option(
 )
 
 
-opt_network = lambda **params: click.option(
-    "-d",
+opt_designs = lambda **params: click.option(
+    "-D",
     "--design",
-    "networks",
+    "designs",
     multiple=True,
     metavar="[DESIGN]",
     help="design(s)",
