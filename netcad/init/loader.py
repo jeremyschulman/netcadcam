@@ -29,7 +29,8 @@ def import_designs_packages() -> Dict:
     for name, details in design_configs.items():
         pkg = details["package"]
         try:
-            details["module"] = import_module(pkg)
+            from_pkg, design_mod = pkg.rsplit(".", 1)
+            details["module"] = getattr(import_module(from_pkg), design_mod)
 
         except ImportError as exc:
             raise RuntimeError(f"Unable to load network module: {exc.args[0]}")
@@ -59,21 +60,28 @@ def load_design(design_name: str) -> Dict:
             f'Missing design "{design_name}" definitions in config-file: {netcad_globals.g_netcad_config_file}'
         )
 
-    pkg = design_config["package"]
-    try:
-        design_config["module"] = import_module(pkg)
+    pkg_name = design_config["package"]
+    design_mod = None
 
-    except ImportError as exc:
-        raise RuntimeError(f"Unable to load network module: {exc.args[0]}")
+    try:
+        design_mod = import_module(pkg_name)
+    except ModuleNotFoundError:
+        pass
+
+    if not design_mod:
+        from_pkg, design_name = pkg_name.rsplit(".", 1)
+        design_mod = getattr(import_module(from_pkg), design_name)
+
+    if not design_mod:
+        raise RuntimeError(f'Failed to import design "{design_name}"')
 
     # if the design package contains a "design" async function, then execute
     # that now.
 
-    if hasattr(
-        (mod := design_config["module"]), "design"
-    ) and asyncio.iscoroutinefunction(mod.design):
-        asyncio.run(mod.design())
+    if hasattr(design_mod, "design") and asyncio.iscoroutinefunction(design_mod.design):
+        asyncio.run(design_mod.design())
 
+    design_config["module"] = design_mod
     return design_config
 
 
