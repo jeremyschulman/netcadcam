@@ -39,6 +39,26 @@ def import_designs_packages() -> Dict:
     return design_configs
 
 
+def import_design(pkg_name: str):
+
+    # try to import the package name as given.  If the package name as given is
+    # not found then we will try another approach.  The package name could be
+    # given as an import reference within another file, for example "import foo
+    # as bar" and the package name as given references "bar".  In this case the
+    # direct import_module will fail resulting in a ModuleNotFound Error.
+
+    try:
+        return import_module(pkg_name)
+    except ModuleNotFoundError:
+        pass
+
+    # Try splitting the package as given into the from package and then an
+    # attribute within that module.  This will handle the case described above.
+
+    from_pkg, design_name = pkg_name.rsplit(".", 1)
+    return getattr(import_module(from_pkg), design_name)
+
+
 def load_design(design_name: str) -> Dict:
     """
     This function loads the specific design by importing the related package and
@@ -61,22 +81,20 @@ def load_design(design_name: str) -> Dict:
         )
 
     pkg_name = design_config["package"]
-    design_mod = None
 
     try:
-        design_mod = import_module(pkg_name)
-    except ModuleNotFoundError:
-        pass
+        design_mod = import_design(pkg_name)
 
-    if not design_mod:
-        from_pkg, design_name = pkg_name.rsplit(".", 1)
-        design_mod = getattr(import_module(from_pkg), design_name)
+    except Exception as exc:
+        rt_exc = RuntimeError(
+            f'Failed to import design "{design_name}" from package: "{pkg_name}";\n'
+            f"Exception: {str(exc)}",
+        )
+        rt_exc.__traceback__ = exc.__traceback__
+        raise rt_exc
 
     if not design_mod:
         raise RuntimeError(f'Failed to import design "{design_name}"')
-
-    # if the design package contains a "design" async function, then execute
-    # that now.
 
     if hasattr(design_mod, "design") and asyncio.iscoroutinefunction(design_mod.design):
         asyncio.run(design_mod.design())

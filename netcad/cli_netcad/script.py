@@ -21,11 +21,15 @@ def script():
     try:
         cli()
 
-    except RuntimeError as exc:
-        if ("--debug" in sys.argv) or os.getenv("NETCAD_DEBUG"):
+    except Exception as exc:
+        if debug_opt := os.getenv("NETCAD_DEBUG"):
+            debug_opt = int(debug_opt)
             import traceback
 
-            traceback.print_exc()
+            if debug_opt > 1:
+                traceback.print_exc()
+            else:
+                traceback.print_tb(exc.__traceback__, limit=-1)
 
         obj_data = ""
         if len(exc.args) > 1:
