@@ -2,6 +2,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
+import sys
 from os import environ
 from pathlib import Path
 
@@ -49,7 +50,7 @@ def ensure_directory(project_dir: Path, env_var: str, default_value: str):
 
 def init():
     """
-    The netcad primary initialization function.
+    The netcadcam primary initialization function.
     """
 
     # -------------------------------------------------------------------------
@@ -107,6 +108,21 @@ def init():
             str(project_dir.joinpath(d.DEFAULT_NETCAD_CACHEDIR).absolute()),
         )
     )
+
+    # Add the project directory to the Python system path so that packages can
+    # be imported without the User installing them.
+
+    sys.path.insert(0, environ[Environment.NETCAD_PROJECTDIR])
+
+    if not (design_configs := netcad_globals.g_config.get("design")):
+        raise RuntimeError(
+            f'Missing "design" definitions in config-file: {netcad_globals.g_netcad_config_file}'
+        )
+
+    # Initialize the g_netcad_designs global to the contents of the config file
+    # so that this can be easily referenced later when loading designs.
+
+    netcad_globals.g_netcad_designs = design_configs
 
     # import the testing services modules so that they are retrievable via the
     # Registry mechanism.

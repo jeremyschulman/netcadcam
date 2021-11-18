@@ -3,9 +3,7 @@
 # -----------------------------------------------------------------------------
 
 import asyncio
-from typing import Optional, AnyStr, Dict
-import sys
-import os
+from typing import Dict
 from importlib import import_module
 
 # -----------------------------------------------------------------------------
@@ -13,7 +11,6 @@ from importlib import import_module
 # -----------------------------------------------------------------------------
 
 from netcad.config import netcad_globals
-from netcad.config.envvars import Environment
 
 # -----------------------------------------------------------------------------
 #
@@ -22,10 +19,7 @@ from netcad.config.envvars import Environment
 # -----------------------------------------------------------------------------
 
 
-def import_designs_packages(root_path: Optional[AnyStr] = None) -> Dict:
-    # Add the User's project directory for python import path.
-
-    sys.path.insert(0, root_path or os.environ[Environment.NETCAD_PROJECTDIR])
+def import_designs_packages() -> Dict:
 
     if not (design_configs := netcad_globals.g_config.get("design")):
         raise RuntimeError(
@@ -42,6 +36,48 @@ def import_designs_packages(root_path: Optional[AnyStr] = None) -> Dict:
 
     netcad_globals.g_netcad_designs = design_configs
     return design_configs
+
+
+def load_design(design_name: str) -> Dict:
+    """
+    This function loads the specific design by importing the related package and
+    running the `design` method.
+
+    Parameters
+    ----------
+    design_name:
+        The name of design as defined by the User in the netcad configuraiton
+        file.
+
+    Returns
+    -------
+    The design informational instance.
+    """
+
+    if not (design_config := netcad_globals.g_netcad_designs.get(design_name)):
+        raise RuntimeError(
+            f'Missing design "{design_name}" definitions in config-file: {netcad_globals.g_netcad_config_file}'
+        )
+
+    pkg = design_config["package"]
+    try:
+        design_config["module"] = import_module(pkg)
+
+    except ImportError as exc:
+        raise RuntimeError(f"Unable to load network module: {exc.args[0]}")
+
+    # if the design package contains a "design" async function, then execute
+    # that now.
+
+    if hasattr(
+        (mod := design_config["module"]), "design"
+    ) and asyncio.iscoroutinefunction(mod.design):
+        asyncio.run(mod.design())
+
+    return design_config
+
+
+# -----------------------------------------------------------------------------
 
 
 def run_designs(designs: Dict):

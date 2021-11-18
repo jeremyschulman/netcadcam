@@ -5,6 +5,12 @@ packages = [
     "netcad",
     "netcad.arango",
     "netcad.cabling",
+    "netcad.cli_netcad",
+    "netcad.cli_netcad.cli_build",
+    "netcad.cli_netcad.cli_design",
+    "netcad.cli_netcad.cli_get",
+    "netcad.cli_netcam",
+    "netcad.cli_netcam.cli_test",
     "netcad.config",
     "netcad.design_services",
     "netcad.device",
@@ -13,12 +19,6 @@ packages = [
     "netcad.jinja2.filters",
     "netcad.jinja2.funcs",
     "netcad.netbox",
-    "netcad.netcad_cli",
-    "netcad.netcad_cli.cli_audit",
-    "netcad.netcad_cli.cli_build",
-    "netcad.netcad_cli.cli_design",
-    "netcad.netcad_cli.cli_get",
-    "netcad.netcam_cli",
     "netcad.origin",
     "netcad.testing_services",
     "netcad.testing_services.cabling",
@@ -47,14 +47,14 @@ install_requires = [
 
 entry_points = {
     "console_scripts": [
-        "netcad = netcad.netcad_cli:script",
-        "netcam = netcad.netcam_cli:script",
+        "netcad = netcad.cli_netcad:script",
+        "netcam = netcad.cli_netcam:script",
     ]
 }
 
 setup_kwargs = {
     "name": "netcad",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "description": "Network Configuration Database",
     "long_description": "# Network Configuration Database\n",
     "author": "Jeremy Schulman",

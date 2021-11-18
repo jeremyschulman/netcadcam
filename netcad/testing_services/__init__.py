@@ -3,6 +3,7 @@ from .test_results import TestCasePass, TestCaseFailed
 from .test_cases import TestCases
 from .testing_registry import testing_service, TestingService
 
+
 BUILTIN_TESTING_SERVICES = frozenset(
     ("device", "interfaces", "cabling", "lags", "mlags", "transceivers", "vlans")
 )

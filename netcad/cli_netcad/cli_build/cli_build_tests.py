@@ -20,8 +20,8 @@ from netcad.logger import get_logger
 from netcad.device import Device
 from netcad.config import Environment
 
-from netcad.netcad_cli.common_opts import opt_devices, opt_network
-from netcad.netcad_cli import device_inventory
+from netcad.cli_netcad.common_opts import opt_devices, opt_designs
+from netcad.cli_netcad import device_inventory
 
 from .clig_build import clig_build
 
@@ -81,14 +81,14 @@ async def build_device_tests(device: Device, tc_dir: Path):
 
 @clig_build.command(name="tests")
 @opt_devices()
-@opt_network()
+@opt_designs()
 @click.option(
     "--tests-dir",
     help="location to store test-cases",
     type=click.Path(path_type=Path, resolve_path=True, exists=True, writable=True),
     envvar=Environment.NETCAD_TESTCASESDIR,
 )
-def cli_build_tests(devices: Tuple[str], networks: Tuple[str], tests_dir: Path):
+def cli_build_tests(devices: Tuple[str], designs: Tuple[str], tests_dir: Path):
     """
     Build device test cases to audit live network
 
@@ -101,7 +101,7 @@ def cli_build_tests(devices: Tuple[str], networks: Tuple[str], tests_dir: Path):
     Parameters
     ----------
     devices
-    networks
+    designs
     tests_dir
     """
     log = get_logger()
@@ -114,8 +114,8 @@ def cli_build_tests(devices: Tuple[str], networks: Tuple[str], tests_dir: Path):
     if devices:
         device_objs.update(device_inventory.get_devices(devices))
 
-    if networks:
-        device_objs.update(device_inventory.get_network_devices(networks))
+    if designs:
+        device_objs.update(device_inventory.get_network_devices(designs))
 
     device_objs = [dev for dev in device_objs if not dev.is_pseudo]
     device_objs.sort()

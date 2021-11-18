@@ -20,8 +20,8 @@ from netcad.device import Device, interface_profile as ip
 
 # CLI specific imports
 
-from netcad.netcad_cli.common_opts import opt_devices
-from netcad.netcad_cli.get_devices import get_devices
+from netcad.cli_netcad.common_opts import opt_devices
+from netcad.cli_netcad.get_devices import get_devices
 from .. import keywords
 from .clig_design import clig_design_report
 

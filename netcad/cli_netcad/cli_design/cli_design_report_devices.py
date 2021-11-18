@@ -19,8 +19,8 @@ from rich.table import Table
 from netcad.logger import get_logger
 from netcad.config import netcad_globals
 from netcad.device import Device
-from netcad.netcad_cli.common_opts import opt_network
-from netcad.netcad_cli.device_inventory import get_network_devices
+from netcad.cli_netcad.common_opts import opt_designs
+from netcad.cli_netcad.device_inventory import get_network_devices
 
 from .clig_design import clig_design_report
 
@@ -71,7 +71,7 @@ def show_network_devices(network: str, devices: List[Device], **flags):
 
 
 @clig_design_report.command(name="devices")
-@opt_network(required=True)
+@opt_designs(required=True)
 @click.option("--all", "include_pseudo", help="show pseudo devices", is_flag=True)
 def cli_design_report_devices(networks: Tuple[str], **flags):
     """

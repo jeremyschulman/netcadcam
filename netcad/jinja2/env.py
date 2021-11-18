@@ -12,11 +12,9 @@ import jinja2
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from .filters import vlan_filters
-from .filters.render import j2_filter_render
-from .filters import ipam
-from .funcs.lookup import j2_func_lookup
-from .funcs.ipam import j2_func_ipam_get
+from . import j2_funcs
+from . import j2_filters
+
 from netcad.helpers import range_string
 
 # -----------------------------------------------------------------------------
@@ -32,13 +30,17 @@ __all__ = ["get_env"]
 # -----------------------------------------------------------------------------
 
 _env_filters = {
-    "ipam_interface": ipam.ipam_interface,
-    "vlan_ranges": vlan_filters.j2_filter_vlans_id_list,
-    "render": j2_filter_render,
+    "ipam_interface": j2_filters.j2_ipam_interface,
+    "vlan_ranges": j2_filters.j2_vlans_id_list,
+    "render": j2_filters.j2_render,
     "range_string": range_string,
 }
 
-_env_globals = {"lookup": j2_func_lookup, "ipam_get": j2_func_ipam_get}
+_env_globals = {
+    "lookup": j2_funcs.j2_func_lookup,
+    "global_import": j2_funcs.j2_func_import,
+    "ipam_get": j2_funcs.j2_func_ipam_get,
+}
 
 
 def get_env(template_dirs):

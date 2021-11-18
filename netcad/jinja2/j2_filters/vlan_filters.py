@@ -13,7 +13,7 @@ from netcad.helpers import range_string
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["j2_filter_vlans_id_list"]
+__all__ = ["j2_vlans_id_list", "range_string"]
 
 
 # -----------------------------------------------------------------------------
@@ -23,7 +23,7 @@ __all__ = ["j2_filter_vlans_id_list"]
 # -----------------------------------------------------------------------------
 
 
-def j2_filter_vlans_id_list(if_obj: "DeviceInterface") -> str:
+def j2_vlans_id_list(if_obj: "DeviceInterface") -> str:
 
     if not (vlans := getattr(if_obj.profile, "vlans", None)):
         dev_name = if_obj.device.name
