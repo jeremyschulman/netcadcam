@@ -4,6 +4,7 @@
 
 import asyncio
 from typing import Dict
+from types import ModuleType
 from importlib import import_module
 
 # -----------------------------------------------------------------------------
@@ -19,27 +20,23 @@ from netcad.config import netcad_globals
 # -----------------------------------------------------------------------------
 
 
-def import_designs_packages() -> Dict:
+def import_design(pkg_name: str) -> ModuleType:
+    """
+    This function will import the module as defined by the `pkg_name` value.
+    This name originates in the netcad configuration file and could be one
+    cases.  The first case is the package name referrs to an actual module file.
+    The second case is that the package name referrs to an attribute within a
+    package module.
 
-    if not (design_configs := netcad_globals.g_config.get("design")):
-        raise RuntimeError(
-            f'Missing "design" definitions in config-file: {netcad_globals.g_netcad_config_file}'
-        )
+    Parameters
+    ----------
+    pkg_name:
+        The package name, as providing in standard Python dotted notation.
 
-    for name, details in design_configs.items():
-        pkg = details["package"]
-        try:
-            from_pkg, design_mod = pkg.rsplit(".", 1)
-            details["module"] = getattr(import_module(from_pkg), design_mod)
-
-        except ImportError as exc:
-            raise RuntimeError(f"Unable to load network module: {exc.args[0]}")
-
-    netcad_globals.g_netcad_designs = design_configs
-    return design_configs
-
-
-def import_design(pkg_name: str):
+    Returns
+    -------
+    The module loaded.
+    """
 
     # try to import the package name as given.  If the package name as given is
     # not found then we will try another approach.  The package name could be
@@ -85,6 +82,11 @@ def load_design(design_name: str) -> Dict:
     try:
         design_mod = import_design(pkg_name)
 
+    # If there is any exception during the importing of the module, that is a
+    # coding error by the Developer, then we need to raise that so the CLI
+    # output will dispaly the information to the User with the hopes that the
+    # information will aid in debugging.
+
     except Exception as exc:
         rt_exc = RuntimeError(
             f'Failed to import design "{design_name}" from package: "{pkg_name}";\n'
@@ -104,6 +106,28 @@ def load_design(design_name: str) -> Dict:
 
 
 # -----------------------------------------------------------------------------
+# TODO: remove these functions and replace with the others above.
+# -----------------------------------------------------------------------------
+
+
+def import_designs_packages() -> Dict:
+
+    if not (design_configs := netcad_globals.g_config.get("design")):
+        raise RuntimeError(
+            f'Missing "design" definitions in config-file: {netcad_globals.g_netcad_config_file}'
+        )
+
+    for name, details in design_configs.items():
+        pkg = details["package"]
+        try:
+            from_pkg, design_mod = pkg.rsplit(".", 1)
+            details["module"] = getattr(import_module(from_pkg), design_mod)
+
+        except ImportError as exc:
+            raise RuntimeError(f"Unable to load network module: {exc.args[0]}")
+
+    netcad_globals.g_netcad_designs = design_configs
+    return design_configs
 
 
 def run_designs(designs: Dict):
