@@ -20,7 +20,7 @@ from netcad.config import netcad_globals
 # -----------------------------------------------------------------------------
 
 
-def import_design(pkg_name: str) -> ModuleType:
+def netcad_import_package(pkg_name: str) -> ModuleType:
     """
     This function will import the module as defined by the `pkg_name` value.
     This name originates in the netcad configuration file and could be one
@@ -81,7 +81,7 @@ def load_design(design_name: str) -> Dict:
     pkg_name = design_config["package"]
 
     try:
-        design_mod = import_design(pkg_name)
+        design_mod = netcad_import_package(pkg_name)
 
     # If there is any exception during the importing of the module, that is a
     # coding error by the Developer, then we need to raise that so the CLI

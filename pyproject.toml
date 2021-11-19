@@ -44,4 +44,4 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
     netcad = 'netcad.cli_netcad:script'
-    netcam = 'netcad.cli_netcam:script'
+    netcam = 'netcad.netcam.cli:script'
