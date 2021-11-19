@@ -2,7 +2,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Set, Sequence, List
+from typing import Set, Sequence, List, Optional
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -27,7 +27,7 @@ __all__ = ["get_devices_from_designs"]
 
 
 def get_devices_from_designs(
-    designs: Sequence[str], include_devices: Sequence[str]
+    designs: Sequence[str], include_devices: Optional[Sequence[str]] = None
 ) -> List[Device]:
 
     for design_name in designs:

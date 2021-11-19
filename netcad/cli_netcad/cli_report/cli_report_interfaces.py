@@ -17,12 +17,11 @@ from rich.table import Table, Text
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device, interface_profile as ip
+from netcad.logger import get_logger
 
-# CLI specific imports
-
-from netcad.cli_netcad.common_opts import opt_devices
-from netcad.cli_netcad.get_devices import get_devices
 from .. import keywords
+from ..common_opts import opt_devices, opt_designs
+from ..device_inventory import get_devices_from_designs
 from .clig_design import clig_design_report
 
 # -----------------------------------------------------------------------------
@@ -93,8 +92,9 @@ def show_device_interfaces(device: Device, **options):
 @click.option(
     "--all", "show_all", help="show all interfaces, including unused", is_flag=True
 )
+@opt_designs(required=True)
 @opt_devices(required=True)
-def cli_design_report_interfaces(devices: Tuple[str], **flags):
+def cli_design_report_interfaces(devices: Tuple[str], designs: Tuple[str], **flags):
     """
     report device interfaces usage
 
@@ -109,11 +109,19 @@ def cli_design_report_interfaces(devices: Tuple[str], **flags):
     \f
     Parameters
     ----------
-    devices: tuple[str]
-        A tuple of device names provided by the User
-    """
+    designs: Tuple[str]
+        A list of design names, as found in the User configuration file.
 
-    dev_objs = get_devices(device_list=devices)
+    devices: tuple[str]
+        A list of device names, as would be found in the designated designs
+    """
+    log = get_logger()
+
+    if not (
+        dev_objs := get_devices_from_designs(designs=designs, include_devices=devices)
+    ):
+        log.error("No devices located in the given designs")
+        return
 
     print(f"Checking {len(dev_objs)} devices ...")
 
