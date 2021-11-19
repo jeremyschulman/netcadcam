@@ -1,2 +1,2 @@
 from .init import init
-from .loader import import_designs_packages, import_design
+from .loader import load_design, import_design
