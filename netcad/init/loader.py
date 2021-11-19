@@ -59,13 +59,14 @@ def import_design(pkg_name: str) -> ModuleType:
 def load_design(design_name: str) -> Dict:
     """
     This function loads the specific design by importing the related package and
-    running the `design` method.
+    executes the `design` function.
 
     Parameters
     ----------
-    design_name:
+    design_name: str
         The name of design as defined by the User in the netcad configuraiton
-        file.
+        file.  For example, if the configuration file contained a toplevel entry
+        "[design.foobaz]" then the `design_name` is "foobaz".
 
     Returns
     -------
@@ -97,6 +98,11 @@ def load_design(design_name: str) -> Dict:
 
     if not design_mod:
         raise RuntimeError(f'Failed to import design "{design_name}"')
+
+    # The design function is expected to be async.
+    # TODO: log a warning if one is not found?  Is it possible that a design
+    #       module does not have a "design" method?  This is unlikely and possibly
+    #       should raise a RuntimeError if the 'design' function is missing.
 
     if hasattr(design_mod, "design") and asyncio.iscoroutinefunction(design_mod.design):
         asyncio.run(design_mod.design())

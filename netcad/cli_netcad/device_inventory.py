@@ -2,7 +2,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Set, Sequence
+from typing import Set, Sequence, List
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -10,12 +10,13 @@ from typing import Set, Sequence
 
 from netcad.device import Device
 from netcad.cabling import CablePlanner
+from netcad.init import loader
 
 # -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["get_devices", "get_network_devices"]
+__all__ = ["get_devices_from_designs"]
 
 
 # -----------------------------------------------------------------------------
@@ -25,6 +26,22 @@ __all__ = ["get_devices", "get_network_devices"]
 # -----------------------------------------------------------------------------
 
 
+def get_devices_from_designs(
+    designs: Sequence[str], include_devices: Sequence[str]
+) -> List[Device]:
+
+    for design_name in designs:
+        loader.load_design(design_name=design_name)
+
+    device_objs = sorted(Device.registry_items(True).values())
+
+    if not include_devices:
+        return device_objs
+
+    return sorted([obj for obj in device_objs if obj.name in include_devices])
+
+
+# TODO: remove
 def get_devices(devices: Sequence[str]) -> Set[Device]:
     """
     Returns a set of Device objects corresponding to the list of
@@ -54,6 +71,7 @@ def get_devices(devices: Sequence[str]) -> Set[Device]:
     return device_objs
 
 
+# TODO: remove
 def get_network_devices(networks: Sequence[str]) -> Set[Device]:
     """
     Returns a set of Device objects that are members in any of the provided

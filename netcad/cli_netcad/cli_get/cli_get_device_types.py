@@ -10,7 +10,7 @@ import os
 # -----------------------------------------------------------------------------
 
 from netcad.logger import get_logger
-from netcad.cli_netcad.main import clig_get
+from netcad.cli_netcad.cli_main import clig_get
 from netcad.config import netcad_globals, Environment
 from netcad.init import loader
 from netcad.device import Device

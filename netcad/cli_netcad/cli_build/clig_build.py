@@ -1,4 +1,4 @@
-from netcad.cli_netcad.main import cli
+from netcad.cli_netcad.cli_main import cli
 
 
 @cli.group("build")

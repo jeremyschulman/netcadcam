@@ -14,7 +14,7 @@ import os
 # -----------------------------------------------------------------------------
 
 from netcad.logger import get_logger
-from .main import cli
+from .cli_main import cli
 
 
 def script():

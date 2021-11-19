@@ -1,14 +1,16 @@
-from netcad.init import loader
-from .clig_design import clig_design
-
-
 # -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
 
-
 from rich.console import Console
 from rich.table import Table
+
+# -----------------------------------------------------------------------------
+# Private Imports
+# -----------------------------------------------------------------------------
+
+from netcad.cli_netcad.cli_report import clig_design
+from netcad.config import netcad_globals
 
 # -----------------------------------------------------------------------------
 # Exports (None)
@@ -24,11 +26,11 @@ __all__ = []
 # -----------------------------------------------------------------------------
 
 
-@clig_design.command(name="list")
+@clig_design.cli.command(name="list")
 def cli_designs_list():
     """List available designs"""
 
-    designs = loader.import_designs_packages()
+    designs = netcad_globals.g_netcad_designs
     console = Console()
 
     table = Table(

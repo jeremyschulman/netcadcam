@@ -17,10 +17,9 @@ import jinja2
 # -----------------------------------------------------------------------------
 
 from netcad.logger import get_logger
-from netcad.init import loader
 from netcad.cli_netcad.common_opts import opt_devices, opt_designs
-from netcad.device import Device
 
+from ..device_inventory import get_devices_from_designs
 from .clig_build import clig_build
 
 # -----------------------------------------------------------------------------
@@ -59,19 +58,16 @@ def cli_render(
     # accordingly.  Extract the device objects from the registry into a set that
     # we can then iterate through.
 
-    for design_name in designs:
-        loader.load_design(design_name=design_name)
-
-    device_objs = set(Device.registry_items(True).values())
-    if devices:
-        device_objs = [obj for obj in device_objs if obj.name in devices]
+    if not (device_objs := get_devices_from_designs(designs, include_devices=devices)):
+        log.error("No devices located in the given designs")
+        return
 
     # Filter out any device that is not a "real" device for configuration
     # purposes. for example the device representing an MLAG redundant pair. Then
     # sort the devices based on their sorting mechanism.
 
     if not (device_objs := sorted((dev for dev in device_objs if not dev.is_pseudo))):
-        log.error("No devices for config building")
+        log.error("No devices located in the given designs")
         return
 
     log.info(f"Building {len(device_objs)} device configurations.")
