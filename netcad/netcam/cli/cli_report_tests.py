@@ -52,7 +52,21 @@ __all__ = []
     type=click.Path(path_type=Path, resolve_path=True, exists=True, writable=True),
     envvar=Environment.NETCAD_TESTCASESDIR,
 )
-def cli_report_tests(devices: Tuple[str], designs: Tuple[str], **_optionals):
+@click.option(
+    "-ef",
+    "--exclude-field",
+    "exclude_fields",
+    multiple=True,
+    help="exclude field from report",
+)
+@click.option(
+    "-if",
+    "--include-field",
+    "include_fields",
+    multiple=True,
+    help="include only field from report",
+)
+def cli_report_tests(devices: Tuple[str], designs: Tuple[str], **optionals):
     """Show test results in tablular form."""
 
     log = get_logger()
@@ -64,7 +78,7 @@ def cli_report_tests(devices: Tuple[str], designs: Tuple[str], **_optionals):
     log.info(f"Showing test logs for {len(device_objs)} devices.")
 
     for dev_obj in device_objs:
-        show_device_test_logs(dev_obj)
+        show_device_test_logs(dev_obj, optionals)
 
 
 # -----------------------------------------------------------------------------
@@ -74,7 +88,7 @@ def cli_report_tests(devices: Tuple[str], designs: Tuple[str], **_optionals):
 # -----------------------------------------------------------------------------
 
 
-def show_device_test_logs(device: Device):
+def show_device_test_logs(device: Device, optionals: dict):
 
     log = get_logger()
 
@@ -85,6 +99,12 @@ def show_device_test_logs(device: Device):
         )
         return
 
+    inc_fields = optionals["include_fields"]
+    exc_fields = optionals["exclude_fields"]
+
+    filter_in = lambda i: i.get("field") in inc_fields
+    filter_out = lambda i: i.get("field") not in exc_fields
+
     for rc_result_file in test_result_files(device):
 
         # if the test results file does not exist, it means that the tests were
@@ -94,8 +114,13 @@ def show_device_test_logs(device: Device):
         if not results_file.exists():
             continue
 
-        results = list()
         results = json.load(results_file.open())
+
+        if exc_fields:
+            results = filter(filter_out, results)
+
+        if inc_fields:
+            results = filter(filter_in, results)
 
         # display the results in a Table form.
         show_log_table(device, results_file.name, results)
@@ -118,13 +143,13 @@ def show_log_table(device: Device, filename: str, results: List[Dict]):
     for result in results:
         r_st = result["status"]
         msr_val = Pretty(result["measurement"])
-        log_msg = result["error"] if r_st == st_opt.FAIL else msr_val
+        log_msg = Pretty(result["error"]) if r_st == st_opt.FAIL else msr_val
 
         table.add_row(
             _colorize_status(result["status"]),
             device.name,
             result["test_case_id"],
-            result["field"],
+            result.get("field"),
             log_msg,
         )
 

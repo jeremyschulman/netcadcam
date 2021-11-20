@@ -39,7 +39,7 @@ __all__ = [
 # -----------------------------------------------------------------------------
 
 # !! order matters here, ensure bool is first
-AnyMeasurementType = Union[bool, str, float, int, List, Dict, None]
+AnyMeasurementType = Union[bool, int, float, List, Dict, None, str]
 
 
 class TestCaseStatus(StrEnum):
@@ -53,7 +53,6 @@ class TestCaseResults(BaseModel):
     device: Device
     test_case: TestCase
     test_case_id: Optional[str]
-    field: str
     measurement: AnyMeasurementType
 
     # noinspection PyUnusedLocal
@@ -85,11 +84,12 @@ class TestCasePass(TestCaseResults):
 
 class TestCaseFailed(TestCaseResults):
     status = Field(default=TestCaseStatus.FAIL)
-    error: str
+    field: str
+    error: Union[str, dict]
 
 
 class TestCaseFailedOnField(TestCaseFailed):
-    error: Optional[str]
+    error: Optional[Union[str, dict]]
 
     @validator("error", always=True)
     def _form_errmsg(cls, value, values: dict):
@@ -102,7 +102,7 @@ class TestCaseFailedOnField(TestCaseFailed):
         field = values["field"]
         exp_val = getattr(values["test_case"].expected_results, field)
         msr_val = values["measurement"]
-        return f"Mismatch: field={field}: expected={exp_val}, measured={msr_val}"
+        return dict(error="mismatch", expected=exp_val, measured=msr_val)
 
 
 # -----------------------------------------------------------------------------
