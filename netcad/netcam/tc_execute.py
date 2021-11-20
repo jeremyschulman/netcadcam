@@ -1,17 +1,9 @@
 # -----------------------------------------------------------------------------
 # System Imports
 # -----------------------------------------------------------------------------
-import json
+
 from typing import List, Tuple
 from collections import defaultdict
-from pathlib import Path
-from dataclasses import asdict
-
-# -----------------------------------------------------------------------------
-# Public Imports
-# -----------------------------------------------------------------------------
-
-import aiofiles
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -20,10 +12,16 @@ import aiofiles
 from netcad.logger import get_logger
 from netcad.config import netcad_globals
 from netcad.testing_services import TestCases
-from .tc_results import TestCasePass, TestCaseFailed, TestCaseInfo, TestCaseResults
 
+from .tc_result_types import TestCasePass, TestCaseFailed, TestCaseInfo, TestCaseResults
+from .tc_save import testcases_save_results
 from .dut import AsyncDeviceUnderTest
 
+# -----------------------------------------------------------------------------
+# Exports
+# -----------------------------------------------------------------------------
+
+__all__ = ["execute_testcases"]
 
 # -----------------------------------------------------------------------------
 #
@@ -33,47 +31,6 @@ from .dut import AsyncDeviceUnderTest
 
 PASS_GREEN = "[green]PASS[/green]"
 FAIL_RED = "[red]FAIL[/red]"
-
-
-async def gather_testcase_results(
-    dut: AsyncDeviceUnderTest, testcases: TestCases
-) -> Tuple[List[TestCaseResults], defaultdict]:
-
-    results = list()
-    result_counts = defaultdict(int)
-
-    async for result in dut.execute_testcases(testcases):
-        results.append(result)
-        result_counts[result.__class__] += 1
-
-    return results, result_counts
-
-
-_map_result_type_str = {
-    TestCasePass: "pass",
-    TestCaseFailed: "fail",
-    TestCaseInfo: "info",
-}
-
-
-async def save_testcase_results(
-    dut: AsyncDeviceUnderTest,
-    tc_name: str,
-    results: List[TestCaseResults],
-    resuls_dir: Path,
-):
-    results_file = resuls_dir / f"{tc_name}.json"
-    json_payload = list()
-
-    for res in results:
-        res_dict = asdict(res)
-        res_dict["type"] = _map_result_type_str[res.__class__]
-        res_dict["device"] = dut.device.name
-        res_dict["test_case"] = res_dict["test_case"].dict()
-        json_payload.append(res_dict)
-
-    async with aiofiles.open(results_file, "w+") as ofile:
-        await ofile.write(json.dumps(json_payload, indent=3))
 
 
 async def execute_testcases(dut: AsyncDeviceUnderTest):
@@ -128,7 +85,7 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
             testcases = await testing_service.load(testcase_dir=dev_tc_dir)
 
             try:
-                results, result_counts = await gather_testcase_results(
+                results, result_counts = await _gather_testcase_results(
                     dut=dut, testcases=testcases
                 )
             except Exception as exc:
@@ -156,7 +113,7 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
                     extra={"markup": True},
                 )
 
-            await save_testcase_results(
+            await testcases_save_results(
                 dut, tc_name, results, resuls_dir=dev_resuls_dir
             )
 
@@ -171,3 +128,24 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
 
     except Exception as exc:
         log.error(f"{dut_name}: Teardown failed: {exc}")
+
+
+# -----------------------------------------------------------------------------
+#
+#                          PRIVATE CODE BEGINS
+#
+# -----------------------------------------------------------------------------
+
+
+async def _gather_testcase_results(
+    dut: AsyncDeviceUnderTest, testcases: TestCases
+) -> Tuple[List[TestCaseResults], defaultdict]:
+
+    results = list()
+    result_counts = defaultdict(int)
+
+    async for result in dut.execute_testcases(testcases):
+        results.append(result)
+        result_counts[result.__class__] += 1
+
+    return results, result_counts
