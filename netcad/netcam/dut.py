@@ -1,3 +1,6 @@
+from typing import AsyncGenerator
+from functools import singledispatchmethod
+
 from netcad.device import Device
 from netcad.testing_services import TestCases
 
@@ -25,7 +28,8 @@ class AsyncDeviceUnderTest(_BaseDeviceUnderTest):
     async def setup(self):
         raise NotImplementedError()
 
-    async def execute_testcases(self, testcases: TestCases):
+    @singledispatchmethod
+    async def execute_testcases(self, testcases: TestCases) -> AsyncGenerator:
         raise NotImplementedError()
 
     async def teardown(self):
