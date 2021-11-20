@@ -75,7 +75,7 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
             # TODO: move this 'limiter' once all of the testing code is
             #       implmeneted.
             #       v----------------------------------------------------------
-            if tc_name not in ("device",):
+            if tc_name not in ("device", "interfaces"):
                 log.warning(f"{dut_name}:        Testcases: {tc_name}, skipping")
                 continue
             # TODO: remove ^---------------------------------------------------

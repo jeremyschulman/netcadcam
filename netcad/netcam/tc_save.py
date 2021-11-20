@@ -1,10 +1,11 @@
 # -----------------------------------------------------------------------------
 # System Imports
 # -----------------------------------------------------------------------------
+
 import json
 from typing import List
 from pathlib import Path
-from dataclasses import asdict
+
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -16,7 +17,7 @@ import aiofiles
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from .tc_result_types import TestCasePass, TestCaseFailed, TestCaseInfo, TestCaseResults
+from . import tc_result_types as trt
 from .dut import AsyncDeviceUnderTest
 
 # -----------------------------------------------------------------------------
@@ -25,28 +26,36 @@ from .dut import AsyncDeviceUnderTest
 
 __all__ = ["testcases_save_results"]
 
-_map_result_type_str = {
-    TestCasePass: "pass",
-    TestCaseFailed: "fail",
-    TestCaseInfo: "info",
-}
-
 
 async def testcases_save_results(
     dut: AsyncDeviceUnderTest,
     tc_name: str,
-    results: List[TestCaseResults],
+    results: List[trt.TestCaseResults],
     resuls_dir: Path,
 ):
     results_file = resuls_dir / f"{tc_name}.json"
     json_payload = list()
 
     for res in results:
-        res_dict = asdict(res)
-        res_dict["type"] = _map_result_type_str[res.__class__]
+        res_dict = res.dict()
+        res_dict["type"] = _map_result_type_str(res)
         res_dict["device"] = dut.device.name
-        res_dict["test_case"] = res_dict["test_case"].dict()
+        res_dict["test_case"] = res_dict["test_case"]
         json_payload.append(res_dict)
 
     async with aiofiles.open(results_file, "w+") as ofile:
         await ofile.write(json.dumps(json_payload, indent=3))
+
+
+def _map_result_type_str(tr_type: trt.TestCaseResults):
+
+    if isinstance(tr_type, trt.TestCasePass):
+        return "PASS"
+
+    if isinstance(tr_type, trt.TestCaseFailed):
+        return "FAIL"
+
+    if isinstance(tr_type, trt.TestCaseInfo):
+        return "INFO"
+
+    return "UNKNOWN"
