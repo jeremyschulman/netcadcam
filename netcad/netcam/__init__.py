@@ -1,2 +1,2 @@
 from .tc_execute import execute_testcases
-from .tc_results import TestCasePass, TestCaseFailed, TestCaseInfo, TestCaseResults
+from .tc_result_types import TestCasePass, TestCaseFailed, TestCaseInfo, TestCaseResults

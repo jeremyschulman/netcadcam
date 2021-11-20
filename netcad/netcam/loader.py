@@ -34,20 +34,19 @@ def import_netcam_plugin() -> ModuleType:
     -------
     The plugin module as described.
     """
-    if not (netcam_config := netcad_globals.g_config.get("netcam")):
-        cfile = netcad_globals.g_netcad_config_file.absolute()
-        raise RuntimeError(f'Configuration Missing: "netcam" section in file: {cfile}')
 
-    if not (package := netcam_config.get("package")):
+    try:
+        plugin_pkgname = netcad_globals.g_config["netcam"]["test"]["package"]
+    except KeyError:
         cfile = netcad_globals.g_netcad_config_file.absolute()
         raise RuntimeError(
-            f'Configuration Missing: "netcam.package" setting in file: {cfile}'
+            f'Configuration Missing: "netcam.test.package" section in file: {cfile}'
         )
 
-    pl_mod = netcad_import_package(package)
+    pl_mod = netcad_import_package(plugin_pkgname)
     if not hasattr(pl_mod, "get_dut"):
         raise RuntimeError(
-            f'Netcam plugin package "{package}" missing get_dut_type function'
+            f'Netcam plugin package "{plugin_pkgname}" missing get_dut_type function'
         )
 
     return pl_mod

@@ -1,17 +1,9 @@
 # -----------------------------------------------------------------------------
 # System Imports
 # -----------------------------------------------------------------------------
-import json
-from typing import List, Tuple
-from collections import defaultdict
-from pathlib import Path
-from dataclasses import asdict
 
-# -----------------------------------------------------------------------------
-# Public Imports
-# -----------------------------------------------------------------------------
-
-import aiofiles
+from typing import List
+from collections import Counter
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -20,10 +12,16 @@ import aiofiles
 from netcad.logger import get_logger
 from netcad.config import netcad_globals
 from netcad.testing_services import TestCases
-from .tc_results import TestCasePass, TestCaseFailed, TestCaseInfo, TestCaseResults
 
+from .tc_result_types import TestCaseStatus, TestCaseResults
+from .tc_save import testcases_save_results
 from .dut import AsyncDeviceUnderTest
 
+# -----------------------------------------------------------------------------
+# Exports
+# -----------------------------------------------------------------------------
+
+__all__ = ["execute_testcases"]
 
 # -----------------------------------------------------------------------------
 #
@@ -33,47 +31,7 @@ from .dut import AsyncDeviceUnderTest
 
 PASS_GREEN = "[green]PASS[/green]"
 FAIL_RED = "[red]FAIL[/red]"
-
-
-async def gather_testcase_results(
-    dut: AsyncDeviceUnderTest, testcases: TestCases
-) -> Tuple[List[TestCaseResults], defaultdict]:
-
-    results = list()
-    result_counts = defaultdict(int)
-
-    async for result in dut.execute_testcases(testcases):
-        results.append(result)
-        result_counts[result.__class__] += 1
-
-    return results, result_counts
-
-
-_map_result_type_str = {
-    TestCasePass: "pass",
-    TestCaseFailed: "fail",
-    TestCaseInfo: "info",
-}
-
-
-async def save_testcase_results(
-    dut: AsyncDeviceUnderTest,
-    tc_name: str,
-    results: List[TestCaseResults],
-    resuls_dir: Path,
-):
-    results_file = resuls_dir / f"{tc_name}.json"
-    json_payload = list()
-
-    for res in results:
-        res_dict = asdict(res)
-        res_dict["type"] = _map_result_type_str[res.__class__]
-        res_dict["device"] = dut.device.name
-        res_dict["test_case"] = res_dict["test_case"].dict()
-        json_payload.append(res_dict)
-
-    async with aiofiles.open(results_file, "w+") as ofile:
-        await ofile.write(json.dumps(json_payload, indent=3))
+SKIP_BLUE = "[blue]SKIP[/blue]"
 
 
 async def execute_testcases(dut: AsyncDeviceUnderTest):
@@ -110,7 +68,7 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
     # -------------------------------------------------------------------------
 
     for design_service in device.services:
-        log.info(f"{dut_name}:    Design Service: {design_service.__class__.__name__}")
+        log.info(f"{dut_name}: Design Service: {design_service.__class__.__name__}")
 
         for testing_service in design_service.testing_services:
             tc_name = testing_service.get_service_name()
@@ -118,46 +76,54 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
             # TODO: move this 'limiter' once all of the testing code is
             #       implmeneted.
             #       v----------------------------------------------------------
-            if tc_name not in ("device",):
-                log.warning(f"{dut_name}:        Testcases: {tc_name}, skipping")
-                continue
-            # TODO: remove ^---------------------------------------------------
 
-            log.info(f"{dut_name}:        Testcases: {tc_name}")
+            if tc_name not in ("device", "interfaces"):
+                log.info(
+                    f"{dut_name}: {SKIP_BLUE}\tTestcases: {tc_name}",
+                    extra={"markup": True},
+                )
+                continue
+
+            # TODO: remove ^---------------------------------------------------
 
             testcases = await testing_service.load(testcase_dir=dev_tc_dir)
 
+            log.info(f"{dut_name}:\t\tTestcases: {tc_name}")
+
             try:
-                results, result_counts = await gather_testcase_results(
-                    dut=dut, testcases=testcases
-                )
+                results = await _gather_testcase_results(dut=dut, testcases=testcases)
             except Exception as exc:
                 log.error(
                     f"{dut_name}: Exception during exection: {exc}, aborting {tc_name}"
                 )
                 continue
 
+            result_counts = Counter(r.status for r in results)
+
+            c_pass, c_fail, c_info = (
+                result_counts[TestCaseStatus.PASS],
+                result_counts[TestCaseStatus.FAIL],
+                result_counts[TestCaseStatus.INFO],
+            )
+
             dev_resuls_dir = dev_tc_dir / "results"
             dev_resuls_dir.mkdir(exist_ok=True)
 
-            if result_counts[TestCaseFailed] == 0:
+            if not c_fail:
                 log.info(
-                    f"{dut_name}:        {PASS_GREEN}/Testcases: {tc_name}: "
-                    f"pass={result_counts[TestCasePass]}, "
-                    f"info={result_counts[TestCaseInfo]}",
+                    f"{dut_name}: {PASS_GREEN}\tTestcases: {tc_name}: "
+                    f"PASS={c_pass}, INFO={c_info}",
                     extra={"markup": True},
                 )
             else:
                 log.warning(
-                    f"{dut_name}:        {FAIL_RED}/Testcases: {tc_name}: "
-                    f"pass={result_counts[TestCasePass]}, "
-                    f"info={result_counts[TestCaseInfo]}, "
-                    f"failed={result_counts[TestCaseFailed]}",
+                    f"{dut_name}: {FAIL_RED}\tTestcases: {tc_name}: "
+                    f"PASS={c_pass}, FAIL={c_fail}, INFO={c_info}",
                     extra={"markup": True},
                 )
 
-            await save_testcase_results(
-                dut, tc_name, results, resuls_dir=dev_resuls_dir
+            await testcases_save_results(
+                dut, tc_name, results, results_dir=dev_resuls_dir
             )
 
     # -------------------------------------------------------------------------
@@ -171,3 +137,22 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
 
     except Exception as exc:
         log.error(f"{dut_name}: Teardown failed: {exc}")
+
+
+# -----------------------------------------------------------------------------
+#
+#                          PRIVATE CODE BEGINS
+#
+# -----------------------------------------------------------------------------
+
+
+async def _gather_testcase_results(
+    dut: AsyncDeviceUnderTest, testcases: TestCases
+) -> List[TestCaseResults]:
+
+    results = list()
+
+    async for result in dut.execute_testcases(testcases):
+        results.append(result)
+
+    return results
