@@ -52,8 +52,14 @@ class TestCaseResults(BaseModel):
     status: TestCaseStatus
     device: Device
     test_case: TestCase
+    test_case_id: Optional[str]
     field: str
     measurement: AnyMeasurementType
+
+    # noinspection PyUnusedLocal
+    @validator("test_case_id", always=True)
+    def _save_tc_id(cls, value, values: dict):
+        return values["test_case"].test_case_id()
 
     class Config:
         arbitrary_types_allowed = True
