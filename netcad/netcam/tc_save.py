@@ -61,17 +61,3 @@ async def testcases_save_results(
 
     async with aiofiles.open(results_file, "w+") as ofile:
         await ofile.write(json.dumps(json_payload, indent=3))
-
-
-def _map_result_type_str(tr_type: trt.TestCaseResults):
-
-    if isinstance(tr_type, trt.TestCasePass):
-        return "PASS"
-
-    if isinstance(tr_type, trt.TestCaseFailed):
-        return "FAIL"
-
-    if isinstance(tr_type, trt.TestCaseInfo):
-        return "INFO"
-
-    return "UNKNOWN"
