@@ -66,6 +66,12 @@ __all__ = []
     multiple=True,
     help="include only field from report",
 )
+@click.option(
+    "--tests",
+    "testing_service_names",
+    multiple=True,
+    help="display only logs from <test>",
+)
 def cli_report_tests(devices: Tuple[str], designs: Tuple[str], **optionals):
     """Show test results in tablular form."""
 
@@ -105,7 +111,7 @@ def show_device_test_logs(device: Device, optionals: dict):
     filter_in = lambda i: i.get("field") in inc_fields
     filter_out = lambda i: i.get("field") not in exc_fields
 
-    for rc_result_file in test_result_files(device):
+    for rc_result_file in test_result_files(device, optionals):
 
         # if the test results file does not exist, it means that the tests were
         # not executed.  For now, silently skip.  TODO: may show User warning?
@@ -130,20 +136,25 @@ def show_log_table(device: Device, filename: str, results: List[Dict]):
     console = Console()
 
     table = Table(
+        "Status",
+        "Device",
+        "Id",
+        "Field",
+        "Log",
         title=f"Device: {device.name} Test Logs: {filename}",
         show_header=True,
         header_style="bold magenta",
+        show_lines=True,
     )
-
-    for column in ["Status", "Device", "Id", "Field", "Log"]:
-        table.add_column(column)
 
     st_opt = trt.TestCaseStatus
 
     for result in results:
         r_st = result["status"]
-        msr_val = Pretty(result["measurement"])
-        log_msg = Pretty(result["error"]) if r_st == st_opt.FAIL else msr_val
+        msr_val = _pretty_dict_table(result["measurement"])
+        log_msg = (
+            _pretty_dict_table(result["error"]) if r_st == st_opt.FAIL else msr_val
+        )
 
         table.add_row(
             _colorize_status(result["status"]),
@@ -156,6 +167,18 @@ def show_log_table(device: Device, filename: str, results: List[Dict]):
     console.print(table)
 
 
+def _pretty_dict_table(obj):
+
+    if not isinstance(obj, dict):
+        return Pretty(obj)
+
+    table = Table(show_header=False, box=None)
+    for key, value in obj.items():
+        table.add_row(key, Pretty(value))
+
+    return table
+
+
 def _colorize_status(status):
     options = trt.TestCaseStatus
 
@@ -166,8 +189,17 @@ def _colorize_status(status):
     return f"[{color}]{status}[/{color}]"
 
 
-def test_result_files(device):
+def test_result_files(device, optionals: dict):
+    inc_ts_names = optionals["testing_service_names"]
 
     for design_service in device.services:
         for testing_service in design_service.testing_services:
-            yield testing_service.get_service_name()
+            ts_name = testing_service.get_service_name()
+
+            if inc_ts_names:
+                if ts_name in inc_ts_names:
+                    yield ts_name
+
+                continue
+
+            yield ts_name

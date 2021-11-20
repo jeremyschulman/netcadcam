@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # System Imports
 # -----------------------------------------------------------------------------
-
+import asyncio
 import sys
 from os import environ
 from pathlib import Path
@@ -18,6 +18,9 @@ import toml
 
 from netcad.config import netcad_globals
 from netcad.config import Environment
+from netcad.config.loader import import_objectref
+from netcad.logger import get_logger
+
 from netcad import defaults as d
 from netcad.testing_services import init_import_testing_services
 
@@ -35,23 +38,48 @@ __all__ = ["init"]
 # -----------------------------------------------------------------------------
 
 
-def ensure_directory(project_dir: Path, env_var: str, default_value: str):
-
-    dir_path = Path(
-        environ.setdefault(
-            env_var,
-            str(project_dir.joinpath(default_value).absolute()),
-        )
-    )
-
-    dir_path.mkdir(exist_ok=True)
-    return dir_path
-
-
 def init():
     """
-    The netcadcam primary initialization function.
+    The netcad/cam primary initialization function.
     """
+
+    _init_config_contents()
+    _init_proj_dirs()
+    _init_design_configs()
+
+    # import the testing services modules so that they are retrievable via the
+    # Registry mechanism.
+
+    init_import_testing_services.on_init()
+
+    _init_user_environment()
+
+
+# -----------------------------------------------------------------------------
+#
+#                               PRIVATE CODE BEGINS
+#
+# -----------------------------------------------------------------------------
+
+
+def _init_design_configs():
+    # Add the project directory to the Python system path so that packages can
+    # be imported without the User installing them.
+
+    sys.path.insert(0, environ[Environment.NETCAD_PROJECTDIR])
+
+    if not (design_configs := netcad_globals.g_config.get("design")):
+        raise RuntimeError(
+            f'Missing "design" definitions in config-file: {netcad_globals.g_netcad_config_file}'
+        )
+
+    # Initialize the g_netcad_designs global to the contents of the config file
+    # so that this can be easily referenced later when loading designs.
+
+    netcad_globals.g_netcad_designs = design_configs
+
+
+def _init_config_contents():
 
     # -------------------------------------------------------------------------
     # NETCAD_CONFIGFILE, designates the location of the netcad configuration
@@ -68,13 +96,17 @@ def init():
 
     netcad_globals.g_config = toml.load(config_filepath.open())
 
+
+def _init_proj_dirs():
+
     # -------------------------------------------------------------------------
     # NETCAD_PROJECTDIR, by default is the parent of the config-file.
     # -------------------------------------------------------------------------
 
     project_dir = netcad_globals.g_netcad_project_dir = Path(
         environ.setdefault(
-            Environment.NETCAD_PROJECTDIR, str(config_filepath.parent.absolute())
+            Environment.NETCAD_PROJECTDIR,
+            str(netcad_globals.g_netcad_config_file.parent.absolute()),
         )
     )
 
@@ -109,22 +141,40 @@ def init():
         )
     )
 
-    # Add the project directory to the Python system path so that packages can
-    # be imported without the User installing them.
 
-    sys.path.insert(0, environ[Environment.NETCAD_PROJECTDIR])
+def _init_user_environment():
 
-    if not (design_configs := netcad_globals.g_config.get("design")):
-        raise RuntimeError(
-            f'Missing "design" definitions in config-file: {netcad_globals.g_netcad_config_file}'
+    # if the User did not provision an entry point reference then nothing more
+    # to do here; just log a debug for safekeeping.
+
+    log = get_logger()
+
+    try:
+        env_entry_point_ref = netcad_globals.g_config["environment"]["entry_point"]
+    except KeyError:
+        log.debug("No user-defined environment entry-point in configuration file.")
+        return
+
+    ep_obj = import_objectref(object_ref=env_entry_point_ref)
+
+    if asyncio.iscoroutine(ep_obj):
+        asyncio.run(ep_obj())
+    elif callable(ep_obj):
+        ep_obj()
+    else:
+        log.error(
+            f"User environment entry-point {env_entry_point_ref} is not callable."
         )
 
-    # Initialize the g_netcad_designs global to the contents of the config file
-    # so that this can be easily referenced later when loading designs.
 
-    netcad_globals.g_netcad_designs = design_configs
+def ensure_directory(project_dir: Path, env_var: str, default_value: str):
 
-    # import the testing services modules so that they are retrievable via the
-    # Registry mechanism.
+    dir_path = Path(
+        environ.setdefault(
+            env_var,
+            str(project_dir.joinpath(default_value).absolute()),
+        )
+    )
 
-    init_import_testing_services.on_init()
+    dir_path.mkdir(exist_ok=True)
+    return dir_path

@@ -31,6 +31,7 @@ __all__ = ["execute_testcases"]
 
 PASS_GREEN = "[green]PASS[/green]"
 FAIL_RED = "[red]FAIL[/red]"
+SKIP_BLUE = "[blue]SKIP[/blue]"
 
 
 async def execute_testcases(dut: AsyncDeviceUnderTest):
@@ -67,7 +68,7 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
     # -------------------------------------------------------------------------
 
     for design_service in device.services:
-        log.info(f"{dut_name}:    Design Service: {design_service.__class__.__name__}")
+        log.info(f"{dut_name}: Design Service: {design_service.__class__.__name__}")
 
         for testing_service in design_service.testing_services:
             tc_name = testing_service.get_service_name()
@@ -77,14 +78,17 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
             #       v----------------------------------------------------------
 
             if tc_name not in ("device", "interfaces"):
-                log.warning(f"{dut_name}:        Testcases: {tc_name}, skipping")
+                log.info(
+                    f"{dut_name}: {SKIP_BLUE}\tTestcases: {tc_name}",
+                    extra={"markup": True},
+                )
                 continue
 
             # TODO: remove ^---------------------------------------------------
 
             testcases = await testing_service.load(testcase_dir=dev_tc_dir)
 
-            log.info(f"{dut_name}:        Testcases: {tc_name}")
+            log.info(f"{dut_name}:\t\tTestcases: {tc_name}")
 
             try:
                 results = await _gather_testcase_results(dut=dut, testcases=testcases)
@@ -107,13 +111,13 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
 
             if not c_fail:
                 log.info(
-                    f"{dut_name}:        {PASS_GREEN}/Testcases: {tc_name}: "
+                    f"{dut_name}: {PASS_GREEN}\tTestcases: {tc_name}: "
                     f"PASS={c_pass}, INFO={c_info}",
                     extra={"markup": True},
                 )
             else:
                 log.warning(
-                    f"{dut_name}:        {FAIL_RED}/Testcases: {tc_name}: "
+                    f"{dut_name}: {FAIL_RED}\tTestcases: {tc_name}: "
                     f"PASS={c_pass}, FAIL={c_fail}, INFO={c_info}",
                     extra={"markup": True},
                 )
