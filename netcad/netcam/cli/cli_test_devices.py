@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # System Imports
 # -----------------------------------------------------------------------------
-
+import asyncio
 from typing import Tuple
 from pathlib import Path
 
@@ -16,11 +16,14 @@ import click
 # -----------------------------------------------------------------------------
 
 from netcad.config import Environment
-from netcad.init.loader import load_design
+from netcad.logger import get_logger
 from netcad.cli_netcad.common_opts import opt_devices, opt_designs
-from netcad.cli_netcad.device_inventory import get_network_devices
+from netcad.cli_netcad.device_inventory import get_devices_from_designs
 
-from netcad.cli_netcam.main import cli
+from netcad.netcam.loader import import_netcam_plugin
+
+from netcad.netcam.cli.main import cli
+from netcad.netcam import execute_testcases
 
 # -----------------------------------------------------------------------------
 # Exports (none)
@@ -68,11 +71,20 @@ def cli_test_device(devices: Tuple[str], designs: Tuple[str], tests_dir: Path):
         exist for each device by hostname.
     """
 
-    for design_name in designs:
-        load_design(design_name=design_name)
+    log = get_logger()
 
-    device_objs = get_network_devices(designs)
-    if devices:
-        device_objs = [obj for obj in device_objs if obj.name in devices]
+    netcam_plugin = import_netcam_plugin()
+    get_dut = getattr(netcam_plugin, "get_dut")
 
-    print(f"Starting tests for {len(device_objs)} devices.")
+    if not (device_objs := get_devices_from_designs(designs, include_devices=devices)):
+        log.error("No devices located in the given designs")
+        return
+
+    duts = [get_dut(dev_obj) for dev_obj in device_objs]
+
+    log.info(f"Starting tests for {len(device_objs)} devices.")
+
+    async def go():
+        await asyncio.gather(*(execute_testcases(dut) for dut in duts))
+
+    asyncio.run(go())

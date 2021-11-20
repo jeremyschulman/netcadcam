@@ -1,5 +1,4 @@
-from netcad.cli_netcad.main import cli
-from netcad.init import loader
+from netcad.cli_netcad.cli_main import cli
 
 # -----------------------------------------------------------------------------
 #
@@ -8,15 +7,13 @@ from netcad.init import loader
 # -----------------------------------------------------------------------------
 
 
-@cli.group(name="design")
-def clig_design():
-    """design list, report, ..."""
-    pass
+# @cli.group(name="design")
+# def clig_design():
+#     """design list, report, ..."""
+#     pass
 
 
-@clig_design.group(name="report")
+@cli.group(name="report")
 def clig_design_report():
     """design report subcommands ..."""
-
-    designs = loader.import_designs_packages()
-    loader.run_designs(designs)
+    pass

@@ -2,7 +2,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Tuple, List
+from typing import Tuple, Iterable
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -19,10 +19,11 @@ from rich.table import Table
 from netcad.logger import get_logger
 from netcad.config import netcad_globals
 from netcad.device import Device
-from netcad.cli_netcad.common_opts import opt_designs
-from netcad.cli_netcad.device_inventory import get_network_devices
+from netcad.cabling.cable_plan import CablePlanner
 
 from .clig_design import clig_design_report
+from ..common_opts import opt_designs
+from ..device_inventory import get_devices_from_designs
 
 # -----------------------------------------------------------------------------
 # Exports (none)
@@ -38,7 +39,7 @@ __all__ = []
 # -----------------------------------------------------------------------------
 
 
-def show_network_devices(network: str, devices: List[Device], **flags):
+def show_network_devices(network: str, devices: Iterable[Device], **flags):
     console = Console()
     design = netcad_globals.g_netcad_designs[network]
     design_desc = design.get("description") or ""
@@ -73,7 +74,7 @@ def show_network_devices(network: str, devices: List[Device], **flags):
 @clig_design_report.command(name="devices")
 @opt_designs(required=True)
 @click.option("--all", "include_pseudo", help="show pseudo devices", is_flag=True)
-def cli_design_report_devices(networks: Tuple[str], **flags):
+def cli_design_report_devices(designs: Tuple[str], **flags):
     """
     report network device usage
 
@@ -85,7 +86,7 @@ def cli_design_report_devices(networks: Tuple[str], **flags):
     \f
     Parameters
     ----------
-    networks: tuple[str]
+    designs: tuple[str]
         Names of networks
 
     Other Parameters
@@ -96,16 +97,17 @@ def cli_design_report_devices(networks: Tuple[str], **flags):
     """
 
     log = get_logger()
-    network_devices = dict()
-    total_devs = 0
 
-    for each_net in networks:
-        net_devs = network_devices[each_net] = sorted(get_network_devices((each_net,)))
-        if not net_devs:
-            log.info("No devices found in the given design")
+    if not (device_objs := get_devices_from_designs(designs=designs)):
+        log.error("No devices located in the given designs")
+        return
+
+    log.info(f"Reporting on {len(designs)} designs, {len(device_objs)} devices.")
+
+    for design_name in designs:
+        cabler: CablePlanner
+        if not (cabler := CablePlanner.registry_get(name=design_name)):
+            log.error(f"No cabling found for design: {design_name}")
             return
-        total_devs += len(net_devs)
 
-    log.info(f"Reporting on {len(networks)} designs, {total_devs} devices.")
-    for net_name, net_devs in network_devices.items():
-        show_network_devices(net_name, net_devs, **flags)
+        show_network_devices(design_name, cabler.devices, **flags)

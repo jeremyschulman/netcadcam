@@ -2,6 +2,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
+from typing import Tuple
 import asyncio
 import os
 
@@ -10,12 +11,13 @@ import os
 # -----------------------------------------------------------------------------
 
 from netcad.logger import get_logger
-from netcad.cli_netcad.main import clig_get
 from netcad.config import netcad_globals, Environment
-from netcad.init import loader
 from netcad.device import Device
 from netcad.origin import OriginDeviceType
 
+from ..cli_main import clig_get
+from ..device_inventory import get_devices_from_designs
+from ..common_opts import opt_devices, opt_designs
 
 # -----------------------------------------------------------------------------
 # Exports (none)
@@ -31,7 +33,9 @@ __all__ = []
 
 
 @clig_get.command(name="device-types")
-def clig_get_device_types():
+@opt_designs(required=True)
+@opt_devices()
+def clig_get_device_types(devices: Tuple[str], designs: Tuple[str]):
     """
     Fetch the device product-model type definitions
 
@@ -44,8 +48,9 @@ def clig_get_device_types():
 
     os.environ[Environment.NETCAD_NOVALIDATE] = "1"
 
-    modules = loader.import_designs_packages()
-    loader.run_designs(modules)
+    get_devices_from_designs(designs=designs, include_devices=devices)
+    # modules = loader.import_designs_packages()
+    # loader.run_designs(modules)
 
     config = netcad_globals.g_config
 
@@ -91,6 +96,5 @@ def clig_get_device_types():
 
     # Run the processing in async model for performance benefits.
 
-    log.info(f"Fetching from {origin_name}, device-types: {','.join(product_models)}")
-
+    log.info(f"Fetching from {origin_name}, {len(product_models)} device-types")
     asyncio.run(origin_cls.get(product_models=product_models))

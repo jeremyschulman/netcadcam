@@ -9,7 +9,6 @@ from operator import attrgetter
 # Public Imports
 # -----------------------------------------------------------------------------
 
-import click
 from rich.table import Table
 from rich.console import Console
 
@@ -17,16 +16,15 @@ from rich.console import Console
 # Private Imports
 # -----------------------------------------------------------------------------
 
+from netcad.logger import get_logger
 from netcad.config import netcad_globals
 from netcad.device import Device, DeviceInterface
 from netcad.device.interface_profile import InterfaceVirtual
 from netcad.cabling.cable_plan import CablePlanner
 
-from netcad.cli_netcad.common_opts import opt_devices, opt_designs
-from netcad.cli_netcad.get_devices import get_devices
-
 from .clig_design import clig_design_report
-
+from ..device_inventory import get_devices_from_designs
+from ..common_opts import opt_devices, opt_designs
 
 # -----------------------------------------------------------------------------
 #
@@ -162,31 +160,35 @@ def report_cabling_per_network(cabling: CablePlanner, network: str):
 
 
 @clig_design_report.command(name="cabling")
+@opt_designs(required=True)
 @opt_devices()
-@opt_designs()
-@click.pass_context
-def cli_design_report_cabling(
-    ctx: click.Context, devices: Tuple[str], designs: Tuple[str]
-):
+def cli_design_report_cabling(devices: Tuple[str], designs: Tuple[str]):
     """report cabling between devices"""
 
+    log = get_logger()
+
+    if not (device_objs := get_devices_from_designs(designs, include_devices=devices)):
+        log.error("No devices located in the given designs")
+        return
+
+    # If specific devices were requested by the User, then report each device
+    # separately.
+
     if devices:
-        dev_objs = get_devices(device_list=devices)
-        print(f"Reporting on {len(dev_objs)} devices ...")
-        for dev_obj in dev_objs:
+        print(f"Reporting on {len(device_objs)} devices ...")
+        for dev_obj in device_objs:
             report_cabling_per_device(dev_obj)
 
         return
 
-    if designs:
-        for network in designs:
-            cabler: CablePlanner
-            if not (cabler := CablePlanner.registry_get(name=network)):
-                ctx.fail(f"No cabling found for design: {network}")
-                return
+    # If here, then the User did not request a specific device, but rather would
+    # like to see the cabling report for all devices in each of the requested
+    # designs.
 
-            report_cabling_per_network(network=network, cabling=cabler)
+    for design_name in designs:
+        cabler: CablePlanner
+        if not (cabler := CablePlanner.registry_get(name=design_name)):
+            log.error(f"No cabling found for design: {design_name}")
+            return
 
-        return
-
-    ctx.fail("Missing option: --device or --design")
+        report_cabling_per_network(network=design_name, cabling=cabler)

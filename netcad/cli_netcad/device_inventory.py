@@ -2,7 +2,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Set, Sequence
+from typing import Set, Sequence, List, Optional
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -10,12 +10,13 @@ from typing import Set, Sequence
 
 from netcad.device import Device
 from netcad.cabling import CablePlanner
+from netcad.init import load_design
 
 # -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["get_devices", "get_network_devices"]
+__all__ = ["get_devices_from_designs"]
 
 
 # -----------------------------------------------------------------------------
@@ -25,35 +26,22 @@ __all__ = ["get_devices", "get_network_devices"]
 # -----------------------------------------------------------------------------
 
 
-def get_devices(devices: Sequence[str]) -> Set[Device]:
-    """
-    Returns a set of Device objects corresponding to the list of
-    hostnames provided.
+def get_devices_from_designs(
+    designs: Sequence[str], include_devices: Optional[Sequence[str]] = None
+) -> List[Device]:
 
-    Parameters
-    ----------
-    devices: sequence[str]
-        Set or list of strings
+    for design_name in designs:
+        load_design(design_name=design_name)
 
-    Returns
-    -------
-    Set[Devices]
+    device_objs = sorted(Device.registry_items(True).values())
 
-    Raises
-    ------
-    RuntimeError if any given device does not exist in the netcad inventory.
-    """
-    device_objs = set()
+    if not include_devices:
+        return device_objs
 
-    for each_name in devices:
-        if not (dev_obj := Device.registry_get(name=each_name)):
-            raise RuntimeError(f"Device not found: {each_name}")
-
-        device_objs.add(dev_obj)
-
-    return device_objs
+    return sorted([obj for obj in device_objs if obj.name in include_devices])
 
 
+# TODO: remove
 def get_network_devices(networks: Sequence[str]) -> Set[Device]:
     """
     Returns a set of Device objects that are members in any of the provided
