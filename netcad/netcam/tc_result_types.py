@@ -3,25 +3,33 @@
 # -----------------------------------------------------------------------------
 
 from typing import Union, List, Dict, Optional
+import enum
 
 # -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
 
-from pydantic import validator, BaseModel
+from pydantic import validator, BaseModel, Field
 
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device
+from netcad.helpers import StrEnum
 from netcad.testing_services.test_case import TestCase
 
 # -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["TestCasePass", "TestCaseFailed", "TestCaseInfo", "TestCaseResults"]
+__all__ = [
+    "TestCaseStatus",
+    "TestCasePass",
+    "TestCaseFailed",
+    "TestCaseInfo",
+    "TestCaseResults",
+]
 
 
 # -----------------------------------------------------------------------------
@@ -34,8 +42,14 @@ __all__ = ["TestCasePass", "TestCaseFailed", "TestCaseInfo", "TestCaseResults"]
 AnyMeasurementType = Union[bool, str, float, int, List, Dict, None]
 
 
-class TestCaseResults(BaseModel):
+class TestCaseStatus(StrEnum):
+    PASS = enum.auto()
+    FAIL = enum.auto()
+    INFO = enum.auto()
 
+
+class TestCaseResults(BaseModel):
+    status: TestCaseStatus
     device: Device
     test_case: TestCase
     field: str
@@ -53,7 +67,7 @@ class TestCaseResults(BaseModel):
 
 
 class TestCasePass(TestCaseResults):
-    pass
+    status = Field(default=TestCaseStatus.PASS)
 
 
 # -----------------------------------------------------------------------------
@@ -64,6 +78,7 @@ class TestCasePass(TestCaseResults):
 
 
 class TestCaseFailed(TestCaseResults):
+    status = Field(default=TestCaseStatus.FAIL)
     error: str
 
 
@@ -92,4 +107,4 @@ class TestCaseFailedOnField(TestCaseFailed):
 
 
 class TestCaseInfo(TestCaseResults):
-    pass
+    status = Field(default=TestCaseStatus.INFO)
