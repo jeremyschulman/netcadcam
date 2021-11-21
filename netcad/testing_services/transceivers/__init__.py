@@ -1,1 +1,1 @@
-from .testing_transceivers import TransceiverTestCases
+from .testing_transceivers import TransceiverTestCases, TransceiverTestCase

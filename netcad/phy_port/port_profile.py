@@ -71,15 +71,15 @@ class PortTransceiverReachType(StrEnum):
     long = enum.auto()
 
 
-# common port speeds
-
-PORT_SPEED_1G = 1_000
-PORT_SPEED_2_5G = 2_500  # 2.5 Gbps
-PORT_SPEED_5G = 5_000
-PORT_SPEED_10G = 10_000
-PORT_SPEED_25G = 25_000
-PORT_SPEED_40G = 40_000
-PORT_SPEED_100G = 100_000
+# # common port speeds
+#
+# PORT_SPEED_1G = 1_000
+# PORT_SPEED_2_5G = 2_500  # 2.5 Gbps
+# PORT_SPEED_5G = 5_000
+# PORT_SPEED_10G = 10_000
+# PORT_SPEED_25G = 25_000
+# PORT_SPEED_40G = 40_000
+# PORT_SPEED_100G = 100_000
 
 
 @dataclass
@@ -103,11 +103,16 @@ class PortTransceiver:
 
     reach: PortTransceiverReachType
 
+    # 'type' - standard transceiver port-type, to match during validation
+    #          see PhyPortTypes for standard values.
+
+    type: str = None
+
     # `length` - when used, denotes the length of the cable in meters
 
     length: Optional[int] = None
 
-    # `model` - when used, specific vendor model, when used, to match during validation"
+    # `model` - when used, specific vendor model, to match during validation
 
     model: Optional[str] = None
 
