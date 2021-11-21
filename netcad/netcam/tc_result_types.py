@@ -73,6 +73,7 @@ class TestCaseResults(BaseModel):
 
 class TestCasePass(TestCaseResults):
     status = Field(default=TestCaseStatus.PASS)
+    field: Optional[str]
 
 
 # -----------------------------------------------------------------------------
@@ -83,12 +84,22 @@ class TestCasePass(TestCaseResults):
 
 
 class TestCaseFailed(TestCaseResults):
-    status = Field(default=TestCaseStatus.FAIL)
+    status = TestCaseStatus.FAIL
     field: str
     error: Union[str, dict]
 
 
-class TestCaseFailedOnField(TestCaseFailed):
+class FailNoExistsTestCase(TestCaseFailed):
+    """The test case failed since the measure item does not exist"""
+
+    def __init__(self, **kwargs):
+        kwargs.setdefault("error", dict(error="missing", field="exists"))
+        kwargs.setdefault("field", "exists")
+
+        super().__init__(**kwargs)
+
+
+class FailTestCaseOnField(TestCaseFailed):
     error: Optional[Union[str, dict]]
 
     @validator("error", always=True)

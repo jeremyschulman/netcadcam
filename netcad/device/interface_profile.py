@@ -15,7 +15,7 @@ import jinja2
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.device.port_profile import PortProfile
+from netcad.phy_port.port_profile import PortProfile
 from netcad.device.device_interface import DeviceInterface
 from netcad.helpers import SafeIsAttribute
 

@@ -14,7 +14,7 @@ from pydantic import BaseModel
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.device import Device
+from netcad.device import Device, DeviceInterface
 from netcad.testing_services import TestCases, TestCase
 from netcad.testing_services import testing_service
 
@@ -41,7 +41,8 @@ class TransceiverTestParams(BaseModel):
 
 
 class TransceiverTestExpectations(BaseModel):
-    model: str
+    model: str  # the transceiver product model name (vendor specific)
+    type: str  # the tranceiver physical type name (industry standard)
 
 
 class TransceiverTestCase(TestCase):
@@ -69,15 +70,18 @@ class TransceiverTestCases(TestCases):
             if iface.profile.port_profile and iface.profile.port_profile.transceiver
         ]
 
+        def _build_one_tc(iface: DeviceInterface):
+            port_profile = iface.profile.port_profile
+            xcvr = port_profile.transceiver
+
+            return TransceiverTestCase(
+                test_params=TransceiverTestParams(interface=iface.name),
+                expected_results=TransceiverTestExpectations(
+                    model=iface.profile.port_profile.name, type=xcvr.type
+                ),
+            )
+
         return TransceiverTestCases(
             device=device.name,
-            tests=[
-                TransceiverTestCase(
-                    test_params=TransceiverTestParams(interface=iface.name),
-                    expected_results=TransceiverTestExpectations(
-                        model=iface.profile.port_profile.name
-                    ),
-                )
-                for iface in sorted(interfaces)
-            ],
+            tests=[_build_one_tc(iface) for iface in sorted(interfaces)],
         )
