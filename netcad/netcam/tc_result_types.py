@@ -46,6 +46,7 @@ class TestCaseStatus(StrEnum):
     PASS = enum.auto()
     FAIL = enum.auto()
     INFO = enum.auto()
+    SKIP = enum.auto()
 
 
 class ResultsTestCase(BaseModel):
@@ -76,6 +77,11 @@ class PassTestCase(ResultsTestCase):
     field: Optional[str]
 
 
+class SkipTestCases(ResultsTestCase):
+    status = TestCaseStatus.SKIP
+    message: str
+
+
 # -----------------------------------------------------------------------------
 #
 #                         When a testcase fails ...
@@ -103,21 +109,23 @@ class FailFieldMismatchResult(FailTestCase):
     expected: Optional[AnyMeasurementType]
     error: Optional[Union[str, dict]]
 
-    def __init__(self, **kwargs):
+    def __init__(self, device, test_case, field, measurement, **kwargs):
 
         if "expected" not in kwargs:
-            kwargs["expected"] = getattr(
-                kwargs["test_case"].expected_results, kwargs["field"]
-            )
+            kwargs["expected"] = getattr(test_case.expected_results, field)
 
         if "error" not in kwargs:
             kwargs["error"] = dict(
-                error="mismatch",
-                expected=kwargs["expected"],
-                measured=kwargs["measurement"],
+                error="mismatch", expected=kwargs["expected"], measured=measurement
             )
 
-        super().__init__(**kwargs)
+        super().__init__(
+            device=device,
+            test_case=test_case,
+            field=field,
+            measurement=measurement,
+            **kwargs
+        )
 
 
 class FailExtraMembersResult(FailTestCase):
