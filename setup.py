@@ -20,6 +20,7 @@ packages = [
     "netcad.netcam",
     "netcad.netcam.cli",
     "netcad.origin",
+    "netcad.phy_port",
     "netcad.testing_services",
     "netcad.testing_services.cabling",
     "netcad.testing_services.device",

@@ -58,10 +58,10 @@ class PortTranscieverFormFactorType(StrEnum):
 
     AOC = enum.auto()
     SFP = enum.auto()
-    SFPp = enum.auto()  # SFP+
+    SFPP = enum.auto()  # SFP+
     SFP28 = enum.auto()
     QSFP = enum.auto()
-    QSFPp = enum.auto()  # QSFP+
+    QSFPP = enum.auto()  # QSFP+
     QSFP28 = enum.auto()
     RJ45 = enum.auto()
 

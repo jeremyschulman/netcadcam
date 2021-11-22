@@ -13,7 +13,7 @@ from netcad.logger import get_logger
 from netcad.config import netcad_globals
 from netcad.testing_services import TestCases
 
-from .tc_result_types import TestCaseStatus, TestCaseResults
+from .tc_result_types import TestCaseStatus, ResultsTestCase
 from .tc_save import testcases_save_results
 from .dut import AsyncDeviceUnderTest
 
@@ -148,7 +148,7 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
 
 async def _gather_testcase_results(
     dut: AsyncDeviceUnderTest, testcases: TestCases
-) -> List[TestCaseResults]:
+) -> List[ResultsTestCase]:
 
     results = list()
 

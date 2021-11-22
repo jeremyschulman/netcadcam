@@ -9,7 +9,7 @@ import enum
 # Public Imports
 # -----------------------------------------------------------------------------
 
-from pydantic import validator, BaseModel, Field
+from pydantic import validator, BaseModel
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -25,10 +25,10 @@ from netcad.testing_services.test_case import TestCase
 
 __all__ = [
     "TestCaseStatus",
-    "TestCasePass",
-    "TestCaseFailed",
-    "TestCaseInfo",
-    "TestCaseResults",
+    "PassTestCase",
+    "FailTestCase",
+    "InfoTestCase",
+    "ResultsTestCase",
 ]
 
 
@@ -48,7 +48,7 @@ class TestCaseStatus(StrEnum):
     INFO = enum.auto()
 
 
-class TestCaseResults(BaseModel):
+class ResultsTestCase(BaseModel):
     status: TestCaseStatus
     device: Device
     test_case: TestCase
@@ -71,8 +71,8 @@ class TestCaseResults(BaseModel):
 # -----------------------------------------------------------------------------
 
 
-class TestCasePass(TestCaseResults):
-    status = Field(default=TestCaseStatus.PASS)
+class PassTestCase(ResultsTestCase):
+    status = TestCaseStatus.PASS
     field: Optional[str]
 
 
@@ -83,13 +83,13 @@ class TestCasePass(TestCaseResults):
 # -----------------------------------------------------------------------------
 
 
-class TestCaseFailed(TestCaseResults):
+class FailTestCase(ResultsTestCase):
     status = TestCaseStatus.FAIL
     field: str
     error: Union[str, dict]
 
 
-class FailNoExistsTestCase(TestCaseFailed):
+class FailNoExistsTestCase(FailTestCase):
     """The test case failed since the measure item does not exist"""
 
     def __init__(self, **kwargs):
@@ -99,7 +99,7 @@ class FailNoExistsTestCase(TestCaseFailed):
         super().__init__(**kwargs)
 
 
-class FailTestCaseOnField(TestCaseFailed):
+class FailOnFieldTestCase(FailTestCase):
     error: Optional[Union[str, dict]]
 
     @validator("error", always=True)
@@ -123,5 +123,6 @@ class FailTestCaseOnField(TestCaseFailed):
 # -----------------------------------------------------------------------------
 
 
-class TestCaseInfo(TestCaseResults):
-    status = Field(default=TestCaseStatus.INFO)
+class InfoTestCase(ResultsTestCase):
+    status = TestCaseStatus.INFO
+    field: Optional[str]
