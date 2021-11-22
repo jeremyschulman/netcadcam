@@ -92,14 +92,14 @@ class FailTestCase(ResultsTestCase):
 class FailNoExistsTestCase(FailTestCase):
     """The test case failed since the measure item does not exist"""
 
-    def __init__(self, **kwargs):
+    def __init__(self, device, test_case, **kwargs):
         kwargs.setdefault("error", dict(error="missing", field="exists"))
         kwargs.setdefault("field", "exists")
 
-        super().__init__(**kwargs)
+        super().__init__(device=device, test_case=test_case, **kwargs)
 
 
-class FailOnFieldTestCase(FailTestCase):
+class FailFieldMismatchTestCase(FailTestCase):
     error: Optional[Union[str, dict]]
 
     @validator("error", always=True)

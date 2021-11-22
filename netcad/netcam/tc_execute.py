@@ -77,7 +77,7 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
             #       implmeneted.
             #       v----------------------------------------------------------
 
-            if tc_name not in ("device", "interfaces", "transceivers"):
+            if tc_name not in ("device", "interfaces", "transceivers", "cabling"):
                 log.info(
                     f"{dut_name}: {SKIP_BLUE}\tTestcases: {tc_name}",
                     extra={"markup": True},
@@ -88,7 +88,7 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
 
             testcases = await testing_service.load(testcase_dir=dev_tc_dir)
 
-            log.info(f"{dut_name}:\t\tTestcases: {tc_name}")
+            # log.info(f"{dut_name}:\t\tTestcases: {tc_name}")
 
             try:
                 results = await _gather_testcase_results(dut=dut, testcases=testcases)
