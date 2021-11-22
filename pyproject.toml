@@ -18,8 +18,8 @@ rich = "^10.12.0"
 aiofiles = "^0.7.0"
 
 [tool.poetry.dev-dependencies]
-pytest = "^5.2"
-invoke = "^1.5.0"
+pytest = "^6.2.5"
+invoke = "^1.6.0"
 black = "^21.6b0"
 flake8 = "^3.9.2"
 flake8-breakpoint = "^1.1.0"

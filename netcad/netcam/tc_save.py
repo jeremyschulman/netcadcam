@@ -30,7 +30,7 @@ __all__ = ["testcases_save_results"]
 async def testcases_save_results(
     dut: AsyncDeviceUnderTest,
     filename: str,
-    results: List[trt.TestCaseResults],
+    results: List[trt.ResultsTestCase],
     results_dir: Path,
 ):
     """

@@ -9,7 +9,7 @@ import enum
 # Public Imports
 # -----------------------------------------------------------------------------
 
-from pydantic import validator, BaseModel, Field
+from pydantic import validator, BaseModel
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -25,10 +25,10 @@ from netcad.testing_services.test_case import TestCase
 
 __all__ = [
     "TestCaseStatus",
-    "TestCasePass",
-    "TestCaseFailed",
-    "TestCaseInfo",
-    "TestCaseResults",
+    "PassTestCase",
+    "FailTestCase",
+    "InfoTestCase",
+    "ResultsTestCase",
 ]
 
 
@@ -46,9 +46,10 @@ class TestCaseStatus(StrEnum):
     PASS = enum.auto()
     FAIL = enum.auto()
     INFO = enum.auto()
+    SKIP = enum.auto()
 
 
-class TestCaseResults(BaseModel):
+class ResultsTestCase(BaseModel):
     status: TestCaseStatus
     device: Device
     test_case: TestCase
@@ -71,9 +72,14 @@ class TestCaseResults(BaseModel):
 # -----------------------------------------------------------------------------
 
 
-class TestCasePass(TestCaseResults):
-    status = Field(default=TestCaseStatus.PASS)
+class PassTestCase(ResultsTestCase):
+    status = TestCaseStatus.PASS
     field: Optional[str]
+
+
+class SkipTestCases(ResultsTestCase):
+    status = TestCaseStatus.SKIP
+    message: str
 
 
 # -----------------------------------------------------------------------------
@@ -83,37 +89,77 @@ class TestCasePass(TestCaseResults):
 # -----------------------------------------------------------------------------
 
 
-class TestCaseFailed(TestCaseResults):
+class FailTestCase(ResultsTestCase):
     status = TestCaseStatus.FAIL
     field: str
     error: Union[str, dict]
 
 
-class FailNoExistsTestCase(TestCaseFailed):
+class FailNoExistsResult(FailTestCase):
     """The test case failed since the measure item does not exist"""
 
-    def __init__(self, **kwargs):
+    def __init__(self, device, test_case, **kwargs):
         kwargs.setdefault("error", dict(error="missing", field="exists"))
         kwargs.setdefault("field", "exists")
 
-        super().__init__(**kwargs)
+        super().__init__(device=device, test_case=test_case, **kwargs)
 
 
-class FailTestCaseOnField(TestCaseFailed):
+class FailFieldMismatchResult(FailTestCase):
+    expected: Optional[AnyMeasurementType]
     error: Optional[Union[str, dict]]
 
-    @validator("error", always=True)
-    def _form_errmsg(cls, value, values: dict):
-        # if the Caller provided a value to override the default, then use it
-        # as-is. otherwise form the default error message.
+    def __init__(self, device, test_case, field, measurement, **kwargs):
 
-        if value:
-            return value
+        if "expected" not in kwargs:
+            kwargs["expected"] = getattr(test_case.expected_results, field)
 
-        field = values["field"]
-        exp_val = getattr(values["test_case"].expected_results, field)
-        msr_val = values["measurement"]
-        return dict(error="mismatch", expected=exp_val, measured=msr_val)
+        if "error" not in kwargs:
+            kwargs["error"] = dict(
+                error="mismatch", expected=kwargs["expected"], measured=measurement
+            )
+
+        super().__init__(
+            device=device,
+            test_case=test_case,
+            field=field,
+            measurement=measurement,
+            **kwargs
+        )
+
+
+class FailExtraMembersResult(FailTestCase):
+    expected: List
+    extras: List
+
+    def __init__(self, device, test_case, expected, extras, **kwargs):
+        if "error" not in kwargs:
+            kwargs["error"] = dict(error="extras", expected=expected, extras=extras)
+
+        super().__init__(
+            device=device,
+            test_case=test_case,
+            expected=expected,
+            extras=extras,
+            **kwargs
+        )
+
+
+class FailMissingMembersResult(FailTestCase):
+    expected: List
+    missing: List
+
+    def __init__(self, device, test_case, expected, missing, **kwargs):
+        if "error" not in kwargs:
+            kwargs["error"] = dict(error="missing", expected=expected, missing=missing)
+
+        super().__init__(
+            device=device,
+            test_case=test_case,
+            expected=expected,
+            missing=missing,
+            **kwargs
+        )
 
 
 # -----------------------------------------------------------------------------
@@ -123,5 +169,6 @@ class FailTestCaseOnField(TestCaseFailed):
 # -----------------------------------------------------------------------------
 
 
-class TestCaseInfo(TestCaseResults):
-    status = Field(default=TestCaseStatus.INFO)
+class InfoTestCase(ResultsTestCase):
+    status = TestCaseStatus.INFO
+    field: Optional[str]

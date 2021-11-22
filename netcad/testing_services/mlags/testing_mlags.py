@@ -5,12 +5,18 @@
 from typing import List, Optional
 
 # -----------------------------------------------------------------------------
+# Public Imports
+# -----------------------------------------------------------------------------
+
+from pydantic import BaseModel
+
+# -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
 from netcad.device import DeviceMLagPairMember, DeviceMLagPairGroup
 from netcad.device import InterfaceLag
-from netcad.testing_services import TestCases
+from netcad.testing_services import TestCases, TestCase
 from netcad.testing_services import testing_service
 
 from netcad.testing_services import lags
@@ -20,13 +26,25 @@ from netcad.testing_services import lags
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["MLagTestCases"]
+__all__ = ["MLagTestCases", "MLagSystemTestCase", "MLagSystemTestParams"]
 
 # -----------------------------------------------------------------------------
 #
 #                                 CODE BEGINS
 #
 # -----------------------------------------------------------------------------
+
+
+class MLagSystemTestParams(BaseModel):
+    name = "mlag_system"
+
+
+class MLagSystemTestCase(TestCase):
+    test_case = "mlag_system"
+    test_params: MLagSystemTestParams
+
+    def test_case_id(self) -> str:
+        return self.test_case
 
 
 @testing_service

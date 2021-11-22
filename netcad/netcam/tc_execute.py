@@ -13,7 +13,7 @@ from netcad.logger import get_logger
 from netcad.config import netcad_globals
 from netcad.testing_services import TestCases
 
-from .tc_result_types import TestCaseStatus, TestCaseResults
+from .tc_result_types import TestCaseStatus, ResultsTestCase
 from .tc_save import testcases_save_results
 from .dut import AsyncDeviceUnderTest
 
@@ -73,22 +73,9 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
         for testing_service in design_service.testing_services:
             tc_name = testing_service.get_service_name()
 
-            # TODO: move this 'limiter' once all of the testing code is
-            #       implmeneted.
-            #       v----------------------------------------------------------
-
-            if tc_name not in ("device", "interfaces", "transceivers"):
-                log.info(
-                    f"{dut_name}: {SKIP_BLUE}\tTestcases: {tc_name}",
-                    extra={"markup": True},
-                )
-                continue
-
-            # TODO: remove ^---------------------------------------------------
-
             testcases = await testing_service.load(testcase_dir=dev_tc_dir)
 
-            log.info(f"{dut_name}:\t\tTestcases: {tc_name}")
+            # log.info(f"{dut_name}:\t\tTestcases: {tc_name}")
 
             try:
                 results = await _gather_testcase_results(dut=dut, testcases=testcases)
@@ -100,25 +87,31 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
 
             result_counts = Counter(r.status for r in results)
 
-            c_pass, c_fail, c_info = (
+            c_pass, c_fail, c_info, c_skip = (
                 result_counts[TestCaseStatus.PASS],
                 result_counts[TestCaseStatus.FAIL],
                 result_counts[TestCaseStatus.INFO],
+                result_counts[TestCaseStatus.SKIP],
             )
 
             dev_resuls_dir = dev_tc_dir / "results"
             dev_resuls_dir.mkdir(exist_ok=True)
 
-            if not c_fail:
-                log.info(
-                    f"{dut_name}: {PASS_GREEN}\tTestcases: {tc_name}: "
-                    f"PASS={c_pass}, INFO={c_info}",
-                    extra={"markup": True},
-                )
-            else:
+            if c_fail:
                 log.warning(
                     f"{dut_name}: {FAIL_RED}\tTestcases: {tc_name}: "
                     f"PASS={c_pass}, FAIL={c_fail}, INFO={c_info}",
+                    extra={"markup": True},
+                )
+            elif c_skip:
+                log.info(
+                    f"{dut_name}: {SKIP_BLUE}\tTestcases: {tc_name}",
+                    extra={"markup": True},
+                )
+            else:
+                log.info(
+                    f"{dut_name}: {PASS_GREEN}\tTestcases: {tc_name}: "
+                    f"PASS={c_pass}, INFO={c_info}",
                     extra={"markup": True},
                 )
 
@@ -148,7 +141,7 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
 
 async def _gather_testcase_results(
     dut: AsyncDeviceUnderTest, testcases: TestCases
-) -> List[TestCaseResults]:
+) -> List[ResultsTestCase]:
 
     results = list()
 

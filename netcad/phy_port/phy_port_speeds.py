@@ -13,3 +13,7 @@ class PhyPortSpeeds(IntEnum):
     speed_100G = 100_000
     speed_200G = 200_000
     speed_400G = 400_000
+
+    def __str__(self):
+        """return the speed as a string; for rendering purposes"""
+        return str(self.value)

@@ -1,1 +1,1 @@
-from .testing_vlans import VlanTestCases
+from .testing_vlans import VlanTestCases, VlanTestCase

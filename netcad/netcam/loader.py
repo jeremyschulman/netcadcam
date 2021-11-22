@@ -8,8 +8,7 @@ from types import ModuleType
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.config import netcad_globals
-from netcad.init.loader import netcad_import_package
+from netcad.config import netcad_globals, loader
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -43,7 +42,7 @@ def import_netcam_plugin() -> ModuleType:
             f'Configuration Missing: "netcam.test.package" section in file: {cfile}'
         )
 
-    pl_mod = netcad_import_package(plugin_pkgname)
+    pl_mod = loader.import_objectref(plugin_pkgname)
     if not hasattr(pl_mod, "get_dut"):
         raise RuntimeError(
             f'Netcam plugin package "{plugin_pkgname}" missing get_dut_type function'
