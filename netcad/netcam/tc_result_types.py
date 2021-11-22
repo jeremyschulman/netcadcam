@@ -89,7 +89,7 @@ class FailTestCase(ResultsTestCase):
     error: Union[str, dict]
 
 
-class FailNoExistsTestCase(FailTestCase):
+class FailNoExistsResult(FailTestCase):
     """The test case failed since the measure item does not exist"""
 
     def __init__(self, device, test_case, **kwargs):
@@ -99,21 +99,59 @@ class FailNoExistsTestCase(FailTestCase):
         super().__init__(device=device, test_case=test_case, **kwargs)
 
 
-class FailFieldMismatchTestCase(FailTestCase):
+class FailFieldMismatchResult(FailTestCase):
+    expected: Optional[AnyMeasurementType]
     error: Optional[Union[str, dict]]
 
-    @validator("error", always=True)
-    def _form_errmsg(cls, value, values: dict):
-        # if the Caller provided a value to override the default, then use it
-        # as-is. otherwise form the default error message.
+    def __init__(self, **kwargs):
 
-        if value:
-            return value
+        if "expected" not in kwargs:
+            kwargs["expected"] = getattr(
+                kwargs["test_case"].expected_results, kwargs["field"]
+            )
 
-        field = values["field"]
-        exp_val = getattr(values["test_case"].expected_results, field)
-        msr_val = values["measurement"]
-        return dict(error="mismatch", expected=exp_val, measured=msr_val)
+        if "error" not in kwargs:
+            kwargs["error"] = dict(
+                error="mismatch",
+                expected=kwargs["expected"],
+                measured=kwargs["measurement"],
+            )
+
+        super().__init__(**kwargs)
+
+
+class FailExtraMembersResult(FailTestCase):
+    expected: List
+    extras: List
+
+    def __init__(self, device, test_case, expected, extras, **kwargs):
+        if "error" not in kwargs:
+            kwargs["error"] = dict(error="extras", expected=expected, extras=extras)
+
+        super().__init__(
+            device=device,
+            test_case=test_case,
+            expected=expected,
+            extras=extras,
+            **kwargs
+        )
+
+
+class FailMissingMembersResult(FailTestCase):
+    expected: List
+    missing: List
+
+    def __init__(self, device, test_case, expected, missing, **kwargs):
+        if "error" not in kwargs:
+            kwargs["error"] = dict(error="missing", expected=expected, missing=missing)
+
+        super().__init__(
+            device=device,
+            test_case=test_case,
+            expected=expected,
+            missing=missing,
+            **kwargs
+        )
 
 
 # -----------------------------------------------------------------------------

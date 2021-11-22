@@ -77,7 +77,13 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
             #       implmeneted.
             #       v----------------------------------------------------------
 
-            if tc_name not in ("device", "interfaces", "transceivers", "cabling"):
+            if tc_name not in (
+                "device",
+                "interfaces",
+                "transceivers",
+                "cabling",
+                "vlans",
+            ):
                 log.info(
                     f"{dut_name}: {SKIP_BLUE}\tTestcases: {tc_name}",
                     extra={"markup": True},
