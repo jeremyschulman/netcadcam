@@ -19,7 +19,7 @@ import click
 from netcad.init import loader
 from netcad.logger import get_logger
 from netcad.config import Environment
-from netcad.cli_netcad.common_opts import opt_devices, opt_designs
+from netcad.cli.common_opts import opt_devices, opt_designs
 from netcad.device import Device
 
 from .clig_build import clig_build

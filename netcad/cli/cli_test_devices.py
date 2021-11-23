@@ -17,12 +17,12 @@ import click
 
 from netcad.config import Environment
 from netcad.logger import get_logger
-from netcad.cli_netcad.common_opts import opt_devices, opt_designs
-from netcad.cli_netcad.device_inventory import get_devices_from_designs
+from netcad.cli.common_opts import opt_devices, opt_designs
+from netcad.cli.device_inventory import get_devices_from_designs
 
 from netcad.netcam.loader import import_netcam_plugin
 
-from netcad.netcam.cli.main import cli
+from netcad.cli.netcam.cli_netcam_main import cli
 from netcad.netcam import execute_testcases
 
 # -----------------------------------------------------------------------------

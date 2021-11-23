@@ -5,10 +5,12 @@ packages = [
     "netcad",
     "netcad.arango",
     "netcad.cabling",
-    "netcad.cli_netcad",
-    "netcad.cli_netcad.cli_build",
-    "netcad.cli_netcad.cli_get",
-    "netcad.cli_netcad.cli_report",
+    "netcad.cli",
+    "netcad.cli.cli_build",
+    "netcad.cli.cli_get",
+    "netcad.cli.cli_report",
+    "netcad.cli.netcad",
+    "netcad.cli.netcam",
     "netcad.config",
     "netcad.design_services",
     "netcad.device",
@@ -18,7 +20,6 @@ packages = [
     "netcad.jinja2.j2_funcs",
     "netcad.netbox",
     "netcad.netcam",
-    "netcad.netcam.cli",
     "netcad.origin",
     "netcad.phy_port",
     "netcad.testing_services",
@@ -48,8 +49,8 @@ install_requires = [
 
 entry_points = {
     "console_scripts": [
-        "netcad = netcad.cli_netcad:script",
-        "netcam = netcad.netcam.cli:script",
+        "netcad = netcad.cli.netcad:script",
+        "netcam = netcad.cli.netcam:script",
     ]
 }
 

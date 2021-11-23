@@ -131,6 +131,16 @@ def _init_proj_dirs():
     )
 
     # -------------------------------------------------------------------------
+    # NETCAD_TEMPLATESDIR
+    # -------------------------------------------------------------------------
+
+    netcad_globals.g_netcad_templates_dir = ensure_directory(
+        project_dir=project_dir,
+        env_var=Environment.NETCAD_TEMPLATESDIR,
+        default_value=d.DEFAULT_NETCAD_TEMPLATESDIR,
+    )
+
+    # -------------------------------------------------------------------------
     # NETCAD_CACHDIR
     # -------------------------------------------------------------------------
 

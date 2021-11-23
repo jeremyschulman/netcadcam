@@ -137,17 +137,17 @@ class Device(Registry, registry_name="devices"):
 
         self.template_env: Optional[jinja2.Environment] = None
 
-    def init_template_env(self):
-        template_dirs = list(netcad_globals.g_netcad_project_dir.rglob("**/templates"))
-        template_dirs.reverse()
+    def init_template_env(self, templates_dir: Optional[Path] = None):
+        template_dirs = list()
+        template_dirs.append(templates_dir or netcad_globals.g_netcad_templates_dir)
         template_dirs.append("/")
         self.template_env = get_env(template_dirs)
 
-    def render_config(self):
-        template = self.get_template()
+    def render_config(self, template_file: Optional[Path] = None):
+        template = self.get_template(template_file)
         return template.render(device=self)
 
-    def get_template(self) -> jinja2.Template:
+    def get_template(self, template_file: Optional[Path] = None) -> jinja2.Template:
         """
         Return the absolute file-path to the device Jinja2 file.
 
@@ -163,20 +163,22 @@ class Device(Registry, registry_name="devices"):
         FileNotFoundError:
             When the template value is not a valid filesystem file.
         """
-        if not self.template:
+        _use_template = template_file or self.template
+
+        if not _use_template:
             raise RuntimeError(
                 f"Missing template assignment: {self.__class__.__name__}"
             )
 
-        if isinstance(self.template, str):
-            as_path = Path(self.template)
+        if isinstance(_use_template, str):
+            as_path = Path(_use_template)
 
-        elif isinstance(self.template, Path):
-            as_path = self.template
+        elif isinstance(_use_template, Path):
+            as_path = _use_template
 
         else:
             raise RuntimeError(
-                f"Unexpected template type on {self.__class__.__class__}: {type(self.template)}"
+                f"Unexpected template type on {self.__class__.__class__}: {type(_use_template)}"
             )
 
         return self.template_env.get_template(str(as_path))

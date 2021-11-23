@@ -43,5 +43,5 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-    netcad = 'netcad.cli_netcad:script'
-    netcam = 'netcad.netcam.cli:script'
+    netcad = 'netcad.cli.netcad:script'
+    netcam = 'netcad.cli.netcam:script'
