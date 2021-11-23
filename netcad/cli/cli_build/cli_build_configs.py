@@ -17,7 +17,7 @@ import jinja2
 # -----------------------------------------------------------------------------
 
 from netcad.logger import get_logger
-from netcad.cli_netcad.common_opts import opt_devices, opt_designs
+from netcad.cli.common_opts import opt_devices, opt_designs
 
 from ..device_inventory import get_devices_from_designs
 from .clig_build import clig_build

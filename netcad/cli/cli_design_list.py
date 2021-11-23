@@ -9,7 +9,7 @@ from rich.table import Table
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.cli_netcad.cli_report import clig_design
+from netcad.cli.cli_report import clig_design
 from netcad.config import netcad_globals
 
 # -----------------------------------------------------------------------------

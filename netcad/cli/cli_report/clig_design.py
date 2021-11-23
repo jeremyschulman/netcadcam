@@ -1,4 +1,4 @@
-from netcad.cli_netcad.cli_main import cli
+from netcad.cli.netcad.cli_netcad_main import cli
 
 # -----------------------------------------------------------------------------
 #

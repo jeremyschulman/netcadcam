@@ -15,7 +15,7 @@ from netcad.config import netcad_globals, Environment
 from netcad.device import Device
 from netcad.origin import OriginDeviceType
 
-from ..cli_main import clig_get
+from netcad.cli.netcad.cli_netcad_main import clig_get
 from ..device_inventory import get_devices_from_designs
 from ..common_opts import opt_devices, opt_designs
 

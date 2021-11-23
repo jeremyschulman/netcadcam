@@ -23,11 +23,12 @@ from rich.pretty import Pretty
 from netcad.device import Device
 from netcad.config import Environment, netcad_globals
 from netcad.logger import get_logger
-from netcad.cli_netcad.common_opts import opt_devices, opt_designs
-from netcad.cli_netcad.device_inventory import get_devices_from_designs
+
+from netcad.cli.common_opts import opt_devices, opt_designs
+from netcad.cli.device_inventory import get_devices_from_designs
 
 from netcad.netcam import tc_result_types as trt
-from .main import cli
+from netcad.cli.netcam.cli_netcam_main import cli
 
 # -----------------------------------------------------------------------------
 # Exports (none)
@@ -121,6 +122,9 @@ def show_device_test_logs(device: Device, optionals: dict):
             continue
 
         results = json.load(results_file.open())
+
+        if results[0]["status"] == trt.TestCaseStatus.SKIP:
+            continue
 
         if exc_fields:
             results = filter(filter_out, results)
