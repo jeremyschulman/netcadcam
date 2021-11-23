@@ -18,6 +18,7 @@ import jinja2
 
 from netcad.logger import get_logger
 from netcad.cli.common_opts import opt_devices, opt_designs
+from netcad.config import Environment
 
 from ..device_inventory import get_devices_from_designs
 from .clig_build import clig_build
@@ -45,10 +46,23 @@ __all__ = []
     default="configs",
 )
 @click.option(
-    "--console", "output_console", help="display output to console", is_flag=True
+    "--templates-dir",
+    help="path to root of template files",
+    type=click.Path(path_type=Path, resolve_path=True, exists=True),
+    envvar=Environment.NETCAD_TEMPLATESDIR,
+)
+@click.option(
+    "--template",
+    "template_file",
+    help="path to specific template file",
+    type=click.Path(path_type=Path, resolve_path=True, exists=True),
 )
 def cli_render(
-    devices: Tuple[str], designs: Tuple[str], configs_dir: Path, output_console: bool
+    devices: Tuple[str],
+    designs: Tuple[str],
+    configs_dir: Path,
+    template_file: Path,
+    templates_dir: Path,
 ):
     """Build device configuration files"""
 
@@ -83,12 +97,10 @@ def cli_render(
             continue
 
         log.debug(f"BUILD config for device {dev_obj.name}")
-        dev_obj.init_template_env()
 
         try:
-            config_text = dev_obj.render_config()
-            # template = dev_obj.get_template()
-            # config_text = template.render(device=dev_obj)
+            dev_obj.init_template_env(templates_dir=templates_dir)
+            config_text = dev_obj.render_config(template_file=template_file)
 
         except jinja2.exceptions.TemplateNotFound as exc:
             raise RuntimeError(
@@ -103,6 +115,3 @@ def cli_render(
         log.info(f"SAVE: {dev_obj.name} config: {config_file.name}")
         with config_file.open("w+") as ofile:
             ofile.write(config_text)
-
-        if output_console:
-            print(config_text, end="")

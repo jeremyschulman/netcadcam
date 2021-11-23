@@ -17,6 +17,7 @@ class Environment(StrEnum):
     NETCAD_PROJECTDIR = auto()
     NETCAD_CONFIGSDIR = auto()
     NETCAD_TESTCASESDIR = auto()
+    NETCAD_TEMPLATESDIR = auto()
 
     # -------------------------------------------------------------------------
     # control-settings

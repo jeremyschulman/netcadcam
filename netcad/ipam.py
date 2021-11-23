@@ -3,22 +3,22 @@ import ipaddress
 from collections import UserDict
 from netcad.registry import Registry
 
-IPAMNetworkType = t.Type[t.Union[ipaddress.IPv4Network, ipaddress.IPv6Network]]
-IPAMAddressType = t.Type[t.Union[ipaddress.IPv4Address, ipaddress.IPv6Address]]
-IPAMInterfaceType = t.Type[t.Union[ipaddress.IPv4Interface, ipaddress.IPv6Interface]]
+AnyIPNetwork = t.Union[ipaddress.IPv4Network, ipaddress.IPv6Network]
+AnyIPAddress = t.Union[ipaddress.IPv4Address, ipaddress.IPv6Address]
+AnyIPInterface = t.Union[ipaddress.IPv4Interface, ipaddress.IPv6Interface]
 
 
 class IPAMNetwork(UserDict):
     def __init__(self, ipam: "IPAM", prefx: str, gateway=1):
         super(IPAMNetwork, self).__init__()
         self.ipam = ipam
-        self.ip_network: IPAMNetworkType = ipaddress.ip_network(address=prefx)
+        self.ip_network: AnyIPNetwork = ipaddress.ip_network(address=prefx)
         self._gateway_host_octet: int = gateway
 
-    def gateway_interface(self, name) -> IPAMInterfaceType:
+    def gateway_interface(self, name) -> AnyIPInterface:
         return self.interface(name=name, offset_octet=self._gateway_host_octet)
 
-    def interface(self, name, offset_octet) -> IPAMInterfaceType:
+    def interface(self, name, offset_octet) -> AnyIPInterface:
         """record an IP interface address for the given name"""
 
         self[name] = ipaddress.ip_interface(
@@ -27,7 +27,7 @@ class IPAMNetwork(UserDict):
 
         return self[name]
 
-    def host(self, name: t.Hashable, offset_octet: int) -> IPAMAddressType:
+    def host(self, name: t.Hashable, offset_octet: int) -> AnyIPAddress:
         """
         Create a host IP address for the given name usig the `last_octet`
         combined with the subnet address.
@@ -64,6 +64,30 @@ class IPAMNetwork(UserDict):
         return self.setdefault(
             "gateway", self.ip_network.network_address + self._gateway_host_octet
         )
+
+    def network(self, name: t.Hashable, prefix: str) -> "IPAMNetwork":
+        """
+        This function creates an new network instance within the IPAM,
+        designated by the name value.  This network can then be retrieve using
+        "getitem" via the designated name.
+
+        Parameters
+        ----------
+        name:
+            Any hashable value that can be used as a key in the UserDict
+            dictionary that underpins the IPAM instance.
+
+        prefix:
+            The IP address network with prefix, for example "192.168.12.0/24".
+            The netmask could alternatively be provided, for example:
+            "192.168.12.0/255.255.255.0"
+
+        Returns
+        -------
+        IPAMNetwork instance for the given prefix.
+        """
+        ip_net = self[name] = IPAMNetwork(self.ipam, prefix)
+        return ip_net
 
 
 class IPAM(Registry, UserDict):
