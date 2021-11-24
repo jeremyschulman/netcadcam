@@ -79,9 +79,14 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
 
             try:
                 results = await _gather_testcase_results(dut=dut, testcases=testcases)
+
             except Exception as exc:
-                log.error(
-                    f"{dut_name}: Exception during exection: {exc}, aborting {tc_name}"
+                import traceback
+
+                exc_info = traceback.format_tb(exc.__traceback__, -2)
+                log.critical(
+                    f"{dut_name}: Exception during exection: {exc}, aborting {tc_name}\n"
+                    "\n".join(exc_info)
                 )
                 continue
 
