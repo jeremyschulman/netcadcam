@@ -4,4 +4,5 @@ from .testing_interfaces import (
     InterfaceTestParams,
     InterfaceTestUsedExpectations,
     InterfaceTestNotUsedExpectations,
+    InterfaceListTestCase,
 )

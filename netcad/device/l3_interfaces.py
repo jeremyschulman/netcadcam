@@ -11,13 +11,13 @@ from ipaddress import IPv4Address
 
 from netcad.vlan import vlan_profile as vp
 from netcad.vlan.vlan_profile import VlanProfile
-from .interface_profile import InterfaceVirtual
+from .interface_profile import InterfaceVirtual, InterfaceProfile
 
 # -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["InterfaceVlan", "InterfaceLoopback"]
+__all__ = ["InterfaceL3", "InterfaceVlan", "InterfaceLoopback", "InterfaceManagement"]
 
 # -----------------------------------------------------------------------------
 #
@@ -26,16 +26,22 @@ __all__ = ["InterfaceVlan", "InterfaceLoopback"]
 # -----------------------------------------------------------------------------
 
 
-class InterfaceLoopback(InterfaceVirtual):
+class InterfaceL3(InterfaceProfile):
+    def __init__(self, if_ipaddr: Optional[IPv4Address] = None, **params):
+        super(InterfaceL3, self).__init__(**params)
+        self.if_ipaddr = if_ipaddr
+
+
+class InterfaceManagement(InterfaceL3):
+    is_mgmt_only = True
+
+
+class InterfaceLoopback(InterfaceVirtual, InterfaceL3):
     """
     A loopback interface is a virtual IP address
     """
 
     is_loopback = True
-
-    def __init__(self, ipaddress: Optional[IPv4Address] = None, **params):
-        super(InterfaceLoopback, self).__init__(**params)
-        self.ipaddress = ipaddress
 
 
 class InterfaceVlan(InterfaceVirtual):
@@ -45,10 +51,6 @@ class InterfaceVlan(InterfaceVirtual):
     """
 
     vlan: VlanProfile
-
-    def __init__(self, if_ipaddr: Optional[IPv4Address] = None, **params):
-        super(InterfaceVlan, self).__init__(**params)
-        self.if_ipaddr = if_ipaddr
 
     def vlans_used(self) -> Set[vp.VlanProfile]:
         return {self.vlan}

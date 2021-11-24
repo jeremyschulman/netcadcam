@@ -4,6 +4,7 @@ from enum import IntEnum
 class PhyPortSpeeds(IntEnum):
     """Physical Port Speeds in value Mbps"""
 
+    speed_100M = 100
     speed_1G = 1_000
     speed_2_5G = 2_500  # 2.5 Gbps
     speed_5G = 5_000

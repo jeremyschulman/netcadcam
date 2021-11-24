@@ -9,9 +9,10 @@ AnyIPInterface = t.Union[ipaddress.IPv4Interface, ipaddress.IPv6Interface]
 
 
 class IPAMNetwork(UserDict):
-    def __init__(self, ipam: "IPAM", prefx: str, gateway=1):
+    def __init__(self, ipam: "IPAM", name: t.Hashable, prefx: str, gateway=1):
         super(IPAMNetwork, self).__init__()
         self.ipam = ipam
+        self.name = name
         self.ip_network: AnyIPNetwork = ipaddress.ip_network(address=prefx)
         self._gateway_host_octet: int = gateway
 
@@ -86,7 +87,7 @@ class IPAMNetwork(UserDict):
         -------
         IPAMNetwork instance for the given prefix.
         """
-        ip_net = self[name] = IPAMNetwork(self.ipam, prefix)
+        ip_net = self[name] = IPAMNetwork(self.ipam, name, prefix)
         return ip_net
 
 
@@ -128,7 +129,7 @@ class IPAM(Registry, UserDict):
         -------
         IPAMNetwork instance for the given prefix.
         """
-        ip_net = self[name] = IPAMNetwork(self, prefix)
+        self[name] = ip_net = IPAMNetwork(self, name, prefix)
         return ip_net
 
     def __getitem__(self, name: t.Hashable) -> IPAMNetwork:

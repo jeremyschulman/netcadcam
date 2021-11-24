@@ -109,14 +109,14 @@ class FailFieldMismatchResult(FailTestCase):
     expected: Optional[AnyMeasurementType]
     error: Optional[Union[str, dict]]
 
-    def __init__(self, device, test_case, field, measurement, **kwargs):
+    def __init__(self, device, test_case, field, measurement, expected=None, **kwargs):
 
-        if "expected" not in kwargs:
-            kwargs["expected"] = getattr(test_case.expected_results, field)
+        if expected is None:
+            expected = getattr(test_case.expected_results, field)
 
         if "error" not in kwargs:
             kwargs["error"] = dict(
-                error="mismatch", expected=kwargs["expected"], measured=measurement
+                error="mismatch", expected=expected, measured=measurement
             )
 
         super().__init__(
