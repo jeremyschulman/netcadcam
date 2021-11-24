@@ -28,6 +28,7 @@ __all__ = [
     "InterfaceTestParams",
     "InterfaceTestUsedExpectations",
     "InterfaceTestNotUsedExpectations",
+    "InterfaceListTestCase",
 ]
 
 # -----------------------------------------------------------------------------
@@ -60,6 +61,19 @@ class InterfaceTestCase(TestCase):
 
     def test_case_id(self) -> str:
         return str(self.test_params.interface)
+
+
+class InterfaceListTestCase(TestCase):
+    def __init__(self, **kwargs):
+        super().__init__(
+            test_case="interface-list",
+            test_params=BaseModel(),
+            expected_results=BaseModel(),
+            **kwargs
+        )
+
+    def test_case_id(self) -> str:
+        return "exclusive_list"
 
 
 @testing_service
