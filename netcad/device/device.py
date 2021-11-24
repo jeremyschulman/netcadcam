@@ -269,16 +269,6 @@ class Device(Registry, registry_name="devices"):
         for if_name in spec.interface_names:
             cls.interfaces[if_name].profile = None
 
-    # def render_interface_unused(
-    #     self, env: jinja2.Environment, interface: "DeviceInterface"
-    # ):
-    #     raise NotImplementedError()
-    #
-    # def render_interface_used(
-    #     self, env: jinja2.Environment, interface: "DeviceInterface"
-    # ):
-    #     raise NotImplementedError()
-
     # -------------------------------------------------------------------------
     #
     #                           Dunder methods

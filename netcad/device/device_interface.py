@@ -256,8 +256,11 @@ class DeviceInterface(object):
     def __lt__(self, other: "DeviceInterface"):
         return self.sort_key < other.sort_key
 
-    def __enter__(self):
+    def __enter__(self) -> "DeviceInterface":
         return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
 
 
 # -----------------------------------------------------------------------------
