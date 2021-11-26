@@ -33,7 +33,9 @@ def get_devices_from_designs(
     for design_name in designs:
         load_design(design_name=design_name)
 
-    device_objs = sorted(Device.registry_items(True).values())
+    device_objs = sorted(
+        obj for obj in Device.registry_items(True).values() if isinstance(obj, Device)
+    )
 
     if not include_devices:
         return device_objs
