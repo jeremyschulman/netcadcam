@@ -79,8 +79,14 @@ class LagTestCases(TestCases):
             if not isinstance(interface.profile, InterfaceLag):
                 continue
 
-            if_lag = interface.profile.lag_parent
-            lag_interfaces[if_lag.name].extend(
+            # TODO: not sure why this is here now; should
+            #       just be using interface
+            # if_lag = interface.profile.lag_parent
+            # if not if_lag:
+            #     breakpoint()
+            #     x=1
+
+            lag_interfaces[interface.name].extend(
                 iface for iface in interface.profile.if_lag_members
             )
 
