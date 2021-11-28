@@ -2,7 +2,8 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Dict, Optional, TypeVar, List, TYPE_CHECKING, Set
+from typing import Optional, TypeVar, List, Set
+from typing import TYPE_CHECKING
 import os
 from operator import attrgetter
 from copy import deepcopy
@@ -18,7 +19,11 @@ import jinja2
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.device.device_interface import DeviceInterfaces, DeviceInterface
+from netcad.device.device_interface import (
+    DeviceInterfaces,
+    DeviceInterface,
+    DeviceInterfacesType,
+)
 from netcad.registry import Registry
 from netcad.config import Environment
 from netcad.config import netcad_globals
@@ -45,7 +50,6 @@ __all__ = ["Device", "DeviceInterface"]
 
 
 PathLike = TypeVar("PathLike", str, Path)
-DeviceInterfacesLike = TypeVar("DeviceInterfacesLike", DeviceInterfaces, dict)
 
 
 class Device(Registry, registry_name="devices"):
@@ -86,7 +90,7 @@ class Device(Registry, registry_name="devices"):
 
     product_model: Optional[str] = None
 
-    interfaces: Dict[str, DeviceInterface] = None
+    interfaces: DeviceInterfacesType = None
 
     template: Optional[PathLike] = None
 
@@ -113,7 +117,9 @@ class Device(Registry, registry_name="devices"):
         # make any specific changes; i.e. handle the various "one-off" cases
         # that happen in real-world networks.
 
-        self.interfaces: DeviceInterfaces = deepcopy(self.__class__.interfaces)  # noqa
+        self.interfaces: DeviceInterfacesType = deepcopy(
+            self.__class__.interfaces
+        )  # noqa
 
         # create the back-references from the interfaces instance to this
         # device.

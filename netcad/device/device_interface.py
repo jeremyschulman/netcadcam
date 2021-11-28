@@ -2,7 +2,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional, Dict, Hashable
+from typing import Optional, Dict, DefaultDict
 from typing import TYPE_CHECKING
 from io import StringIO
 import re
@@ -21,7 +21,7 @@ import jinja2
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["DeviceInterface", "DeviceInterfaces"]
+__all__ = ["DeviceInterface", "DeviceInterfaces", "DeviceInterfacesType"]
 
 # -----------------------------------------------------------------------------
 #
@@ -269,6 +269,8 @@ class DeviceInterface(object):
 #
 # -----------------------------------------------------------------------------
 
+DeviceInterfacesType = DefaultDict[str, DeviceInterface]
+
 
 class DeviceInterfaces(defaultdict):
     """
@@ -394,9 +396,3 @@ class DeviceInterfaces(defaultdict):
         content.seek(0)
         as_str = content.read()
         return as_str[:-1]
-
-    def __getitem__(self, name: Hashable) -> DeviceInterface:
-        """Return the network by name"""
-        # only calling super.  This method is declared so that the type-hinting
-        # knows the return value is an IPAMNetwork instance.
-        return super(DeviceInterfaces, self).__getitem__(name)
