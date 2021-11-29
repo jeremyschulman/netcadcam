@@ -9,7 +9,7 @@ from operator import attrgetter
 # Public Imports
 # -----------------------------------------------------------------------------
 
-from rich.table import Table
+from rich.table import Table, Text, Style
 from rich.console import Console
 
 # -----------------------------------------------------------------------------
@@ -22,7 +22,7 @@ from netcad.device import Device, DeviceInterface
 from netcad.device.interface_profile import InterfaceVirtual
 from netcad.cabling.cable_plan import CablePlanner
 
-from .clig_design import clig_design_report
+from .clig_netcad_report import clig_design_report
 from ..device_inventory import get_devices_from_designs
 from ..common_opts import opt_devices, opt_designs
 
@@ -31,132 +31,6 @@ from ..common_opts import opt_devices, opt_designs
 #                                 CODE BEGINS
 #
 # -----------------------------------------------------------------------------
-
-
-NOT_USED = "[grey]UNUSED[/grey]"
-NOT_ASSIGNED = "[grey]N/A[/grey]"
-MISSING = "[red]MISSING[/red]"
-VIRTUAL = "[blue]virtual[/blue]"
-
-
-def interface_profile_names(iface: DeviceInterface) -> Tuple[str, str]:
-    if not iface.used:
-        return NOT_USED, NOT_ASSIGNED
-
-    if not (if_prof := iface.profile):
-        return NOT_ASSIGNED, NOT_ASSIGNED
-
-    if isinstance(if_prof, InterfaceVirtual):
-        return if_prof.name, VIRTUAL
-
-    if not (port_prof := if_prof.port_profile):
-        return if_prof.name, MISSING
-
-    return if_prof.name, port_prof.name
-
-
-def report_cabling_per_device(device: Device):
-    console = Console()
-
-    if_cables = [
-        interface for interface in device.interfaces.values() if interface.cable_peer
-    ]
-
-    if_cables.sort()
-
-    # Populate the report table using this sorted collection of cables.
-
-    table = Table(
-        title=f"Device Cabling: {device.name}",
-        show_header=True,
-        header_style="bold magenta",
-    )
-
-    for column in [
-        "Device",
-        "Interface",
-        "Profile",
-        "Port",
-        "Remote Port",
-        "Remote Profile",
-        "Remote Interface",
-        "Remote Device",
-        "Cable-ID",
-    ]:
-
-        table.add_column(column)
-
-    for dev_if in if_cables:
-        rmt_if = dev_if.cable_peer
-
-        table.add_row(
-            device.name,
-            dev_if.name,
-            *interface_profile_names(dev_if),
-            *reversed(interface_profile_names(rmt_if)),
-            rmt_if.name,
-            rmt_if.device.name,
-            # check either end, for the case of an MLAG.
-            dev_if.cable_id or rmt_if.cable_id,
-        )
-
-    console.print(table)
-
-
-def report_cabling_per_network(cabling: CablePlanner, network: str):
-    console = Console()
-
-    if not cabling.cables:
-        console.print(f"[yellow]{network}: No cables.[/yellow]")
-        return
-
-    design = netcad_globals.g_netcad_designs[network]
-    design_desc = design.get("description") or ""
-
-    # orient each cable row (left-device, right-device) based on their sorting
-    # property (User defined, or hostname by default)
-
-    cables = [
-        [cable[0], *sorted(cable[1], key=attrgetter("device"))]
-        for cable in cabling.cables.items()
-    ]
-
-    # then sort the table based on the device-name, and interface sort-key
-
-    cables.sort(key=lambda c: (c[1].device.name, c[1], c[2].device.name, c[2]))
-
-    table = Table(
-        title=f"Design Cabling '{network}', {design_desc}",
-        show_header=True,
-        header_style="bold magenta",
-    )
-
-    for column in [
-        "Device",
-        "Interface",
-        "Profile",
-        "Port",
-        "Remote Port",
-        "Remote Profile",
-        "Remote Interface",
-        "Remote Device",
-        "Cable-ID",
-    ]:
-
-        table.add_column(column)
-
-    for cable_id, dev_if, rmt_if in cables:
-        table.add_row(
-            dev_if.device.name,
-            dev_if.name,
-            *interface_profile_names(dev_if),
-            *reversed(interface_profile_names(rmt_if)),
-            rmt_if.name,
-            rmt_if.device.name,
-            cable_id,
-        )
-
-    console.print(table)
 
 
 @clig_design_report.command(name="cabling")
@@ -192,3 +66,125 @@ def cli_design_report_cabling(devices: Tuple[str], designs: Tuple[str]):
             return
 
         report_cabling_per_network(network=design_name, cabling=cabler)
+
+
+# -----------------------------------------------------------------------------
+#
+#                                 PRIVATE CODE BEGINS
+#
+# -----------------------------------------------------------------------------
+
+NOT_USED = "[grey]UNUSED[/grey]"
+NOT_ASSIGNED = "[grey]N/A[/grey]"
+MISSING = "[red]MISSING[/red]"
+VIRTUAL = "[blue]virtual[/blue]"
+
+
+def interface_profile_names(iface: DeviceInterface) -> Tuple[str, str]:
+    if not iface.used:
+        return NOT_USED, NOT_ASSIGNED
+
+    if not (if_prof := iface.profile):
+        return NOT_ASSIGNED, NOT_ASSIGNED
+
+    if isinstance(if_prof, InterfaceVirtual):
+        return if_prof.name, VIRTUAL
+
+    if not (port_prof := if_prof.port_profile):
+        return if_prof.name, MISSING
+
+    return if_prof.name, port_prof.name
+
+
+def cabling_table(table: Table, cables) -> Table:
+
+    for column in [
+        "Device",
+        "Interface",
+        "Profile",
+        "Port",
+        "Remote Port",
+        "Remote Profile",
+        "Remote Interface",
+        "Remote Device",
+        "Cable-ID",
+    ]:
+
+        table.add_column(column)
+
+    for cable_id, dev_if, rmt_if in cables:
+        dev_if_prof, dev_phy_prof = interface_profile_names(dev_if)
+        rmt_if_prof, rmt_phy_prof = interface_profile_names(rmt_if)
+
+        if dev_phy_prof != rmt_phy_prof:
+            dev_phy_prof = Text(dev_phy_prof, style=Style(color="red"))
+            rmt_phy_prof = Text(rmt_phy_prof, style=Style(color="red"))
+
+        table.add_row(
+            dev_if.device.name,
+            dev_if.name,
+            dev_if_prof,
+            dev_phy_prof,
+            rmt_phy_prof,
+            rmt_if_prof,
+            rmt_if.name,
+            rmt_if.device.name,
+            cable_id,
+        )
+
+    return table
+
+
+def report_cabling_per_device(device: Device):
+    console = Console()
+
+    cables = [
+        (interface.cable_id, interface, interface.cable_peer)
+        for interface in device.interfaces.values()
+        if interface.cable_peer
+    ]
+
+    table = cabling_table(
+        table=Table(
+            title=f"Device Cabling: {device.name}",
+            show_header=True,
+            header_style="bold magenta",
+        ),
+        cables=cables,
+    )
+
+    console.print(table)
+
+
+def report_cabling_per_network(cabling: CablePlanner, network: str):
+    console = Console()
+
+    if not cabling.cables:
+        console.print(f"[yellow]{network}: No cables.[/yellow]")
+        return
+
+    design = netcad_globals.g_netcad_designs[network]
+    design_desc = design.get("description") or ""
+
+    # orient each cable row (left-device, right-device) based on their sorting
+    # property (User defined, or hostname by default)
+
+    cables = [
+        [cable[0], *sorted(cable[1], key=attrgetter("device"))]
+        for cable in cabling.cables.items()
+    ]
+
+    # then sort the table based on the device-name, and interface sort-key
+
+    cables.sort(key=lambda c: (c[1].device.name, c[1], c[2].device.name, c[2]))
+
+    table = cabling_table(
+        table=Table(
+            title=f"Design Cabling '{network}', {design_desc}",
+            show_header=True,
+            header_style="bold magenta",
+        ),
+        cables=cables,
+    )
+
+    console.print(table)

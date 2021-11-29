@@ -21,7 +21,7 @@ from netcad.config import netcad_globals
 from netcad.device import Device
 from netcad.cabling.cable_plan import CablePlanner
 
-from .clig_design import clig_design_report
+from .clig_netcad_report import clig_design_report
 from ..common_opts import opt_designs
 from ..device_inventory import get_devices_from_designs
 
