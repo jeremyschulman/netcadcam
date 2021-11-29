@@ -22,7 +22,6 @@ import jinja2
 from netcad.device.device_interface import (
     DeviceInterfaces,
     DeviceInterface,
-    DeviceInterfacesType,
 )
 from netcad.registry import Registry
 from netcad.config import Environment
@@ -90,7 +89,7 @@ class Device(Registry, registry_name="devices"):
 
     product_model: Optional[str] = None
 
-    interfaces: DeviceInterfacesType = None
+    interfaces: DeviceInterfaces = None
 
     template: Optional[PathLike] = None
 
@@ -117,9 +116,7 @@ class Device(Registry, registry_name="devices"):
         # make any specific changes; i.e. handle the various "one-off" cases
         # that happen in real-world networks.
 
-        self.interfaces: DeviceInterfacesType = deepcopy(
-            self.__class__.interfaces
-        )  # noqa
+        self.interfaces: DeviceInterfaces = deepcopy(self.__class__.interfaces)  # noqa
 
         # create the back-references from the interfaces instance to this
         # device.

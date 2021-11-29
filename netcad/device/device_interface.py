@@ -21,7 +21,7 @@ import jinja2
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["DeviceInterface", "DeviceInterfaces", "DeviceInterfacesType"]
+__all__ = ["DeviceInterface", "DeviceInterfaces"]
 
 # -----------------------------------------------------------------------------
 #
@@ -269,10 +269,8 @@ class DeviceInterface(object):
 #
 # -----------------------------------------------------------------------------
 
-DeviceInterfacesType = DefaultDict[str, DeviceInterface]
 
-
-class DeviceInterfaces(defaultdict):
+class DeviceInterfaces(defaultdict, DefaultDict[str, DeviceInterface]):
     """
     The collection of interfaces bound to a Device.  Subclasses a defaultdict so
     that the Caller can create ad-hoc interfaces that are not originally part of
