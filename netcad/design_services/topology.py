@@ -19,6 +19,7 @@ from netcad.testing_services import (
     vlans,
     transceivers,
     cabling,
+    ipaddrs,
 )
 
 # -----------------------------------------------------------------------------
@@ -48,6 +49,7 @@ class TopologyService(DesignService, registry_name="topology"):
             vlans.VlanTestCases,
             cabling.InterfaceCablingTestCases,
             lags.LagTestCases,
+            ipaddrs.IPInterfacesTestCases,
         ]
 
     def add_devices(self, devices: List[Device]):
