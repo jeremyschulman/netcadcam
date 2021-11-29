@@ -27,6 +27,7 @@ __all__ = [
     "TransceiverTestCase",
     "TransceiverTestParams",
     "TransceiverTestExpectations",
+    "TransceiverListTestCase",
 ]
 
 # -----------------------------------------------------------------------------
@@ -51,6 +52,19 @@ class TransceiverTestCase(TestCase):
 
     def test_case_id(self) -> str:
         return str(self.test_params.interface)
+
+
+class TransceiverListTestCase(TestCase):
+    def __init__(self, **kwargs):
+        super().__init__(
+            test_case="transceiver-list",
+            test_params=BaseModel(),
+            expected_results=BaseModel(),
+            **kwargs
+        )
+
+    def test_case_id(self) -> str:
+        return "exclusive_list"
 
 
 @testing_service

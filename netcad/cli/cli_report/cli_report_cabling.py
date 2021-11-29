@@ -22,7 +22,7 @@ from netcad.device import Device, DeviceInterface
 from netcad.device.interface_profile import InterfaceVirtual
 from netcad.cabling.cable_plan import CablePlanner
 
-from .clig_netcad_report import clig_design_report
+from netcad.cli.netcad.clig_netcad_report import clig_design_report
 from ..device_inventory import get_devices_from_designs
 from ..common_opts import opt_devices, opt_designs
 
@@ -74,13 +74,14 @@ def cli_design_report_cabling(devices: Tuple[str], designs: Tuple[str]):
 #
 # -----------------------------------------------------------------------------
 
-NOT_USED = "[grey]UNUSED[/grey]"
-NOT_ASSIGNED = "[grey]N/A[/grey]"
-MISSING = "[red]MISSING[/red]"
-VIRTUAL = "[blue]virtual[/blue]"
+
+NOT_USED = Text("UNUSED", style=Style(color="grey50"))
+NOT_ASSIGNED = Text("N/A", style=Style(color="grey50"))
+MISSING = Text("MISSING", style=Style(color="red"))
+VIRTUAL = Text("virtual", style=Style(color="blue"))
 
 
-def interface_profile_names(iface: DeviceInterface) -> Tuple[str, str]:
+def interface_profile_names(iface: DeviceInterface) -> Tuple[Text, Text]:
     if not iface.used:
         return NOT_USED, NOT_ASSIGNED
 
@@ -93,7 +94,7 @@ def interface_profile_names(iface: DeviceInterface) -> Tuple[str, str]:
     if not (port_prof := if_prof.port_profile):
         return if_prof.name, MISSING
 
-    return if_prof.name, port_prof.name
+    return Text(if_prof.name), Text(port_prof.name)
 
 
 def cabling_table(table: Table, cables) -> Table:
@@ -113,12 +114,16 @@ def cabling_table(table: Table, cables) -> Table:
         table.add_column(column)
 
     for cable_id, dev_if, rmt_if in cables:
+
         dev_if_prof, dev_phy_prof = interface_profile_names(dev_if)
         rmt_if_prof, rmt_phy_prof = interface_profile_names(rmt_if)
 
+        # if the physical port definitions are not the same, then color them in
+        # red to indicate the error to the User.
+
         if dev_phy_prof != rmt_phy_prof:
-            dev_phy_prof = Text(dev_phy_prof, style=Style(color="red"))
-            rmt_phy_prof = Text(rmt_phy_prof, style=Style(color="red"))
+            dev_phy_prof.style = Style(color="red")
+            rmt_phy_prof.style = Style(color="red")
 
         table.add_row(
             dev_if.device.name,

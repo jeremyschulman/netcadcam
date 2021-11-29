@@ -44,7 +44,7 @@ class InterfaceLoopback(InterfaceVirtual, InterfaceL3):
     is_loopback = True
 
 
-class InterfaceVlan(InterfaceVirtual):
+class InterfaceVlan(InterfaceVirtual, InterfaceL3):
     """
     InterfaceVlan is used to declare IP addresses assigned to VLANs.  Also
     referred to an SVI.
