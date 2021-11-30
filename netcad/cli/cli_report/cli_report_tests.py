@@ -73,6 +73,9 @@ __all__ = []
     multiple=True,
     help="display only logs from <test>",
 )
+@click.option(
+    "--all", "include_all", is_flag=True, help="display all results, not just FAIL"
+)
 def cli_report_tests(devices: Tuple[str], designs: Tuple[str], **optionals):
     """Show test results in tablular form."""
 
@@ -108,9 +111,11 @@ def show_device_test_logs(device: Device, optionals: dict):
 
     inc_fields = optionals["include_fields"]
     exc_fields = optionals["exclude_fields"]
+    inc_all = optionals["include_all"]
 
     filter_in = lambda i: i.get("field") in inc_fields
     filter_out = lambda i: i.get("field") not in exc_fields
+    filter_fails = lambda i: i["status"] == trt.TestCaseStatus.FAIL
 
     for rc_result_file in test_result_files(device, optionals):
 
@@ -125,6 +130,9 @@ def show_device_test_logs(device: Device, optionals: dict):
 
         if results[0]["status"] == trt.TestCaseStatus.SKIP:
             continue
+
+        if not inc_all:
+            results = filter(filter_fails, results)
 
         if exc_fields:
             results = filter(filter_out, results)

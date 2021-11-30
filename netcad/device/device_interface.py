@@ -2,7 +2,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional, Dict, Hashable
+from typing import Optional, Dict, DefaultDict
 from typing import TYPE_CHECKING
 from io import StringIO
 import re
@@ -270,7 +270,7 @@ class DeviceInterface(object):
 # -----------------------------------------------------------------------------
 
 
-class DeviceInterfaces(defaultdict):
+class DeviceInterfaces(defaultdict, DefaultDict[str, DeviceInterface]):
     """
     The collection of interfaces bound to a Device.  Subclasses a defaultdict so
     that the Caller can create ad-hoc interfaces that are not originally part of
@@ -394,9 +394,3 @@ class DeviceInterfaces(defaultdict):
         content.seek(0)
         as_str = content.read()
         return as_str[:-1]
-
-    def __getitem__(self, name: Hashable) -> DeviceInterface:
-        """Return the network by name"""
-        # only calling super.  This method is declared so that the type-hinting
-        # knows the return value is an IPAMNetwork instance.
-        return super(DeviceInterfaces, self).__getitem__(name)

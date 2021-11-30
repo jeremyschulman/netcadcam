@@ -9,7 +9,7 @@ from rich.table import Table
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.cli.cli_report import clig_design
+from netcad.cli.netcad.cli_netcad_main import cli
 from netcad.config import netcad_globals
 
 # -----------------------------------------------------------------------------
@@ -26,7 +26,7 @@ __all__ = []
 # -----------------------------------------------------------------------------
 
 
-@clig_design.cli.command(name="list")
+@cli.command(name="list")
 def cli_designs_list():
     """List available designs"""
 

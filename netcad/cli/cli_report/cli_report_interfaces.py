@@ -22,7 +22,7 @@ from netcad.logger import get_logger
 from .. import keywords
 from ..common_opts import opt_devices, opt_designs
 from ..device_inventory import get_devices_from_designs
-from .clig_design import clig_design_report
+from netcad.cli.netcad.clig_netcad_report import clig_design_report
 
 # -----------------------------------------------------------------------------
 #

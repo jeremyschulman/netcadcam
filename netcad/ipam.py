@@ -91,7 +91,13 @@ class IPAMNetwork(UserDict):
         return ip_net
 
 
-class IPAM(Registry, UserDict):
+class IPAM(Registry, UserDict, t.MutableMapping[t.Hashable, IPAMNetwork]):
+    """
+    The IPAM class is used to store instances of dictionary like object that
+    whose keys can be any hashable item, such as a string-name, or VlanProfile,
+    and whose values are instance of the IPAMNetwork class.
+    """
+
     def __init__(self, name: t.Hashable):
         """
         Creates an IPAM instance by name and registers that name with the IPAM
@@ -131,9 +137,3 @@ class IPAM(Registry, UserDict):
         """
         self[name] = ip_net = IPAMNetwork(self, name, prefix)
         return ip_net
-
-    def __getitem__(self, name: t.Hashable) -> IPAMNetwork:
-        """Return the network by name"""
-        # only calling super.  This method is declared so that the type-hinting
-        # knows the return value is an IPAMNetwork instance.
-        return super(IPAM, self).__getitem__(name)
