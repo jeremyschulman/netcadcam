@@ -5,13 +5,14 @@
 import json
 from typing import Tuple, List, Dict
 from pathlib import Path
+from collections import Counter
 
 # -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
 
 import click
-from rich.table import Table
+from rich.table import Table, Text, Style
 from rich.console import Console
 from rich.pretty import Pretty
 
@@ -76,6 +77,7 @@ __all__ = []
 @click.option(
     "--all", "include_all", is_flag=True, help="display all results, not just FAIL"
 )
+@click.option("--brief", "brief_mode", is_flag=True, help="Show summary counts only")
 def cli_report_tests(devices: Tuple[str], designs: Tuple[str], **optionals):
     """Show test results in tablular form."""
 
@@ -87,28 +89,108 @@ def cli_report_tests(devices: Tuple[str], designs: Tuple[str], **optionals):
 
     log.info(f"Showing test logs for {len(device_objs)} devices.")
 
-    for dev_obj in device_objs:
-        show_device_test_logs(dev_obj, optionals)
+    devices_tc_dirs = dict()
+    for device in device_objs:
+        dev_tcr_dir = netcad_globals.g_netcad_testcases_dir / device.name / "results"
+        if not dev_tcr_dir.exists():
+            log.error(
+                f"Missing {device.name}, expected test results directory: {dev_tcr_dir.name}"
+            )
+            continue
+        devices_tc_dirs[device] = dev_tcr_dir
+
+    if not optionals["brief_mode"]:
+        for dev_obj, dev_tc_dir in devices_tc_dirs.items():
+            show_device_test_logs(dev_obj, dev_tc_dir, optionals)
+    else:
+        optionals["include_all"] = True
+        for dev_obj, dev_tc_dir in devices_tc_dirs.items():
+            show_device_brief_summary_table(dev_obj, dev_tc_dir, optionals)
 
 
 # -----------------------------------------------------------------------------
 #
-#                                 CODE BEGINS
+#                              PRIVATE CODE BEGINS
 #
 # -----------------------------------------------------------------------------
 
 
-def show_device_test_logs(device: Device, optionals: dict):
+def show_device_brief_summary_table(device: Device, tcr_dir: Path, optionals: dict):
 
-    log = get_logger()
+    table = Table(
+        "Test Cases",
+        "Pass",
+        "Fail",
+        "Info",
+        "Total",
+        show_header=True,
+        header_style="bold magenta",
+        show_lines=True,
+    )
 
-    dev_tcr_dir = netcad_globals.g_netcad_testcases_dir / device.name / "results"
-    if not dev_tcr_dir.exists():
-        log.error(
-            f"Missing {device.name}, expected test results directory: {dev_tcr_dir.name}"
+    pass_style = Style(color="green")
+    fail_style = Style(color="red")
+    info_style = Style(color="blue")
+
+    dev_tc_count = 0
+    for tc_name in test_cases_names(device, optionals):
+
+        # if the test results file does not exist, it means that the tests were
+        # not executed.  For now, silently skip.  TODO: may show User warning?
+
+        results_file = tcr_dir.joinpath(f"{tc_name}.json")
+        if not results_file.exists():
+            continue
+
+        results = json.load(results_file.open())
+
+        if not (results := filter_results(results=results, optionals=optionals)):
+            continue
+
+        tcr_cntrs = Counter(res["status"] for res in results)
+        tcr_cntrs = {
+            st: tcr_cntrs.get(st) or 0
+            for st in (
+                trt.TestCaseStatus.PASS,
+                trt.TestCaseStatus.FAIL,
+                trt.TestCaseStatus.INFO,
+            )
+        }
+        tcr_total = sum(tcr_cntrs.values())
+        dev_tc_count += tcr_total
+
+        table.add_row(
+            tc_name,
+            Text(str(tcr_cntrs[trt.TestCaseStatus.PASS]), style=pass_style),
+            Text(str(tcr_cntrs[trt.TestCaseStatus.FAIL]), style=fail_style),
+            Text(str(tcr_cntrs[trt.TestCaseStatus.INFO]), style=info_style),
+            Text(str(tcr_total)),
         )
-        return
 
+    table.title = Text(
+        f"Device: {device.name}, Total Results: {dev_tc_count}", justify="left"
+    )
+    console = Console()
+    console.print("\n", table)
+
+
+def filter_results(results: dict, optionals: dict) -> List[Dict]:
+    """
+    This function filters the test cases results based on the User CLI flags.
+
+    Parameters
+    ----------
+    results:
+        The complete list of test case results.
+
+    optionals:
+        The User CLI option flags
+
+    Returns
+    -------
+    List of the filtered results.  If the results include a "skip" indicator,
+    then an empty list is returned.
+    """
     inc_fields = optionals["include_fields"]
     exc_fields = optionals["exclude_fields"]
     inc_all = optionals["include_all"]
@@ -117,28 +199,36 @@ def show_device_test_logs(device: Device, optionals: dict):
     filter_out = lambda i: i.get("field") not in exc_fields
     filter_fails = lambda i: i["status"] == trt.TestCaseStatus.FAIL
 
-    for rc_result_file in test_result_files(device, optionals):
+    if results[0]["status"] == trt.TestCaseStatus.SKIP:
+        return []
+
+    if not inc_all:
+        results = filter(filter_fails, results)
+
+    if exc_fields:
+        results = filter(filter_out, results)
+
+    if inc_fields:
+        results = filter(filter_in, results)
+
+    return list(results)
+
+
+def show_device_test_logs(device: Device, tcr_dir: Path, optionals: dict):
+
+    for rc_result_file in test_cases_names(device, optionals):
 
         # if the test results file does not exist, it means that the tests were
         # not executed.  For now, silently skip.  TODO: may show User warning?
 
-        results_file = dev_tcr_dir.joinpath(f"{rc_result_file}.json")
+        results_file = tcr_dir.joinpath(f"{rc_result_file}.json")
         if not results_file.exists():
             continue
 
         results = json.load(results_file.open())
 
-        if results[0]["status"] == trt.TestCaseStatus.SKIP:
+        if not (results := filter_results(results=results, optionals=optionals)):
             continue
-
-        if not inc_all:
-            results = filter(filter_fails, results)
-
-        if exc_fields:
-            results = filter(filter_out, results)
-
-        if inc_fields:
-            results = filter(filter_in, results)
 
         # display the results in a Table form.
         show_log_table(device, results_file.name, results)
@@ -201,7 +291,7 @@ def _colorize_status(status):
     return f"[{color}]{status}[/{color}]"
 
 
-def test_result_files(device, optionals: dict):
+def test_cases_names(device, optionals: dict):
     inc_ts_names = optionals["testing_service_names"]
 
     for design_service in device.services:

@@ -83,16 +83,23 @@ def report_l3_interfaces(interfaces: List[Tuple[Device, DeviceInterface]]):
     interfaces.sort(key=lambda i: (i[1].profile.if_ipaddr, i[0]))
 
     table = Table(
+        "IP Address",
         "Device",
         "Interface",
+        "Profile",
         "Description",
-        "IP Address",
         title="IP addresses",
         show_header=True,
         header_style="bold magenta",
     )
 
     for dev, iface in interfaces:
-        table.add_row(dev.name, iface.name, iface.desc, str(iface.profile.if_ipaddr))
+        table.add_row(
+            str(iface.profile.if_ipaddr),
+            dev.name,
+            iface.name,
+            iface.profile.name,
+            iface.desc,
+        )
 
     console.print(table)
