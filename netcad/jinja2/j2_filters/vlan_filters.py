@@ -30,4 +30,8 @@ def j2_vlans_id_list(if_obj: "DeviceInterface") -> str:
         if_name = if_obj.name
         raise RuntimeError(f"{dev_name}:{if_name} does not have assigned vlans")
 
+    # do not include the native vlan in the range-list.
+    if native_vlan := getattr(if_obj.profile, "native_vlan", None):
+        vlans = set(vlans) - {native_vlan}
+
     return range_string(numbers=sorted([vlan.vlan_id for vlan in vlans]))
