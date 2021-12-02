@@ -58,7 +58,7 @@ class InterfaceLag(InterfaceVirtual):
 
     @property
     def lag_number(self):
-        return self._if_parent.port_numbers[0]
+        return self.lag_parent.port_numbers[0]
 
     @property
     def lag_parent(self) -> DeviceInterface:
@@ -67,7 +67,7 @@ class InterfaceLag(InterfaceVirtual):
         "Port-Channel2000" for example, would be the lag_parent of the Lag
         profile.
         """
-        return self._if_parent
+        return self._if_parent or self.interface
 
     @lag_parent.setter
     def lag_parent(self, if_parent: DeviceInterface):

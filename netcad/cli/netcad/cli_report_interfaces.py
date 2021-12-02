@@ -7,10 +7,10 @@ from typing import Tuple
 # -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
+
 import click
 from rich.console import Console
 from rich.table import Table, Text
-
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -19,9 +19,9 @@ from rich.table import Table, Text
 from netcad.device import Device, interface_profile as ip
 from netcad.logger import get_logger
 
-from .. import keywords
-from ..common_opts import opt_devices, opt_designs
-from ..device_inventory import get_devices_from_designs
+from netcad.cli import keywords
+from netcad.cli.common_opts import opt_devices, opt_designs
+from netcad.cli.device_inventory import get_devices_from_designs
 from netcad.cli.netcad.clig_netcad_report import clig_design_report
 
 # -----------------------------------------------------------------------------

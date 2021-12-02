@@ -18,8 +18,8 @@ from rich.console import Console
 from netcad.logger import get_logger
 from netcad.device import DeviceInterface, Device
 from netcad.device.l3_interfaces import InterfaceL3
-from ..common_opts import opt_devices, opt_designs
-from ..device_inventory import get_devices_from_designs
+from netcad.cli.common_opts import opt_devices, opt_designs
+from netcad.cli.device_inventory import get_devices_from_designs
 from netcad.cli.netcad.clig_netcad_report import clig_design_report
 
 

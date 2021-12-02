@@ -2,7 +2,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional, Dict, DefaultDict
+from typing import Optional, Dict, DefaultDict, Iterable, List
 from typing import TYPE_CHECKING
 from io import StringIO
 import re
@@ -230,6 +230,23 @@ class DeviceInterface(object):
         self.enabled = True
 
         profile.interface = self
+
+    @staticmethod
+    def sorted_interface_names(if_names: Iterable[str]) -> List[str]:
+        """
+        This helper function is used to return a sorted list of interface names
+        (strings).  The input `if_names` can be any iterable collection
+        providing the source interface names.
+
+        Parameters
+        ----------
+        if_names
+
+        Returns
+        -------
+        List of sorted interface names.
+        """
+        return [iface.name for iface in sorted(map(DeviceInterface, if_names))]
 
     # -------------------------------------------------------------------------
     #

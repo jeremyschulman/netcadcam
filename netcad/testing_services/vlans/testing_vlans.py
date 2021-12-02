@@ -3,7 +3,6 @@
 # -----------------------------------------------------------------------------
 
 from typing import List, Optional
-from collections import defaultdict
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -70,16 +69,20 @@ class VlanTestCases(TestCases):
     @classmethod
     def build(cls, device: Device, **kwargs) -> "VlanTestCases":
 
-        vlan_interfaces = defaultdict(list)
+        vlan_interfaces = dict()
+        for vlan in device.vlans():
+            vlan_interfaces[vlan] = list()
 
-        for if_name, interface in device.interfaces.items():
-            if not interface.profile:
-                continue
+        for if_name, interface in device.interfaces.used().items():
 
             if not (vlans_used := getattr(interface.profile, "vlans_used", None)):
                 continue
 
-            for vlan in vlans_used():
+            vlans = vlans_used()
+            if native_vlan := getattr(interface.profile, "native_vlan", None):
+                vlans -= {native_vlan}
+
+            for vlan in vlans:
                 vlan_interfaces[vlan].append(if_name)
 
         test_cases = VlanTestCases(
