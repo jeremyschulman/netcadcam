@@ -75,8 +75,9 @@ class NetboxDevices(NetboxClient):
         )
         res.raise_for_status()
         interfaces = list()
+        res_if_list = res.json()["results"]
 
-        for if_rec in res.json()["results"]:
+        for if_rec in res_if_list:
             del if_rec["display"]
             del if_rec["device_type"]
             del if_rec["url"]

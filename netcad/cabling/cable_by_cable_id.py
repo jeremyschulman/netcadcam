@@ -26,7 +26,6 @@ class CableByCableId(CablePlanner):
             for if_name, iface in device.interfaces.items():
                 if not iface.cable_id:
                     continue
-
                 self.add_endpoint(cable_id=iface.cable_id, interface=iface)
 
         # now invoke the validate() method directly before associating the cable
