@@ -105,7 +105,7 @@ def load_design(design_name: str) -> Dict:
     #       should raise a RuntimeError if the 'design' function is missing.
 
     if hasattr(design_mod, "design") and asyncio.iscoroutinefunction(design_mod.design):
-        asyncio.run(design_mod.design())
+        asyncio.run(design_mod.design(design_name, design_config))
 
     design_config["module"] = design_mod
     return design_config
