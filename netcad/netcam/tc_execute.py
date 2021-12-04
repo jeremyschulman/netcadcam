@@ -67,7 +67,7 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
     # Testing all Design Services and related Testing Services
     # -------------------------------------------------------------------------
 
-    for design_service in device.services:
+    for design_service in device.services.values():
         log.info(f"{dut_name}: Design Service: {design_service.__class__.__name__}")
 
         for testing_service in design_service.testing_services:

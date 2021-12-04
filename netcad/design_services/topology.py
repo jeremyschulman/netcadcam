@@ -37,7 +37,7 @@ __all__ = ["TopologyService"]
 
 class TopologyService(DesignService, registry_name="topology"):
     def __init__(self, network: str):
-        super(TopologyService, self).__init__()
+        super(TopologyService, self).__init__(name=network)
         self.network = network
         self.cabling = CableByCableId(name=network)
         self.registry_add(name=network, obj=self)

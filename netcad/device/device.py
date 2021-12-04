@@ -2,7 +2,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional, TypeVar, List, Set
+from typing import Optional, TypeVar, List, Set, Type
 from typing import TYPE_CHECKING
 import os
 from operator import attrgetter
@@ -32,8 +32,9 @@ from netcad.jinja2.env import get_env
 
 if TYPE_CHECKING:
     from netcad.vlan.vlan_profile import VlanProfile
-    from netcad.design_services import DesignService
+    from netcad.design_services import DesignService, Design, DesignServiceDirectory
 
+    DesignServiceType = TypeVar("DesignServiceType", bound=DesignService)
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -127,10 +128,17 @@ class Device(Registry, registry_name="devices"):
 
         self.registry_add(self.name, self)
 
+        # A device is "owned" by a Design instance.  Need to keep a
+        # back-reference to this design instance since it will be used to back
+        # reference other related design elements by the device through the
+        # Developer specific usage.
+
+        self.design: Optional["Design"] = None
+
         # services is a list of DesignService instances bound to this device.
         # These services will later be used to generate test cases.
 
-        self.services: List["DesignService"] = list()
+        self.services: DesignServiceDirectory = dict()
 
         # for any Caller provided values, override the class attributes; or set
         # new attributes (TODO: rethink this approach)
@@ -139,6 +147,12 @@ class Device(Registry, registry_name="devices"):
             setattr(self, attr, value)
 
         self.template_env: Optional[jinja2.Environment] = None
+
+    def services_of(
+        self, svc_cls: Type["DesignServiceType"]
+    ) -> List["DesignServiceType"]:
+        """Return the device services that are of the given service type"""
+        return [svc for svc in self.services.values() if isinstance(svc, svc_cls)]
 
     def init_template_env(self, templates_dir: Optional[Path] = None):
         template_dirs = list()

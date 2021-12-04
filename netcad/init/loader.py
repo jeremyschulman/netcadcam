@@ -6,6 +6,7 @@ import asyncio
 from typing import Dict
 from types import ModuleType
 from importlib import import_module
+import inspect
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -105,7 +106,14 @@ def load_design(design_name: str) -> Dict:
     #       should raise a RuntimeError if the 'design' function is missing.
 
     if hasattr(design_mod, "design") and asyncio.iscoroutinefunction(design_mod.design):
-        asyncio.run(design_mod.design(design_name, design_config))
+        design_coro = design_mod.design
+        sig = inspect.signature(design_coro)
+        run_coro = (
+            design_coro(design_name, design_config)
+            if len(sig.parameters)
+            else design_coro()
+        )
+        asyncio.run(run_coro)
 
     design_config["module"] = design_mod
     return design_config

@@ -2,7 +2,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import List, Type, Optional
+from typing import List, Type, Optional, Hashable, Dict
 from netcad.device import Device
 
 # -----------------------------------------------------------------------------
@@ -20,11 +20,14 @@ from netcad.testing_services import TestCases
 # Exports`
 # -----------------------------------------------------------------------------
 
-__all__ = ["DesignService"]
+__all__ = ["DesignService", "DesignServiceDirectory"]
 
 
 class DesignService(Registry, registry_name="design_services"):
-    def __init__(self):
+    def __init__(self, name: Hashable):
+        super().__init__()
+        self.registry_add(name, self)
+        self.name = name
         self.devices = set()
         self.testing_services: Optional[List[Type[TestCases]]] = list()
 
@@ -41,7 +44,7 @@ class DesignService(Registry, registry_name="design_services"):
         """
         self.devices.update(devices)
         for each_dev in devices:
-            each_dev.services.append(self)
+            each_dev.services[self.name] = self
 
     async def build(self):
         """
@@ -53,3 +56,6 @@ class DesignService(Registry, registry_name="design_services"):
 
     async def validate(self):
         raise NotImplementedError()
+
+
+DesignServiceDirectory = Dict[Hashable, DesignService]
