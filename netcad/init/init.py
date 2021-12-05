@@ -22,7 +22,6 @@ from netcad.config.loader import import_objectref
 from netcad.logger import get_logger
 
 from netcad import defaults as d
-from netcad.testing_services import init_import_testing_services
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -46,12 +45,6 @@ def init():
     _init_config_contents()
     _init_proj_dirs()
     _init_design_configs()
-
-    # import the testing services modules so that they are retrievable via the
-    # Registry mechanism.
-
-    init_import_testing_services.on_init()
-
     _init_user_environment()
 
 

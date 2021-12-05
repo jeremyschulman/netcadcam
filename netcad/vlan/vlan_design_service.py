@@ -16,6 +16,8 @@ from netcad.device import Device
 from netcad.design_services import DesignService
 
 from .vlan_profile import VlanProfile
+from .vlan_testcases import VlanTestCases
+
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -40,7 +42,9 @@ class DeviceVlanDesignService(DesignService):
     def __init__(self, name: Hashable, device: Device):
         super().__init__(name=name)
         self.device = device
+        self.testing_services = [VlanTestCases]
         self.add_devices([device])
+        self.alias_names = dict()
 
     @lru_cache
     def all_vlans(self) -> List[VlanProfile]:
@@ -84,6 +88,9 @@ class VlansDesignService(
     behavior of the VlanProfiles used by a design.  A device-specific design
     service is also created & associated to devices as they are added to the
     VlansDesignService.
+
+    The VlansDesignService subclasses UserDict where each key is the Device
+    instance and the value is the per-device Vlan design service.
     """
 
     # The per-device VLAN service class.  By default will be the class defined
@@ -93,7 +100,7 @@ class VlansDesignService(
 
     def __init__(
         self,
-        name: Optional[Hashable] = "desgin_vlans",
+        name: Optional[Hashable] = "design_vlans",
         device_service_name: Optional[Hashable] = "vlans",
     ):
         """

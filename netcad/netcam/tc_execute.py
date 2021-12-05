@@ -68,14 +68,19 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
     # -------------------------------------------------------------------------
 
     for design_service in device.services.values():
+
+        # there could be design services without defined testing services, so
+        # skip if that is the case.
+
+        if not design_service.testing_services:
+            continue
+
         log.info(f"{dut_name}: Design Service: {design_service.__class__.__name__}")
 
         for testing_service in design_service.testing_services:
             tc_name = testing_service.get_service_name()
 
             testcases = await testing_service.load(testcase_dir=dev_tc_dir)
-
-            # log.info(f"{dut_name}:\t\tTestcases: {tc_name}")
 
             try:
                 results = await _gather_testcase_results(dut=dut, testcases=testcases)
