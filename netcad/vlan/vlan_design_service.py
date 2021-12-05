@@ -44,7 +44,14 @@ class DeviceVlanDesignService(DesignService):
 
     @lru_cache
     def all_vlans(self) -> List[VlanProfile]:
-        """return the set of VlanProfile instances used by this device"""
+        """
+        Returns a sorted list of VlanProfiles that are used by this speific
+        device.
+
+        Returns
+        -------
+        list - as described.
+        """
 
         all_vlans: Set[VlanProfile] = set()
         interfaces = self.device.interfaces

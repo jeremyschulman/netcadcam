@@ -2,10 +2,9 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional, TypeVar, List, Set, Type
+from typing import Optional, TypeVar, List, Type
 from typing import TYPE_CHECKING
 import os
-from operator import attrgetter
 from copy import deepcopy
 from pathlib import Path
 
@@ -26,15 +25,12 @@ from netcad.device.device_interface import (
 from netcad.registry import Registry
 from netcad.config import Environment
 from netcad.config import netcad_globals
-from netcad.testing_services import DEFAULT_TESTING_SERVICES
 from netcad.origin import OriginDeviceType
 from netcad.jinja2.env import get_env
 
 if TYPE_CHECKING:
-    from netcad.vlan.vlan_profile import VlanProfile
-    from netcad.design_services import DesignService, Design, DesignServiceDirectory
+    from netcad.design_services import Design, DesignServiceDirectory, DesignServiceType
 
-    DesignServiceType = TypeVar("DesignServiceType", bound=DesignService)
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -200,35 +196,19 @@ class Device(Registry, registry_name="devices"):
 
         return self.template_env.get_template(str(as_path))
 
-    def vlans(self) -> List["VlanProfile"]:
-        """return the set of VlanProfile instances used by this device"""
-
-        all_vlans: Set[VlanProfile] = set()
-
-        for if_name, iface in self.interfaces.items():
-            if not iface.profile:
-                continue
-
-            if not (vlans_used := getattr(iface.profile, "vlans_used", None)):
-                continue
-
-            all_vlans.update(vlans_used())
-
-        return sorted(all_vlans, key=attrgetter("vlan_id"))
-
     # noinspection PyMethodMayBeStatic
-    def testing_services(self) -> List[str]:
-        """
-        This function returs the list of TestCases service names that will be
-        used for creating the device's network state audits.  The Device base
-        class will always return the following (and showing their associated
-        TestCases class for reference).
-
-        Returns
-        -------
-        List[str] as described.
-        """
-        return list(DEFAULT_TESTING_SERVICES)
+    # def testing_services(self) -> List[str]:
+    #     """
+    #     This function returs the list of TestCases service names that will be
+    #     used for creating the device's network state audits.  The Device base
+    #     class will always return the following (and showing their associated
+    #     TestCases class for reference).
+    #
+    #     Returns
+    #     -------
+    #     List[str] as described.
+    #     """
+    #     return list(DEFAULT_TESTING_SERVICES)
 
     # -------------------------------------------------------------------------
     #
@@ -294,7 +274,7 @@ class Device(Registry, registry_name="devices"):
 
     def __getattr__(self, item):
         """
-        Impement a mechanism that allows a Caller to check for the existance of
+        Implement a mechanism that allows a Caller to check for the existance of
         an attribute that has the form "is_xxxx".  For example:
 
             if device.is_pseudo:

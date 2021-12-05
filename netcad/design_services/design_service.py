@@ -2,7 +2,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import List, Type, Optional, Hashable, Dict
+from typing import List, Type, Optional, Hashable, Dict, TypeVar
 from netcad.device import Device
 
 # -----------------------------------------------------------------------------
@@ -20,7 +20,7 @@ from netcad.testing_services import TestCases
 # Exports`
 # -----------------------------------------------------------------------------
 
-__all__ = ["DesignService", "DesignServiceDirectory"]
+__all__ = ["DesignService", "DesignServiceDirectory", "DesignServiceType"]
 
 
 class DesignService(Registry, registry_name="design_services"):
@@ -59,3 +59,4 @@ class DesignService(Registry, registry_name="design_services"):
 
 
 DesignServiceDirectory = Dict[Hashable, DesignService]
+DesignServiceType = TypeVar("DesignServiceType", bound=DesignService)
