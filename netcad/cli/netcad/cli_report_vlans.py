@@ -75,7 +75,7 @@ def show_device_vlan_table(device: Device):
 
     vlans = list(
         chain.from_iterable(
-            svc.vlans() for svc in device.services_of(DeviceVlanDesignService)
+            svc.all_vlans() for svc in device.services_of(DeviceVlanDesignService)
         )
     )
 

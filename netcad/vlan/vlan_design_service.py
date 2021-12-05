@@ -21,7 +21,7 @@ from .vlan_profile import VlanProfile
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["VlanDesignService", "DeviceVlanDesignService"]
+__all__ = ["VlansDesignService", "DeviceVlanDesignService"]
 
 # -----------------------------------------------------------------------------
 #
@@ -43,7 +43,7 @@ class DeviceVlanDesignService(DesignService):
         self.add_devices([device])
 
     @lru_cache
-    def vlans(self) -> List[VlanProfile]:
+    def all_vlans(self) -> List[VlanProfile]:
         """return the set of VlanProfile instances used by this device"""
 
         all_vlans: Set[VlanProfile] = set()
@@ -63,28 +63,62 @@ class DeviceVlanDesignService(DesignService):
     # -------------------------------------------------------------------------
 
     async def build(self):
-        _ = self.vlans()
+        _ = self.all_vlans()
 
     async def validate(self):
         pass
 
 
-class VlanDesignService(
+class VlansDesignService(
     DesignService, UserDict, MutableMapping[Device, DeviceVlanDesignService]
 ):
+    """
+    The VlansDesignService enables a Designer to manage the arrangement and
+    behavior of the VlanProfiles used by a design.  A device-specific design
+    service is also created & associated to devices as they are added to the
+    VlansDesignService.
+    """
+
+    # The per-device VLAN service class.  By default will be the class defined
+    # above.  A Designer may wish to subclass something different.
+
+    device_vlan_service = DeviceVlanDesignService
+
     def __init__(
         self,
         name: Optional[Hashable] = "desgin_vlans",
         device_service_name: Optional[Hashable] = "vlans",
     ):
+        """
+        Initialize the design level Vlan services.
 
+        Parameters
+        ----------
+        name:
+            The Designer designated name for this specific instance of the Vlans
+            service.  By default, this value will be "design_vlans".
+
+        device_service_name:
+            The per-device specific vlan design service name.  By default, this
+            value is "vlans".
+        """
         super().__init__(name=name)
         self._device_service_name = device_service_name
 
     def add_devices(self, devices: List[Device]):
+        """
+        Add the list of Device instances to the VlanDesignService.  As a result
+        each device will also be associated with the `device_vlan_service` class
+        instance that allows for the device-specific arranngement of Vlans.
+
+        Parameters
+        ----------
+        devices:
+            List of Device instances
+        """
         super().add_devices(devices)
         for each_dev in filterfalse(lambda d: d in self.data, devices):
-            self[each_dev] = DeviceVlanDesignService(
+            self[each_dev] = self.device_vlan_service(
                 name=self._device_service_name, device=each_dev
             )
 
@@ -93,4 +127,5 @@ class VlanDesignService(
             await each_dev.build()
 
     async def validate(self):
+        """No validation action performed"""
         pass
