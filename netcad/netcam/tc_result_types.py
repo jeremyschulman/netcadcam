@@ -100,8 +100,10 @@ class FailNoExistsResult(FailTestCase):
     """The test case failed since the measure item does not exist"""
 
     def __init__(self, device, test_case, **kwargs):
-        kwargs.setdefault("error", dict(error="missing", field="exists"))
         kwargs.setdefault("field", "exists")
+        kwargs.setdefault(
+            "error", dict(error="missing", expected=test_case.expected_results.dict())
+        )
 
         super().__init__(device=device, test_case=test_case, **kwargs)
 
