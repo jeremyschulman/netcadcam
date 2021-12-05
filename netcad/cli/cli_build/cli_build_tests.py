@@ -70,7 +70,7 @@ async def build_device_tests(device: Device, tc_dir: Path):
     # testing services associated with that service; build the test-cases for
     # the device and save to a JSON data file.
 
-    for service_obj in device.services:
+    for service_obj in device.services.values():
         for tc_svccls in service_obj.testing_services:
             if not (test_cases := tc_svccls.build(device, service=service_obj)):
                 continue

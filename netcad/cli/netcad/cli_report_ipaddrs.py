@@ -56,6 +56,15 @@ def cli_design_report_interfaces(devices: Tuple[str], designs: Tuple[str]):
     # Generate the list of interfaces with IP addresses.  These must be
     # interfaces with profiles that subclass InterfaceL3.
 
+    # if_l3_list = [
+    #     (dev, iface)
+    #     for dev in dev_objs
+    #     for iface in dev.interfaces.used().values()
+    #     if isinstance(iface.profile, InterfaceL3)
+    # ]
+    #
+    # breakpoint()
+
     if_l3_list = [
         (dev, iface)
         for dev in dev_objs

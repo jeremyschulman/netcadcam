@@ -29,6 +29,7 @@ __all__ = [
     "FailTestCase",
     "InfoTestCase",
     "ResultsTestCase",
+    "SkipTestCases",
 ]
 
 

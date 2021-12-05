@@ -4,6 +4,7 @@
 
 from typing import Tuple
 from collections import defaultdict
+from itertools import chain
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -19,6 +20,8 @@ from rich.console import Pretty
 
 from netcad.logger import get_logger
 from netcad.device import Device
+from netcad.vlan.vlan_design_service import DeviceVlanDesignService
+
 
 from ..device_inventory import get_devices_from_designs
 from ..common_opts import opt_devices, opt_designs
@@ -65,7 +68,17 @@ def cli_report_vlans(devices: Tuple[str], designs: Tuple[str]):
 
 
 def show_device_vlan_table(device: Device):
-    vlans = device.vlans()
+
+    # each device instance may have one or more device-vlan design services.
+    # Typically, it will be one, but perhaps a Designer comes up with a usage
+    # that does have more than one.  So handle that, just in case ;-)
+
+    vlans = list(
+        chain.from_iterable(
+            svc.all_vlans() for svc in device.services_of(DeviceVlanDesignService)
+        )
+    )
+
     console = Console()
 
     table = Table(

@@ -133,7 +133,7 @@ def show_device_brief_summary_table(device: Device, tcr_dir: Path, optionals: di
     info_style = Style(color="blue")
 
     dev_tc_count = 0
-    for tc_name in test_cases_names(device, optionals):
+    for tc_name in find_test_cases_names(device, optionals):
 
         # if the test results file does not exist, it means that the tests were
         # not executed.  For now, silently skip.  TODO: may show User warning?
@@ -216,7 +216,7 @@ def filter_results(results: dict, optionals: dict) -> List[Dict]:
 
 def show_device_test_logs(device: Device, tcr_dir: Path, optionals: dict):
 
-    for rc_result_file in test_cases_names(device, optionals):
+    for rc_result_file in find_test_cases_names(device, optionals):
 
         # if the test results file does not exist, it means that the tests were
         # not executed.  For now, silently skip.  TODO: may show User warning?
@@ -291,10 +291,10 @@ def _colorize_status(status):
     return f"[{color}]{status}[/{color}]"
 
 
-def test_cases_names(device, optionals: dict):
+def find_test_cases_names(device, optionals: dict):
     inc_ts_names = optionals["testing_service_names"]
 
-    for design_service in device.services:
+    for design_service in device.services.values():
         for testing_service in design_service.testing_services:
             ts_name = testing_service.get_service_name()
 
