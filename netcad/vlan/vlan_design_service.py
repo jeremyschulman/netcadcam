@@ -18,7 +18,6 @@ from netcad.design_services import DesignService
 from .vlan_profile import VlanProfile
 from .vlan_testcases import VlanTestCases
 
-
 # -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
