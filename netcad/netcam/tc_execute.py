@@ -79,6 +79,14 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
 
         for testing_service in design_service.testing_services:
             tc_name = testing_service.get_service_name()
+            tc_file = testing_service.filepath(testcase_dir=dev_tc_dir, service=tc_name)
+
+            if not tc_file.exists():
+                log.info(
+                    f"{dut_name}: {SKIP_BLUE}\tNo test cases for: {tc_name}",
+                    extra={"markup": True},
+                )
+                continue
 
             testcases = await testing_service.load(testcase_dir=dev_tc_dir)
 

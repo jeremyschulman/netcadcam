@@ -17,7 +17,13 @@ from .interface_profile import InterfaceVirtual, InterfaceProfile
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["InterfaceL3", "InterfaceVlan", "InterfaceLoopback", "InterfaceManagement"]
+__all__ = [
+    "InterfaceL3",
+    "InterfaceVlan",
+    "InterfaceIsLoopback",
+    "InterfaceIsManagement",
+    "InterfaceIsInVRF",
+]
 
 # -----------------------------------------------------------------------------
 #
@@ -32,16 +38,25 @@ class InterfaceL3(InterfaceProfile):
         self.if_ipaddr = if_ipaddr
 
 
-class InterfaceManagement(InterfaceL3):
+class InterfaceIsManagement(InterfaceL3):
+    """
+    An interface that is only used for out of band management
+    """
+
     is_mgmt_only = True
 
 
-class InterfaceLoopback(InterfaceVirtual, InterfaceL3):
+class InterfaceIsLoopback(InterfaceVirtual, InterfaceL3):
     """
     A loopback interface is a virtual IP address
     """
 
     is_loopback = True
+
+
+class InterfaceIsInVRF(InterfaceL3):
+    is_in_vrf = True
+    vrf: Optional[str] = "management"
 
 
 class InterfaceVlan(InterfaceVirtual, InterfaceL3):

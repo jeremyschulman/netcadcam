@@ -1,8 +1,16 @@
+"""
+This file provides the "VlansAll" descriptor that automates the process
+of collecting all VlanProfiles defined on a given Device instance.
+
+For details on Python Descriptors in general, see:
+https://docs.python.org/3/howto/descriptor.html
+"""
+
 # -----------------------------------------------------------------------------
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import List, Union
+from typing import List, Union, Optional, Iterable, Set
 from operator import attrgetter
 
 # -----------------------------------------------------------------------------
@@ -55,6 +63,14 @@ class VlansAll:
         not to active the "skip-me" feature.
     """
 
+    def __init__(
+        self,
+        include_vlans: Optional[Iterable[VlanProfile]] = None,
+        exclude_vlans: Optional[Iterable[VlanProfile]] = None,
+    ):
+        self.include_vlans: Set[VlanProfile] = set(include_vlans or {})
+        self.exclude_vlans: Set[VlanProfile] = set(exclude_vlans or {})
+
     def __set_name__(self, owner, name):
         if not issubclass(owner, InterfaceProfile):
             raise RuntimeError(
@@ -76,15 +92,18 @@ class VlansAll:
             The instance, when not None, is the interface profile instance
             where the the attribute is assigned the VlansAll descriptor.
 
-            For example, this class "UplinkSPtoTR" defines the attribute "vlans"
-            and assigns the VlansAll descriptor.  The "instance" then is the
-            specific instance of an UplinkSPtoTR class.
+                For example, this class "UplinkSPtoTR" defines the attribute "vlans"
+                and assigns the VlansAll descriptor.  The "instance" then is the
+                specific instance of an UplinkSPtoTR class.
 
-                class UplinkSPtoTR(InterfaceL2Trunk):
-                    desc = PeerInterfaceId()
-                    native_vlan = fsl_vlans.vlan_vpn_transit
-                    vlans = VlansAll()
-                    template = Path("interface_trunk.jinja2")
+                    class UplinkSPtoTR(InterfaceL2Trunk):
+                        desc = PeerInterfaceId()
+                        native_vlan = fsl_vlans.vlan_vpn_transit
+                        vlans = VlansAll()
+                        template = Path("interface_trunk.jinja2")
+
+            The instance, when None, is a call requesting the VlansAll
+            descriptor instance itself.
 
         objtype:
             The class type for the instance.
@@ -139,4 +158,7 @@ class VlansAll:
         # ----------------------------------------
 
         instance._skip_me = False
+        collect_vlans.update(self.include_vlans)
+        collect_vlans -= self.exclude_vlans
+
         return sorted(collect_vlans, key=attrgetter("vlan_id"))

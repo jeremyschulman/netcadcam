@@ -28,6 +28,7 @@ class PhyPortTypes(StrEnum):
     type_10GBASE_SR = "10GBASE-SR"
     type_10GBASE_SRL = "10GBASE-SRL"
     type_10GBASE_LR = "10GBASE-LR"
+    type_10GBASE_LRM = "10GBASE-LRM"
     type_10GBASE_LRL = "10GBASE-LRL"
     type_10GBASE_ER = "10GBASE-ER"
     type_10GBASE_ERLBD = "10GBASE-ERLBD"
