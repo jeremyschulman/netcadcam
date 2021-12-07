@@ -18,6 +18,10 @@ from pydantic import BaseModel
 from netcad.logger import get_logger
 from netcad.device import Device
 from netcad.vlan import VlanProfile
+
+from netcad.device.l2_interfaces import InterfaceL2Access, InterfaceL2Trunk
+from netcad.device.l3_interfaces import InterfaceVlan
+
 from netcad.testing_services import TestCases, TestCase
 from netcad.testing_services.testing_registry import testing_service
 
@@ -98,13 +102,14 @@ class VlanTestCases(TestCases):
         # the association between VLANs used and the interface.
 
         for if_name, interface in device.interfaces.used().items():
+            if_prof = interface.profile
 
-            if not (vlans_used := getattr(interface.profile, "vlans_used", None)):
+            if isinstance(if_prof, (InterfaceL2Access, InterfaceVlan)):
+                vlans = if_prof.vlans_used()
+            elif isinstance(if_prof, InterfaceL2Trunk):
+                vlans = if_prof.trunk_allowed_vlans()
+            else:
                 continue
-
-            vlans = vlans_used()
-            if native_vlan := getattr(interface.profile, "native_vlan", None):
-                vlans -= {native_vlan}
 
             for vlan in vlans:
 
