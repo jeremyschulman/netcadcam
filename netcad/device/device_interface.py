@@ -106,8 +106,10 @@ class DeviceInterface(object):
         # interface attributes accordinly.
 
         if name.isdigit():
-            self.port_numbers = int(name)
-            self.sort_key = self.port_numbers
+            port_id = int(name)
+            self.port_numbers = (port_id,)
+            # need the first item in the tuple to be any string value for sorting purposes
+            self.sort_key = ("port", port_id)
             self.short_name = name
 
         # if the name contains numbers then break these numbers out for
