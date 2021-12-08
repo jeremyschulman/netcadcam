@@ -2,7 +2,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional, Dict, DefaultDict, Iterable, List
+from typing import Optional, Union, Dict, DefaultDict, Iterable, List, Callable
 from typing import TYPE_CHECKING
 from io import StringIO
 import re
@@ -38,6 +38,7 @@ _re_find_numbers = re.compile(r"\d+")
 _re_short_name = re.compile(r"(\D\D)\D+(\d.*)")
 
 
+# noinspection PyUnresolvedReferences
 class DeviceInterface(object):
     """
     DeviceInterface models the properties of a network device interface as it is
@@ -75,6 +76,12 @@ class DeviceInterface(object):
     cable_peer: DeviceInterface
         The instance of the device-interface on the far end of a cable
         relationship.
+
+    cable_port_id : str
+        The `cable_port_id` attribute is used to return the value which would
+        show up as the "port-id" in LLDP or CDP cabling tests.  By default, the
+        cable_port_id is the interface name.  A Designer may wish to override
+        this default behavior by seeting the cable_port_it property value.
 
     interfaces: DeviceInterfaces
         A back-reference to the collection of all interfaces; see Interfaces
@@ -123,6 +130,10 @@ class DeviceInterface(object):
         self.enabled = enabled
         self.label = label
         self.cable_id = cable_id
+
+        # hold the Designer defined cable_port_id override value.
+        self._cable_port_id = None
+
         self.profile = profile
         self.cable_peer: Optional[DeviceInterface] = None
         self.interfaces = interfaces
@@ -132,6 +143,21 @@ class DeviceInterface(object):
     #                          Properties Read-Only
     #
     # -------------------------------------------------------------------------
+
+    @property
+    def cable_port_id(self) -> str:
+        if not self._cable_port_id:
+            return self.name
+
+        return (
+            self._cable_port_id(self)
+            if callable(self._cable_port_id)
+            else self._cable_port_id
+        )
+
+    @cable_port_id.setter
+    def cable_port_id(self, value: Union[Callable, str]):
+        self._cable_port_id = value
 
     @property
     def used(self):
