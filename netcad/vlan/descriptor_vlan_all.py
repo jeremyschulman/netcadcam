@@ -1,14 +1,23 @@
+"""
+This file provides the "VlansAll" descriptor that automates the process
+of collecting all VlanProfiles defined on a given Device instance.
+
+For details on Python Descriptors in general, see:
+https://docs.python.org/3/howto/descriptor.html
+"""
+
 # -----------------------------------------------------------------------------
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Set
+from typing import List, Union, Optional, Iterable, Set
 from operator import attrgetter
 
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
+from netcad.device import DeviceInterface
 from netcad.device.interface_profile import InterfaceProfile
 from netcad.vlan import VlanProfile
 
@@ -48,15 +57,19 @@ class VlansAll:
         and detected in use by the instance.attribute for it was bound to during
         the __set_name__ call.
 
-    _assigned_cls: type
-        The class type for which this descriptor is bound to.  This is used to
-        determine during getter whether or not to active the "skip-me" feature.
-
     _assigned_attr_name: str
         The class attribute name that identifies where this descriptor is
         assigned to in the _assigned_cls.  Again used to determine whether or
         not to active the "skip-me" feature.
     """
+
+    def __init__(
+        self,
+        include_vlans: Optional[Iterable[VlanProfile]] = None,
+        exclude_vlans: Optional[Iterable[VlanProfile]] = None,
+    ):
+        self.include_vlans: Set[VlanProfile] = set(include_vlans or {})
+        self.exclude_vlans: Set[VlanProfile] = set(exclude_vlans or {})
 
     def __set_name__(self, owner, name):
         if not issubclass(owner, InterfaceProfile):
@@ -66,30 +79,65 @@ class VlansAll:
             )
 
         self._skip_me = False
-        self._assigned_cls = owner
         self._assigned_attr_name = name
 
-    def __get__(self, instance, owner):
+    def __get__(self, instance, objtype) -> Union["VlansAll", List[VlanProfile]]:
+        """
+        The "getter" is used to retrieve all vlans defined on the device.  The
+        return value is a list of VlanProfile instances sorted by vlan_id.
 
+        Parameters
+        ----------
+        instance:
+            The instance, when not None, is the interface profile instance
+            where the the attribute is assigned the VlansAll descriptor.
+
+                For example, this class "UplinkSPtoTR" defines the attribute "vlans"
+                and assigns the VlansAll descriptor.  The "instance" then is the
+                specific instance of an UplinkSPtoTR class.
+
+                    class UplinkSPtoTR(InterfaceL2Trunk):
+                        desc = PeerInterfaceId()
+                        native_vlan = fsl_vlans.vlan_vpn_transit
+                        vlans = VlansAll()
+                        template = Path("interface_trunk.jinja2")
+
+            The instance, when None, is a call requesting the VlansAll
+            descriptor instance itself.
+
+        objtype:
+            The class type for the instance.
+
+        Returns
+        -------
+        A List of VlanProfile instances sorted by the vlan_id attribute.
+        """
+
+        # ---------------------------------------------------------------------
         # if no instance, then class lookup, return descriptor
+        # ---------------------------------------------------------------------
+
         if instance is None:
             return self
 
+        # ---------------------------------------------------------------------
         # need to iterate through all of the device interfaces and find all
         # VlanProfiles.  Need to avoid trying to getter on a profile that is
         # using the VlansAll descriptor to avoid recursion.
+        # ---------------------------------------------------------------------
 
-        all_vlans: Set[VlanProfile] = set()
-        dev_interfaces = instance.interface.device.interfaces
+        this_iface: DeviceInterface = instance.interface
+        this_device = this_iface.device
+        dev_interfaces = this_device.interfaces
 
-        for if_name, iface in dev_interfaces.items():
+        collect_vlans = set()
 
-            # if the skip-me feature is activated it means that this descriptor
-            # is already in the execution call stack, so we need to avoid
-            # recursion.  Also if there is no profile assigned to this interface
-            # then we skip it.
+        # set a flag on the interface profile instance
+        instance._skip_me = True
 
-            if self._skip_me or not iface.profile:
+        for if_name, iface in dev_interfaces.used().items():
+
+            if getattr(iface.profile, "_skip_me", False) is True:
                 continue
 
             # if the interface profile does not implement a `vlans_used` method
@@ -98,30 +146,19 @@ class VlansAll:
             if not (vlans_used := getattr(iface.profile, "vlans_used", None)):
                 continue
 
-            # if this interface.attribute is assigned the VlansAll descriptor
-            # itself, then we need to mark this descriptor as being in the
-            # execution call stack and to "skip" it should the
-            # inteface.attribute be called again during the invokation of the
-            # `vlans_used` method.
-
-            if isinstance(iface.profile, self._assigned_cls) and isinstance(
-                getattr(iface.profile.__class__, self._assigned_attr_name), VlansAll
-            ):
-                self._skip_me = True
-
-            # invoke the vlans_used method that will return a list of
-            # VlanProfiles assigned on this interface.
-
             vlans = vlans_used()
 
             # deactivate the skip-me since we've completed the call of
             # vlans_used which would be the source of any recursion.
 
-            self._skip_me = False
+            collect_vlans.update(vlans)
 
-            all_vlans.update(vlans)
+        # ----------------------------------------
+        # return the collected set of VlanProfiles
+        # ----------------------------------------
 
-        # return a list of VlanProfiles sorted by the vlan_id attribute.  That
-        # is in VLAN ID numerical order low to high.
+        instance._skip_me = False
+        collect_vlans.update(self.include_vlans)
+        collect_vlans -= self.exclude_vlans
 
-        return sorted(all_vlans, key=attrgetter("vlan_id"))
+        return sorted(collect_vlans, key=attrgetter("vlan_id"))

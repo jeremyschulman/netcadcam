@@ -14,7 +14,7 @@ from pydantic import BaseModel
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.device import Device
+from netcad.device import Device, DeviceInterface
 from netcad.testing_services import TestCases, TestCase
 from netcad.testing_services import testing_service
 
@@ -42,7 +42,7 @@ class InterfaceCablingTestParams(BaseModel):
 
 class InterfaceCablingdExpectations(BaseModel):
     device: str
-    interface: str
+    port_id: str
 
 
 class InterfaceCablingTestCase(TestCase):
@@ -66,7 +66,7 @@ class InterfaceCablingTestCases(TestCases):
         # use a layer-2 protocol (LLDP or CDP) to validate the neighbor
         # relationship.
 
-        interfaces = sorted(
+        interfaces: List[DeviceInterface] = sorted(
             filter(
                 lambda iface: iface.cable_peer and not iface.profile.is_virtual,
                 device.interfaces.used(include_disabled=False).values(),
@@ -81,7 +81,7 @@ class InterfaceCablingTestCases(TestCases):
                     test_params=InterfaceCablingTestParams(interface=interface.name),
                     expected_results=InterfaceCablingdExpectations(
                         device=interface.cable_peer.device.name,
-                        interface=interface.cable_peer.name,
+                        port_id=interface.cable_peer.cable_port_id,
                     ),
                 )
                 for interface in interfaces
