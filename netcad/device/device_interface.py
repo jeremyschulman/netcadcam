@@ -124,7 +124,7 @@ class DeviceInterface(object):
         # then set the number value to 0 for default purposes.
         else:
             self.short_name = name
-            self.sort_key = 0
+            self.sort_key = (name, 0)
             self.port_numbers = None
 
         self._profile = None
