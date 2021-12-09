@@ -75,5 +75,5 @@ class TestCases(BaseModel):
             return parse_obj_as(cls, json.loads(await infile.read()))
 
     @classmethod
-    def build(cls, obj: Any, service=None) -> "TestCases":
+    def build(cls, obj: Any, design_service=None) -> "TestCases":
         raise NotImplementedError()

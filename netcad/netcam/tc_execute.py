@@ -37,7 +37,7 @@ SKIP_BLUE = "[blue]SKIP[/blue]"
 async def execute_testcases(dut: AsyncDeviceUnderTest):
     device = dut.device
     dev_name = device.name
-    dut_name = f"DUT:{dev_name}"
+    dut_name = f"DUT: {dev_name}"
 
     tc_dir = netcad_globals.g_netcad_testcases_dir
 
@@ -67,7 +67,7 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
     # Testing all Design Services and related Testing Services
     # -------------------------------------------------------------------------
 
-    for design_service in device.services.values():
+    for ds_name, design_service in device.services.items():
 
         # there could be design services without defined testing services, so
         # skip if that is the case.
@@ -75,7 +75,7 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
         if not design_service.testing_services:
             continue
 
-        log.info(f"{dut_name}: Design Service: {design_service.__class__.__name__}")
+        log.info(f"{dut_name}: Design Service: {ds_name}")
 
         for testing_service in design_service.testing_services:
             tc_name = testing_service.get_service_name()
@@ -83,7 +83,7 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
 
             if not tc_file.exists():
                 log.info(
-                    f"{dut_name}: {SKIP_BLUE}\tNo test cases for: {tc_name}",
+                    f"{dut_name}: {SKIP_BLUE}\tTestcases: {tc_name}: None",
                     extra={"markup": True},
                 )
                 continue

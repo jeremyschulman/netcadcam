@@ -1,2 +1,0 @@
-from .testing_cabling import InterfaceCablingTestCases, InterfaceCablingTestCase
-from .testing_tools import nei_interface_match, nei_hostname_match
