@@ -25,7 +25,7 @@ from netcad.testing_services import (
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["TopologyService"]
+__all__ = ["TopologyService", "DesignService"]
 
 # -----------------------------------------------------------------------------
 #
