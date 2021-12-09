@@ -2,7 +2,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional, Union
+from typing import Optional, Union, Dict
 from pathlib import Path
 
 # -----------------------------------------------------------------------------
@@ -79,6 +79,15 @@ class InterfaceProfile(SafeIsAttribute):
             "Interface profile unexpected template type: "
             f"{self.__class__.__name__}: {type(self.template)}"
         )
+
+    @property
+    def profile_flags(self) -> Dict[str, bool]:
+        flags = dict()
+        for attr in filter(lambda i: i.startswith("is_"), dir(self)):
+            attr_val = getattr(self, attr)
+            if isinstance(attr_val, bool):
+                flags[attr] = attr_val
+        return flags
 
     @property
     def name(self):

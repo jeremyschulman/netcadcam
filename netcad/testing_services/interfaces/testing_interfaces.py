@@ -40,6 +40,7 @@ __all__ = [
 
 class InterfaceTestParams(BaseModel):
     interface: str
+    interface_flags: Optional[dict]
 
 
 class InterfaceTestUsedExpectations(BaseModel):
@@ -91,6 +92,7 @@ class InterfaceTestCases(TestCases):
 
             if not iface.used:
                 expected_results = InterfaceTestNotUsedExpectations(used=False)
+                if_flags = None
 
             # if the interface is used (in design) it still could be shutdown
             # (.enabled=False). we would still want to check the reporting speed
@@ -98,6 +100,8 @@ class InterfaceTestCases(TestCases):
 
             else:
                 port_profile = iface.profile.port_profile
+                if_flags = iface.profile.profile_flags
+
                 expected_results = InterfaceTestUsedExpectations(
                     used=True,
                     desc=iface.desc,
@@ -109,7 +113,9 @@ class InterfaceTestCases(TestCases):
                     expected_results.oper_up = None
 
             return InterfaceTestCase(
-                test_params=InterfaceTestParams(interface=iface.name),
+                test_params=InterfaceTestParams(
+                    interface=iface.name, interface_flags=if_flags
+                ),
                 expected_results=expected_results,
             )
 

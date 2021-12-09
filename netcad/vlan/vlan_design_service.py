@@ -2,7 +2,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import List, Set, Hashable, Optional, MutableMapping
+from typing import List, Set, Hashable, Optional, MutableMapping, TypeVar
 from itertools import filterfalse
 from operator import attrgetter
 from collections import UserDict
@@ -22,7 +22,12 @@ from .vlan_testcases import VlanTestCases
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["VlansDesignService", "DeviceVlanDesignService"]
+__all__ = [
+    "VlansDesignService",
+    "DeviceVlanDesignService",
+    "DeviceVlanDesignServiceLike",
+]
+
 
 # -----------------------------------------------------------------------------
 #
@@ -77,6 +82,11 @@ class DeviceVlanDesignService(DesignService):
 
     async def validate(self):
         pass
+
+
+DeviceVlanDesignServiceLike = TypeVar(
+    "DeviceVlanDesignServiceLike", DeviceVlanDesignService, DesignService
+)
 
 
 class VlansDesignService(
