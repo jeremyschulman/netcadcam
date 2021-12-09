@@ -72,9 +72,8 @@ async def build_device_tests(device: Device, tc_dir: Path):
 
     for service_obj in device.services.values():
         for tc_svccls in service_obj.testing_services:
-            if not (test_cases := tc_svccls.build(device, service=service_obj)):
+            if not (test_cases := tc_svccls.build(device, design_service=service_obj)):
                 continue
-
             await test_cases.save(dev_tc_dir)
 
 

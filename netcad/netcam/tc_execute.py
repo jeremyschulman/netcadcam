@@ -67,7 +67,7 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
     # Testing all Design Services and related Testing Services
     # -------------------------------------------------------------------------
 
-    for design_service in device.services.values():
+    for ds_name, design_service in device.services.items():
 
         # there could be design services without defined testing services, so
         # skip if that is the case.
@@ -75,7 +75,7 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
         if not design_service.testing_services:
             continue
 
-        log.info(f"{dut_name}: Design Service: {design_service.__class__.__name__}")
+        log.info(f"{dut_name}: Design Service: {ds_name}")
 
         for testing_service in design_service.testing_services:
             tc_name = testing_service.get_service_name()

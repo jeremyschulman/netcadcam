@@ -19,7 +19,7 @@ from netcad.device import InterfaceLag
 from netcad.testing_services import TestCases, TestCase
 from netcad.testing_services import testing_service
 
-from netcad.testing_services import lags
+from . import tc_lags as lags
 
 
 # -----------------------------------------------------------------------------

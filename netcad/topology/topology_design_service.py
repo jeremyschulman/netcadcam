@@ -2,7 +2,7 @@
 # Systeme Imports
 # -----------------------------------------------------------------------------
 
-from typing import List
+from typing import List, Optional
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -10,16 +10,18 @@ from typing import List
 
 from netcad.device import Device
 from netcad.cabling import CableByCableId
+from netcad.design_services.design_service import DesignService
 
-from .design_service import DesignService
-from netcad.testing_services import (
-    device,
-    interfaces,
-    lags,
-    transceivers,
-    cabling,
-    ipaddrs,
-)
+# -----------------------------------------------------------------------------
+# Private Module Imports
+# -----------------------------------------------------------------------------
+
+from .tc_transceivers import TransceiverTestCases
+from .tc_device_info import DeviceInformationTestCases
+from .tc_cabling_nei import InterfaceCablingTestCases
+from .tc_interfaces import InterfaceTestCases
+from .tc_lags import LagTestCases
+from .tc_ipaddrs import IPInterfacesTestCases
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -35,19 +37,24 @@ __all__ = ["TopologyService"]
 
 
 class TopologyService(DesignService, registry_name="topology"):
-    def __init__(self, network: str):
-        super(TopologyService, self).__init__(name=network)
-        self.network = network
-        self.cabling = CableByCableId(name=network)
+    def __init__(self, network: str, name: Optional[str] = "topology"):
+
+        # setup the design service with the User provided service name
+        super(TopologyService, self).__init__(name=name)
+
+        # register this topology by the User provided network name
         self.registry_add(name=network, obj=self)
 
+        self.network = network
+        self.cabling = CableByCableId(name=network)
+
         self.testing_services = [
-            device.DeviceInformationTestCases,
-            interfaces.InterfaceTestCases,
-            transceivers.TransceiverTestCases,
-            cabling.InterfaceCablingTestCases,
-            lags.LagTestCases,
-            ipaddrs.IPInterfacesTestCases,
+            DeviceInformationTestCases,
+            InterfaceTestCases,
+            TransceiverTestCases,
+            InterfaceCablingTestCases,
+            LagTestCases,
+            IPInterfacesTestCases,
         ]
 
     def add_devices(self, devices: List[Device]):
@@ -58,4 +65,5 @@ class TopologyService(DesignService, registry_name="topology"):
         self.cabling.build()
 
     async def validate(self):
+        # TODO: put cabling validate here.
         pass
