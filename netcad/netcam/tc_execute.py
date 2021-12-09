@@ -37,7 +37,7 @@ SKIP_BLUE = "[blue]SKIP[/blue]"
 async def execute_testcases(dut: AsyncDeviceUnderTest):
     device = dut.device
     dev_name = device.name
-    dut_name = f"DUT:{dev_name}"
+    dut_name = f"DUT: {dev_name}"
 
     tc_dir = netcad_globals.g_netcad_testcases_dir
 
@@ -83,7 +83,7 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
 
             if not tc_file.exists():
                 log.info(
-                    f"{dut_name}: {SKIP_BLUE}\tNo test cases for: {tc_name}",
+                    f"{dut_name}: {SKIP_BLUE}\tNo testcases for: {tc_name}",
                     extra={"markup": True},
                 )
                 continue
