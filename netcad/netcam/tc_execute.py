@@ -83,7 +83,7 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
 
             if not tc_file.exists():
                 log.info(
-                    f"{dut_name}: {SKIP_BLUE}\tNo testcases for: {tc_name}",
+                    f"{dut_name}: {SKIP_BLUE}\tTestcases: {tc_name}: None",
                     extra={"markup": True},
                 )
                 continue
