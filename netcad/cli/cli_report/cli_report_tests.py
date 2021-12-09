@@ -252,8 +252,11 @@ def show_log_table(device: Device, filename: str, results: List[Dict]):
     st_opt = trt.TestCaseStatus
 
     for result in results:
+        expected = result["test_case"]["expected_results"]
         r_st = result["status"]
-        msr_val = _pretty_dict_table(result["measurement"])
+        msr_val = _pretty_dict_table(
+            dict(expected=expected, measured=result["measurement"])
+        )
         log_msg = (
             _pretty_dict_table(result["error"]) if r_st == st_opt.FAIL else msr_val
         )
