@@ -1,1 +1,1 @@
-from .topology_design_service import TopologyService
+from .topology_design_service import TopologyService, TopologyServiceLike

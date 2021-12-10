@@ -2,7 +2,7 @@
 # Systeme Imports
 # -----------------------------------------------------------------------------
 
-from typing import List, Optional
+from typing import List, Optional, TypeVar
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -27,7 +27,7 @@ from .tc_ipaddrs import IPInterfacesTestCases
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["TopologyService"]
+__all__ = ["TopologyService", "TopologyServiceLike"]
 
 # -----------------------------------------------------------------------------
 #
@@ -67,3 +67,6 @@ class TopologyService(DesignService, registry_name="topology"):
     async def validate(self):
         # TODO: put cabling validate here.
         pass
+
+
+TopologyServiceLike = TypeVar("TopologyServiceLike", TopologyService, DesignService)
