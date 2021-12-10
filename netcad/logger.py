@@ -55,6 +55,7 @@ def get_logger(show_path=False) -> logging.Logger:
                 rich_tracebacks=True,
                 log_time_format=DEFAULT_DATE_FORMAT,
                 show_path=show_path,
+                markup=True,
             )
         ],
     )

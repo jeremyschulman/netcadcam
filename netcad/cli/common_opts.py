@@ -20,3 +20,7 @@ opt_designs = lambda **params: click.option(
     help="design(s)",
     **params
 )
+
+opt_design = lambda **params: click.option(
+    "-D", "--design", "design", metavar="[DESIGN]", help="design", **params
+)

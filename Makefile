@@ -14,3 +14,4 @@ requirements.txt:
 clean:
 	rm -rf dist *.egg-info .pytest_cache
 	rm -f requirements.txt setup.py
+	rm -f poetry.lock
