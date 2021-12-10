@@ -4,6 +4,7 @@
 
 from typing import Optional, Union, Dict
 from pathlib import Path
+from functools import cached_property
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -80,7 +81,7 @@ class InterfaceProfile(SafeIsAttribute):
             f"{self.__class__.__name__}: {type(self.template)}"
         )
 
-    @property
+    @cached_property
     def profile_flags(self) -> Dict[str, bool]:
         flags = dict()
         for attr in filter(lambda i: i.startswith("is_"), dir(self)):

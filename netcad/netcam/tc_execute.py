@@ -29,15 +29,23 @@ __all__ = ["execute_testcases"]
 #
 # -----------------------------------------------------------------------------
 
-PASS_GREEN = "[green]PASS[/green]"
-FAIL_RED = "[red]FAIL[/red]"
-SKIP_BLUE = "[blue]SKIP[/blue]"
+
+def markup_color(text, color):
+    return f"[{color}]{text}[/{color}]"
 
 
-async def execute_testcases(dut: AsyncDeviceUnderTest):
+PASS_GREEN = markup_color("PASS", "green")
+FAIL_RED = markup_color("FAIL", "red")
+SKIP_BLUE = markup_color("SKIP", "grey70")
+SUMMARY_YELLOW = markup_color("DONE", "bright_yellow")
+
+
+async def execute_testcases(dut: AsyncDeviceUnderTest) -> Counter:
     device = dut.device
     dev_name = device.name
     dut_name = f"DUT: {dev_name}"
+
+    total_test_counts = Counter()
 
     tc_dir = netcad_globals.g_netcad_testcases_dir
 
@@ -48,7 +56,7 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
         log.error(
             f"{dut_name}:Missing expected testcase directory: {dev_tc_dir.absolute()}, skipping"
         )
-        return
+        return total_test_counts
 
     # -------------------------------------------------------------------------
     # Testing Prologue
@@ -61,7 +69,7 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
 
     except Exception as exc:
         log.error(f"{dut_name}: Startup failed: {exc}, aborting.")
-        return
+        return total_test_counts
 
     # -------------------------------------------------------------------------
     # Testing all Design Services and related Testing Services
@@ -75,17 +83,14 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
         if not design_service.testing_services:
             continue
 
-        log.info(f"{dut_name}: Design Service: {ds_name}")
+        # log.info(f"{dut_name}: Design Service: {ds_name}")
 
         for testing_service in design_service.testing_services:
             tc_name = testing_service.get_service_name()
             tc_file = testing_service.filepath(testcase_dir=dev_tc_dir, service=tc_name)
 
             if not tc_file.exists():
-                log.info(
-                    f"{dut_name}: {SKIP_BLUE}\tTestcases: {tc_name}: None",
-                    extra={"markup": True},
-                )
+                log.info(f"{dut_name}: {SKIP_BLUE}\tTestcases: {tc_name}: None")
                 continue
 
             testcases = await testing_service.load(testcase_dir=dev_tc_dir)
@@ -104,6 +109,7 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
                 continue
 
             result_counts = Counter(r.status for r in results)
+            total_test_counts.update(result_counts)
 
             c_pass, c_fail, c_info, c_skip = (
                 result_counts[TestCaseStatus.PASS],
@@ -119,18 +125,15 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
                 log.warning(
                     f"{dut_name}: {FAIL_RED}\tTestcases: {tc_name}: "
                     f"PASS={c_pass}, FAIL={c_fail}, INFO={c_info}",
-                    extra={"markup": True},
                 )
             elif c_skip:
                 log.info(
                     f"{dut_name}: {SKIP_BLUE}\tTestcases: {tc_name}",
-                    extra={"markup": True},
                 )
             else:
                 log.info(
                     f"{dut_name}: {PASS_GREEN}\tTestcases: {tc_name}: "
                     f"PASS={c_pass}, INFO={c_info}",
-                    extra={"markup": True},
                 )
 
             await testcases_save_results(
@@ -141,13 +144,25 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
     # Testing Epilogue
     # -------------------------------------------------------------------------
 
-    log.info(f"{dut_name}: Testing Completed.")
+    ttc = sum(total_test_counts.values())
+    c_pass, c_fail, c_info, c_skip = (
+        total_test_counts[TestCaseStatus.PASS],
+        total_test_counts[TestCaseStatus.FAIL],
+        total_test_counts[TestCaseStatus.INFO],
+        total_test_counts[TestCaseStatus.SKIP],
+    )
+
+    log.info(
+        f"{dut_name}: {SUMMARY_YELLOW} {ttc:4}\tTestcases: PASS={c_pass}, FAIL={c_fail}, INFO={c_info}"
+    )
 
     try:
         await dut.teardown()
 
     except Exception as exc:
         log.error(f"{dut_name}: Teardown failed: {exc}")
+
+    return total_test_counts
 
 
 # -----------------------------------------------------------------------------

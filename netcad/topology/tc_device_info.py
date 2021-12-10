@@ -8,7 +8,7 @@ from typing import List, Dict, Optional
 # Public Imports
 # -----------------------------------------------------------------------------
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -39,20 +39,42 @@ class DeviceInformationTestCase(TestCase):
 class DeviceInterfaceInfo(BaseModel):
     name: str
     enabled: bool
+    used: bool
     port_type: Optional[str]
-    desc: str
+    desc: Optional[str] = Field("")
+    profile_flags: Optional[dict] = Field(default_factory=dict)
 
 
 def _interfaces_as_dict(device: Device) -> dict:
     as_dict = dict()
 
-    for if_name, iface in device.interfaces.used().items():
+    for if_name, iface in device.interfaces.items():
+
+        if not iface.used:
+            as_dict[if_name] = DeviceInterfaceInfo(
+                used=False, name=if_name, enabled=iface.enabled, desc=iface.desc
+            )
+            continue
+
+        if_prof = iface.profile
+
+        # extract the physical port type name from the profile, if it exists;
+        # otherwise it is set to None.  It should never be None, FWIW.
+        # TODO: perhaps log error?
+
         port_type = (
-            iface.profile.port_profile.name if iface.profile.port_profile else None
+            None if not (ifphy_prof := if_prof.port_profile) else ifphy_prof.name
         )
 
+        flags = if_prof.profile_flags
+
         as_dict[if_name] = DeviceInterfaceInfo(
-            name=if_name, enabled=iface.enabled, desc=iface.desc, port_type=port_type
+            used=True,
+            name=if_name,
+            enabled=iface.enabled,
+            desc=iface.desc,
+            port_type=port_type,
+            profile_flags=flags,
         )
 
     return as_dict

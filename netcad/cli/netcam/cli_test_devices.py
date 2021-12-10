@@ -16,7 +16,7 @@ import click
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.config import Environment
+from netcad.config import Environment, netcad_globals
 from netcad.logger import get_logger
 from netcad.cli.common_opts import opt_devices, opt_designs
 from netcad.cli.device_inventory import get_devices_from_designs
@@ -81,7 +81,12 @@ def cli_test_device(devices: Tuple[str], designs: Tuple[str], tests_dir: Path):
         log.error("No devices located in the given designs")
         return
 
-    duts = [get_dut(dev_obj) for dev_obj in device_objs]
+    tc_dir = netcad_globals.g_netcad_testcases_dir
+
+    duts = [
+        get_dut(device=dev_obj, testcases_dir=tc_dir.joinpath(dev_obj.name))
+        for dev_obj in device_objs
+    ]
 
     log.info(f"Starting tests for {len(device_objs)} devices.")
 
