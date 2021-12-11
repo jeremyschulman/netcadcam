@@ -5,6 +5,8 @@
 import asyncio
 from typing import Tuple, Dict
 from pathlib import Path
+from datetime import datetime
+from collections import Counter
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -107,12 +109,15 @@ def cli_test_device(devices: Tuple[str], designs: Tuple[str], tests_dir: Path):
     #       in a check and execute the plugin running differently. For now, only
     #       asyncio plugins are supported.
 
+    ts_start = datetime.now()
+
     async def go():
         await asyncio.gather(*(execute_testcases(dut) for dut in duts.values()))
 
     asyncio.run(go())
+    ts_end = datetime.now()
 
-    display_summary_table(duts)
+    display_summary_table(duts, duration=ts_end - ts_start)
 
 
 # -----------------------------------------------------------------------------
@@ -122,16 +127,16 @@ def cli_test_device(devices: Tuple[str], designs: Tuple[str], tests_dir: Path):
 # -----------------------------------------------------------------------------
 
 
-def display_summary_table(duts: Dict[str, DeviceUnderTest]):
+def display_summary_table(duts: Dict[str, DeviceUnderTest], duration):
     # Display summary table for each device, and then a grand total summary
 
     table = Table(
         "Device",
+        "Status",
         "Total",
         "Pass",
         "Fail",
         "Info",
-        title=f"Test Results Summary: {len(duts)} devices",
         show_header=True,
         header_style="bold magenta",
         show_lines=True,
@@ -139,8 +144,19 @@ def display_summary_table(duts: Dict[str, DeviceUnderTest]):
 
     colored_styles = (Style(color="green"), Style(color="red"), Style(color="blue"))
 
+    grand_totals = Counter()
+
+    def color_pass_fail(_cntrs):
+        return (
+            Text("PASSED!", style=colored_styles[0])
+            if _cntrs["FAIL"] == 0
+            else Text("FAILED!", style=colored_styles[1])
+        )
+
     for dut in sorted(duts.values()):
         cntrs = dut.result_counts
+        grand_totals.update(cntrs)
+
         totals = str(sum(cntrs.values()))
         clrd_cnts = [
             Text(str(cntr), style=clrd_style)
@@ -148,7 +164,21 @@ def display_summary_table(duts: Dict[str, DeviceUnderTest]):
                 (cntrs["PASS"], cntrs["FAIL"], cntrs["INFO"]), colored_styles
             )
         ]
-        table.add_row(dut.device.name, totals, *clrd_cnts)
+        table.add_row(dut.device.name, color_pass_fail(cntrs), totals, *clrd_cnts)
+
+    gt_sum = sum(grand_totals.values())
 
     console = Console()
-    console.print("\n", table, "\n")
+    pass_fail = color_pass_fail(grand_totals)
+
+    console.print(
+        "\n",
+        "Overall Test Results: ",
+        pass_fail,
+        "\n",
+        f"{len(duts)} Devices, {gt_sum} Testscases\n",
+        f"Duration {duration}\n",
+    )
+
+    table.title = Text("Device Summaries", justify="left")
+    console.print(table, "\n")
