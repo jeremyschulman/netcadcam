@@ -82,8 +82,7 @@ def cli_test_device(devices: Tuple[str], designs: Tuple[str], tests_dir: Path):
 
     log = get_logger()
 
-    netcam_plugin = import_netcam_plugin()
-    get_dut = getattr(netcam_plugin, "get_dut")
+    netcam_plugins = import_netcam_plugin()
 
     if not (device_objs := get_devices_from_designs(designs, include_devices=devices)):
         log.error("No devices located in the given designs")
@@ -94,12 +93,17 @@ def cli_test_device(devices: Tuple[str], designs: Tuple[str], tests_dir: Path):
     # back to the DUT by device name when be build the summary table.
 
     tc_dir = netcad_globals.g_netcad_testcases_dir
-    duts = {
-        dev_obj.name: get_dut(
+    duts = {}
+
+    for dev_obj in device_objs:
+        if not (get_dut := netcam_plugins.get(dev_obj.os_name)):
+            raise RuntimeError(
+                f"Missing testing plugin for {dev_obj.name}: os-name: {dev_obj.os_name}"
+            )
+
+        duts[dev_obj.name] = get_dut(
             device=dev_obj, testcases_dir=tc_dir.joinpath(dev_obj.name)
         )
-        for dev_obj in device_objs
-    }
 
     log.info(f"Starting tests for {len(device_objs)} devices.")
 
