@@ -33,7 +33,14 @@ class _BaseDeviceUnderTest:
         self.result_counts = Counter()
 
     def __lt__(self, other):
-        return self.device < other.device
+        """
+        Sort the device DUT instances by the underlying device hostname. This
+        sort behavior overrides the underlying device "lt" override behavior as
+        the purpose of DUT reporting is not specific to the arrangement of the
+        devices in a design; but rather by the hostname value for User "eye
+        sorting".
+        """
+        return self.device.name < other.device.name
 
 
 class DeviceUnderTest(_BaseDeviceUnderTest):
