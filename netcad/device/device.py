@@ -29,7 +29,7 @@ from netcad.origin import OriginDeviceType
 from netcad.jinja2.env import get_env
 
 if TYPE_CHECKING:
-    from netcad.design_services import Design, DesignServiceDirectory, DesignServiceType
+    from netcad.design_services import Design, DesignServiceCatalog, DesignServiceLike
 
 
 # -----------------------------------------------------------------------------
@@ -134,7 +134,7 @@ class Device(Registry, registry_name="devices"):
         # services is a list of DesignService instances bound to this device.
         # These services will later be used to generate test cases.
 
-        self.services: DesignServiceDirectory = dict()
+        self.services: DesignServiceCatalog = dict()
 
         # for any Caller provided values, override the class attributes; or set
         # new attributes (TODO: rethink this approach)
@@ -145,8 +145,8 @@ class Device(Registry, registry_name="devices"):
         self.template_env: Optional[jinja2.Environment] = None
 
     def services_of(
-        self, svc_cls: Type["DesignServiceType"]
-    ) -> List["DesignServiceType"]:
+        self, svc_cls: Type["DesignServiceLike"]
+    ) -> List["DesignServiceLike"]:
         """Return the device services that are of the given service type"""
         return [svc for svc in self.services.values() if isinstance(svc, svc_cls)]
 

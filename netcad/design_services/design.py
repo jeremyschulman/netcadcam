@@ -1,10 +1,42 @@
+# -----------------------------------------------------------------------------
+# System Imports
+# -----------------------------------------------------------------------------
+
 from typing import Dict, Optional
 from copy import deepcopy
+
+# -----------------------------------------------------------------------------
+# Private Imports
+# -----------------------------------------------------------------------------
 
 from netcad.registry import Registry
 from netcad.device import Device
 
+# -----------------------------------------------------------------------------
+# Private Module Imports
+# -----------------------------------------------------------------------------
+
 from .design_service import DesignService
+
+
+# -----------------------------------------------------------------------------
+# Exports
+# -----------------------------------------------------------------------------
+
+__all__ = ["Design", "DesignConfig", "DesignService"]
+
+# -----------------------------------------------------------------------------
+#
+#                                 CODE BEGINS
+#
+# -----------------------------------------------------------------------------
+
+
+# TODO: for now the design configuration that comes from the "netcad.toml" file
+#       is repreesnted into a dictionary object.  Future it will be a pydantic
+#       modelled instance. this would be a code-breaking change.
+
+DesignConfig = Dict
 
 
 class Design(Registry, registry_name="designs"):

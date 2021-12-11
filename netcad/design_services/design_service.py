@@ -20,7 +20,7 @@ from netcad.testing_services import TestCases
 # Exports`
 # -----------------------------------------------------------------------------
 
-__all__ = ["DesignService", "DesignServiceDirectory", "DesignServiceType"]
+__all__ = ["DesignService", "DesignServiceCatalog", "DesignServiceLike"]
 
 
 class DesignService(Registry, registry_name="design_services"):
@@ -58,5 +58,5 @@ class DesignService(Registry, registry_name="design_services"):
         raise NotImplementedError()
 
 
-DesignServiceDirectory = Dict[Hashable, DesignService]
-DesignServiceType = TypeVar("DesignServiceType", bound=DesignService)
+DesignServiceCatalog = Dict[Hashable, DesignService]
+DesignServiceLike = TypeVar("DesignServiceLike", bound=DesignService)

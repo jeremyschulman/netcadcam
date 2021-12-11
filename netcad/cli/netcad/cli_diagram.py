@@ -12,7 +12,7 @@ import click
 from netcad.logger import get_logger
 from netcad.cli.common_opts import opt_design
 from netcad.config import netcad_globals
-from netcad.init import load_design
+from netcad.design_services import load_design
 
 # Private Module Imports
 
