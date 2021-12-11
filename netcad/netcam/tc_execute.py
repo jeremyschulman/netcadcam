@@ -12,6 +12,7 @@ from collections import Counter
 from netcad.logger import get_logger
 from netcad.config import netcad_globals
 from netcad.testing_services import TestCases
+from netcad.cli.keywords import markup_color
 
 from .tc_result_types import TestCaseStatus, ResultsTestCase
 from .tc_save import testcases_save_results
@@ -28,10 +29,6 @@ __all__ = ["execute_testcases"]
 #                                 CODE BEGINS
 #
 # -----------------------------------------------------------------------------
-
-
-def markup_color(text, color):
-    return f"[{color}]{text}[/{color}]"
 
 
 PASS_CLRD = markup_color("PASS", "green")

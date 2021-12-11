@@ -30,6 +30,7 @@ from netcad.cli.device_inventory import get_devices_from_designs
 
 from netcad.netcam import tc_result_types as trt
 from netcad.cli.netcam.cli_netcam_main import cli
+from netcad.cli.keywords import color_pass_fail
 
 # -----------------------------------------------------------------------------
 # Exports (none)
@@ -119,10 +120,11 @@ def show_device_brief_summary_table(device: Device, tcr_dir: Path, optionals: di
 
     table = Table(
         "Test Cases",
+        "Status",
+        "Total",
         "Pass",
         "Fail",
         "Info",
-        "Total",
         show_header=True,
         header_style="bold magenta",
         show_lines=True,
@@ -161,10 +163,11 @@ def show_device_brief_summary_table(device: Device, tcr_dir: Path, optionals: di
 
         table.add_row(
             tc_name,
+            color_pass_fail(tcr_cntrs),
+            Text(str(tcr_total)),
             Text(str(tcr_cntrs[trt.TestCaseStatus.PASS]), style=pass_style),
             Text(str(tcr_cntrs[trt.TestCaseStatus.FAIL]), style=fail_style),
             Text(str(tcr_cntrs[trt.TestCaseStatus.INFO]), style=info_style),
-            Text(str(tcr_total)),
         )
 
     table.title = Text(

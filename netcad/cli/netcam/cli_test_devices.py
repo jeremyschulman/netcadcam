@@ -31,6 +31,8 @@ from netcad.netcam.loader import import_netcam_plugin
 
 from netcad.cli.netcam.cli_netcam_main import cli
 from netcad.netcam import execute_testcases
+from netcad.cli.keywords import color_pass_fail
+
 
 # -----------------------------------------------------------------------------
 # Exports (none)
@@ -143,15 +145,7 @@ def display_summary_table(duts: Dict[str, DeviceUnderTest], duration):
     )
 
     colored_styles = (Style(color="green"), Style(color="red"), Style(color="blue"))
-
     grand_totals = Counter()
-
-    def color_pass_fail(_cntrs):
-        return (
-            Text("PASSED!", style=colored_styles[0])
-            if _cntrs["FAIL"] == 0
-            else Text("FAILED!", style=colored_styles[1])
-        )
 
     for dut in sorted(duts.values()):
         cntrs = dut.result_counts
