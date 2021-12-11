@@ -2,7 +2,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 from copy import deepcopy
 
 # -----------------------------------------------------------------------------
@@ -58,6 +58,7 @@ class Design(Registry, registry_name="designs"):
         # comes from the name as defined in the netcad configuration file.
 
         self.registry_add(name=name, obj=self)
+        self.name = name
 
         # The config that originated from the netcad configuration file for this
         # specific design.
@@ -74,3 +75,8 @@ class Design(Registry, registry_name="designs"):
         self.devices: Dict[str, Device] = dict()
 
         self.ipams = dict()
+
+    def add_devices(self, devices: List[Device]):
+        for dev in devices:
+            self.devices[dev.name] = dev
+            dev.design = self
