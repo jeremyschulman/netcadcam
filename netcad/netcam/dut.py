@@ -6,6 +6,7 @@ from typing import AsyncGenerator, Optional, Dict
 from functools import singledispatchmethod
 from pathlib import Path
 import json
+from collections import Counter
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -29,6 +30,10 @@ class _BaseDeviceUnderTest:
         self.device = device
         self.testcases_dir = testcases_dir
         self.device_info: Optional[Dict] = None
+        self.result_counts = Counter()
+
+    def __lt__(self, other):
+        return self.device < other.device
 
 
 class DeviceUnderTest(_BaseDeviceUnderTest):

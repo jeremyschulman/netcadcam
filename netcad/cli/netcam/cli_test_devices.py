@@ -3,7 +3,7 @@
 # -----------------------------------------------------------------------------
 
 import asyncio
-from typing import Tuple
+from typing import Tuple, Dict
 from pathlib import Path
 
 # -----------------------------------------------------------------------------
@@ -11,6 +11,9 @@ from pathlib import Path
 # -----------------------------------------------------------------------------
 
 import click
+from rich.console import Console
+from rich.text import Text, Style
+from rich.table import Table
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -18,6 +21,7 @@ import click
 
 from netcad.config import Environment, netcad_globals
 from netcad.logger import get_logger
+from netcad.netcam.dut import DeviceUnderTest
 from netcad.cli.common_opts import opt_devices, opt_designs
 from netcad.cli.device_inventory import get_devices_from_designs
 
@@ -81,16 +85,70 @@ def cli_test_device(devices: Tuple[str], designs: Tuple[str], tests_dir: Path):
         log.error("No devices located in the given designs")
         return
 
-    tc_dir = netcad_globals.g_netcad_testcases_dir
+    # create the device-under-test (DUT) instances for each of the devices in
+    # the design. we keep this collection as a dictionary so that we can refer
+    # back to the DUT by device name when be build the summary table.
 
-    duts = [
-        get_dut(device=dev_obj, testcases_dir=tc_dir.joinpath(dev_obj.name))
+    tc_dir = netcad_globals.g_netcad_testcases_dir
+    duts = {
+        dev_obj.name: get_dut(
+            device=dev_obj, testcases_dir=tc_dir.joinpath(dev_obj.name)
+        )
         for dev_obj in device_objs
-    ]
+    }
 
     log.info(f"Starting tests for {len(device_objs)} devices.")
 
+    # execute the tests concurrently to minimize the time it takes to run
+    # though all of the tests.
+
+    # TODO: this _presumes_ that the underlying "netcam" plugin was written to
+    #       support asyncio.  This might not always be the case, so need to put
+    #       in a check and execute the plugin running differently. For now, only
+    #       asyncio plugins are supported.
+
     async def go():
-        await asyncio.gather(*(execute_testcases(dut) for dut in duts))
+        await asyncio.gather(*(execute_testcases(dut) for dut in duts.values()))
 
     asyncio.run(go())
+
+    display_summary_table(duts)
+
+
+# -----------------------------------------------------------------------------
+#
+#                          PRIVATE CODE BEGINS
+#
+# -----------------------------------------------------------------------------
+
+
+def display_summary_table(duts: Dict[str, DeviceUnderTest]):
+    # Display summary table for each device, and then a grand total summary
+
+    table = Table(
+        "Device",
+        "Total",
+        "Pass",
+        "Fail",
+        "Info",
+        title=f"Test Results Summary: {len(duts)} devices",
+        show_header=True,
+        header_style="bold magenta",
+        show_lines=True,
+    )
+
+    colored_styles = (Style(color="green"), Style(color="red"), Style(color="blue"))
+
+    for dut in sorted(duts.values()):
+        cntrs = dut.result_counts
+        totals = str(sum(cntrs.values()))
+        clrd_cnts = [
+            Text(str(cntr), style=clrd_style)
+            for cntr, clrd_style in zip(
+                (cntrs["PASS"], cntrs["FAIL"], cntrs["INFO"]), colored_styles
+            )
+        ]
+        table.add_row(dut.device.name, totals, *clrd_cnts)
+
+    console = Console()
+    console.print("\n", table, "\n")

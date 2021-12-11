@@ -34,18 +34,18 @@ def markup_color(text, color):
     return f"[{color}]{text}[/{color}]"
 
 
-PASS_GREEN = markup_color("PASS", "green")
-FAIL_RED = markup_color("FAIL", "red")
-SKIP_BLUE = markup_color("SKIP", "grey70")
-SUMMARY_YELLOW = markup_color("DONE", "bright_yellow")
+PASS_CLRD = markup_color("PASS", "green")
+FAIL_CLRD = markup_color("FAIL", "red")
+SKIP_CLRD = markup_color("SKIP", "grey70")
+SUMMARY_CLRD = markup_color("DONE", "bright_yellow")
 
 
-async def execute_testcases(dut: AsyncDeviceUnderTest) -> Counter:
+async def execute_testcases(dut: AsyncDeviceUnderTest):
     device = dut.device
     dev_name = device.name
     dut_name = f"DUT: {dev_name}"
 
-    total_test_counts = Counter()
+    total_test_counts = dut.result_counts
 
     tc_dir = netcad_globals.g_netcad_testcases_dir
 
@@ -56,7 +56,7 @@ async def execute_testcases(dut: AsyncDeviceUnderTest) -> Counter:
         log.error(
             f"{dut_name}:Missing expected testcase directory: {dev_tc_dir.absolute()}, skipping"
         )
-        return total_test_counts
+        return
 
     # -------------------------------------------------------------------------
     # Testing Prologue
@@ -69,7 +69,7 @@ async def execute_testcases(dut: AsyncDeviceUnderTest) -> Counter:
 
     except Exception as exc:
         log.error(f"{dut_name}: Startup failed: {exc}, aborting.")
-        return total_test_counts
+        return
 
     # -------------------------------------------------------------------------
     # Testing all Design Services and related Testing Services
@@ -90,7 +90,7 @@ async def execute_testcases(dut: AsyncDeviceUnderTest) -> Counter:
             tc_file = testing_service.filepath(testcase_dir=dev_tc_dir, service=tc_name)
 
             if not tc_file.exists():
-                log.info(f"{dut_name}: {SKIP_BLUE}\tTestcases: {tc_name}: None")
+                log.info(f"{dut_name}: {SKIP_CLRD}\tTestcases: {tc_name}: None")
                 continue
 
             testcases = await testing_service.load(testcase_dir=dev_tc_dir)
@@ -123,16 +123,16 @@ async def execute_testcases(dut: AsyncDeviceUnderTest) -> Counter:
 
             if c_fail:
                 log.warning(
-                    f"{dut_name}: {FAIL_RED}\tTestcases: {tc_name}: "
+                    f"{dut_name}: {FAIL_CLRD}\tTestcases: {tc_name}: "
                     f"PASS={c_pass}, FAIL={c_fail}, INFO={c_info}",
                 )
             elif c_skip:
                 log.info(
-                    f"{dut_name}: {SKIP_BLUE}\tTestcases: {tc_name}",
+                    f"{dut_name}: {SKIP_CLRD}\tTestcases: {tc_name}",
                 )
             else:
                 log.info(
-                    f"{dut_name}: {PASS_GREEN}\tTestcases: {tc_name}: "
+                    f"{dut_name}: {PASS_CLRD}\tTestcases: {tc_name}: "
                     f"PASS={c_pass}, INFO={c_info}",
                 )
 
@@ -153,7 +153,7 @@ async def execute_testcases(dut: AsyncDeviceUnderTest) -> Counter:
     )
 
     log.info(
-        f"{dut_name}: {SUMMARY_YELLOW} {ttc:4}\tTestcases: PASS={c_pass}, FAIL={c_fail}, INFO={c_info}"
+        f"{dut_name}: {SUMMARY_CLRD} {ttc:4}\tTestcases: PASS={c_pass}, FAIL={c_fail}, INFO={c_info}"
     )
 
     try:
@@ -161,8 +161,6 @@ async def execute_testcases(dut: AsyncDeviceUnderTest) -> Counter:
 
     except Exception as exc:
         log.error(f"{dut_name}: Teardown failed: {exc}")
-
-    return total_test_counts
 
 
 # -----------------------------------------------------------------------------
