@@ -1,3 +1,5 @@
+from collections import Counter
+
 from rich.text import Text, Style
 
 
@@ -5,7 +7,12 @@ def markup_color(text, color):
     return f"[{color}]{text}[/{color}]"
 
 
-def color_pass_fail(_cntrs):
+def color_pass_fail(_cntrs: Counter):
+    total = sum(_cntrs.values())
+
+    if total == _cntrs["SKIP"]:
+        return Text("SKPPED!", style=Style(color="grey50"))
+
     return (
         Text("PASSED!", style=Style(color="green"))
         if _cntrs["FAIL"] == 0

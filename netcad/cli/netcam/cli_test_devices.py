@@ -96,12 +96,12 @@ def cli_test_device(devices: Tuple[str], designs: Tuple[str], tests_dir: Path):
     duts = {}
 
     for dev_obj in device_objs:
-        if not (get_dut := netcam_plugins.get(dev_obj.os_name)):
+        if not (pg_cfg := netcam_plugins.get(dev_obj.os_name)):
             raise RuntimeError(
                 f"Missing testing plugin for {dev_obj.name}: os-name: {dev_obj.os_name}"
             )
 
-        duts[dev_obj.name] = get_dut(
+        duts[dev_obj.name] = pg_cfg.get_dut(
             device=dev_obj, testcases_dir=tc_dir.joinpath(dev_obj.name)
         )
 

@@ -9,7 +9,7 @@ import enum
 # Public Imports
 # -----------------------------------------------------------------------------
 
-from pydantic import validator, BaseModel
+from pydantic import validator, BaseModel, Field
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -30,6 +30,10 @@ __all__ = [
     "InfoTestCase",
     "ResultsTestCase",
     "SkipTestCases",
+    "FailMissingMembersResult",
+    "FailExtraMembersResult",
+    "FailFieldMismatchResult",
+    "FailNoExistsResult",
 ]
 
 
@@ -78,9 +82,19 @@ class PassTestCase(ResultsTestCase):
     field: Optional[str]
 
 
+class NoneTestCase(TestCase):
+    test_params = BaseModel()
+    expected_results = BaseModel()
+
+    def test_case_id(self) -> str:
+        return "n/a"
+
+
 class SkipTestCases(ResultsTestCase):
     status = TestCaseStatus.SKIP
     message: str
+    test_case: TestCase = Field(default_factory=NoneTestCase)
+    measurement: Optional[AnyMeasurementType] = None
 
 
 # -----------------------------------------------------------------------------
