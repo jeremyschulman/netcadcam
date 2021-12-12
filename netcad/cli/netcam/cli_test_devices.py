@@ -143,12 +143,19 @@ def display_summary_table(duts: Dict[str, DeviceUnderTest], duration):
         "Pass",
         "Fail",
         "Info",
+        "Skip",
         show_header=True,
         header_style="bold magenta",
         show_lines=True,
     )
 
-    colored_styles = (Style(color="green"), Style(color="red"), Style(color="blue"))
+    colored_styles = (
+        Style(color="green"),
+        Style(color="red"),
+        Style(color="blue"),
+        Style(color="magenta"),
+    )
+
     grand_totals = Counter()
 
     for dut in sorted(duts.values()):
@@ -159,7 +166,8 @@ def display_summary_table(duts: Dict[str, DeviceUnderTest], duration):
         clrd_cnts = [
             Text(str(cntr), style=clrd_style)
             for cntr, clrd_style in zip(
-                (cntrs["PASS"], cntrs["FAIL"], cntrs["INFO"]), colored_styles
+                (cntrs["PASS"], cntrs["FAIL"], cntrs["INFO"], cntrs["SKIP"]),
+                colored_styles,
             )
         ]
         table.add_row(dut.device.name, color_pass_fail(cntrs), totals, *clrd_cnts)

@@ -35,6 +35,7 @@ __all__ = [
     "VlanTestParams",
     "VlanTestExpectations",
     "VlanTestCases",
+    "VlanTestCaseExclusiveList",
 ]
 
 
@@ -62,6 +63,15 @@ class VlanTestCase(TestCase):
         return str(self.test_params.vlan_id)
 
 
+class VlanTestCaseExclusiveList(TestCase):
+    test_case = "exclusive_list"
+    test_params: Optional[BaseModel] = None
+    expected_results: Optional[BaseModel] = None
+
+    def test_case_id(self) -> str:
+        return self.test_case
+
+
 # -----------------------------------------------------------------------------
 #
 #
@@ -80,9 +90,6 @@ class VlanTestCases(TestCases):
         # define a mapping of VLAN to the interfaces that are using that Vlan
 
         map_vlan_ifaces = dict()
-
-        # TODO: need to divorce this decision from this test-case production;
-        #       this choice should be up to the Designer.
 
         device_vlans = list(
             chain.from_iterable(

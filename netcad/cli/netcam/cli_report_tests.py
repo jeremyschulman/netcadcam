@@ -125,6 +125,7 @@ def show_device_brief_summary_table(device: Device, tcr_dir: Path, optionals: di
         "Pass",
         "Fail",
         "Info",
+        "Skip",
         show_header=True,
         header_style="bold magenta",
         show_lines=True,
@@ -133,6 +134,7 @@ def show_device_brief_summary_table(device: Device, tcr_dir: Path, optionals: di
     pass_style = Style(color="green")
     fail_style = Style(color="red")
     info_style = Style(color="blue")
+    skip_sytle = Style(color="magenta")
 
     dev_tc_count = 0
     for tc_name in find_test_cases_names(device, optionals):
@@ -150,14 +152,6 @@ def show_device_brief_summary_table(device: Device, tcr_dir: Path, optionals: di
             continue
 
         tcr_cntrs = Counter(res["status"] for res in results)
-        tcr_cntrs = {
-            st: tcr_cntrs.get(st) or 0
-            for st in (
-                trt.TestCaseStatus.PASS,
-                trt.TestCaseStatus.FAIL,
-                trt.TestCaseStatus.INFO,
-            )
-        }
         tcr_total = sum(tcr_cntrs.values())
         dev_tc_count += tcr_total
 
@@ -168,6 +162,7 @@ def show_device_brief_summary_table(device: Device, tcr_dir: Path, optionals: di
             Text(str(tcr_cntrs[trt.TestCaseStatus.PASS]), style=pass_style),
             Text(str(tcr_cntrs[trt.TestCaseStatus.FAIL]), style=fail_style),
             Text(str(tcr_cntrs[trt.TestCaseStatus.INFO]), style=info_style),
+            Text(str(tcr_cntrs[trt.TestCaseStatus.SKIP]), style=skip_sytle),
         )
 
     table.title = Text(
@@ -202,8 +197,8 @@ def filter_results(results: dict, optionals: dict) -> List[Dict]:
     filter_out = lambda i: i.get("field") not in exc_fields
     filter_fails = lambda i: i["status"] == trt.TestCaseStatus.FAIL
 
-    if results[0]["status"] == trt.TestCaseStatus.SKIP:
-        return []
+    # if results[0]["status"] == trt.TestCaseStatus.SKIP:
+    #     return []
 
     if not inc_all:
         results = filter(filter_fails, results)
@@ -260,9 +255,13 @@ def show_log_table(device: Device, filename: str, results: List[Dict]):
         msr_val = _pretty_dict_table(
             dict(expected=expected, measured=result["measurement"])
         )
-        log_msg = (
-            _pretty_dict_table(result["error"]) if r_st == st_opt.FAIL else msr_val
-        )
+
+        if r_st == st_opt.FAIL:
+            log_msg = _pretty_dict_table(result["error"])
+        elif r_st == st_opt.SKIP:
+            log_msg = result["message"]
+        else:
+            log_msg = msr_val
 
         table.add_row(
             _colorize_status(result["status"]),
@@ -290,9 +289,12 @@ def _pretty_dict_table(obj):
 def _colorize_status(status):
     options = trt.TestCaseStatus
 
-    color = {options.PASS: "green", options.FAIL: "red", options.INFO: "blue"}.get(
-        status
-    )
+    color = {
+        options.PASS: "green",
+        options.FAIL: "red",
+        options.INFO: "blue",
+        options.SKIP: "magenta",
+    }.get(status)
 
     return f"[{color}]{status}[/{color}]"
 

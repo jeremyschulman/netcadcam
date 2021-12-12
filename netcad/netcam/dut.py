@@ -2,7 +2,8 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import AsyncGenerator, Optional, Dict
+from typing import Optional, Dict
+from typing import TYPE_CHECKING
 from functools import singledispatchmethod
 from pathlib import Path
 import json
@@ -22,7 +23,22 @@ from netcad.device import Device
 from netcad.testing_services import TestCases
 
 
+# -----------------------------------------------------------------------------
+# Exports
+# -----------------------------------------------------------------------------
+
+
 __all__ = ["DeviceUnderTest", "AsyncDeviceUnderTest"]
+
+
+# -----------------------------------------------------------------------------
+#
+#                                 CODE BEGINS
+#
+# -----------------------------------------------------------------------------
+
+if TYPE_CHECKING:
+    from netcad.netcam import CollectionTestResults
 
 
 class _BaseDeviceUnderTest:
@@ -56,13 +72,31 @@ class DeviceUnderTest(_BaseDeviceUnderTest):
 
 class AsyncDeviceUnderTest(_BaseDeviceUnderTest):
     async def setup(self):
+        """
+        The default setup process is to load the "device info" testcases file so
+        that the information contained in that file is available to any and all
+        test case executors.  The subclassing plugin is expected to invoke this
+        setup via super, and then perform any pluging/DUT specific setup action;
+        generally opening a connection to the DUT API/SSH/etc.
+        """
         async with aiofiles.open(str(self.testcases_dir / "device.json")) as ifile:
             payload = await ifile.read()
             self.device_info = json.loads(payload)
 
     @singledispatchmethod
-    async def execute_testcases(self, testcases: TestCases) -> AsyncGenerator:
-        raise NotImplementedError()
+    async def execute_testcases(
+        self, testcases: TestCases
+    ) -> Optional["CollectionTestResults"]:
+        """
+        The default testcase executor behavior will return None to indicate that
+        the underlying plugin does not support the specific test-cases.
+        """
+        return None
 
     async def teardown(self):
-        raise NotImplementedError()
+        """
+        There is no specific default behavior for the DUT teardown process.  The
+        subclassing DUT generally uses this method to close/cleanup any specific
+        resources that were created during the setup method.
+        """
+        pass

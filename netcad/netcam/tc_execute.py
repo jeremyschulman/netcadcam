@@ -2,19 +2,17 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import List
 from collections import Counter
+from logging import Logger
 
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
 from netcad.logger import get_logger
-from netcad.config import netcad_globals
-from netcad.testing_services import TestCases
 from netcad.cli.keywords import markup_color
 
-from .tc_result_types import TestCaseStatus, ResultsTestCase
+from .tc_result_types import TestCaseStatus, SkipTestCases
 from .tc_save import testcases_save_results
 from .dut import AsyncDeviceUnderTest
 
@@ -42,16 +40,12 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
     dev_name = device.name
     dut_name = f"DUT: {dev_name}"
 
-    total_test_counts = dut.result_counts
-
-    tc_dir = netcad_globals.g_netcad_testcases_dir
-
     log = get_logger()
 
-    dev_tc_dir = tc_dir / dev_name
-    if not dev_tc_dir.is_dir():
+    if not dut.testcases_dir.is_dir():
         log.error(
-            f"{dut_name}:Missing expected testcase directory: {dev_tc_dir.absolute()}, skipping"
+            f"{dut_name}:Missing expected testcase directory: "
+            f"{dut.testcases_dir.absolute()}, skipping"
         )
         return
 
@@ -65,8 +59,55 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
         await dut.setup()
 
     except Exception as exc:
-        log.error(f"{dut_name}: Startup failed: {exc}, aborting.")
+        log.error(f"{dut_name}: {FAIL_CLRD}:\t!!! Startup failed: {exc}, aborting.")
+        dut.result_counts["FAIL"] = 1
+        log.info(f"{dut_name}: {SUMMARY_CLRD} ----\tTestcases: PASS=0, FAIL=1, INFO=0")
         return
+
+    # -------------------------------------------------------------------------
+    # Execute all of the tests
+    # -------------------------------------------------------------------------
+
+    await run_tests(dut, log)
+
+    # -------------------------------------------------------------------------
+    # Testing Epilogue
+    # -------------------------------------------------------------------------
+
+    total_test_counts = dut.result_counts
+
+    ttc = sum(total_test_counts.values())
+
+    c_pass, c_fail, c_info, c_skip = (
+        total_test_counts[TestCaseStatus.PASS],
+        total_test_counts[TestCaseStatus.FAIL],
+        total_test_counts[TestCaseStatus.INFO],
+        total_test_counts[TestCaseStatus.SKIP],
+    )
+
+    log.info(
+        f"{dut_name}: {SUMMARY_CLRD} {ttc:4}\tTestcases: PASS={c_pass}, FAIL={c_fail}, INFO={c_info}, SKIP={c_skip}"
+    )
+
+    try:
+        await dut.teardown()
+
+    except Exception as exc:
+        log.error(f"{dut_name}: Teardown failed: {exc}")
+
+
+# -----------------------------------------------------------------------------
+#
+#                          PRIVATE CODE BEGINS
+#
+# -----------------------------------------------------------------------------
+
+
+async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
+
+    device = dut.device
+    dev_tc_dir = dut.testcases_dir
+    dut_name = f"DUT: {device.name}"
 
     # -------------------------------------------------------------------------
     # Testing all Design Services and related Testing Services
@@ -83,17 +124,40 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
         # log.info(f"{dut_name}: Design Service: {ds_name}")
 
         for testing_service in design_service.testing_services:
+
             tc_name = testing_service.get_service_name()
             tc_file = testing_service.filepath(testcase_dir=dev_tc_dir, service=tc_name)
-
             if not tc_file.exists():
-                log.info(f"{dut_name}: {SKIP_CLRD}\tTestcases: {tc_name}: None")
+                # if there are no test cases for this test-service, this
+                # continue to the next one.  Deactivated the log message as not
+                # sure if this is adding any value or potential confusion.  So
+                # leaving it out for now.
+
+                # log.info(f"{dut_name}: {SKIP_CLRD}\tTestcases: {tc_name}: None")
                 continue
 
             testcases = await testing_service.load(testcase_dir=dev_tc_dir)
 
+            if not len(testcases.tests):
+                # if the test file was generated with an empty set of tests,
+                # which could happen depending on the Developer of the testing
+                # service, then skill this and go onto the next one.
+                continue
+
             try:
-                results = await _gather_testcase_results(dut=dut, testcases=testcases)
+                results = await dut.execute_testcases(testcases)
+
+                # if the testing plugin returns None, then these tests are
+                # marked as "skipped"
+
+                if not results:
+                    results = [
+                        SkipTestCases(
+                            device=device,
+                            message=f"Missing: device {device.name} support for "
+                            f"testcases: {tc_name}",
+                        )
+                    ]
 
             except Exception as exc:
                 import traceback
@@ -106,7 +170,7 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
                 continue
 
             result_counts = Counter(r.status for r in results)
-            total_test_counts.update(result_counts)
+            dut.result_counts.update(result_counts)
 
             c_pass, c_fail, c_info, c_skip = (
                 result_counts[TestCaseStatus.PASS],
@@ -136,44 +200,3 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
             await testcases_save_results(
                 dut, tc_name, results, results_dir=dev_resuls_dir
             )
-
-    # -------------------------------------------------------------------------
-    # Testing Epilogue
-    # -------------------------------------------------------------------------
-
-    ttc = sum(total_test_counts.values())
-    c_pass, c_fail, c_info, c_skip = (
-        total_test_counts[TestCaseStatus.PASS],
-        total_test_counts[TestCaseStatus.FAIL],
-        total_test_counts[TestCaseStatus.INFO],
-        total_test_counts[TestCaseStatus.SKIP],
-    )
-
-    log.info(
-        f"{dut_name}: {SUMMARY_CLRD} {ttc:4}\tTestcases: PASS={c_pass}, FAIL={c_fail}, INFO={c_info}"
-    )
-
-    try:
-        await dut.teardown()
-
-    except Exception as exc:
-        log.error(f"{dut_name}: Teardown failed: {exc}")
-
-
-# -----------------------------------------------------------------------------
-#
-#                          PRIVATE CODE BEGINS
-#
-# -----------------------------------------------------------------------------
-
-
-async def _gather_testcase_results(
-    dut: AsyncDeviceUnderTest, testcases: TestCases
-) -> List[ResultsTestCase]:
-
-    results = list()
-
-    async for result in dut.execute_testcases(testcases):
-        results.append(result)
-
-    return results
