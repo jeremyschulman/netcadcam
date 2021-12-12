@@ -87,6 +87,10 @@ def _init_config_contents():
     ).absolute()
     environ[Environment.NETCAD_CONFIGFILE] = str(config_filepath)
 
+    if not config_filepath.is_file():
+        raise RuntimeError(
+            f"Netcad configuration file not found: {config_filepath.absolute()}"
+        )
     netcad_globals.g_config = toml.load(config_filepath.open())
 
 

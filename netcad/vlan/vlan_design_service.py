@@ -77,10 +77,10 @@ class DeviceVlanDesignService(DesignService):
     # Design Service required methods
     # -------------------------------------------------------------------------
 
-    async def build(self):
+    def build(self):
         _ = self.all_vlans()
 
-    async def validate(self):
+    def validate(self):
         pass
 
 
@@ -145,10 +145,10 @@ class VlansDesignService(
                 name=self._device_service_name, device=each_dev
             )
 
-    async def build(self):
+    def build(self):
         for each_dev in self.data.values():
-            await each_dev.build()
+            each_dev.build()
 
-    async def validate(self):
+    def validate(self):
         """No validation action performed"""
         pass

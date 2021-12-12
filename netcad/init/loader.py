@@ -2,17 +2,14 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-import asyncio
-from typing import Dict
 from types import ModuleType
 from importlib import import_module
-import inspect
 
 # -----------------------------------------------------------------------------
-# Private Imports
+# Exports
 # -----------------------------------------------------------------------------
 
-from netcad.config import netcad_globals
+__all__ = ["netcad_import_package"]
 
 # -----------------------------------------------------------------------------
 #
@@ -55,65 +52,3 @@ def netcad_import_package(pkg_name: str) -> ModuleType:
 
     from_pkg, design_name = pkg_name.rsplit(".", 1)
     return getattr(import_module(from_pkg), design_name)
-
-
-def load_design(design_name: str) -> Dict:
-    """
-    This function loads the specific design by importing the related package and
-    executes the `design` function.
-
-    Parameters
-    ----------
-    design_name: str
-        The name of design as defined by the User in the netcad configuraiton
-        file.  For example, if the configuration file contained a toplevel entry
-        "[design.foobaz]" then the `design_name` is "foobaz".
-
-    Returns
-    -------
-    The design informational instance.
-    """
-
-    if not (design_config := netcad_globals.g_netcad_designs.get(design_name)):
-        raise RuntimeError(
-            f'Missing design "{design_name}" definitions in config-file: {netcad_globals.g_netcad_config_file}'
-        )
-
-    pkg_name = design_config["package"]
-
-    try:
-        design_mod = netcad_import_package(pkg_name)
-
-    # If there is any exception during the importing of the module, that is a
-    # coding error by the Developer, then we need to raise that so the CLI
-    # output will dispaly the information to the User with the hopes that the
-    # information will aid in debugging.
-
-    except Exception as exc:
-        rt_exc = RuntimeError(
-            f'Failed to import design "{design_name}" from package: "{pkg_name}";\n'
-            f"Exception: {str(exc)}",
-        )
-        rt_exc.__traceback__ = exc.__traceback__
-        raise rt_exc
-
-    if not design_mod:
-        raise RuntimeError(f'Failed to import design "{design_name}"')
-
-    # The design function is expected to be async.
-    # TODO: log a warning if one is not found?  Is it possible that a design
-    #       module does not have a "design" method?  This is unlikely and possibly
-    #       should raise a RuntimeError if the 'design' function is missing.
-
-    if hasattr(design_mod, "design") and asyncio.iscoroutinefunction(design_mod.design):
-        design_coro = design_mod.design
-        sig = inspect.signature(design_coro)
-        run_coro = (
-            design_coro(design_name, design_config)
-            if len(sig.parameters)
-            else design_coro()
-        )
-        asyncio.run(run_coro)
-
-    design_config["module"] = design_mod
-    return design_config

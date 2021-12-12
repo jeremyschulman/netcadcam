@@ -1,10 +1,42 @@
-from typing import Dict, Optional
+# -----------------------------------------------------------------------------
+# System Imports
+# -----------------------------------------------------------------------------
+
+from typing import Dict, Optional, List
 from copy import deepcopy
+
+# -----------------------------------------------------------------------------
+# Private Imports
+# -----------------------------------------------------------------------------
 
 from netcad.registry import Registry
 from netcad.device import Device
 
+# -----------------------------------------------------------------------------
+# Private Module Imports
+# -----------------------------------------------------------------------------
+
 from .design_service import DesignService
+
+
+# -----------------------------------------------------------------------------
+# Exports
+# -----------------------------------------------------------------------------
+
+__all__ = ["Design", "DesignConfig", "DesignService"]
+
+# -----------------------------------------------------------------------------
+#
+#                                 CODE BEGINS
+#
+# -----------------------------------------------------------------------------
+
+
+# TODO: for now the design configuration that comes from the "netcad.toml" file
+#       is repreesnted into a dictionary object.  Future it will be a pydantic
+#       modelled instance. this would be a code-breaking change.
+
+DesignConfig = Dict
 
 
 class Design(Registry, registry_name="designs"):
@@ -26,6 +58,7 @@ class Design(Registry, registry_name="designs"):
         # comes from the name as defined in the netcad configuration file.
 
         self.registry_add(name=name, obj=self)
+        self.name = name
 
         # The config that originated from the netcad configuration file for this
         # specific design.
@@ -42,3 +75,8 @@ class Design(Registry, registry_name="designs"):
         self.devices: Dict[str, Device] = dict()
 
         self.ipams = dict()
+
+    def add_devices(self, devices: List[Device]):
+        for dev in devices:
+            self.devices[dev.name] = dev
+            dev.design = self

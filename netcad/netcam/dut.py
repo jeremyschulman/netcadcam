@@ -6,6 +6,7 @@ from typing import AsyncGenerator, Optional, Dict
 from functools import singledispatchmethod
 from pathlib import Path
 import json
+from collections import Counter
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -29,6 +30,17 @@ class _BaseDeviceUnderTest:
         self.device = device
         self.testcases_dir = testcases_dir
         self.device_info: Optional[Dict] = None
+        self.result_counts = Counter()
+
+    def __lt__(self, other):
+        """
+        Sort the device DUT instances by the underlying device hostname. This
+        sort behavior overrides the underlying device "lt" override behavior as
+        the purpose of DUT reporting is not specific to the arrangement of the
+        devices in a design; but rather by the hostname value for User "eye
+        sorting".
+        """
+        return self.device.name < other.device.name
 
 
 class DeviceUnderTest(_BaseDeviceUnderTest):

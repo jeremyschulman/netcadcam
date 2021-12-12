@@ -9,7 +9,7 @@ from typing import Sequence, List, Optional
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device
-from netcad.init import load_design
+from netcad.design_services import load_design
 
 # -----------------------------------------------------------------------------
 # Exports

@@ -16,11 +16,11 @@ import click
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.init import loader
 from netcad.logger import get_logger
 from netcad.config import Environment
 from netcad.cli.common_opts import opt_devices, opt_designs
 from netcad.device import Device
+from netcad.design_services import load_design
 
 from .clig_build import clig_build
 
@@ -112,7 +112,7 @@ def cli_build_tests(devices: Tuple[str], designs: Tuple[str], tests_dir: Path):
     # we can then iterate through.
 
     for design_name in designs:
-        loader.load_design(design_name=design_name)
+        load_design(design_name=design_name)
 
     device_objs = set(Device.registry_items(True).values())
     if devices:

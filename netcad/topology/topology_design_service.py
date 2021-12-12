@@ -61,10 +61,10 @@ class TopologyService(DesignService, registry_name="topology"):
         super(TopologyService, self).add_devices(devices)
         self.cabling.add_devices(devices)
 
-    async def build(self):
+    def build(self):
         self.cabling.build()
 
-    async def validate(self):
+    def validate(self):
         # TODO: put cabling validate here.
         pass
 

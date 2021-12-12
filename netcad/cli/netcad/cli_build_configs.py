@@ -20,7 +20,7 @@ from netcad.logger import get_logger
 from netcad.cli.common_opts import opt_devices, opt_designs
 from netcad.config import Environment
 
-from ..device_inventory import get_devices_from_designs
+from netcad.cli.device_inventory import get_devices_from_designs
 from .clig_build import clig_build
 
 # -----------------------------------------------------------------------------
