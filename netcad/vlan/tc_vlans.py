@@ -35,6 +35,7 @@ __all__ = [
     "VlanTestParams",
     "VlanTestExpectations",
     "VlanTestCases",
+    "VlanTestCaseExclusiveList",
 ]
 
 
@@ -60,6 +61,15 @@ class VlanTestCase(TestCase):
 
     def test_case_id(self) -> str:
         return str(self.test_params.vlan_id)
+
+
+class VlanTestCaseExclusiveList(TestCase):
+    test_case = "exclusive_list"
+    test_params: Optional[BaseModel] = None
+    expected_results: Optional[BaseModel] = None
+
+    def test_case_id(self) -> str:
+        return self.test_case
 
 
 # -----------------------------------------------------------------------------

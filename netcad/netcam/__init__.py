@@ -12,3 +12,8 @@ from .tc_result_types import (
     ResultsTestCase,
     SkipTestCases,
 )
+
+
+def any_failures(results):
+    is_failure = lambda r: isinstance(r, FailTestCase)
+    return any(map(is_failure, results))
