@@ -86,9 +86,13 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
 
             tc_name = testing_service.get_service_name()
             tc_file = testing_service.filepath(testcase_dir=dev_tc_dir, service=tc_name)
-
             if not tc_file.exists():
-                log.info(f"{dut_name}: {SKIP_CLRD}\tTestcases: {tc_name}: None")
+                # if there are no test cases for this test-service, this
+                # continue to the next one.  Deactivated the log message as not
+                # sure if this is adding any value or potential confusion.  So
+                # leaving it out for now.
+
+                # log.info(f"{dut_name}: {SKIP_CLRD}\tTestcases: {tc_name}: None")
                 continue
 
             testcases = await testing_service.load(testcase_dir=dev_tc_dir)
