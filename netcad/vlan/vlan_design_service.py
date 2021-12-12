@@ -16,7 +16,9 @@ from netcad.device import Device
 from netcad.design_services import DesignService
 
 from .vlan_profile import VlanProfile
-from .vlan_testcases import VlanTestCases
+from .tc_vlans import VlanTestCases
+from .tc_switchports import SwitchportTestCases
+
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -46,7 +48,7 @@ class DeviceVlanDesignService(DesignService):
     def __init__(self, name: Hashable, device: Device):
         super().__init__(name=name)
         self.device = device
-        self.testing_services = [VlanTestCases]
+        self.testing_services = [VlanTestCases, SwitchportTestCases]
         self.add_devices([device])
         self.alias_names = dict()
 

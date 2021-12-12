@@ -24,6 +24,7 @@ from netcad.testing_services.test_case import TestCase
 # -----------------------------------------------------------------------------
 
 __all__ = [
+    "CollectionTestResults",
     "TestCaseStatus",
     "PassTestCase",
     "FailTestCase",
@@ -189,3 +190,6 @@ class FailMissingMembersResult(FailTestCase):
 class InfoTestCase(ResultsTestCase):
     status = TestCaseStatus.INFO
     field: Optional[str]
+
+
+CollectionTestResults = List[ResultsTestCase]

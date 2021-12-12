@@ -81,9 +81,6 @@ class VlanTestCases(TestCases):
 
         map_vlan_ifaces = dict()
 
-        # TODO: need to divorce this decision from this test-case production;
-        #       this choice should be up to the Designer.
-
         device_vlans = list(
             chain.from_iterable(
                 svc.all_vlans() for svc in device.services_of(DeviceVlanDesignService)

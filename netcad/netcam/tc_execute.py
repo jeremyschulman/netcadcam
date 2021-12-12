@@ -2,7 +2,6 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import List
 from collections import Counter
 
 # -----------------------------------------------------------------------------
@@ -11,10 +10,9 @@ from collections import Counter
 
 from netcad.logger import get_logger
 from netcad.config import netcad_globals
-from netcad.testing_services import TestCases
 from netcad.cli.keywords import markup_color
 
-from .tc_result_types import TestCaseStatus, ResultsTestCase
+from .tc_result_types import TestCaseStatus, SkipTestCases
 from .tc_save import testcases_save_results
 from .dut import AsyncDeviceUnderTest
 
@@ -44,6 +42,8 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
 
     total_test_counts = dut.result_counts
 
+    # TODO: remove this; the tc_dir is setup during the call to
+    #       execute_testcases.
     tc_dir = netcad_globals.g_netcad_testcases_dir
 
     log = get_logger()
@@ -83,6 +83,7 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
         # log.info(f"{dut_name}: Design Service: {ds_name}")
 
         for testing_service in design_service.testing_services:
+
             tc_name = testing_service.get_service_name()
             tc_file = testing_service.filepath(testcase_dir=dev_tc_dir, service=tc_name)
 
@@ -93,7 +94,19 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
             testcases = await testing_service.load(testcase_dir=dev_tc_dir)
 
             try:
-                results = await _gather_testcase_results(dut=dut, testcases=testcases)
+                results = await dut.execute_testcases(testcases)
+
+                # if the testing plugin returns None, then these tests are
+                # marked as "skipped"
+
+                if not results:
+                    results = [
+                        SkipTestCases(
+                            device=device,
+                            message=f"Missing: device {device.name} support for "
+                            f"testcases: {tc_name}",
+                        )
+                    ]
 
             except Exception as exc:
                 import traceback
@@ -142,6 +155,7 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
     # -------------------------------------------------------------------------
 
     ttc = sum(total_test_counts.values())
+
     c_pass, c_fail, c_info, c_skip = (
         total_test_counts[TestCaseStatus.PASS],
         total_test_counts[TestCaseStatus.FAIL],
@@ -166,14 +180,14 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
 #
 # -----------------------------------------------------------------------------
 
-
-async def _gather_testcase_results(
-    dut: AsyncDeviceUnderTest, testcases: TestCases
-) -> List[ResultsTestCase]:
-
-    results = list()
-
-    async for result in dut.execute_testcases(testcases):
-        results.append(result)
-
-    return results
+# TODO: remove
+# async def _gather_testcase_results(
+#     dut: AsyncDeviceUnderTest, testcases: TestCases
+# ) -> List[ResultsTestCase]:
+#
+#     results = list()
+#
+#     async for result in dut.execute_testcases(testcases):
+#         results.append(result)
+#
+#     return results
