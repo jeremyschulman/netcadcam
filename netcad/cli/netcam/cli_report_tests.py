@@ -78,6 +78,10 @@ __all__ = []
 @click.option(
     "--all", "include_all", is_flag=True, help="display all results, not just FAIL"
 )
+@click.option("--info", "include_info", is_flag=True, help="include INFO reports")
+@click.option(
+    "--pass", "include_pass", is_flag=True, default=False, help="include PASS reports"
+)
 @click.option("--brief", "brief_mode", is_flag=True, help="Show summary counts only")
 def cli_report_tests(devices: Tuple[str], designs: Tuple[str], **optionals):
     """Show test results in tablular form."""
@@ -189,25 +193,30 @@ def filter_results(results: dict, optionals: dict) -> List[Dict]:
     List of the filtered results.  If the results include a "skip" indicator,
     then an empty list is returned.
     """
-    inc_fields = optionals["include_fields"]
-    exc_fields = optionals["exclude_fields"]
     inc_all = optionals["include_all"]
 
-    filter_in = lambda i: i.get("field") in inc_fields
-    filter_out = lambda i: i.get("field") not in exc_fields
-    filter_fails = lambda i: i["status"] == trt.TestCaseStatus.FAIL
+    status_allows = {trt.TestCaseStatus.FAIL}
 
-    # if results[0]["status"] == trt.TestCaseStatus.SKIP:
-    #     return []
+    inc_fields = optionals["include_fields"]
+    exc_fields = optionals["exclude_fields"]
 
-    if not inc_all:
-        results = filter(filter_fails, results)
+    if optionals["include_info"] or inc_all:
+        status_allows.add(trt.TestCaseStatus.INFO)
+
+    if optionals["include_pass"] or inc_all:
+        status_allows.add(trt.TestCaseStatus.PASS)
+
+    filter_flds_in = lambda i: i.get("field") in inc_fields
+    filter_flds_out = lambda i: i.get("field") not in exc_fields
+    filter_status = lambda i: i["status"] in status_allows
+
+    results = filter(filter_status, results)
 
     if exc_fields:
-        results = filter(filter_out, results)
+        results = filter(filter_flds_out, results)
 
     if inc_fields:
-        results = filter(filter_in, results)
+        results = filter(filter_flds_in, results)
 
     return list(results)
 

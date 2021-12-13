@@ -56,6 +56,7 @@ class VlanTestExpectations(BaseModel):
 
 
 class VlanTestCase(TestCase):
+    test_case = "interface"
     test_params: VlanTestParams
     expected_results: VlanTestExpectations
 
@@ -140,7 +141,7 @@ class VlanTestCases(TestCases):
             device=device.name,
             tests=[
                 VlanTestCase(
-                    test_case="vlan-exists",
+                    test_case="interfaces",
                     test_params=VlanTestParams(vlan_id=vlan_p.vlan_id),
                     expected_results=VlanTestExpectations(
                         vlan=vlan_p, interfaces=if_names

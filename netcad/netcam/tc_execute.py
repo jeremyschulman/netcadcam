@@ -11,6 +11,7 @@ from logging import Logger
 
 from netcad.logger import get_logger
 from netcad.cli.keywords import markup_color
+from netcad.debug import debug_enabled, format_exc_message
 
 from .tc_result_types import TestCaseStatus, SkipTestCases
 from .tc_save import testcases_save_results
@@ -59,7 +60,11 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
         await dut.setup()
 
     except Exception as exc:
-        log.error(f"{dut_name}: {FAIL_CLRD}:\t!!! Startup failed: {exc}, aborting.")
+        log.critical(f"{dut_name}: {FAIL_CLRD}:\t!!! Startup failed: {exc}, aborting.")
+
+        if debug_enabled():
+            log.critical(format_exc_message(exc))
+
         dut.result_counts["FAIL"] = 1
         log.info(f"{dut_name}: {SUMMARY_CLRD} ----\tTestcases: PASS=0, FAIL=1, INFO=0")
         return

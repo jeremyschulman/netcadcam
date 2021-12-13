@@ -42,6 +42,7 @@ def init():
     The netcad/cam primary initialization function.
     """
 
+    _init_debug()
     _init_config_contents()
     _init_proj_dirs()
     _init_design_configs()
@@ -53,6 +54,20 @@ def init():
 #                               PRIVATE CODE BEGINS
 #
 # -----------------------------------------------------------------------------
+
+
+def _init_debug():
+
+    log = get_logger()
+
+    if not (debug_val := environ.get("NETCAD_DEBUG")):
+        return
+
+    if not (debug_val.isdigit()):
+        log.error(f"NETCAD_DEBUG value must be >= 0: {debug_val}, debug is disabled.")
+
+    netcad_globals.g_debug_level = int(debug_val)
+    log.debug(f"NETCAD_DEBUG set to {netcad_globals.g_debug_level}")
 
 
 def _init_design_configs():
