@@ -34,12 +34,16 @@ def cli_designs_list():
     console = Console()
 
     table = Table(
-        show_header=True, header_style="bold magenta", title="Available Designs"
+        "Name",
+        "Description",
+        "Group",
+        show_header=True,
+        header_style="bold magenta",
+        title="Available Designs",
     )
-    table.add_column("Name")
-    table.add_column("Description")
 
     for name, details in designs.items():
-        table.add_row(name, details["description"])
+        group = ", ".join(details.get("group", ""))
+        table.add_row(name, details["description"], group)
 
     console.print("\n", table)

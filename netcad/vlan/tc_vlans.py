@@ -88,16 +88,13 @@ class VlanTestCases(TestCases):
     def build(cls, device: Device, **kwargs) -> "VlanTestCases":
         from netcad.vlan.vlan_design_service import DeviceVlanDesignService
 
-        # define a mapping of VLAN to the interfaces that are using that Vlan
-
-        map_vlan_ifaces = dict()
-
         device_vlans = list(
             chain.from_iterable(
                 svc.all_vlans() for svc in device.services_of(DeviceVlanDesignService)
             )
         )
 
+        map_vlan_ifaces = dict()
         for vlan in device_vlans:
             map_vlan_ifaces[vlan] = list()
 
