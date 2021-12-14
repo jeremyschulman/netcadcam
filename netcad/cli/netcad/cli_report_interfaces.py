@@ -33,11 +33,14 @@ from netcad.cli.netcad.clig_netcad_report import clig_design_report
 
 def show_device_interfaces(device: Device, **options):
     console = Console()
-    table = Table(show_header=True, header_style="bold magenta")
-    table.add_column("Name")
-    table.add_column("Description")
-    table.add_column("Profile")
-    table.add_column("Port")
+    table = Table(
+        "Name",
+        "Description",
+        "Profile",
+        "Port",
+        show_header=True,
+        header_style="bold magenta",
+    )
 
     def add_row(*columns):
         table.add_row(*columns)

@@ -101,11 +101,18 @@ def cli_test_device(devices: Tuple[str], designs: Tuple[str], tests_dir: Path):
                 f"Missing testing plugin for {dev_obj.name}: os-name: {dev_obj.os_name}"
             )
 
-        duts[dev_obj.name] = pg_cfg.get_dut(
+        duts[dev_obj] = pg_cfg.get_dut(
             device=dev_obj, testcases_dir=tc_dir.joinpath(dev_obj.name)
         )
 
-    log.info(f"Starting tests for {len(device_objs)} devices.")
+    remove_unsupported = [dev for dev, dut in duts.items() if not dut]
+    for dev_obj in remove_unsupported:
+        log.warning(f"Missing DUT support for device: {dev_obj.name}, skipping.")
+
+    for dev_obj in remove_unsupported:
+        del duts[dev_obj]
+
+    log.info(f"Starting tests for {len(duts)} devices.")
 
     # execute the tests concurrently to minimize the time it takes to run
     # though all of the tests.

@@ -22,5 +22,5 @@ def color_pass_fail(_cntrs: Counter):
 
 NOT_USED = markup_color("unused", "yellow")
 NOT_ASSIGNED = markup_color("N/A", "grey")
-MISSING = markup_color("MISSING", "red]")
+MISSING = markup_color("MISSING", "red")
 VIRTUAL = markup_color("virtual", "blue")

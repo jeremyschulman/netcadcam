@@ -3,36 +3,34 @@
 # -----------------------------------------------------------------------------
 
 import sys
-import os
-
-# -----------------------------------------------------------------------------
-# Public Imports
-# -----------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
 from netcad.logger import get_logger
+from netcad.debug import format_exc_message
+
 from .cli_netcam_main import cli
 
 
+# -----------------------------------------------------------------------------
+#
+#                                 CODE BEGINS
+#
+# -----------------------------------------------------------------------------
+
+
 def script():
+    """
+    This function is the main entry point for the CLI tool when the User
+    invokes the "netcam" command from the terminal.
+    """
     try:
         cli()
 
-    except RuntimeError as exc:
-        if ("--debug" in sys.argv) or os.getenv("NETCAD_DEBUG"):
-            import traceback
-
-            traceback.print_exc()
-
-        obj_data = ""
-        if len(exc.args) > 1:
-            from pprint import pformat as pp
-
-            obj_data = "\n".join([pp(obj) for obj in exc.args[1:]])
-
+    except Exception as exc:
+        exc_msg = format_exc_message(exc)
         log = get_logger()
-        log.critical("ERROR: " + exc.args[0] + "\n" + obj_data)
+        log.critical(exc_msg)
         sys.exit(1)

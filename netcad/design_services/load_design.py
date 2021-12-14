@@ -74,7 +74,7 @@ def load_design(design_name: str) -> Dict:
 
     if hasattr(design_mod, "design") and callable(design_mod.design):
         try:
-            design_mod.design(design_config=design_config)
+            design_inst = design_mod.design(design_config=design_config)
 
         except Exception as exc:
             rt_exc = RuntimeError(
@@ -88,5 +88,6 @@ def load_design(design_name: str) -> Dict:
             f'Missing expected "design" function in design module for: {design_name}'
         )
 
+    design_config["obj"] = design_inst
     design_config["module"] = design_mod
     return design_config

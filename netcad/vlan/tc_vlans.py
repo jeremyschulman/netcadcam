@@ -56,6 +56,7 @@ class VlanTestExpectations(BaseModel):
 
 
 class VlanTestCase(TestCase):
+    test_case = "interface"
     test_params: VlanTestParams
     expected_results: VlanTestExpectations
 
@@ -87,16 +88,13 @@ class VlanTestCases(TestCases):
     def build(cls, device: Device, **kwargs) -> "VlanTestCases":
         from netcad.vlan.vlan_design_service import DeviceVlanDesignService
 
-        # define a mapping of VLAN to the interfaces that are using that Vlan
-
-        map_vlan_ifaces = dict()
-
         device_vlans = list(
             chain.from_iterable(
                 svc.all_vlans() for svc in device.services_of(DeviceVlanDesignService)
             )
         )
 
+        map_vlan_ifaces = dict()
         for vlan in device_vlans:
             map_vlan_ifaces[vlan] = list()
 
@@ -140,7 +138,7 @@ class VlanTestCases(TestCases):
             device=device.name,
             tests=[
                 VlanTestCase(
-                    test_case="vlan-exists",
+                    test_case="interfaces",
                     test_params=VlanTestParams(vlan_id=vlan_p.vlan_id),
                     expected_results=VlanTestExpectations(
                         vlan=vlan_p, interfaces=if_names

@@ -10,3 +10,4 @@ g_netcad_project_dir: Optional[Path] = None
 g_netcad_cache_dir: Optional[Path] = None
 g_netcad_designs: Optional[Dict] = None
 g_testing_plugins = dict()
+g_debug_level: Optional[int] = 0

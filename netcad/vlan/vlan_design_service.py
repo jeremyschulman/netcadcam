@@ -80,6 +80,7 @@ class DeviceVlanDesignService(DesignService):
     # -------------------------------------------------------------------------
 
     def build(self):
+        self.all_vlans.cache_clear()
         _ = self.all_vlans()
 
     def validate(self):

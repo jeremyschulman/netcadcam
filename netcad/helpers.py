@@ -2,7 +2,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import List
+from typing import List, Set
 from itertools import groupby
 from enum import Enum
 
@@ -16,7 +16,13 @@ from pydantic import BaseModel
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["range_string", "StrEnum", "HashableModel", "SafeIsAttribute"]
+__all__ = [
+    "range_string",
+    "parse_istrange",
+    "StrEnum",
+    "HashableModel",
+    "SafeIsAttribute",
+]
 
 # -----------------------------------------------------------------------------
 #
@@ -54,7 +60,9 @@ def range_string(numbers: List[int]) -> str:
         if not start:
             values.append(str(last))
         else:
-            sep = "," if len(start) == 1 else "-"
+            # sep = "," if len(start) == 1 else "-"
+            # always uses dashes, even if two consecture numbers
+            sep = "-"
             values.append(f"{start[0][1]}{sep}{last}")
 
     return ",".join(values)
@@ -81,3 +89,33 @@ class SafeIsAttribute(object):
             return False
 
         raise AttributeError(item)
+
+
+def parse_istrange(strange: str) -> Set[int]:
+    """
+    Parse a string of numbers in CSV that may contain ranges into
+    a set of integer values.  For example "5,25-26" -> {5,25,26}
+
+    Parameters
+    ----------
+    strange: str
+        The CSV string-range to parse
+
+    Returns
+    -------
+    set as described
+    """
+
+    strange_ints = set()
+    tokens = strange.split(",")
+
+    for tok in tokens:
+        if "-" not in tok:
+            strange_ints.add(int(tok))
+            continue
+
+        # add the inclusive set of numbers in the range.
+        start, end = map(int, tok.split("-"))
+        strange_ints.update(set(range(start, end + 1)))
+
+    return strange_ints

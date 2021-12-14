@@ -4,6 +4,7 @@
 
 from typing import Tuple
 from itertools import groupby
+from operator import attrgetter
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -102,16 +103,16 @@ def show_network_devices(design: Design, **flags):
     design_desc = design.config.get("description") or ""
 
     table = Table(
+        "Device",
+        "OS",
+        "Product Model",
+        "Profile",
         show_header=True,
         header_style="bold magenta",
         title=f"Design '{design.name}', {design_desc}",
     )
-    table.add_column("Device")
-    table.add_column("OS Name")
-    table.add_column("Product Model")
-    table.add_column("Profile")
 
-    for dev in design.devices.values():
+    for dev in sorted(design.devices.values(), key=attrgetter("name")):
         dev_type = dev.__class__.__name__
 
         # if the device is pseudo, and the User requested these to be shown,

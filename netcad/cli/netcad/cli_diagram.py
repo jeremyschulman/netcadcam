@@ -33,12 +33,11 @@ def cli_diagram(design: str, save_file: Path):
 
     log = get_logger()
 
-    load_design(design_name=design)
-
-    design_config = netcad_globals.g_netcad_designs[design]
+    design_config = load_design(design_name=design)
     design_mod = design_config["module"]
+
     if not (diagram_func := getattr(design_mod, "diagram")):
         log.error(f'{design}: Missing "diagram" function in design.')
         return
 
-    diagram_func(design, design_config, save_file=save_file)
+    diagram_func(design_config, save_file=save_file)
