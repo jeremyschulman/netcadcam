@@ -80,3 +80,8 @@ class Design(Registry, registry_name="designs"):
         for dev in devices:
             self.devices[dev.name] = dev
             dev.design = self
+
+    def build(self):
+        for svc in self.services.values():
+            svc.build()
+            svc.validate()

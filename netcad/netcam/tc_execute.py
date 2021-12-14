@@ -60,7 +60,9 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
 
     except Exception as exc:
         errmsg = str(exc) or exc.__class__.__name__
-        log.critical(f"{dut_name}: {FAIL_CLRD}:\t!!! Startup failed: {errmsg}, aborting.")
+        log.critical(
+            f"{dut_name}: {FAIL_CLRD}:\t!!! Startup failed: {errmsg}, aborting."
+        )
 
         if debug_enabled():
             log.critical(format_exc_message(exc))
