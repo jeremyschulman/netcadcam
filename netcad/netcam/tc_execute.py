@@ -42,7 +42,6 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
     dut_name = f"DUT: {dev_name}"
 
     log = get_logger()
-
     if not dut.testcases_dir.is_dir():
         log.error(
             f"{dut_name}:Missing expected testcase directory: "
