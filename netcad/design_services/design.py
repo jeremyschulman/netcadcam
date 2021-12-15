@@ -2,7 +2,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Dict, Optional, List
+from typing import Dict, Optional
 from copy import deepcopy
 
 # -----------------------------------------------------------------------------
@@ -76,12 +76,43 @@ class Design(Registry, registry_name="designs"):
 
         self.ipams = dict()
 
-    def add_devices(self, devices: List[Device]):
+    def add_devices(self, *devices: Device):
+        """
+        This method adds device(s) to the design instance.  The Designer MUST
+        call this method for any device used in the design so that the device is
+        accounted for, and the device.design backreference is established.
+
+        Parameters
+        ----------
+        devices:
+            Either a single Device instance or a list (or other iterable) of
+            Device instances to add to the design.
+        """
+
         for dev in devices:
             self.devices[dev.name] = dev
             dev.design = self
 
     def build(self):
+        """
+        Execute the `build` methods for all services in the design.
+        """
         for svc in self.services.values():
             svc.build()
+
+    def validate(self):
+        """
+        Execute the `validate` methods for all services in the design.
+        """
+        for svc in self.services.values():
             svc.validate()
+
+    def update(self):
+        """
+        This "helper" method is used to rebuild all services and then
+        re-validate all services.  The expected use-case is when a Designer
+        needs to update an existing design instance after it has already been
+        gone through an original build+validate cycle.
+        """
+        self.build()
+        self.validate()
