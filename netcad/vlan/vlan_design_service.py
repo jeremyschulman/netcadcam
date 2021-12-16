@@ -49,7 +49,7 @@ class DeviceVlanDesignService(DesignService):
         super().__init__(name=name)
         self.device = device
         self.testing_services = [VlanTestCases, SwitchportTestCases]
-        self.add_devices([device])
+        self.add_devices(device)
         self.alias_names = dict()
 
     @lru_cache
@@ -131,7 +131,7 @@ class VlansDesignService(
         super().__init__(name=name)
         self._device_service_name = device_service_name
 
-    def add_devices(self, devices: List[Device]):
+    def add_devices(self, *devices: Device):
         """
         Add the list of Device instances to the VlanDesignService.  As a result
         each device will also be associated with the `device_vlan_service` class
@@ -142,7 +142,7 @@ class VlansDesignService(
         devices:
             List of Device instances
         """
-        super().add_devices(devices)
+        super().add_devices(*devices)
         for each_dev in filterfalse(lambda d: d in self.data, devices):
             self[each_dev] = self.device_vlan_service(
                 name=self._device_service_name, device=each_dev

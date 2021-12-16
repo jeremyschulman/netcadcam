@@ -1,8 +1,22 @@
-from typing import Dict, Hashable, Set, Sequence
+# -----------------------------------------------------------------------------
+# System Imports
+# -----------------------------------------------------------------------------
+
+from typing import Dict, Hashable, Set
 from collections import defaultdict
+
+# -----------------------------------------------------------------------------
+# Private Imports
+# -----------------------------------------------------------------------------
 
 from netcad.device import Device, DeviceInterface
 from netcad.registry import Registry
+
+# -----------------------------------------------------------------------------
+# Exports
+# -----------------------------------------------------------------------------
+
+__all__ = ["CablePlanner"]
 
 
 class CablePlanner(Registry):
@@ -14,7 +28,7 @@ class CablePlanner(Registry):
         self.cables: Dict[Hashable, set] = defaultdict(set)
         self.validated = False
 
-    def add_devices(self, devices: Sequence[Device]):
+    def add_devices(self, *devices: Device):
         self.devices.update(devices)
 
     def add_endpoint(self, cable_id, interface: DeviceInterface):
@@ -85,7 +99,7 @@ class CablePlanner(Registry):
             raise RuntimeError(
                 f"Cable plan: {self.name}: Improper cabling peer counts",
                 self,
-                ifs_by_counts,
+                dict(ifs_by_counts),
             )
 
         self.validate_endpoints()

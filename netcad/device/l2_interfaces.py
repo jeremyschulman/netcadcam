@@ -46,7 +46,6 @@ class InterfaceL2Trunk(InterfaceL2):
         Return the set of all vlans used by this interface, inclusive of the
         native vlan, if defined.
         """
-
         native = {self.native_vlan} if hasattr(self, "native_vlan") else set()
         return set(self.vlans) | native
 

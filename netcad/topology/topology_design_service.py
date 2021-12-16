@@ -2,7 +2,7 @@
 # Systeme Imports
 # -----------------------------------------------------------------------------
 
-from typing import List, Optional, TypeVar
+from typing import Optional, TypeVar
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -57,9 +57,9 @@ class TopologyService(DesignService, registry_name="topology"):
             IPInterfacesTestCases,
         ]
 
-    def add_devices(self, devices: List[Device]):
-        super(TopologyService, self).add_devices(devices)
-        self.cabling.add_devices(devices)
+    def add_devices(self, *devices: Device):
+        super(TopologyService, self).add_devices(*devices)
+        self.cabling.add_devices(*devices)
 
     def build(self):
         self.cabling.build()

@@ -85,7 +85,7 @@ class SwitchportTestCases(TestCases):
             elif isinstance(if_prof, InterfaceL2Trunk):
                 tc_expd = SwitchportTrunkExpectation(
                     native_vlan=if_prof.native_vlan,
-                    trunk_allowed_vlans=list(if_prof.trunk_allowed_vlans()),
+                    trunk_allowed_vlans=sorted(if_prof.trunk_allowed_vlans()),
                 )
             else:
                 continue

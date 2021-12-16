@@ -4,6 +4,7 @@
 
 from typing import List, Optional
 from itertools import chain
+from operator import itemgetter
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -132,7 +133,8 @@ class VlanTestCases(TestCases):
                 map_vlan_ifaces[vlan].append(if_name)
 
         # Create the instance of the Vlans Test Cases so that it can be stored
-        # and used by the 'netcam' tooling.
+        # and used by the 'netcam' tooling.  Keep the test cases sorted by
+        # VLAN-ID value; which is how the VlanProfile object is sortable.
 
         test_cases = VlanTestCases(
             device=device.name,
@@ -144,7 +146,9 @@ class VlanTestCases(TestCases):
                         vlan=vlan_p, interfaces=if_names
                     ),
                 )
-                for vlan_p, if_names in map_vlan_ifaces.items()
+                for vlan_p, if_names in sorted(
+                    map_vlan_ifaces.items(), key=itemgetter(0)
+                )
             ],
         )
 
