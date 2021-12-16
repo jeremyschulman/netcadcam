@@ -3,6 +3,8 @@
 # -----------------------------------------------------------------------------
 
 from typing import Sequence, Optional
+from operator import attrgetter
+from itertools import filterfalse
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -35,6 +37,7 @@ class CableMLagsByCableId(CablePlanner):
 
     def build(self, cable_ids: Optional[Sequence[str]] = None):
         only_cables = cable_ids or self.cable_ids
+        self.cables.clear()
 
         # find the pseudo-device activing as the MLAG redundant pair.  If one is
         # not found, then raise an exception.
@@ -52,8 +55,8 @@ class CableMLagsByCableId(CablePlanner):
                 f"Unxpected found more than one designated mlag device in cable plan: {self.name}"
             )
 
-        # find the set of interfaces (and labels) that the designated mlag-dev
-        # is using that matches the list of allowed labels
+        # create a mapping of the mlag cable-id to the mlag device interface
+        # bound to that cable.
 
         mlag_dev = found_mlag_dev[0]
         mlag_references = {
@@ -63,10 +66,15 @@ class CableMLagsByCableId(CablePlanner):
         }
 
         devices = self.devices.copy()
-        devices.remove(mlag_dev)
+        mlag_dev_names = set(map(attrgetter("name"), mlag_dev.group_members))
 
-        # find all of the remote devices that are using the mlag-labels; add these
-        # directly to the cabling.
+        devices = set(
+            filterfalse(lambda d: d is mlag_dev or d.name in mlag_dev_names, devices)
+        )
+
+        # find all of the remote devices that are using the mlag-labels; add
+        # these directly to the cabling.  Each cable-ID should have a *SINGLE*
+        # remote reference; for example to an individual interface or to a LAG.
 
         for device in devices:
             for if_name, iface in device.interfaces.items():
@@ -81,7 +89,12 @@ class CableMLagsByCableId(CablePlanner):
         # MLAG pair will point to the same remote interface. (these are
         # port-channels).
 
-        for cable_id, (if_remote,) in self.cables.items():
+        for cable_id, endpoints in self.cables.items():
+            if_remote = next(iter(endpoints))
+
+            if not isinstance(if_remote, DeviceInterface):
+                raise RuntimeError(f"Unexpected mlag remote cable: {if_remote}")
+
             if_mlag_ref: DeviceInterface = mlag_references[cable_id]
             for dev in mlag_dev.group_members:
                 if_dev = dev.interfaces[if_mlag_ref.name]

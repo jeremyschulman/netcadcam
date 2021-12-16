@@ -30,7 +30,7 @@ from netcad.helpers import StrEnum
 # -----------------------------------------------------------------------------
 
 
-class PortCableMediaType(StrEnum):
+class CableMediaType(StrEnum):
     """Denotes the physical cable type"""
 
     SMF = enum.auto()
@@ -42,7 +42,7 @@ class PortCableMediaType(StrEnum):
     TWX = enum.auto()  # twinaxial
 
 
-class PortCableTerminationType(StrEnum):
+class CableTerminationType(StrEnum):
     """denotes the physical connector termitnating the cable"""
 
     LC = enum.auto()
@@ -53,7 +53,7 @@ class PortCableTerminationType(StrEnum):
     TWX = enum.auto()
 
 
-class PortTranscieverFormFactorType(StrEnum):
+class TranscieverFormFactorType(StrEnum):
     """denotes the transciever form-factor type"""
 
     AOC = enum.auto()
@@ -66,26 +66,15 @@ class PortTranscieverFormFactorType(StrEnum):
     RJ45 = enum.auto()
 
 
-class PortTransceiverReachType(StrEnum):
+class PhyPortReachType(StrEnum):
     short = enum.auto()
     long = enum.auto()
 
 
-# # common port speeds
-#
-# PORT_SPEED_1G = 1_000
-# PORT_SPEED_2_5G = 2_500  # 2.5 Gbps
-# PORT_SPEED_5G = 5_000
-# PORT_SPEED_10G = 10_000
-# PORT_SPEED_25G = 25_000
-# PORT_SPEED_40G = 40_000
-# PORT_SPEED_100G = 100_000
-
-
 @dataclass
 class PortCable:
-    media: PortCableMediaType
-    termination: PortCableTerminationType
+    media: CableMediaType
+    termination: CableTerminationType
 
     # `length` - when used, denotes the length of the cable in meters
 
@@ -97,11 +86,11 @@ class PortTransceiver:
 
     # `form_factor` denotes the physical format of the transciver
 
-    form_factor: PortTranscieverFormFactorType
+    form_factor: TranscieverFormFactorType
 
     # `reach` denotes short or long range (or other tbd)
 
-    reach: PortTransceiverReachType
+    reach: PhyPortReachType
 
     # 'type' - standard transceiver port-type, to match during validation
     #          see PhyPortTypes for standard values.
@@ -118,7 +107,7 @@ class PortTransceiver:
 
 
 @dataclass
-class PortProfile:
+class PhyPortProfile:
     """
     A PortProfile is used to identify the physical port criterial if-and-only-if
     a change from the default port is required.  Common usages of a PortProfile:

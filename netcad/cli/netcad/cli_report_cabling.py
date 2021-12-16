@@ -19,6 +19,7 @@ from rich.console import Console
 from netcad.logger import get_logger
 from netcad.config import netcad_globals
 from netcad.device import Device, DeviceInterface
+from netcad.phy_port import PhyPortProfile
 from netcad.device.interface_profile import InterfaceVirtual
 from netcad.cabling.cable_plan import CablePlanner
 
@@ -113,6 +114,25 @@ def cabling_table(table: Table, cables) -> Table:
 
         table.add_column(column)
 
+    def phy_is_different(lcl_phy: PhyPortProfile, rmt_phy: PhyPortProfile) -> bool:
+        # if no phy-ports, then return not-different ;-)
+        if lcl_phy is None and rmt_phy is None:
+            return False
+
+        return not all(
+            (
+                lcl_phy.speed == rmt_phy.speed,
+                lcl_phy.cabling.media == rmt_phy.cabling.media,
+            )
+        )
+
+    # -------------------------------------------------------------------------
+    # create each cabling row
+    # -------------------------------------------------------------------------
+
+    dev_if: DeviceInterface
+    rmt_if: DeviceInterface
+
     for cable_id, dev_if, rmt_if in cables:
 
         dev_if_prof, dev_phy_prof = interface_profile_names(dev_if)
@@ -121,7 +141,7 @@ def cabling_table(table: Table, cables) -> Table:
         # if the physical port definitions are not the same, then color them in
         # red to indicate the error to the User.
 
-        if dev_phy_prof != rmt_phy_prof:
+        if phy_is_different(dev_if.profile.port_profile, rmt_if.profile.port_profile):
             dev_phy_prof.style = Style(color="red")
             rmt_phy_prof.style = Style(color="red")
 

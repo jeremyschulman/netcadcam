@@ -27,7 +27,8 @@ class VlansFromPeer:
         if_active: DeviceInterface = instance.interface
         if not (if_peer := if_active.cable_peer):
             raise RuntimeError(
-                f"Unexpected missing interface peer on: {if_active.device_ifname}"
+                f"Unexpected missing interface peer on: {if_active.device_ifname}, "
+                f"cable: {if_active.cable_id}"
             )
 
         if not (vlan_prof_attr := getattr(if_peer.profile, self._attr_name, None)):
