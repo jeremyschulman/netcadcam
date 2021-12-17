@@ -12,7 +12,6 @@ from collections import UserList
 
 import maya
 from pydantic import BaseModel, validator
-from rich.console import Console
 from rich.table import Table
 from rich.text import Text, Style
 
@@ -46,13 +45,8 @@ class DesignNotes(UserList, List[DesignNote]):
         # backref to the design instance, set in the Design.__init__ method.
         self.design = None
 
-    def print(self, console: Optional[Console] = None):
-
-        if not console:
-            console = Console()
-
+    def table(self):
         if not (c_notes := len(self.data)):
-            console.print("No notes")
             return
 
         title = (
@@ -76,4 +70,4 @@ class DesignNotes(UserList, List[DesignNote]):
         for note in sorted(self.data):
             table.add_row(str(note.date_start), note.message, str(note.date_end or ""))
 
-        console.print("\n", table, "\n")
+        return table
