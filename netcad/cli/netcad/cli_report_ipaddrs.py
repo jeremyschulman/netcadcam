@@ -20,7 +20,7 @@ from netcad.device import DeviceInterface, Device
 from netcad.device.l3_interfaces import InterfaceL3
 from netcad.cli.common_opts import opt_devices, opt_designs
 from netcad.cli.device_inventory import get_devices_from_designs
-from netcad.cli.netcad.clig_netcad_report import clig_design_report
+from netcad.cli.netcad.clig_netcad_show import clig_design_show
 
 
 # -----------------------------------------------------------------------------
@@ -30,7 +30,7 @@ from netcad.cli.netcad.clig_netcad_report import clig_design_report
 # -----------------------------------------------------------------------------
 
 
-@clig_design_report.command(name="ipaddrs")
+@clig_design_show.command(name="ipaddrs")
 @opt_designs(required=True)
 @opt_devices()
 def cli_design_report_interfaces(devices: Tuple[str], designs: Tuple[str]):

@@ -47,34 +47,61 @@ class _RegistryFactory(object):
         cls._registry[name] = obj
 
     @classmethod
-    def registry_get(cls, name: str) -> Optional[Any]:
+    def registry_get(cls, name: str, with_registry=False) -> Optional[Any]:
         """
         Return the registered item designative by 'name', or None if not found.
         This search will start with the class used in by the Caller, and if not
         found there, will check any subclassed registries.
+
+        When the item is found and  `with_registry` is True then the retun will be
+        a tuple (item, Registry instance)
 
         Parameters
         ----------
         name: str
             The registered name.
 
+        with_registry: bool
+            When True the return value will be Tuple that includes the specific
+            registry class that "ownes" the item. When False (default) only
+            the item is returned.
+
         Returns
         -------
-        The object that was registered by the given name if found.
-        None if not found.
+        None:
+            When the item is not found
+
+         Any:
+            When the item is found and `with_registry` is False (default)
+
+        Tuple: [Any, Registry]
+            When the item is found and `with_registry` is True
         """
-        return next(
+        owner, item = next(
             (
                 # return the object given by name
-                each_cls._registry.get(name)
+                (each_cls, each_cls._registry.get(name))
                 # check _this_ class, and then any subclasses.
                 for each_cls in (cls, *cls.registry_subclasses())
                 # if the name is in the registry then return this object
                 if name in each_cls._registry
             ),
             # Nothing found, so return None to Caller
-            None,
+            (None, None),
         )
+
+        return item if not with_registry else (item, owner)
+
+    @classmethod
+    def registry_remove(cls, name: str) -> Optional[Any]:
+        item, reg_cls = cls.registry_get(name, with_registry=True)
+        if not item:
+            # TODO: probably should raise an exception if not found?
+            #       for now, return None
+            return None
+
+        del reg_cls._registry[item.name]  # noqa
+        return item
 
     @classmethod
     def registry_list(cls, subclasses=False) -> Set[str]:

@@ -6,6 +6,7 @@ import json
 from typing import Tuple, List, Dict
 from pathlib import Path
 from collections import Counter
+from itertools import groupby
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -24,13 +25,20 @@ from rich.pretty import Pretty
 from netcad.device import Device
 from netcad.config import Environment, netcad_globals
 from netcad.logger import get_logger
+from netcad.design_services import Design
 
 from netcad.cli.common_opts import opt_devices, opt_designs
 from netcad.cli.device_inventory import get_devices_from_designs
 
 from netcad.netcam import tc_result_types as trt
-from netcad.cli.netcam.cli_netcam_main import cli
 from netcad.cli.keywords import color_pass_fail
+
+# -----------------------------------------------------------------------------
+# Module Private Imports
+# -----------------------------------------------------------------------------
+
+from .cli_netcam_show import clig_show
+
 
 # -----------------------------------------------------------------------------
 # Exports (none)
@@ -46,7 +54,7 @@ __all__ = []
 # -----------------------------------------------------------------------------
 
 
-@cli.command(name="report")
+@clig_show.command(name="tests")
 @opt_devices()
 @opt_designs(required=True)
 @click.option(
@@ -82,7 +90,12 @@ __all__ = []
 @click.option(
     "--pass", "include_pass", is_flag=True, default=False, help="include PASS reports"
 )
-@click.option("--brief", "brief_mode", is_flag=True, help="Show summary counts only")
+@click.option(
+    "--brief", "brief_mode", is_flag=True, help="Show summary counts of device(s)"
+)
+@click.option(
+    "--summary", "summary_mode", is_flag=True, help="Show summary counts of design(s)"
+)
 def cli_report_tests(devices: Tuple[str], designs: Tuple[str], **optionals):
     """Show test results in tablular form."""
 
@@ -94,23 +107,67 @@ def cli_report_tests(devices: Tuple[str], designs: Tuple[str], **optionals):
 
     log.info(f"Showing test logs for {len(device_objs)} devices.")
 
-    devices_tc_dirs = dict()
+    # bind a test-case-dir Path attribute (tcr_dir) to each Device instance so
+    # that the results can be retrieved and processed.
+
+    tc_dir = netcad_globals.g_netcad_testcases_dir
+
     for device in device_objs:
-        dev_tcr_dir = netcad_globals.g_netcad_testcases_dir / device.name / "results"
+        dev_tcr_dir = tc_dir / device.name / "results"
         if not dev_tcr_dir.exists():
             log.error(
                 f"Missing {device.name}, expected test results directory: {dev_tcr_dir.name}"
             )
             continue
-        devices_tc_dirs[device] = dev_tcr_dir
 
-    if not optionals["brief_mode"]:
-        for dev_obj, dev_tc_dir in devices_tc_dirs.items():
-            show_device_test_logs(dev_obj, dev_tc_dir, optionals)
-    else:
+        # 'stick' a new attribute onto the Device instance that will be
+        # privately used within this CLI module.
+
+        device.tcr_dir = dev_tcr_dir
+
+    devices_by_design = groupby(
+        sorted(device_objs, key=lambda d: id(d.design)), key=lambda d: d.design
+    )
+
+    console = Console()
+
+    # User wants to see a breif summary per design
+
+    if optionals["summary_mode"]:
         optionals["include_all"] = True
-        for dev_obj, dev_tc_dir in devices_tc_dirs.items():
-            show_device_brief_summary_table(dev_obj, dev_tc_dir, optionals)
+
+        for design, device_objs in devices_by_design:
+            show_design_brief_summary_table(
+                console=console, design=design, optionals=optionals
+            )
+
+        return
+
+    # User wants to see a brief report per-device
+    if optionals["brief_mode"]:
+        optionals["include_all"] = True
+
+        for design, device_objs in devices_by_design:
+
+            for dev_obj in device_objs:
+                show_device_brief_summary_table(console, dev_obj, optionals)
+
+            console.print("\n", design.notes.table(), "\n")
+
+        # done with brief mode, exit CLI processing
+        return
+
+    # -------------------------------------------------------------------------
+    # Full reporting mode
+    # -------------------------------------------------------------------------
+
+    for design, device_objs in devices_by_design:
+
+        for dev_obj in device_objs:
+            show_device_test_logs(console, dev_obj, optionals)
+
+        if design.notes:
+            console.print("\n", design.notes.table(), "\n")
 
 
 # -----------------------------------------------------------------------------
@@ -120,7 +177,71 @@ def cli_report_tests(devices: Tuple[str], designs: Tuple[str], **optionals):
 # -----------------------------------------------------------------------------
 
 
-def show_device_brief_summary_table(device: Device, tcr_dir: Path, optionals: dict):
+def show_design_brief_summary_table(console: Console, design: Design, optionals: dict):
+    table = Table(
+        "Test Cases",
+        "Status",
+        "Total",
+        "Pass",
+        "Fail",
+        "Info",
+        "Skip",
+        show_header=True,
+        header_style="bold magenta",
+        show_lines=True,
+    )
+
+    pass_style = Style(color="green")
+    fail_style = Style(color="red")
+    info_style = Style(color="blue")
+    skip_sytle = Style(color="magenta")
+
+    design_tc_counts = 0
+    dev_cntrs = Counter()
+
+    for device in design.devices.values():
+        for tc_name in find_test_cases_names(device, optionals):
+
+            # if the test results file does not exist, it means that the tests were
+            # not executed.  For now, silently skip.  TODO: may show User warning?
+
+            results_file = device.tcr_dir.joinpath(f"{tc_name}.json")
+            if not results_file.exists():
+                continue
+
+            results = json.load(results_file.open())
+
+            if not (results := filter_results(results=results, optionals=optionals)):
+                continue
+
+            tcr_cntrs = Counter(res["status"] for res in results)
+            dev_cntrs.update(tcr_cntrs)
+
+        dev_tc_counts = sum(dev_cntrs.values())
+        design_tc_counts += dev_tc_counts
+
+        table.add_row(
+            device.name,
+            color_pass_fail(dev_cntrs),
+            Text(str(dev_tc_counts)),
+            Text(str(dev_cntrs[trt.TestCaseStatus.PASS]), style=pass_style),
+            Text(str(dev_cntrs[trt.TestCaseStatus.FAIL]), style=fail_style),
+            Text(str(dev_cntrs[trt.TestCaseStatus.INFO]), style=info_style),
+            Text(str(dev_cntrs[trt.TestCaseStatus.SKIP]), style=skip_sytle),
+        )
+
+    table.title = Text(
+        f"Design: {design.name}, Total Results: {design_tc_counts}", justify="left"
+    )
+
+    console.print("\n", table, "\n")
+    if design.notes:
+        console.print(design.notes.table(), "\n")
+
+
+def show_device_brief_summary_table(console: Console, device: Device, optionals: dict):
+
+    tcr_dir: Path = device.tcr_dir
 
     table = Table(
         "Test Cases",
@@ -172,7 +293,7 @@ def show_device_brief_summary_table(device: Device, tcr_dir: Path, optionals: di
     table.title = Text(
         f"Device: {device.name}, Total Results: {dev_tc_count}", justify="left"
     )
-    console = Console()
+
     console.print("\n", table)
 
 
@@ -221,7 +342,8 @@ def filter_results(results: dict, optionals: dict) -> List[Dict]:
     return list(results)
 
 
-def show_device_test_logs(device: Device, tcr_dir: Path, optionals: dict):
+def show_device_test_logs(console: Console, device: Device, optionals: dict):
+    tcr_dir: Path = device.tcr_dir
 
     for rc_result_file in find_test_cases_names(device, optionals):
 
@@ -238,11 +360,12 @@ def show_device_test_logs(device: Device, tcr_dir: Path, optionals: dict):
             continue
 
         # display the results in a Table form.
-        show_log_table(device, results_file.name, results)
+        show_log_table(console, device, results_file.name, results)
 
 
-def show_log_table(device: Device, filename: str, results: List[Dict]):
-    console = Console()
+def show_log_table(
+    console: Console, device: Device, filename: str, results: List[Dict]
+):
 
     table = Table(
         "Status",
@@ -250,7 +373,7 @@ def show_log_table(device: Device, filename: str, results: List[Dict]):
         "Id",
         "Field",
         "Log",
-        title=f"Device: {device.name} Test Logs: {filename}",
+        title=Text(f"Device: {device.name}\n   Test Logs: {filename}", justify="left"),
         show_header=True,
         header_style="bold magenta",
         show_lines=True,
@@ -280,7 +403,7 @@ def show_log_table(device: Device, filename: str, results: List[Dict]):
             log_msg,
         )
 
-    console.print(table)
+    console.print("\n", table, "\n")
 
 
 def _pretty_dict_table(obj):

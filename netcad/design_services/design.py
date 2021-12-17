@@ -11,6 +11,7 @@ from copy import deepcopy
 
 from netcad.registry import Registry
 from netcad.device import Device
+from netcad.notes import DesignNotes
 
 # -----------------------------------------------------------------------------
 # Private Module Imports
@@ -59,6 +60,10 @@ class Design(Registry, registry_name="designs"):
 
         self.registry_add(name=name, obj=self)
         self.name = name
+
+        # collection of notes defined by the Designer
+        self.notes = DesignNotes()
+        self.notes.design = self
 
         # The config that originated from the netcad configuration file for this
         # specific design.

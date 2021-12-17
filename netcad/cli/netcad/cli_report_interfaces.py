@@ -22,7 +22,7 @@ from netcad.logger import get_logger
 from netcad.cli import keywords
 from netcad.cli.common_opts import opt_devices, opt_designs
 from netcad.cli.device_inventory import get_devices_from_designs
-from netcad.cli.netcad.clig_netcad_report import clig_design_report
+from netcad.cli.netcad.clig_netcad_show import clig_design_show
 
 # -----------------------------------------------------------------------------
 #
@@ -88,7 +88,7 @@ def show_device_interfaces(device: Device, **options):
     console.print(table)
 
 
-@clig_design_report.command(name="interfaces")
+@clig_design_show.command(name="interfaces")
 @click.option(
     "--unused", "show_unused", help="only show unused interfaces", is_flag=True
 )
