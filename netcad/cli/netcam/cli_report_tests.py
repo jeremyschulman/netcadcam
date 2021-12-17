@@ -6,6 +6,7 @@ import json
 from typing import Tuple, List, Dict
 from pathlib import Path
 from collections import Counter
+from itertools import groupby
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -100,7 +101,8 @@ def cli_report_tests(devices: Tuple[str], designs: Tuple[str], **optionals):
 
     log.info(f"Showing test logs for {len(device_objs)} devices.")
 
-    devices_tc_dirs = dict()
+    devices_tc_dirs: Dict[Device, Path] = dict()
+
     for device in device_objs:
         dev_tcr_dir = netcad_globals.g_netcad_testcases_dir / device.name / "results"
         if not dev_tcr_dir.exists():
@@ -110,13 +112,39 @@ def cli_report_tests(devices: Tuple[str], designs: Tuple[str], **optionals):
             continue
         devices_tc_dirs[device] = dev_tcr_dir
 
-    if not optionals["brief_mode"]:
-        for dev_obj, dev_tc_dir in devices_tc_dirs.items():
-            show_device_test_logs(dev_obj, dev_tc_dir, optionals)
-    else:
+    devices_by_design = groupby(
+        sorted(device_objs, key=lambda d: id(d.design)), key=lambda d: d.design
+    )
+
+    # -------------------------------------------------------------------------
+    # Brief mode
+    # -------------------------------------------------------------------------
+
+    if optionals["brief_mode"]:
         optionals["include_all"] = True
-        for dev_obj, dev_tc_dir in devices_tc_dirs.items():
-            show_device_brief_summary_table(dev_obj, dev_tc_dir, optionals)
+
+        for design, devices in devices_by_design:
+
+            for dev_obj in devices:
+                dev_tcr_dir = devices_tc_dirs[dev_obj]
+                show_device_brief_summary_table(dev_obj, dev_tcr_dir, optionals)
+
+            design.notes.print()
+
+        # done with brief mode, exit CLI processing
+        return
+
+    # -------------------------------------------------------------------------
+    # Full reporting mode
+    # -------------------------------------------------------------------------
+
+    for design, devices in devices_by_design:
+
+        for dev_obj in devices:
+            dev_tcr_dir = devices_tc_dirs[dev_obj]
+            show_device_test_logs(dev_obj, dev_tcr_dir, optionals)
+
+        design.notes.print()
 
 
 # -----------------------------------------------------------------------------
