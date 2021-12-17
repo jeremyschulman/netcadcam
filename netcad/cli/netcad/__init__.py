@@ -1,6 +1,4 @@
 from .netcad import script
-from .clig_netcad_report import netcad_add_design_report
-
 from . import cli_build_configs
 from . import cli_build_tests
 from . import cli_design_list

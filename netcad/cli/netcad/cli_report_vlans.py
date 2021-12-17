@@ -10,7 +10,6 @@ from itertools import chain
 # Public Imports
 # -----------------------------------------------------------------------------
 
-import click
 from rich.console import Console
 from rich.table import Table
 from rich.console import Pretty
@@ -22,11 +21,15 @@ from rich.console import Pretty
 from netcad.logger import get_logger
 from netcad.device import Device
 from netcad.vlan.vlan_design_service import DeviceVlanDesignService
-from netcad.cli.netcad import netcad_add_design_report
 
 from netcad.cli.device_inventory import get_devices_from_designs
 from netcad.cli.common_opts import opt_devices, opt_designs
 
+# -----------------------------------------------------------------------------
+# Module Private Imports
+# -----------------------------------------------------------------------------
+
+from .clig_netcad_show import clig_design_show
 
 # -----------------------------------------------------------------------------
 # Exports (none)
@@ -41,8 +44,7 @@ __all__ = []
 # -----------------------------------------------------------------------------
 
 
-@netcad_add_design_report
-@click.command(name="vlans")
+@clig_design_show.command(name="vlans")
 @opt_designs(required=True)
 @opt_devices()
 def cli_report_vlans(devices: Tuple[str], designs: Tuple[str]):

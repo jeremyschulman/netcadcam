@@ -23,7 +23,7 @@ from netcad.phy_port import PhyPortProfile
 from netcad.device.interface_profile import InterfaceVirtual
 from netcad.cabling.cable_plan import CablePlanner
 
-from netcad.cli.netcad.clig_netcad_report import clig_design_report
+from netcad.cli.netcad.clig_netcad_show import clig_design_show
 from netcad.cli.device_inventory import get_devices_from_designs
 from netcad.cli.common_opts import opt_devices, opt_designs
 
@@ -34,7 +34,7 @@ from netcad.cli.common_opts import opt_devices, opt_designs
 # -----------------------------------------------------------------------------
 
 
-@clig_design_report.command(name="cabling")
+@clig_design_show.command(name="cabling")
 @opt_designs(required=True)
 @opt_devices()
 def cli_design_report_cabling(devices: Tuple[str], designs: Tuple[str]):

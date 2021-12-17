@@ -29,8 +29,14 @@ from netcad.cli.common_opts import opt_devices, opt_designs
 from netcad.cli.device_inventory import get_devices_from_designs
 
 from netcad.netcam import tc_result_types as trt
-from netcad.cli.netcam.cli_netcam_main import cli
 from netcad.cli.keywords import color_pass_fail
+
+# -----------------------------------------------------------------------------
+# Module Private Imports
+# -----------------------------------------------------------------------------
+
+from .cli_netcam_show import clig_show
+
 
 # -----------------------------------------------------------------------------
 # Exports (none)
@@ -46,7 +52,7 @@ __all__ = []
 # -----------------------------------------------------------------------------
 
 
-@cli.command(name="report")
+@clig_show.command(name="tests")
 @opt_devices()
 @opt_designs(required=True)
 @click.option(

@@ -27,7 +27,7 @@ from netcad.cli.device_inventory import get_devices_from_designs
 # Private Module Imports
 # -----------------------------------------------------------------------------
 
-from .clig_netcad_report import clig_design_report
+from .clig_netcad_show import clig_design_show
 
 # -----------------------------------------------------------------------------
 # Exports (none)
@@ -43,7 +43,7 @@ __all__ = []
 # -----------------------------------------------------------------------------
 
 
-@clig_design_report.command(name="devices")
+@clig_design_show.command(name="devices")
 @opt_designs(required=True)
 @click.option("--all", "include_pseudo", help="show pseudo devices", is_flag=True)
 def cli_design_report_devices(designs: Tuple[str], **flags):
