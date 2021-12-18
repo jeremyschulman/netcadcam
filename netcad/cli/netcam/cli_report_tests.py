@@ -200,6 +200,8 @@ def show_design_brief_summary_table(console: Console, design: Design, optionals:
     dev_cntrs = Counter()
 
     for device in design.devices.values():
+        dev_cntrs.clear()
+
         for tc_name in find_test_cases_names(device, optionals):
 
             # if the test results file does not exist, it means that the tests were
