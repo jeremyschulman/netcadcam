@@ -114,16 +114,17 @@ def cli_report_tests(devices: Tuple[str], designs: Tuple[str], **optionals):
 
     for device in device_objs:
         dev_tcr_dir = tc_dir / device.name / "results"
+        # 'stick' a new attribute onto the Device instance that will be
+        # privately used within this CLI module.
+
+        device.tcr_dir = dev_tcr_dir
         if not dev_tcr_dir.exists():
             log.error(
                 f"Missing {device.name}, expected test results directory: {dev_tcr_dir.name}"
             )
             continue
 
-        # 'stick' a new attribute onto the Device instance that will be
-        # privately used within this CLI module.
 
-        device.tcr_dir = dev_tcr_dir
 
     devices_by_design = groupby(
         sorted(device_objs, key=lambda d: id(d.design)), key=lambda d: d.design
