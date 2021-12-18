@@ -55,4 +55,4 @@ def cli_diagram(design: str, save_file: Path):
         log.error(f'{design}: Missing "diagram" function in design.')
         return
 
-    diagram_func(design_config, save_file=save_file)
+    diagram_func(design=design_config["obj"], save_file=save_file)

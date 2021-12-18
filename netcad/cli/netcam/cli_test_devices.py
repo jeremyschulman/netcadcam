@@ -95,39 +95,39 @@ def cli_test_device(devices: Tuple[str], designs: Tuple[str], tests_dir: Path):
     tc_dir = netcad_globals.g_netcad_testcases_dir
     duts = {}
 
-    for dev_obj in device_objs:
-        if not (pg_cfg := netcam_plugins.get(dev_obj.os_name)):
-            raise RuntimeError(
-                f"Missing testing plugin for {dev_obj.name}: os-name: {dev_obj.os_name}"
+    async def run_tests():
+
+        for dev_obj in device_objs:
+            if not (pg_cfg := netcam_plugins.get(dev_obj.os_name)):
+                raise RuntimeError(
+                    f"Missing testing plugin for {dev_obj.name}: os-name: {dev_obj.os_name}"
+                )
+
+            duts[dev_obj] = pg_cfg.get_dut(
+                device=dev_obj, testcases_dir=tc_dir.joinpath(dev_obj.name)
             )
 
-        duts[dev_obj] = pg_cfg.get_dut(
-            device=dev_obj, testcases_dir=tc_dir.joinpath(dev_obj.name)
-        )
+        remove_unsupported = [dev for dev, dut in duts.items() if not dut]
+        for dev_obj in remove_unsupported:
+            log.warning(f"Missing DUT support for device: {dev_obj.name}, skipping.")
 
-    remove_unsupported = [dev for dev, dut in duts.items() if not dut]
-    for dev_obj in remove_unsupported:
-        log.warning(f"Missing DUT support for device: {dev_obj.name}, skipping.")
+        for dev_obj in remove_unsupported:
+            del duts[dev_obj]
 
-    for dev_obj in remove_unsupported:
-        del duts[dev_obj]
+        log.info(f"Starting tests for {len(duts)} devices.")
 
-    log.info(f"Starting tests for {len(duts)} devices.")
+        # execute the tests concurrently to minimize the time it takes to run
+        # though all of the tests.
 
-    # execute the tests concurrently to minimize the time it takes to run
-    # though all of the tests.
+        # TODO: this _presumes_ that the underlying "netcam" plugin was written to
+        #       support asyncio.  This might not always be the case, so need to put
+        #       in a check and execute the plugin running differently. For now, only
+        #       asyncio plugins are supported.
 
-    # TODO: this _presumes_ that the underlying "netcam" plugin was written to
-    #       support asyncio.  This might not always be the case, so need to put
-    #       in a check and execute the plugin running differently. For now, only
-    #       asyncio plugins are supported.
-
-    ts_start = datetime.now()
-
-    async def go():
         await asyncio.gather(*(execute_testcases(dut) for dut in duts.values()))
 
-    asyncio.run(go())
+    ts_start = datetime.now()
+    asyncio.run(run_tests())
     ts_end = datetime.now()
 
     display_summary_table(duts, duration=ts_end - ts_start)
