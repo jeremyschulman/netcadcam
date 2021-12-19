@@ -124,8 +124,6 @@ def cli_report_tests(devices: Tuple[str], designs: Tuple[str], **optionals):
             )
             continue
 
-
-
     devices_by_design = groupby(
         sorted(device_objs, key=lambda d: id(d.design)), key=lambda d: d.design
     )
@@ -366,6 +364,14 @@ def show_device_test_logs(console: Console, device: Device, optionals: dict):
         show_log_table(console, device, results_file.name, results)
 
 
+_TCS_2_TRT = {
+    trt.TestCaseStatus.PASS: trt.PassTestCase,
+    trt.TestCaseStatus.FAIL: trt.FailTestCase,
+    trt.TestCaseStatus.INFO: trt.InfoTestCase,
+    trt.TestCaseStatus.SKIP: trt.SkipTestCases,
+}
+
+
 def show_log_table(
     console: Console, device: Device, filename: str, results: List[Dict]
 ):
@@ -382,28 +388,16 @@ def show_log_table(
         show_lines=True,
     )
 
-    st_opt = trt.TestCaseStatus
-
     for result in results:
-        expected = result["test_case"]["expected_results"]
-        r_st = result["status"]
-        msr_val = _pretty_dict_table(
-            dict(expected=expected, measured=result["measurement"])
-        )
-
-        if r_st == st_opt.FAIL:
-            log_msg = _pretty_dict_table(result["error"])
-        elif r_st == st_opt.SKIP:
-            log_msg = result["message"]
-        else:
-            log_msg = msr_val
+        r_tcr = _TCS_2_TRT.get(result["status"], trt.InfoTestCase)
+        log_msg = r_tcr.log_result(result)
 
         table.add_row(
             _colorize_status(result["status"]),
             device.name,
             result["test_case_id"],
             result.get("field"),
-            log_msg,
+            _pretty_dict_table(log_msg),
         )
 
     console.print("\n", table, "\n")
