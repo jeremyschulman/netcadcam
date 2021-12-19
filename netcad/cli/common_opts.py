@@ -11,6 +11,10 @@ opt_devices = lambda **params: click.option(
 )
 
 
+def unique_set(ctx, param, value):
+    return set(value)
+
+
 opt_designs = lambda **params: click.option(
     "-D",
     "--design",
@@ -18,6 +22,7 @@ opt_designs = lambda **params: click.option(
     multiple=True,
     metavar="[DESIGN]",
     help="design(s)",
+    callback=unique_set,
     **params
 )
 
