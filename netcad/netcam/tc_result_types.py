@@ -92,7 +92,7 @@ class PassTestCase(ResultsTestCase):
         The log message to report to the User when results are processed.
         """
         expected = result["test_case"]["expected_results"]
-        if field := result.get("field"):
+        if (field := result.get("field")) and field in expected:
             expected = expected[field]
         return dict(expected=expected, measured=result["measurement"])
 
@@ -215,8 +215,7 @@ class InfoTestCase(ResultsTestCase):
 
     @staticmethod
     def log_result(result: dict):
-        """use the same approach as PASS"""
-        return PassTestCase.log_result(result)
+        return result["measurement"]
 
 
 CollectionTestResults = List[ResultsTestCase]
