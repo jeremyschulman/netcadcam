@@ -27,7 +27,7 @@ from netcad.netcam.dut import DeviceUnderTest
 from netcad.cli.common_opts import opt_devices, opt_designs
 from netcad.cli.device_inventory import get_devices_from_designs
 
-from netcad.netcam.loader import import_netcam_plugin
+from netcad.netcam.loader import import_netcam_plugins
 
 from netcad.cli.netcam.cli_netcam_main import cli
 from netcad.netcam import execute_testcases
@@ -82,7 +82,7 @@ def cli_test_device(devices: Tuple[str], designs: Tuple[str], tests_dir: Path):
 
     log = get_logger()
 
-    netcam_plugins = import_netcam_plugin()
+    netcam_plugins = import_netcam_plugins()
 
     if not (device_objs := get_devices_from_designs(designs, include_devices=devices)):
         log.error("No devices located in the given designs")

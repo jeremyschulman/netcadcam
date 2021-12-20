@@ -47,10 +47,7 @@ def clig_get_device_types(devices: Tuple[str], designs: Tuple[str]):
     log = get_logger()
 
     os.environ[Environment.NETCAD_NOVALIDATE] = "1"
-
     get_devices_from_designs(designs=designs, include_devices=devices)
-    # modules = loader.import_designs_packages()
-    # loader.run_designs(modules)
 
     config = netcad_globals.g_config
 
@@ -61,7 +58,7 @@ def clig_get_device_types(devices: Tuple[str], designs: Tuple[str]):
 
     except KeyError:
         raise RuntimeError(
-            "Unable to find [get.device-types] in configuration file: "
+            "Configuration file error: missing "
             f"{netcad_globals.g_netcad_config_file.absolute()}"
         )
 

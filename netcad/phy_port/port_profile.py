@@ -40,6 +40,7 @@ class CableMediaType(StrEnum):
     CAT7 = enum.auto()
     AOC = enum.auto()
     TWX = enum.auto()  # twinaxial
+    virtual = enum.auto()  # for virtual networking
 
 
 class CableTerminationType(StrEnum):
@@ -51,6 +52,7 @@ class CableTerminationType(StrEnum):
     RJ45 = enum.auto()
     AOC = enum.auto()
     TWX = enum.auto()
+    virtual = enum.auto()  # for virtual networking
 
 
 class TranscieverFormFactorType(StrEnum):

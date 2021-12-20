@@ -32,8 +32,7 @@ def get_devices_from_designs(
     device_objs = set()
 
     for design_name in designs:
-        design_ctx = load_design(design_name=design_name)
-        design_obj = design_ctx["obj"]
+        design_obj = load_design(design_name=design_name)
         device_objs.update(design_obj.devices.values())
 
     if not include_devices:

@@ -1,4 +1,5 @@
-from typing import Optional, Dict
+from typing import Optional, Dict, List
+
 from pathlib import Path
 
 
@@ -9,5 +10,8 @@ g_netcad_templates_dir: Optional[Path] = None
 g_netcad_project_dir: Optional[Path] = None
 g_netcad_cache_dir: Optional[Path] = None
 g_netcad_designs: Optional[Dict] = None
-g_testing_plugins = dict()
+
+g_netcam_plugins: Optional[List[Dict]] = None
+g_netcam_plugins_catalog: Optional[Dict[str, Dict]] = None
+
 g_debug_level: Optional[int] = 0

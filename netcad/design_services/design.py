@@ -4,6 +4,7 @@
 
 from typing import Dict, Optional
 from copy import deepcopy
+from types import ModuleType
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -60,6 +61,7 @@ class Design(Registry, registry_name="designs"):
 
         self.registry_add(name=name, obj=self)
         self.name = name
+        self.module: Optional[ModuleType] = None
 
         # collection of notes defined by the Designer
         self.notes = DesignNotes()

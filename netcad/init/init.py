@@ -156,11 +156,10 @@ def _init_proj_dirs():
     # NETCAD_CACHDIR
     # -------------------------------------------------------------------------
 
-    netcad_globals.g_netcad_cache_dir = Path(
-        environ.setdefault(
-            Environment.NETCAD_CACHEDIR,
-            str(project_dir.joinpath(d.DEFAULT_NETCAD_CACHEDIR).absolute()),
-        )
+    netcad_globals.g_netcad_cache_dir = ensure_directory(
+        project_dir=project_dir,
+        env_var=Environment.NETCAD_CACHEDIR,
+        default_value=d.DEFAULT_NETCAD_CACHEDIR,
     )
 
 
