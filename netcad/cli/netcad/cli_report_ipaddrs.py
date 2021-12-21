@@ -31,7 +31,7 @@ from netcad.cli.netcad.clig_netcad_show import clig_design_show
 
 
 @clig_design_show.command(name="ipaddrs")
-@opt_designs(required=True)
+@opt_designs()
 @opt_devices()
 def cli_design_report_interfaces(devices: Tuple[str], designs: Tuple[str]):
     """

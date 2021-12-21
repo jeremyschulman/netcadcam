@@ -41,6 +41,17 @@ class TopologyDesignService(DesignService, registry_name="topology"):
     The TopologyDesignService is required for every design as it defines the set
     of devices, their interfaces, and the cabling-links that connect the
     device-interfaces.
+
+    Attributes
+    ----------
+    name: str
+        The topology name as defined by the Designer.  This name is typically
+        the same name as the Design name; but it does not need to be.  This
+        choice is up to the Designer.
+
+    cabling: CableByCableId
+        The cabling instance used to manage the relationship of the connected
+        device interfaces.
     """
 
     DESIGN_CHECKS = [
@@ -52,19 +63,21 @@ class TopologyDesignService(DesignService, registry_name="topology"):
         IPInterfacesTestCases,
     ]
 
-    def __init__(self, name: str, service_name: Optional[str] = "topology", **kwargs):
+    def __init__(
+        self, topology_name: str, service_name: Optional[str] = "topology", **kwargs
+    ):
 
         # The cabling must be created first becasue the add_devices, which is
         # called by the superclass constructor, uses cabling
 
-        self.cabling = CableByCableId(name=name)
+        self.cabling = CableByCableId(name=topology_name)
 
         # setup the design service with the User provided service name
 
         super(TopologyDesignService, self).__init__(service_name=service_name, **kwargs)
 
-        self.registry_add(name=name, obj=self)
-        self.name = name
+        self.registry_add(name=topology_name, obj=self)
+        self.name = topology_name
 
         # TODO: cleanup the use/naming of "testing" vs. "checks"
         self.testing_services = [

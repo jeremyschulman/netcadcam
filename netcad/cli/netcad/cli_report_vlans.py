@@ -45,7 +45,7 @@ __all__ = []
 
 
 @clig_design_show.command(name="vlans")
-@opt_designs(required=True)
+@opt_designs()
 @opt_devices()
 def cli_report_vlans(devices: Tuple[str], designs: Tuple[str]):
     """

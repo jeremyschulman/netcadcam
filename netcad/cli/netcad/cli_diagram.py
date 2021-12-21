@@ -35,7 +35,7 @@ __all__ = []
 
 
 @cli.command(name="diagram")
-@opt_design(required=True)
+@opt_design()
 @click.option(
     "--save",
     "save_file",

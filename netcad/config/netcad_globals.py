@@ -15,3 +15,4 @@ g_netcam_plugins: Optional[List[Dict]] = None
 g_netcam_plugins_catalog: Optional[Dict[str, Dict]] = None
 
 g_debug_level: Optional[int] = 0
+g_userenv_design_names: Optional[List] = None

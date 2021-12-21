@@ -20,7 +20,13 @@ class Environment(StrEnum):
     NETCAD_TEMPLATESDIR = auto()
 
     # -------------------------------------------------------------------------
-    # control-settings
+    # Controls
     # -------------------------------------------------------------------------
 
     NETCAD_NOVALIDATE = auto()
+
+    # When defined instructs the netcad system to use this design name, or
+    # collection of design naames when using colon-separated values, so that the
+    # User does not need to provide the --design flag option to CLI commands.
+
+    NETCAD_DESIGNS = auto()

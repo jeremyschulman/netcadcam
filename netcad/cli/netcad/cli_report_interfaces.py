@@ -31,6 +31,57 @@ from netcad.cli.netcad.clig_netcad_show import clig_design_show
 # -----------------------------------------------------------------------------
 
 
+@clig_design_show.command(name="interfaces")
+@click.option(
+    "--unused", "show_unused", help="only show unused interfaces", is_flag=True
+)
+@click.option(
+    "--all", "show_all", help="show all interfaces, including unused", is_flag=True
+)
+@opt_designs(required=True)
+@opt_devices(required=True)
+def cli_design_report_interfaces(devices: Tuple[str], designs: Tuple[str], **flags):
+    """
+    report device interfaces usage
+
+    \b
+    The output includes the interface name, description, assigned profile, and
+    physical port type.  By default this command will show only interfaces that
+    are used in the design.  Any unused interfaces will be omitted.  Additonal
+    flag options:
+       --all : show the unused interfaces
+       --unused : show only the unused interfaces
+
+    \f
+    Parameters
+    ----------
+    designs: Tuple[str]
+        A list of design names, as found in the User configuration file.
+
+    devices: tuple[str]
+        A list of device names, as would be found in the designated designs
+    """
+    log = get_logger()
+
+    if not (
+        dev_objs := get_devices_from_designs(designs=designs, include_devices=devices)
+    ):
+        log.error("No devices located in the given designs")
+        return
+
+    print(f"Checking {len(dev_objs)} devices ...")
+
+    for each_dev in dev_objs:
+        show_device_interfaces(each_dev, **flags)
+
+
+# -----------------------------------------------------------------------------
+#
+#                               PRIVATE CODE BEGINS
+#
+# -----------------------------------------------------------------------------
+
+
 def show_device_interfaces(device: Device, **options):
     console = Console()
     table = Table(
@@ -86,47 +137,3 @@ def show_device_interfaces(device: Device, **options):
         add_row(iface.name, if_desc, if_prof_name, pp_name)
 
     console.print(table)
-
-
-@clig_design_show.command(name="interfaces")
-@click.option(
-    "--unused", "show_unused", help="only show unused interfaces", is_flag=True
-)
-@click.option(
-    "--all", "show_all", help="show all interfaces, including unused", is_flag=True
-)
-@opt_designs(required=True)
-@opt_devices(required=True)
-def cli_design_report_interfaces(devices: Tuple[str], designs: Tuple[str], **flags):
-    """
-    report device interfaces usage
-
-    \b
-    The output includes the interface name, description, assigned profile, and
-    physical port type.  By default this command will show only interfaces that
-    are used in the design.  Any unused interfaces will be omitted.  Additonal
-    flag options:
-       --all : show the unused interfaces
-       --unused : show only the unused interfaces
-
-    \f
-    Parameters
-    ----------
-    designs: Tuple[str]
-        A list of design names, as found in the User configuration file.
-
-    devices: tuple[str]
-        A list of device names, as would be found in the designated designs
-    """
-    log = get_logger()
-
-    if not (
-        dev_objs := get_devices_from_designs(designs=designs, include_devices=devices)
-    ):
-        log.error("No devices located in the given designs")
-        return
-
-    print(f"Checking {len(dev_objs)} devices ...")
-
-    for each_dev in dev_objs:
-        show_device_interfaces(each_dev, **flags)
