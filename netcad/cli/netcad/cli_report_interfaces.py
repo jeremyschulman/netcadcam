@@ -38,7 +38,7 @@ from netcad.cli.netcad.clig_netcad_show import clig_design_show
 @click.option(
     "--all", "show_all", help="show all interfaces, including unused", is_flag=True
 )
-@opt_designs(required=True)
+@opt_designs()
 @opt_devices(required=True)
 def cli_design_report_interfaces(devices: Tuple[str], designs: Tuple[str], **flags):
     """

@@ -390,6 +390,14 @@ class DeviceInterfaces(defaultdict, DefaultDict[str, DeviceInterface]):
 
         return used_interfaces
 
+    def unused(self) -> Dict[str, DeviceInterface]:
+        """
+        Returns a dictiionary of the unused interfaces.
+        """
+        return dict(
+            (if_name, if_obj) for if_name, if_obj in self.items() if not if_obj.used
+        )
+
     def render(self, ctx: jinja2.runtime.Context, prefix: Optional[str] = None):
         env = ctx.environment
         content = StringIO()

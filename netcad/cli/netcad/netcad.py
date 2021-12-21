@@ -9,8 +9,9 @@ import sys
 # -----------------------------------------------------------------------------
 
 from netcad.logger import get_logger
-from .cli_netcad_main import cli
 from netcad.debug import format_exc_message
+from netcad.init import init, init_plugings
+from .cli_netcad_main import cli
 
 # -----------------------------------------------------------------------------
 #
@@ -25,6 +26,8 @@ def script():
     invokes the "netcad" command from the terminal.
     """
     try:
+        init()
+        init_plugings.init_netcad_plugins()
         cli()
 
     except Exception as exc:

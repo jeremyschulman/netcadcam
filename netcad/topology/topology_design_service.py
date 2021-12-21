@@ -75,9 +75,8 @@ class TopologyDesignService(DesignService, registry_name="topology"):
         # setup the design service with the User provided service name
 
         super(TopologyDesignService, self).__init__(service_name=service_name, **kwargs)
-
         self.registry_add(name=topology_name, obj=self)
-        self.name = topology_name
+        self.topology_name = topology_name
 
         # TODO: cleanup the use/naming of "testing" vs. "checks"
         self.testing_services = [
