@@ -2,7 +2,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import List, Set, Hashable, Optional, MutableMapping, TypeVar
+from typing import List, Set, Optional, MutableMapping, TypeVar
 from itertools import filterfalse
 from operator import attrgetter
 from collections import UserDict
@@ -15,10 +15,13 @@ from functools import lru_cache
 from netcad.device import Device
 from netcad.design_services import DesignService
 
+# -----------------------------------------------------------------------------
+# Module Private Imports
+# -----------------------------------------------------------------------------
+
 from .vlan_profile import VlanProfile
 from .tc_vlans import VlanTestCases
 from .tc_switchports import SwitchportTestCases
-
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -45,8 +48,10 @@ class DeviceVlanDesignService(DesignService):
     devices, has only one device.
     """
 
-    def __init__(self, name: Hashable, device: Device):
-        super().__init__(name=name)
+    DESIGN_CHECKS = [VlanTestCases, SwitchportTestCases]
+
+    def __init__(self, device: Device, service_name: Optional[str] = "vlans"):
+        super().__init__(service_name=service_name)
         self.device = device
         self.testing_services = [VlanTestCases, SwitchportTestCases]
         self.add_devices(device)
@@ -112,8 +117,9 @@ class VlansDesignService(
 
     def __init__(
         self,
-        name: Optional[Hashable] = "design_vlans",
-        device_service_name: Optional[Hashable] = "vlans",
+        service_name: Optional[str] = "vlans",
+        device_service_name: Optional[str] = "vlans",
+        **kwargs,
     ):
         """
         Initialize the design level Vlan services.
@@ -128,8 +134,9 @@ class VlansDesignService(
             The per-device specific vlan design service name.  By default, this
             value is "vlans".
         """
-        super().__init__(name=name)
         self._device_service_name = device_service_name
+
+        super().__init__(service_name=service_name, **kwargs)
 
     def add_devices(self, *devices: Device):
         """
@@ -143,9 +150,10 @@ class VlansDesignService(
             List of Device instances
         """
         super().add_devices(*devices)
+
         for each_dev in filterfalse(lambda d: d in self.data, devices):
             self[each_dev] = self.device_vlan_service(
-                name=self._device_service_name, device=each_dev
+                service_name=self._device_service_name, device=each_dev
             )
 
     def build(self):

@@ -83,7 +83,7 @@ class Design(Registry, registry_name="designs"):
 
         self.ipams = dict()
 
-    def add_devices(self, *devices: Device):
+    def add_devices(self, *devices: Device) -> "Design":
         """
         This method adds device(s) to the design instance.  The Designer MUST
         call this method for any device used in the design so that the device is
@@ -100,12 +100,25 @@ class Design(Registry, registry_name="designs"):
             self.devices[dev.name] = dev
             dev.design = self
 
-    def build(self):
+        # for method chaining
+        return self
+
+    def add_services(self, *design_services: DesignService) -> "Design":
+        for svc in design_services:
+            self.services[svc.name] = svc
+
+        # for method chaining
+        return self
+
+    def build(self) -> "Design":
         """
         Execute the `build` methods for all services in the design.
         """
         for svc in self.services.values():
             svc.build()
+
+        # for method chaining
+        return self
 
     def validate(self):
         """
