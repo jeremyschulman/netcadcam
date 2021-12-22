@@ -10,6 +10,8 @@ import sys
 
 from netcad.logger import get_logger
 from netcad.debug import format_exc_message
+from netcad.init import init  # init_plugings
+from netcad.netcam.loader import import_netcam_plugins
 
 from .cli_netcam_main import cli
 
@@ -27,6 +29,8 @@ def script():
     invokes the "netcam" command from the terminal.
     """
     try:
+        init()
+        import_netcam_plugins()
         cli()
 
     except Exception as exc:

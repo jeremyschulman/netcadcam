@@ -128,6 +128,6 @@ def import_netcam_plugins() -> NetcamPluginCatalog:
         netcad_globals.g_netcam_plugins.append(pg_obj)
 
         for os_name in pg_obj.supports:
-            netcad_globals.g_netcam_plugins_catalog[os_name] = pg_item
+            netcad_globals.g_netcam_plugins_catalog[os_name] = pg_obj
 
     return netcad_globals.g_netcam_plugins_catalog

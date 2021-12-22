@@ -4,7 +4,7 @@ from rich.pretty import Pretty
 
 from .cli_netcam_main import cli
 
-from netcad.netcam.loader import import_netcam_plugins
+
 from netcad.config import netcad_globals
 
 
@@ -16,8 +16,6 @@ def clig_netcam_plugins():
 
 @clig_netcam_plugins.command("list")
 def cli_netcam_plugins_list():
-
-    import_netcam_plugins()
 
     table = Table("Name", "Description", "Package", "Supports", show_header=True)
 

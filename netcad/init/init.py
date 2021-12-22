@@ -86,7 +86,7 @@ def _init_design_configs():
     #       unique values.  Reference:
     #       https://stackoverflow.com/questions/480214/how-do-you-remove-duplicates-from-a-list-whilst-preserving-order
 
-    if userenv_design := environ.get(Environment.NETCAD_DESIGNS):
+    if userenv_design := environ.get(Environment.NETCAD_DESIGN):
         netcad_globals.g_userenv_design_names = list(
             dict.fromkeys(userenv_design.split(":"))
         )

@@ -29,4 +29,4 @@ class Environment(StrEnum):
     # collection of design naames when using colon-separated values, so that the
     # User does not need to provide the --design flag option to CLI commands.
 
-    NETCAD_DESIGNS = auto()
+    NETCAD_DESIGN = auto()
