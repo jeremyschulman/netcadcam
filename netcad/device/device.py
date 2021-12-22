@@ -196,20 +196,6 @@ class Device(Registry, registry_name="devices"):
 
         return self.template_env.get_template(str(as_path))
 
-    # noinspection PyMethodMayBeStatic
-    # def testing_services(self) -> List[str]:
-    #     """
-    #     This function returs the list of TestCases service names that will be
-    #     used for creating the device's network state audits.  The Device base
-    #     class will always return the following (and showing their associated
-    #     TestCases class for reference).
-    #
-    #     Returns
-    #     -------
-    #     List[str] as described.
-    #     """
-    #     return list(DEFAULT_TESTING_SERVICES)
-
     # -------------------------------------------------------------------------
     #
     #                            Class Methods

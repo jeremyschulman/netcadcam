@@ -276,6 +276,11 @@ class DeviceInterface(object):
         """
         return [iface.name for iface in sorted(map(DeviceInterface, if_names))]
 
+    @jinja2.pass_context
+    def render(self, ctx: jinja2.runtime.Context) -> str:
+        template = self.profile.get_template(ctx.environment)
+        return template.render(device=self.device, interface=self).rstrip()
+
     # -------------------------------------------------------------------------
     #
     #                               Dunder Overrides
