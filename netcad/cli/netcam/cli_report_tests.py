@@ -114,6 +114,7 @@ def cli_report_tests(devices: Tuple[str], designs: Tuple[str], **optionals):
 
     for device in device_objs:
         dev_tcr_dir = tc_dir / device.name / "results"
+
         # 'stick' a new attribute onto the Device instance that will be
         # privately used within this CLI module.
 
@@ -123,8 +124,6 @@ def cli_report_tests(devices: Tuple[str], designs: Tuple[str], **optionals):
                 f"Missing {device.name}, expected test results directory: {dev_tcr_dir.name}"
             )
             continue
-
-
 
     devices_by_design = groupby(
         sorted(device_objs, key=lambda d: id(d.design)), key=lambda d: d.design
@@ -139,7 +138,7 @@ def cli_report_tests(devices: Tuple[str], designs: Tuple[str], **optionals):
 
         for design, device_objs in devices_by_design:
             show_design_brief_summary_table(
-                console=console, design=design, optionals=optionals
+                console=console, design=design, optionals=optionals, devices=devices
             )
 
         return
@@ -153,7 +152,8 @@ def cli_report_tests(devices: Tuple[str], designs: Tuple[str], **optionals):
             for dev_obj in device_objs:
                 show_device_brief_summary_table(console, dev_obj, optionals)
 
-            console.print("\n", design.notes.table(), "\n")
+            if design.notes:
+                console.print("\n", design.notes.table(), "\n")
 
         # done with brief mode, exit CLI processing
         return
@@ -178,7 +178,9 @@ def cli_report_tests(devices: Tuple[str], designs: Tuple[str], **optionals):
 # -----------------------------------------------------------------------------
 
 
-def show_design_brief_summary_table(console: Console, design: Design, optionals: dict):
+def show_design_brief_summary_table(
+    console: Console, design: Design, optionals: dict, devices: Tuple[str]
+):
     table = Table(
         "Test Cases",
         "Status",
@@ -200,7 +202,14 @@ def show_design_brief_summary_table(console: Console, design: Design, optionals:
     design_tc_counts = 0
     dev_cntrs = Counter()
 
-    for device in design.devices.values():
+    # if the User provided a filtered list of devices, then reduce the set of
+    # all devices by those that they want to see.
+
+    dev_objs = design.devices.values()
+    if devices:
+        dev_objs = filter(lambda d: d.name in devices, dev_objs)
+
+    for device in dev_objs:
         dev_cntrs.clear()
 
         for tc_name in find_test_cases_names(device, optionals):
@@ -366,6 +375,14 @@ def show_device_test_logs(console: Console, device: Device, optionals: dict):
         show_log_table(console, device, results_file.name, results)
 
 
+_TCS_2_TRT = {
+    trt.TestCaseStatus.PASS: trt.PassTestCase,
+    trt.TestCaseStatus.FAIL: trt.FailTestCase,
+    trt.TestCaseStatus.INFO: trt.InfoTestCase,
+    trt.TestCaseStatus.SKIP: trt.SkipTestCases,
+}
+
+
 def show_log_table(
     console: Console, device: Device, filename: str, results: List[Dict]
 ):
@@ -382,28 +399,16 @@ def show_log_table(
         show_lines=True,
     )
 
-    st_opt = trt.TestCaseStatus
-
     for result in results:
-        expected = result["test_case"]["expected_results"]
-        r_st = result["status"]
-        msr_val = _pretty_dict_table(
-            dict(expected=expected, measured=result["measurement"])
-        )
-
-        if r_st == st_opt.FAIL:
-            log_msg = _pretty_dict_table(result["error"])
-        elif r_st == st_opt.SKIP:
-            log_msg = result["message"]
-        else:
-            log_msg = msr_val
+        r_tcr = _TCS_2_TRT.get(result["status"], trt.InfoTestCase)
+        log_msg = r_tcr.log_result(result)
 
         table.add_row(
             _colorize_status(result["status"]),
             device.name,
             result["test_case_id"],
             result.get("field"),
-            log_msg,
+            _pretty_dict_table(log_msg),
         )
 
     console.print("\n", table, "\n")

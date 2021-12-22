@@ -35,7 +35,7 @@ from netcad.cli.common_opts import opt_devices, opt_designs
 
 
 @clig_design_show.command(name="cabling")
-@opt_designs(required=True)
+@opt_designs()
 @opt_devices()
 def cli_design_report_cabling(devices: Tuple[str], designs: Tuple[str]):
     """report cabling between devices"""

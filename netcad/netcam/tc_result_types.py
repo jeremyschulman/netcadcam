@@ -70,6 +70,10 @@ class ResultsTestCase(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
+    @staticmethod
+    def log_result(result: dict):
+        raise NotImplementedError()
+
 
 # -----------------------------------------------------------------------------
 #
@@ -81,6 +85,16 @@ class ResultsTestCase(BaseModel):
 class PassTestCase(ResultsTestCase):
     status = TestCaseStatus.PASS
     field: Optional[str]
+
+    @staticmethod
+    def log_result(result: dict):
+        """
+        The log message to report to the User when results are processed.
+        """
+        expected = result["test_case"]["expected_results"]
+        if (field := result.get("field")) and field in expected:
+            expected = expected[field]
+        return dict(expected=expected, measured=result["measurement"])
 
 
 class NoneTestCase(TestCase):
@@ -97,6 +111,10 @@ class SkipTestCases(ResultsTestCase):
     test_case: TestCase = Field(default_factory=NoneTestCase)
     measurement: Optional[AnyMeasurementType] = None
 
+    @staticmethod
+    def log_result(result: dict):
+        return result["message"]
+
 
 # -----------------------------------------------------------------------------
 #
@@ -109,6 +127,10 @@ class FailTestCase(ResultsTestCase):
     status = TestCaseStatus.FAIL
     field: str
     error: Union[str, dict]
+
+    @staticmethod
+    def log_result(result: dict):
+        return result["error"]
 
 
 class FailNoExistsResult(FailTestCase):
@@ -142,7 +164,7 @@ class FailFieldMismatchResult(FailTestCase):
             test_case=test_case,
             field=field,
             measurement=measurement,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -159,7 +181,7 @@ class FailExtraMembersResult(FailTestCase):
             test_case=test_case,
             expected=expected,
             extras=extras,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -176,7 +198,7 @@ class FailMissingMembersResult(FailTestCase):
             test_case=test_case,
             expected=expected,
             missing=missing,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -190,6 +212,10 @@ class FailMissingMembersResult(FailTestCase):
 class InfoTestCase(ResultsTestCase):
     status = TestCaseStatus.INFO
     field: Optional[str]
+
+    @staticmethod
+    def log_result(result: dict):
+        return result["measurement"]
 
 
 CollectionTestResults = List[ResultsTestCase]

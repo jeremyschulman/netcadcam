@@ -27,7 +27,7 @@ from .tc_ipaddrs import IPInterfacesTestCases
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["TopologyService", "TopologyServiceLike"]
+__all__ = ["TopologyDesignService", "TopologyServiceLike"]
 
 # -----------------------------------------------------------------------------
 #
@@ -36,18 +36,49 @@ __all__ = ["TopologyService", "TopologyServiceLike"]
 # -----------------------------------------------------------------------------
 
 
-class TopologyService(DesignService, registry_name="topology"):
-    def __init__(self, network: str, name: Optional[str] = "topology"):
+class TopologyDesignService(DesignService, registry_name="topology"):
+    """
+    The TopologyDesignService is required for every design as it defines the set
+    of devices, their interfaces, and the cabling-links that connect the
+    device-interfaces.
+
+    Attributes
+    ----------
+    name: str
+        The topology name as defined by the Designer.  This name is typically
+        the same name as the Design name; but it does not need to be.  This
+        choice is up to the Designer.
+
+    cabling: CableByCableId
+        The cabling instance used to manage the relationship of the connected
+        device interfaces.
+    """
+
+    DESIGN_CHECKS = [
+        DeviceInformationTestCases,
+        InterfaceTestCases,
+        TransceiverTestCases,
+        InterfaceCablingTestCases,
+        LagTestCases,
+        IPInterfacesTestCases,
+    ]
+
+    def __init__(
+        self, topology_name: str, service_name: Optional[str] = "topology", **kwargs
+    ):
+
+        # The cabling must be created first becasue the add_devices, which is
+        # called by the superclass constructor, uses cabling
+
+        self.cabling = CableByCableId(name=topology_name)
 
         # setup the design service with the User provided service name
-        super(TopologyService, self).__init__(name=name)
 
-        # register this topology by the User provided network name
-        self.registry_add(name=network, obj=self)
+        super(TopologyDesignService, self).__init__(service_name=service_name, **kwargs)
+        self.registry_add(name=topology_name, obj=self)
+        self.topology_name = topology_name
 
-        self.network = network
-        self.cabling = CableByCableId(name=network)
-
+        # TODO: cleanup the use/naming of "testing" vs. "checks"
         self.testing_services = [
             DeviceInformationTestCases,
             InterfaceTestCases,
@@ -58,7 +89,7 @@ class TopologyService(DesignService, registry_name="topology"):
         ]
 
     def add_devices(self, *devices: Device):
-        super(TopologyService, self).add_devices(*devices)
+        super(TopologyDesignService, self).add_devices(*devices)
         self.cabling.add_devices(*devices)
 
     def build(self):
@@ -69,4 +100,6 @@ class TopologyService(DesignService, registry_name="topology"):
         pass
 
 
-TopologyServiceLike = TypeVar("TopologyServiceLike", TopologyService, DesignService)
+TopologyServiceLike = TypeVar(
+    "TopologyServiceLike", TopologyDesignService, DesignService
+)

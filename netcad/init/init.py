@@ -1,6 +1,7 @@
 # -----------------------------------------------------------------------------
 # System Imports
 # -----------------------------------------------------------------------------
+
 import asyncio
 import sys
 from os import environ
@@ -39,7 +40,7 @@ __all__ = ["init"]
 
 def init():
     """
-    The netcad/cam primary initialization function.
+    The netcad / netcam primary initialization function.
     """
 
     _init_debug()
@@ -71,20 +72,38 @@ def _init_debug():
 
 
 def _init_design_configs():
+
     # Add the project directory to the Python system path so that packages can
     # be imported without the User installing them.
 
     sys.path.insert(0, environ[Environment.NETCAD_PROJECTDIR])
 
+    # If the User exports a set of design-names they want to use by default so
+    # they do not need to provide that flag on each invocation, then setup that
+    # global variable now.
+    #
+    # Note: the following code uses a technique to get the ordered list of
+    #       unique values.  Reference:
+    #       https://stackoverflow.com/questions/480214/how-do-you-remove-duplicates-from-a-list-whilst-preserving-order
+
+    if userenv_design := environ.get(Environment.NETCAD_DESIGN):
+        netcad_globals.g_userenv_design_names = list(
+            dict.fromkeys(userenv_design.split(":"))
+        )
+
+    # Ensure the User actually defined some 'design' items in their configuration file.
+
     if not (design_configs := netcad_globals.g_config.get("design")):
         raise RuntimeError(
-            f'Missing "design" definitions in config-file: {netcad_globals.g_netcad_config_file}'
+            f'Missing "design" definitions in config file: "{netcad_globals.g_netcad_config_file}"'
         )
 
     # Initialize the g_netcad_designs global to the contents of the config file
     # so that this can be easily referenced later when loading designs.
 
-    netcad_globals.g_netcad_designs = design_configs
+    netcad_globals.g_netcad_designs = {
+        design_cfg["name"]: design_cfg for design_cfg in design_configs
+    }
 
 
 def _init_config_contents():
@@ -97,15 +116,18 @@ def _init_config_contents():
     config_filepath = environ.setdefault(
         Environment.NETCAD_CONFIGFILE, d.DEFAULT_NETCAD_CONFIG_FILE
     )
+
     config_filepath = netcad_globals.g_netcad_config_file = Path(
         config_filepath
     ).absolute()
+
     environ[Environment.NETCAD_CONFIGFILE] = str(config_filepath)
 
     if not config_filepath.is_file():
         raise RuntimeError(
             f"Netcad configuration file not found: {config_filepath.absolute()}"
         )
+
     netcad_globals.g_config = toml.load(config_filepath.open())
 
 
@@ -156,11 +178,10 @@ def _init_proj_dirs():
     # NETCAD_CACHDIR
     # -------------------------------------------------------------------------
 
-    netcad_globals.g_netcad_cache_dir = Path(
-        environ.setdefault(
-            Environment.NETCAD_CACHEDIR,
-            str(project_dir.joinpath(d.DEFAULT_NETCAD_CACHEDIR).absolute()),
-        )
+    netcad_globals.g_netcad_cache_dir = ensure_directory(
+        project_dir=project_dir,
+        env_var=Environment.NETCAD_CACHEDIR,
+        default_value=d.DEFAULT_NETCAD_CACHEDIR,
     )
 
 

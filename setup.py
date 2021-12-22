@@ -3,12 +3,9 @@ from setuptools import setup
 
 packages = [
     "netcad",
-    "netcad.arango",
     "netcad.cabling",
     "netcad.cli",
-    "netcad.cli.cli_build",
     "netcad.cli.cli_get",
-    "netcad.cli.cli_report",
     "netcad.cli.netcad",
     "netcad.cli.netcam",
     "netcad.config",
@@ -23,13 +20,7 @@ packages = [
     "netcad.origin",
     "netcad.phy_port",
     "netcad.testing_services",
-    "netcad.testing_services.cabling",
-    "netcad.testing_services.device",
-    "netcad.testing_services.interfaces",
-    "netcad.testing_services.lags",
-    "netcad.testing_services.mlags",
-    "netcad.testing_services.transceivers",
-    "netcad.testing_services.vlans",
+    "netcad.topology",
     "netcad.vlan",
 ]
 
@@ -40,6 +31,7 @@ install_requires = [
     "aiofiles>=0.7.0,<0.8.0",
     "click>=8.0.1,<9.0.0",
     "httpx>=0.19.0,<0.20.0",
+    "maya>=0.6.1,<0.7.0",
     "more-itertools>=8.10.0,<9.0.0",
     "pydantic>=1.8.2,<2.0.0",
     "rich>=10.12.0,<11.0.0",

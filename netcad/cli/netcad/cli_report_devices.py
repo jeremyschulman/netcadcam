@@ -44,7 +44,7 @@ __all__ = []
 
 
 @clig_design_show.command(name="devices")
-@opt_designs(required=True)
+@opt_designs()
 @click.option("--all", "include_pseudo", help="show pseudo devices", is_flag=True)
 def cli_design_report_devices(designs: Tuple[str], **flags):
     """

@@ -27,7 +27,7 @@ from netcad.netcam.dut import DeviceUnderTest
 from netcad.cli.common_opts import opt_devices, opt_designs
 from netcad.cli.device_inventory import get_devices_from_designs
 
-from netcad.netcam.loader import import_netcam_plugin
+# from netcad.netcam.loader import import_netcam_plugins
 
 from netcad.cli.netcam.cli_netcam_main import cli
 from netcad.netcam import execute_testcases
@@ -50,7 +50,7 @@ __all__ = []
 
 @cli.command(name="test")
 @opt_devices()
-@opt_designs(required=True)
+@opt_designs()
 @click.option(
     "--tests-dir",
     help="location to read test-cases",
@@ -82,8 +82,6 @@ def cli_test_device(devices: Tuple[str], designs: Tuple[str], tests_dir: Path):
 
     log = get_logger()
 
-    netcam_plugins = import_netcam_plugin()
-
     if not (device_objs := get_devices_from_designs(designs, include_devices=devices)):
         log.error("No devices located in the given designs")
         return
@@ -93,17 +91,20 @@ def cli_test_device(devices: Tuple[str], designs: Tuple[str], tests_dir: Path):
     # back to the DUT by device name when be build the summary table.
 
     tc_dir = netcad_globals.g_netcad_testcases_dir
+    netcam_plugins = netcad_globals.g_netcam_plugins_catalog
+
     duts = {}
 
     async def run_tests():
 
         for dev_obj in device_objs:
-            if not (pg_cfg := netcam_plugins.get(dev_obj.os_name)):
+            if not (pg_obj := netcam_plugins.get(dev_obj.os_name)):
                 raise RuntimeError(
                     f"Missing testing plugin for {dev_obj.name}: os-name: {dev_obj.os_name}"
                 )
 
-            duts[dev_obj] = pg_cfg.get_dut(
+            # TODO: fix the way the plugin is called
+            duts[dev_obj] = pg_obj.plugin_get_dut(  # noqa
                 device=dev_obj, testcases_dir=tc_dir.joinpath(dev_obj.name)
             )
 

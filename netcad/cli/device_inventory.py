@@ -29,14 +29,13 @@ def get_devices_from_designs(
     designs: Sequence[str], include_devices: Optional[Sequence[str]] = None
 ) -> List[Device]:
 
-    for design_name in designs:
-        load_design(design_name=design_name)
+    device_objs = set()
 
-    device_objs = sorted(
-        obj for obj in Device.registry_items(True).values() if isinstance(obj, Device)
-    )
+    for design_name in designs:
+        design_obj = load_design(design_name=design_name)
+        device_objs.update(design_obj.devices.values())
 
     if not include_devices:
-        return device_objs
+        return sorted(device_objs)
 
     return sorted([obj for obj in device_objs if obj.name in include_devices])

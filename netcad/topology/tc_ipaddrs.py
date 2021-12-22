@@ -76,7 +76,8 @@ class IPInterfacesTestCases(TestCases):
         if_l3_list = [
             iface
             for iface in device.interfaces.used().values()
-            if isinstance(iface.profile, InterfaceL3) and iface.profile.if_ipaddr
+            if isinstance(iface.profile, InterfaceL3)
+            and (iface.profile.if_ipaddr or iface.profile.is_reserved)
         ]
 
         return IPInterfacesTestCases(
@@ -85,7 +86,7 @@ class IPInterfacesTestCases(TestCases):
                 IPInterfaceTestCase(
                     test_params=IPInterfaceTestParams(if_name=iface.name),
                     expected_results=IPInterfaceTestExpectations(
-                        if_ipaddr=str(iface.profile.if_ipaddr)
+                        if_ipaddr=str(iface.profile.if_ipaddr or "is_reserved")
                     ),
                 )
                 for iface in if_l3_list

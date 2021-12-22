@@ -2,7 +2,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional
+from typing import Optional, Hashable, TypeVar
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -20,9 +20,7 @@ from netcad.helpers import HashableModel
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = [
-    "VlanProfile",
-]
+__all__ = ["VlanProfile", "VlanProfileLike"]
 
 
 # -----------------------------------------------------------------------------
@@ -59,3 +57,6 @@ class VlanProfile(HashableModel):
     def __lt__(self, other: "VlanProfile"):
         """Enabled sorting by vlan-ID value"""
         return self.vlan_id < other.vlan_id
+
+
+VlanProfileLike = TypeVar("VlanProfileLike", VlanProfile, Hashable)

@@ -37,7 +37,7 @@ __all__ = []
 
 
 @clig_build.command(name="configs")
-@opt_designs(required=True)
+@opt_designs()
 @opt_devices()
 @click.option(
     "--configs-dir",

@@ -276,6 +276,11 @@ class DeviceInterface(object):
         """
         return [iface.name for iface in sorted(map(DeviceInterface, if_names))]
 
+    @jinja2.pass_context
+    def render(self, ctx: jinja2.runtime.Context) -> str:
+        template = self.profile.get_template(ctx.environment)
+        return template.render(device=self.device, interface=self).rstrip()
+
     # -------------------------------------------------------------------------
     #
     #                               Dunder Overrides
@@ -389,6 +394,14 @@ class DeviceInterfaces(defaultdict, DefaultDict[str, DeviceInterface]):
             used_interfaces[if_name] = interface
 
         return used_interfaces
+
+    def unused(self) -> Dict[str, DeviceInterface]:
+        """
+        Returns a dictiionary of the unused interfaces.
+        """
+        return dict(
+            (if_name, if_obj) for if_name, if_obj in self.items() if not if_obj.used
+        )
 
     def render(self, ctx: jinja2.runtime.Context, prefix: Optional[str] = None):
         env = ctx.environment
