@@ -16,7 +16,7 @@ from pydantic import BaseModel
 
 from netcad.device import Device, DeviceInterface
 from netcad.checks import CheckCollection, Check
-from netcad.checks import design_checks
+from netcad.checks import register_collection
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -67,9 +67,9 @@ class TransceiverCheckExclusiveList(Check):
         return "exclusive_list"
 
 
-@design_checks
+@register_collection
 class TransceiverCheckCollection(CheckCollection):
-    service = "transceivers"
+    name = "transceivers"
     checks: Optional[List[TransceiverCheck]]
 
     @classmethod

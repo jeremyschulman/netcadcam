@@ -17,7 +17,7 @@ from pydantic import BaseModel
 from netcad.device import DeviceMLagPairMember, DeviceMLagPairGroup
 from netcad.device import InterfaceLag
 from netcad.checks import CheckCollection, Check
-from netcad.checks import design_checks
+from netcad.checks import register_collection
 
 from . import check_lags as lags
 
@@ -47,9 +47,9 @@ class MLagSystemCheck(Check):
         return self.check_type
 
 
-@design_checks
+@register_collection
 class MLagCheckCollection(CheckCollection):
-    service = "mlags"
+    name = "mlags"
     checks: Optional[List[lags.LagCheck]]
 
     @classmethod

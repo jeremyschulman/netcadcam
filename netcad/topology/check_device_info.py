@@ -16,7 +16,7 @@ from pydantic import BaseModel, Field
 
 from netcad.device import Device
 from netcad.checks import CheckCollection, Check
-from netcad.checks import design_checks
+from netcad.checks import register_collection
 
 
 class DeviceInformationCheckParams(BaseModel):
@@ -80,9 +80,9 @@ def _interfaces_as_dict(device: Device) -> dict:
     return as_dict
 
 
-@design_checks
+@register_collection
 class DeviceInformationCheckCollection(CheckCollection):
-    service = "device"
+    name = "device"
     checks: List[DeviceInformationCheck]
     interfaces: Dict[str, DeviceInterfaceInfo]
 

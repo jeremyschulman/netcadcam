@@ -19,7 +19,7 @@ from netcad.device import Device, DeviceInterface
 from netcad.checks import CheckCollection, Check
 from netcad.device import InterfaceLag
 
-from netcad.checks import design_checks
+from netcad.checks import register_collection
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -62,9 +62,9 @@ class LagCheck(Check):
         return str(self.check_params.interface)
 
 
-@design_checks
+@register_collection
 class LagCheckCollection(CheckCollection):
-    service = "lags"
+    name = "lags"
     checks: Optional[List[LagCheck]]
 
     @classmethod

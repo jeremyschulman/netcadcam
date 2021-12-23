@@ -1,7 +1,7 @@
 from netcad.registry import Registry
 from .check_collection import CheckCollection
 
-__all__ = ["CheckRegistry", "design_checks"]
+__all__ = ["CheckRegistry", "register_collection"]
 
 
 class CheckRegistry(Registry, registry_name="test_services"):
@@ -16,7 +16,7 @@ class CheckRegistry(Registry, registry_name="test_services"):
 
             @testing_services
             class FooTestCases(TestCases):
-                service = 'foo-service'
+                name = 'foo-service'
                 ...
 
         The __call__ decorator will validate that the decorating class is of
@@ -38,15 +38,15 @@ class CheckRegistry(Registry, registry_name="test_services"):
             )
 
         try:
-            service_name = cls.get_service_name()
+            name = cls.get_name()
         except (KeyError, AttributeError):
             raise RuntimeError(
-                f"TestCases: {cls.__name__}: missing `service` name attribute."
+                f"TestCases: {cls.__name__}: missing `name` name attribute."
             )
 
-        self.registry_add(service_name, cls)
+        self.registry_add(name, cls)
         return cls
 
 
 # decorator function is the registration, see __call__ usage above.
-design_checks = CheckRegistry()
+register_collection = CheckRegistry()

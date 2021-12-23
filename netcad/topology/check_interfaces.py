@@ -16,7 +16,7 @@ from pydantic import BaseModel, PositiveInt
 
 from netcad.device import Device, DeviceInterface
 from netcad.checks import CheckCollection, Check
-from netcad.checks import design_checks
+from netcad.checks import register_collection
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -77,9 +77,9 @@ class InterfaceCheckExclusiveList(Check):
         return "exclusive_list"
 
 
-@design_checks
+@register_collection
 class InterfaceCheckCollection(CheckCollection):
-    service = "interfaces"
+    name = "interfaces"
     checks: Optional[List[InterfaceCheck]]
 
     @classmethod

@@ -16,7 +16,7 @@ from pydantic import BaseModel
 
 from netcad.device import Device, DeviceInterface
 from netcad.checks import CheckCollection, Check
-from netcad.checks import design_checks
+from netcad.checks import register_collection
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -53,9 +53,9 @@ class InterfaceCablingCheck(Check):
         return str(self.check_params.interface)
 
 
-@design_checks
+@register_collection
 class InterfaceCablingCheckCollection(CheckCollection):
-    service = "cabling"
+    name = "cabling"
     checks: Optional[List[InterfaceCablingCheck]]
 
     @classmethod

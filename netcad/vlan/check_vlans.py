@@ -24,7 +24,7 @@ from netcad.device.l2_interfaces import InterfaceL2Access, InterfaceL2Trunk
 from netcad.device.l3_interfaces import InterfaceVlan
 
 from netcad.checks import CheckCollection, Check
-from netcad.checks.check_registry import design_checks
+from netcad.checks.check_registry import register_collection
 
 
 # -----------------------------------------------------------------------------
@@ -65,10 +65,13 @@ class VlanCheck(Check):
         return str(self.check_params.vlan_id)
 
 
+class VlanExclusiveListExpectations(BaseModel):
+    vlans: List[VlanProfile]
+
+
 class VlanCheckExclusiveList(Check):
     check_type = "exclusive_list"
-    check_params: Optional[BaseModel] = None
-    expected_results: Optional[BaseModel] = None
+    expected_results: VlanExclusiveListExpectations
 
     def check_id(self) -> str:
         return self.check_type
@@ -80,9 +83,9 @@ class VlanCheckExclusiveList(Check):
 # -----------------------------------------------------------------------------
 
 
-@design_checks
+@register_collection
 class VlanCheckCollection(CheckCollection):
-    service = "vlans"
+    name = "vlans"
     checks: Optional[List[VlanCheck]]
 
     @classmethod

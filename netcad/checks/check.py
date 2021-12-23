@@ -47,7 +47,7 @@ class Check(BaseModel):
     """
 
     check_type: Optional[str]
-    check_params: BaseModel
+    check_params: Optional[BaseModel]
     expected_results: BaseModel
 
     def check_id(self) -> str:

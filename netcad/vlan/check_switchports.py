@@ -19,7 +19,7 @@ from netcad.vlan import VlanProfile
 from netcad.device.l2_interfaces import InterfaceL2Access, InterfaceL2Trunk
 
 from netcad.checks import CheckCollection, Check
-from netcad.checks.check_registry import design_checks
+from netcad.checks.check_registry import register_collection
 
 
 # -----------------------------------------------------------------------------
@@ -65,9 +65,9 @@ class SwitchportCheck(Check):
         return str(self.check_params.if_name)
 
 
-@design_checks
+@register_collection
 class SwitchportCheckCollection(CheckCollection):
-    service = "switchports"
+    name = "switchports"
     checks: Optional[List[SwitchportCheck]]
 
     @classmethod
