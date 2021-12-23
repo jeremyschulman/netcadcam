@@ -19,18 +19,18 @@ from netcad.checks import CheckCollection, Check
 from netcad.checks import design_checks
 
 
-class DeviceInformationTestParams(BaseModel):
+class DeviceInformationCheckParams(BaseModel):
     device: str
     os_name: str
 
 
-class DeviceInformationTestExpectations(BaseModel):
+class DeviceInformationCheckExpectations(BaseModel):
     product_model: str
 
 
-class DeviceInformationTestCase(Check):
-    check_params: DeviceInformationTestParams
-    expected_results: DeviceInformationTestExpectations
+class DeviceInformationCheck(Check):
+    check_params: DeviceInformationCheckParams
+    expected_results: DeviceInformationCheckExpectations
 
     def check_id(self) -> str:
         return self.check_params.device
@@ -81,23 +81,23 @@ def _interfaces_as_dict(device: Device) -> dict:
 
 
 @design_checks
-class DeviceInformationTestCases(CheckCollection):
+class DeviceInformationCheckCollection(CheckCollection):
     service = "device"
-    checks: List[DeviceInformationTestCase]
+    checks: List[DeviceInformationCheck]
     interfaces: Dict[str, DeviceInterfaceInfo]
 
     @classmethod
-    def build(cls, device: Device, **kwargs) -> "DeviceInformationTestCases":
+    def build(cls, device: Device, **kwargs) -> "DeviceInformationCheckCollection":
 
-        return DeviceInformationTestCases(
+        return DeviceInformationCheckCollection(
             device=device.name,
             interfaces=_interfaces_as_dict(device),
             checks=[
-                DeviceInformationTestCase(
-                    check_params=DeviceInformationTestParams(
+                DeviceInformationCheck(
+                    check_params=DeviceInformationCheckParams(
                         device=device.name, os_name=device.os_name
                     ),
-                    expected_results=DeviceInformationTestExpectations(
+                    expected_results=DeviceInformationCheckExpectations(
                         product_model=device.product_model
                     ),
                 )

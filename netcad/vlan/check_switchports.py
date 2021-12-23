@@ -27,14 +27,14 @@ from netcad.checks.check_registry import design_checks
 # -----------------------------------------------------------------------------
 
 __all__ = [
-    "SwitchportTestCases",
-    "SwitchportTestCase",
+    "SwitchportCheckCollection",
+    "SwitchportCheck",
     "SwitchportTrunkExpectation",
     "SwitchportAccessExpectation",
 ]
 
 
-class SwitchportTestParams(BaseModel):
+class SwitchportCheckParams(BaseModel):
     if_name: str
 
 
@@ -56,9 +56,9 @@ class SwitchportTrunkExpectation(SwitchportAnyExpectations):
 SwitchportExpectations = Union[SwitchportAccessExpectation, SwitchportTrunkExpectation]
 
 
-class SwitchportTestCase(Check):
+class SwitchportCheck(Check):
     check_type = "switchport"
-    check_params: SwitchportTestParams
+    check_params: SwitchportCheckParams
     expected_results: SwitchportExpectations
 
     def check_id(self) -> str:
@@ -66,18 +66,18 @@ class SwitchportTestCase(Check):
 
 
 @design_checks
-class SwitchportTestCases(CheckCollection):
+class SwitchportCheckCollection(CheckCollection):
     service = "switchports"
-    checks: Optional[List[SwitchportTestCase]]
+    checks: Optional[List[SwitchportCheck]]
 
     @classmethod
-    def build(cls, device: Device, **kwargs) -> "SwitchportTestCases":
+    def build(cls, device: Device, **kwargs) -> "SwitchportCheckCollection":
 
-        test_cases = list()
+        checks = list()
 
         for if_name, interface in device.interfaces.used().items():
             if_prof = interface.profile
-            tc_params = SwitchportTestParams(if_name=if_name)
+            tc_params = SwitchportCheckParams(if_name=if_name)
 
             if isinstance(if_prof, InterfaceL2Access):
                 tc_expd = SwitchportAccessExpectation(vlan=if_prof.vlan)
@@ -90,8 +90,8 @@ class SwitchportTestCases(CheckCollection):
             else:
                 continue
 
-            test_cases.append(
-                SwitchportTestCase(check_params=tc_params, expected_results=tc_expd)
+            checks.append(
+                SwitchportCheck(check_params=tc_params, expected_results=tc_expd)
             )
 
-        return SwitchportTestCases(device=device.name, checks=test_cases)
+        return SwitchportCheckCollection(device=device.name, checks=checks)

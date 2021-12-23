@@ -23,10 +23,10 @@ from netcad.checks import design_checks
 # -----------------------------------------------------------------------------
 
 __all__ = [
-    "InterfaceCablingTestCases",
-    "InterfaceCablingTestCase",
+    "InterfaceCablingCheckCollection",
+    "InterfaceCablingCheck",
     "InterfaceCablingdExpectations",
-    "InterfaceCablingTestParams",
+    "InterfaceCablingCheckParams",
 ]
 
 # -----------------------------------------------------------------------------
@@ -36,7 +36,7 @@ __all__ = [
 # -----------------------------------------------------------------------------
 
 
-class InterfaceCablingTestParams(BaseModel):
+class InterfaceCablingCheckParams(BaseModel):
     interface: str
 
 
@@ -45,8 +45,8 @@ class InterfaceCablingdExpectations(BaseModel):
     port_id: str
 
 
-class InterfaceCablingTestCase(Check):
-    check_params: InterfaceCablingTestParams
+class InterfaceCablingCheck(Check):
+    check_params: InterfaceCablingCheckParams
     expected_results: InterfaceCablingdExpectations
 
     def check_id(self) -> str:
@@ -54,12 +54,12 @@ class InterfaceCablingTestCase(Check):
 
 
 @design_checks
-class InterfaceCablingTestCases(CheckCollection):
+class InterfaceCablingCheckCollection(CheckCollection):
     service = "cabling"
-    checks: Optional[List[InterfaceCablingTestCase]]
+    checks: Optional[List[InterfaceCablingCheck]]
 
     @classmethod
-    def build(cls, device: Device, **kwargs) -> "InterfaceCablingTestCases":
+    def build(cls, device: Device, **kwargs) -> "InterfaceCablingCheckCollection":
 
         # only used physical interfaces that have a cabling peer relationship.
         # exclude any interfaces that are disabled, since the cabling tests will
@@ -73,12 +73,12 @@ class InterfaceCablingTestCases(CheckCollection):
             )
         )
 
-        test_cases = InterfaceCablingTestCases(
+        return InterfaceCablingCheckCollection(
             exclusive=False,
             device=device.name,
             checks=[
-                InterfaceCablingTestCase(
-                    check_params=InterfaceCablingTestParams(interface=interface.name),
+                InterfaceCablingCheck(
+                    check_params=InterfaceCablingCheckParams(interface=interface.name),
                     expected_results=InterfaceCablingdExpectations(
                         device=interface.cable_peer.device.name,
                         port_id=interface.cable_peer.cable_port_id,
@@ -87,5 +87,3 @@ class InterfaceCablingTestCases(CheckCollection):
                 for interface in interfaces
             ],
         )
-
-        return test_cases

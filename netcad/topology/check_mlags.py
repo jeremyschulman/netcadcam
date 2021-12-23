@@ -19,14 +19,14 @@ from netcad.device import InterfaceLag
 from netcad.checks import CheckCollection, Check
 from netcad.checks import design_checks
 
-from . import tc_lags as lags
+from . import check_lags as lags
 
 
 # -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["MLagTestCases", "MLagSystemTestCase", "MLagSystemTestParams"]
+__all__ = ["MLagCheckCollection", "MLagSystemCheck", "MLagSystemCheckParams"]
 
 # -----------------------------------------------------------------------------
 #
@@ -35,25 +35,27 @@ __all__ = ["MLagTestCases", "MLagSystemTestCase", "MLagSystemTestParams"]
 # -----------------------------------------------------------------------------
 
 
-class MLagSystemTestParams(BaseModel):
+class MLagSystemCheckParams(BaseModel):
     name = "mlag_system"
 
 
-class MLagSystemTestCase(Check):
+class MLagSystemCheck(Check):
     check_type = "mlag_system"
-    check_params: MLagSystemTestParams
+    check_params: MLagSystemCheckParams
 
     def check_id(self) -> str:
         return self.check_type
 
 
 @design_checks
-class MLagTestCases(CheckCollection):
+class MLagCheckCollection(CheckCollection):
     service = "mlags"
-    checks: Optional[List[lags.LagTestCase]]
+    checks: Optional[List[lags.LagCheck]]
 
     @classmethod
-    def build(cls, device: DeviceMLagPairMember, **kwargs) -> Optional["MLagTestCases"]:
+    def build(
+        cls, device: DeviceMLagPairMember, **kwargs
+    ) -> Optional["MLagCheckCollection"]:
 
         # find all of the LAG interfaces defined on the psuedo MLAG devic
 
@@ -74,15 +76,15 @@ class MLagTestCases(CheckCollection):
         #       interface. meaning MLAG 1 = Port-Channel1 on both device (if
         #       this was an Arista device).
 
-        test_cases = MLagTestCases(
+        return MLagCheckCollection(
             device=device.name,
             checks=[
-                lags.LagTestCase(
-                    check_params=lags.LagTestParams(interface=mlag_iface.name),
-                    expected_results=lags.LagTestExpectations(
+                lags.LagCheck(
+                    check_params=lags.LagCheckParams(interface=mlag_iface.name),
+                    expected_results=lags.LagCheckExpectations(
                         enabled=mlag_dev.interfaces[mlag_iface.name].enabled,
                         interfaces=[
-                            lags.LagTestExpectedInterfaceStatus(
+                            lags.LagCheckExpectedInterfaceStatus(
                                 interface=each_interface.name,
                                 enabled=each_interface.enabled,
                             )
@@ -96,5 +98,3 @@ class MLagTestCases(CheckCollection):
                 for mlag_iface in mlag_interfaces
             ],
         )
-
-        return test_cases

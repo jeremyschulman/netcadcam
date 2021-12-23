@@ -26,11 +26,11 @@ from netcad.checks import design_checks
 # -----------------------------------------------------------------------------
 
 __all__ = [
-    "LagTestCases",
-    "LagTestCase",
-    "LagTestParams",
-    "LagTestExpectations",
-    "LagTestExpectedInterfaceStatus",
+    "LagCheckCollection",
+    "LagCheck",
+    "LagCheckParams",
+    "LagCheckExpectations",
+    "LagCheckExpectedInterfaceStatus",
 ]
 
 # -----------------------------------------------------------------------------
@@ -40,35 +40,35 @@ __all__ = [
 # -----------------------------------------------------------------------------
 
 
-class LagTestParams(BaseModel):
+class LagCheckParams(BaseModel):
     interface: str
 
 
-class LagTestExpectedInterfaceStatus(BaseModel):
+class LagCheckExpectedInterfaceStatus(BaseModel):
     interface: str
     enabled: bool
 
 
-class LagTestExpectations(BaseModel):
+class LagCheckExpectations(BaseModel):
     enabled: bool
-    interfaces: List[LagTestExpectedInterfaceStatus]
+    interfaces: List[LagCheckExpectedInterfaceStatus]
 
 
-class LagTestCase(Check):
-    check_params: LagTestParams
-    expected_results: LagTestExpectations
+class LagCheck(Check):
+    check_params: LagCheckParams
+    expected_results: LagCheckExpectations
 
     def check_id(self) -> str:
         return str(self.check_params.interface)
 
 
 @design_checks
-class LagTestCases(CheckCollection):
+class LagCheckCollection(CheckCollection):
     service = "lags"
-    checks: Optional[List[LagTestCase]]
+    checks: Optional[List[LagCheck]]
 
     @classmethod
-    def build(cls, device: Device, **kwargs) -> Optional["LagTestCases"]:
+    def build(cls, device: Device, **kwargs) -> Optional["LagCheckCollection"]:
 
         # scan the device interfaces looking for LAGs.  Create a dictionary
         # key=lag-if-name, value=list of member interfaces.
@@ -90,24 +90,24 @@ class LagTestCases(CheckCollection):
                 iface for iface in interface.profile.if_lag_members
             )
 
-        # if no lags found, then return None so that the test cases file
-        # is not generated.
+        # if no lags found, then return None so that the checks file is not
+        # generated.
 
         if not lag_interfaces:
             return None
 
-        # create the list of test-cases using the formulated dictionary.
+        # create the collection of checks using the formulated dictionary.
 
-        test_cases = LagTestCases(
+        collection = LagCheckCollection(
             device=device.name,
             checks=[
-                LagTestCase(
+                LagCheck(
                     check_type="lag",
-                    check_params=LagTestParams(interface=lag_name),
-                    expected_results=LagTestExpectations(
+                    check_params=LagCheckParams(interface=lag_name),
+                    expected_results=LagCheckExpectations(
                         enabled=device.interfaces[lag_name].enabled,
                         interfaces=[
-                            LagTestExpectedInterfaceStatus(
+                            LagCheckExpectedInterfaceStatus(
                                 interface=each_interface.name,
                                 enabled=each_interface.enabled,
                             )
@@ -119,8 +119,10 @@ class LagTestCases(CheckCollection):
             ],
         )
 
-        # return the test cases sorted by the lag interface name
-        test_cases.checks.sort(
+        # return the collection sorted by the lag interface name
+
+        collection.checks.sort(
             key=lambda tc: DeviceInterface(tc.check_params.interface)
         )
-        return test_cases
+
+        return collection

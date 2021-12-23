@@ -32,11 +32,11 @@ from netcad.checks.check_registry import design_checks
 # -----------------------------------------------------------------------------
 
 __all__ = [
-    "VlanTestCase",
-    "VlanTestParams",
-    "VlanTestExpectations",
-    "VlanTestCases",
-    "VlanTestCaseExclusiveList",
+    "VlanCheck",
+    "VlanCheckParams",
+    "VlanCheckExpectations",
+    "VlanCheckCollection",
+    "VlanCheckExclusiveList",
 ]
 
 
@@ -47,25 +47,25 @@ __all__ = [
 # -----------------------------------------------------------------------------
 
 
-class VlanTestParams(BaseModel):
+class VlanCheckParams(BaseModel):
     vlan_id: int
 
 
-class VlanTestExpectations(BaseModel):
+class VlanCheckExpectations(BaseModel):
     vlan: VlanProfile
     interfaces: List[str]
 
 
-class VlanTestCase(Check):
+class VlanCheck(Check):
     check_type = "interface"
-    check_params: VlanTestParams
-    expected_results: VlanTestExpectations
+    check_params: VlanCheckParams
+    expected_results: VlanCheckExpectations
 
     def check_id(self) -> str:
         return str(self.check_params.vlan_id)
 
 
-class VlanTestCaseExclusiveList(Check):
+class VlanCheckExclusiveList(Check):
     check_type = "exclusive_list"
     check_params: Optional[BaseModel] = None
     expected_results: Optional[BaseModel] = None
@@ -81,12 +81,12 @@ class VlanTestCaseExclusiveList(Check):
 
 
 @design_checks
-class VlanTestCases(CheckCollection):
+class VlanCheckCollection(CheckCollection):
     service = "vlans"
-    checks: Optional[List[VlanTestCase]]
+    checks: Optional[List[VlanCheck]]
 
     @classmethod
-    def build(cls, device: Device, **kwargs) -> "VlanTestCases":
+    def build(cls, device: Device, **kwargs) -> "VlanCheckCollection":
         from netcad.vlan.vlan_design_service import DeviceVlanDesignService
 
         device_vlans = list(
@@ -136,13 +136,13 @@ class VlanTestCases(CheckCollection):
         # and used by the 'netcam' tooling.  Keep the test cases sorted by
         # VLAN-ID value; which is how the VlanProfile object is sortable.
 
-        test_cases = VlanTestCases(
+        test_cases = VlanCheckCollection(
             device=device.name,
             checks=[
-                VlanTestCase(
+                VlanCheck(
                     check_type="interfaces",
-                    check_params=VlanTestParams(vlan_id=vlan_p.vlan_id),
-                    expected_results=VlanTestExpectations(
+                    check_params=VlanCheckParams(vlan_id=vlan_p.vlan_id),
+                    expected_results=VlanCheckExpectations(
                         vlan=vlan_p, interfaces=if_names
                     ),
                 )

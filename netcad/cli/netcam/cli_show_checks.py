@@ -445,7 +445,7 @@ def find_test_cases_names(device, optionals: dict):
     inc_ts_names = optionals["testing_service_names"]
 
     for design_service in device.services.values():
-        for testing_service in design_service.testing_services:
+        for testing_service in design_service.check_collections:
             ts_name = testing_service.get_service_name()
 
             if inc_ts_names:

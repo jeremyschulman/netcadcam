@@ -125,12 +125,12 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
         # there could be design services without defined testing services, so
         # skip if that is the case.
 
-        if not design_service.testing_services:
+        if not design_service.check_collections:
             continue
 
         # log.info(f"{dut_name}: Design Service: {ds_name}")
 
-        for testing_service in design_service.testing_services:
+        for testing_service in design_service.check_collections:
 
             tc_name = testing_service.get_service_name()
             tc_file = testing_service.filepath(testcase_dir=dev_tc_dir, service=tc_name)

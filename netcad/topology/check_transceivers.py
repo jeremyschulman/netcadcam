@@ -23,11 +23,11 @@ from netcad.checks import design_checks
 # -----------------------------------------------------------------------------
 
 __all__ = [
-    "TransceiverTestCases",
-    "TransceiverTestCase",
-    "TransceiverTestParams",
-    "TransceiverTestExpectations",
-    "TransceiverListTestCase",
+    "TransceiverCheckCollection",
+    "TransceiverCheck",
+    "TransceiverCheckParams",
+    "TransceiverCheckExpectations",
+    "TransceiverCheckExclusiveList",
 ]
 
 # -----------------------------------------------------------------------------
@@ -37,28 +37,28 @@ __all__ = [
 # -----------------------------------------------------------------------------
 
 
-class TransceiverTestParams(BaseModel):
+class TransceiverCheckParams(BaseModel):
     interface: str
 
 
-class TransceiverTestExpectations(BaseModel):
+class TransceiverCheckExpectations(BaseModel):
     model: str  # the transceiver product model name (vendor specific)
     type: str  # the tranceiver physical type name (industry standard)
 
 
-class TransceiverTestCase(Check):
-    check_params: TransceiverTestParams
-    expected_results: TransceiverTestExpectations
+class TransceiverCheck(Check):
+    check_params: TransceiverCheckParams
+    expected_results: TransceiverCheckExpectations
 
     def check_id(self) -> str:
         return str(self.check_params.interface)
 
 
-class TransceiverListTestCase(Check):
+class TransceiverCheckExclusiveList(Check):
     def __init__(self, **kwargs):
         super().__init__(
-            test_case="transceiver-list",
-            test_params=BaseModel(),
+            check_type="transceiver-list",
+            check_params=BaseModel(),
             expected_results=BaseModel(),
             **kwargs
         )
@@ -68,12 +68,12 @@ class TransceiverListTestCase(Check):
 
 
 @design_checks
-class TransceiverTestCases(CheckCollection):
+class TransceiverCheckCollection(CheckCollection):
     service = "transceivers"
-    checks: Optional[List[TransceiverTestCase]]
+    checks: Optional[List[TransceiverCheck]]
 
     @classmethod
-    def build(cls, device: Device, **kwargs) -> "TransceiverTestCases":
+    def build(cls, device: Device, **kwargs) -> "TransceiverCheckCollection":
 
         # find all interfaces that have a designed transceiver assicated to the
         # interface profile -> port-profile.
@@ -88,14 +88,14 @@ class TransceiverTestCases(CheckCollection):
             port_profile = iface.profile.port_profile
             xcvr = port_profile.transceiver
 
-            return TransceiverTestCase(
-                check_params=TransceiverTestParams(interface=iface.name),
-                expected_results=TransceiverTestExpectations(
+            return TransceiverCheck(
+                check_params=TransceiverCheckParams(interface=iface.name),
+                expected_results=TransceiverCheckExpectations(
                     model=iface.profile.port_profile.name, type=xcvr.type
                 ),
             )
 
-        return TransceiverTestCases(
+        return TransceiverCheckCollection(
             device=device.name,
             checks=[_build_one_tc(iface) for iface in sorted(interfaces)],
         )

@@ -132,7 +132,7 @@ async def _build_device_checks(device: Device, tc_dir: Path):
     # the device and save to a JSON data file.
 
     for service_obj in device.services.values():
-        for tc_svccls in service_obj.testing_services:
+        for tc_svccls in service_obj.check_collections:
             if not (test_cases := tc_svccls.build(device, design_service=service_obj)):
                 continue
             await test_cases.save(dev_tc_dir)

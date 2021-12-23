@@ -3,6 +3,7 @@
 # -----------------------------------------------------------------------------
 
 from typing import Optional, TypeVar
+from copy import copy
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -16,12 +17,12 @@ from netcad.design_services.design_service import DesignService
 # Private Module Imports
 # -----------------------------------------------------------------------------
 
-from .tc_transceivers import TransceiverTestCases
-from .tc_device_info import DeviceInformationTestCases
-from .tc_cabling_nei import InterfaceCablingTestCases
-from .tc_interfaces import InterfaceTestCases
-from .tc_lags import LagTestCases
-from .tc_ipaddrs import IPInterfacesTestCases
+from .check_transceivers import TransceiverCheckCollection
+from .check_device_info import DeviceInformationCheckCollection
+from .check_cabling_nei import InterfaceCablingCheckCollection
+from .check_interfaces import InterfaceCheckCollection
+from .check_lags import LagCheckCollection
+from .check_ipaddrs import IpInterfacesCheckCollection
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -54,13 +55,13 @@ class TopologyDesignService(DesignService, registry_name="topology"):
         device interfaces.
     """
 
-    DESIGN_CHECKS = [
-        DeviceInformationTestCases,
-        InterfaceTestCases,
-        TransceiverTestCases,
-        InterfaceCablingTestCases,
-        LagTestCases,
-        IPInterfacesTestCases,
+    CHECK_COLLECTIONS = [
+        DeviceInformationCheckCollection,
+        InterfaceCheckCollection,
+        TransceiverCheckCollection,
+        InterfaceCablingCheckCollection,
+        LagCheckCollection,
+        IpInterfacesCheckCollection,
     ]
 
     def __init__(
@@ -78,15 +79,7 @@ class TopologyDesignService(DesignService, registry_name="topology"):
         self.registry_add(name=topology_name, obj=self)
         self.topology_name = topology_name
 
-        # TODO: cleanup the use/naming of "testing" vs. "checks"
-        self.testing_services = [
-            DeviceInformationTestCases,
-            InterfaceTestCases,
-            TransceiverTestCases,
-            InterfaceCablingTestCases,
-            LagTestCases,
-            IPInterfacesTestCases,
-        ]
+        self.check_collections = copy(self.__class__.CHECK_COLLECTIONS)
 
     def add_devices(self, *devices: Device):
         super(TopologyDesignService, self).add_devices(*devices)
