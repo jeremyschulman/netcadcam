@@ -11,8 +11,8 @@ import inspect
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.config import loader
 from netcad.device import Device
+from netcad.init.loader import netcad_import_package
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -107,7 +107,7 @@ class Plugin:
             raise AttributeError(_item)
 
         try:
-            self.module = loader.import_objectref(self.package)
+            self.module = netcad_import_package(self.package)
             self.module.__getattr__ = types.MethodType(_plugin_silent, self.module)
 
         except ModuleNotFoundError:

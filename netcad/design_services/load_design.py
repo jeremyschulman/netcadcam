@@ -62,7 +62,7 @@ def load_design(design_name: str) -> Design:
     if not design_mod:
         raise RuntimeError(f'Failed to import design "{design_name}"')
 
-    design_inst = Design(name=design_name, config=design_config)
+    design_inst = Design(name=design_name, config=design_config.get("config"))
 
     # Execute the design function in the module if present.  If one is not
     # found, then this is a Designer error, and raise a Runtime exception.

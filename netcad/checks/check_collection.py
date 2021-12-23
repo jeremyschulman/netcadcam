@@ -3,6 +3,7 @@
 # -----------------------------------------------------------------------------
 
 from typing import List, Optional, Any
+from typing import TYPE_CHECKING
 from pathlib import Path
 import json
 
@@ -18,6 +19,9 @@ import aiofiles
 # -----------------------------------------------------------------------------
 
 from . import Check
+
+if TYPE_CHECKING:
+    from netcad.design_services import DesignService
 
 
 # noinspection PyUnresolvedReferences
@@ -70,5 +74,5 @@ class CheckCollection(BaseModel):
             return parse_obj_as(cls, json.loads(await infile.read()))
 
     @classmethod
-    def build(cls, obj: Any, design_service=None) -> "CheckCollection":
+    def build(cls, obj: Any, design_service: "DesignService") -> "CheckCollection":
         raise NotImplementedError()
