@@ -14,7 +14,7 @@ from netcad.cli.keywords import markup_color
 from netcad.debug import debug_enabled, format_exc_message
 
 from netcad.checks.check_result_types import CheckStatus, CheckSkipResult
-from .tc_save import device_checks_save_results
+from .save_check_results import device_checks_save_results
 from .dut import AsyncDeviceUnderTest
 
 # -----------------------------------------------------------------------------
