@@ -54,12 +54,12 @@ __all__ = []
 # -----------------------------------------------------------------------------
 
 
-@clig_show.command(name="tests")
+@clig_show.command(name="checks")
 @opt_devices()
 @opt_designs()
 @click.option(
-    "--tests-dir",
-    help="location to read test-cases",
+    "--checks-dir",
+    help="location to read checks",
     type=click.Path(path_type=Path, resolve_path=True, exists=True, writable=True),
     envvar=Environment.NETCAD_CHECKSDIR,
 )
@@ -96,7 +96,9 @@ __all__ = []
 @click.option(
     "--summary", "summary_mode", is_flag=True, help="Show summary counts of design(s)"
 )
-def cli_report_tests(devices: Tuple[str], designs: Tuple[str], **optionals):
+def cli_report_tests(
+    devices: Tuple[str], designs: Tuple[str], checks_dir: Path, **optionals
+):
     """Show test results in tablular form."""
 
     log = get_logger()
@@ -110,7 +112,7 @@ def cli_report_tests(devices: Tuple[str], designs: Tuple[str], **optionals):
     # bind a test-case-dir Path attribute (tcr_dir) to each Device instance so
     # that the results can be retrieved and processed.
 
-    tc_dir = netcad_globals.g_netcad_checks_dir
+    tc_dir = checks_dir or netcad_globals.g_netcad_checks_dir
 
     for device in device_objs:
         dev_tcr_dir = tc_dir / device.name / "results"
@@ -406,7 +408,7 @@ def show_log_table(
         table.add_row(
             _colorize_status(result["status"]),
             device.name,
-            result["test_case_id"],
+            result["check_id"],
             result.get("field"),
             _pretty_dict_table(log_msg),
         )

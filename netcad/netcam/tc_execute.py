@@ -39,7 +39,7 @@ SUMMARY_CLRD = markup_color("DONE", "bright_yellow")
 async def execute_design_checks(dut: AsyncDeviceUnderTest):
     device = dut.device
     dev_name = device.name
-    dut_name = dev_name
+    dut_name = f"{dev_name:<16}"
 
     log = get_logger()
     if not dut.testcases_dir.is_dir():
@@ -114,7 +114,7 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
 
     device = dut.device
     dev_tc_dir = dut.testcases_dir
-    dut_name = device.name
+    dut_name = f"{device.name:<16}"
 
     # -------------------------------------------------------------------------
     # Testing all Design Services and related Testing Services
