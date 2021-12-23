@@ -17,7 +17,7 @@ import aiofiles
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from . import tc_result_types as trt
+from ..checks import check_result_types as trt
 from .dut import AsyncDeviceUnderTest
 
 # -----------------------------------------------------------------------------

@@ -30,7 +30,7 @@ from netcad.design_services import Design
 from netcad.cli.common_opts import opt_devices, opt_designs
 from netcad.cli.device_inventory import get_devices_from_designs
 
-from netcad.netcam import tc_result_types as trt
+from ...checks import check_result_types as trt
 from netcad.cli.keywords import color_pass_fail
 
 # -----------------------------------------------------------------------------

@@ -1,17 +1,6 @@
-from .tc_execute import execute_design_checks
+from .execute_checks import execute_device_checks
 
-from .tc_result_types import (
-    CheckResultsCollection,
-    CheckPassResult,
-    CheckFailResult,
-    CheckFailNoExists,
-    CheckFailFieldMismatch,
-    CheckFailMissingMembers,
-    CheckFailExtraMembers,
-    CheckInfoLog,
-    CheckResult,
-    CheckSkipResult,
-)
+from netcad.checks.check_result_types import CheckFailResult, CheckResultsCollection
 
 
 def any_failures(results):

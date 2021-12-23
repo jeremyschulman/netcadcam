@@ -30,7 +30,7 @@ from netcad.cli.device_inventory import get_devices_from_designs
 # from netcad.netcam.loader import import_netcam_plugins
 
 from netcad.cli.netcam.cli_netcam_main import cli
-from netcad.netcam import execute_design_checks
+from netcad.netcam import execute_device_checks
 from netcad.cli.keywords import color_pass_fail
 
 
@@ -126,7 +126,7 @@ def cli_test_device(devices: Tuple[str], designs: Tuple[str], checks_dir: Path):
         #       in a check and execute the plugin running differently. For now, only
         #       asyncio plugins are supported.
 
-        await asyncio.gather(*(execute_design_checks(dut) for dut in duts.values()))
+        await asyncio.gather(*(execute_device_checks(dut) for dut in duts.values()))
 
     ts_start = datetime.now()
     asyncio.run(run_tests())

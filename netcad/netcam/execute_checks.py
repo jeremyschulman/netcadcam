@@ -13,7 +13,7 @@ from netcad.logger import get_logger
 from netcad.cli.keywords import markup_color
 from netcad.debug import debug_enabled, format_exc_message
 
-from .tc_result_types import CheckStatus, CheckSkipResult
+from netcad.checks.check_result_types import CheckStatus, CheckSkipResult
 from .tc_save import device_checks_save_results
 from .dut import AsyncDeviceUnderTest
 
@@ -21,7 +21,7 @@ from .dut import AsyncDeviceUnderTest
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["execute_design_checks"]
+__all__ = ["execute_device_checks"]
 
 # -----------------------------------------------------------------------------
 #
@@ -36,7 +36,7 @@ SKIP_CLRD = markup_color("SKIP", "grey70")
 SUMMARY_CLRD = markup_color("DONE", "bright_yellow")
 
 
-async def execute_design_checks(dut: AsyncDeviceUnderTest):
+async def execute_device_checks(dut: AsyncDeviceUnderTest):
     device = dut.device
     dev_name = device.name
     dut_name = f"{dev_name:<16}"
