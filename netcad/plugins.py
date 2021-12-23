@@ -3,7 +3,7 @@
 # -----------------------------------------------------------------------------
 
 import types
-from typing import Optional, Protocol, get_args, get_type_hints
+from typing import Optional, Protocol, get_args, get_type_hints, Dict
 from pathlib import Path
 import inspect
 
@@ -18,7 +18,13 @@ from netcad.device import Device
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["NetcadPluginModule", "NetcamPluginModule", "NetcamPlugin", "NetcadPlugin"]
+__all__ = [
+    "NetcadPluginModule",
+    "NetcamPluginModule",
+    "NetcamPlugin",
+    "NetcadPlugin",
+    "PluginCatalog",
+]
 
 # -----------------------------------------------------------------------------
 #
@@ -81,7 +87,7 @@ class Plugin:
 
     def load(self):
         self.import_plugin()
-        self.module.plugin_init(self.config)
+        self.module.plugin_init(self.config.get("config"))
 
     def _validate_config(self):
         self.name = self.config.get("name")
@@ -124,6 +130,12 @@ class Plugin:
             if not getattr(self.module, mod_attr_name, None):
                 raise RuntimeError(f"{pkg_ref}: missing required {mod_attr_name}")
 
+    def __getattr__(self, item):
+        if item.startswith("plugin_"):
+            return getattr(self.module, item)
+
+        raise AttributeError(item)
+
 
 class NetcadPlugin(Plugin):
     _plugin_typeref = NetcadPluginModule
@@ -131,3 +143,6 @@ class NetcadPlugin(Plugin):
 
 class NetcamPlugin(Plugin):
     _plugin_typeref = NetcamPluginModule
+
+
+PluginCatalog = Dict[str, Plugin]

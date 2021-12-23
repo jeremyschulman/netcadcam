@@ -92,7 +92,7 @@ def cli_test_device(devices: Tuple[str], designs: Tuple[str], checks_dir: Path):
     # back to the DUT by device name when be build the summary table.
 
     tc_dir = checks_dir or netcad_globals.g_netcad_checks_dir
-    netcam_plugins = netcad_globals.g_netcam_plugins_catalog
+    netcam_plugins = netcad_globals.g_netcam_plugins_os_catalog
 
     duts = {}
 
