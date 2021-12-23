@@ -14,7 +14,7 @@ from netcad.cli.keywords import markup_color
 from netcad.debug import debug_enabled, format_exc_message
 
 from .tc_result_types import CheckStatus, CheckSkipResult
-from .tc_save import testcases_save_results
+from .tc_save import device_checks_save_results
 from .dut import AsyncDeviceUnderTest
 
 # -----------------------------------------------------------------------------
@@ -39,12 +39,12 @@ SUMMARY_CLRD = markup_color("DONE", "bright_yellow")
 async def execute_design_checks(dut: AsyncDeviceUnderTest):
     device = dut.device
     dev_name = device.name
-    dut_name = f"DUT: {dev_name}"
+    dut_name = dev_name
 
     log = get_logger()
     if not dut.testcases_dir.is_dir():
         log.error(
-            f"{dut_name}:Missing expected testcase directory: "
+            f"{dut_name}:Missing expected checks directory: "
             f"{dut.testcases_dir.absolute()}, skipping"
         )
         return
@@ -53,7 +53,7 @@ async def execute_design_checks(dut: AsyncDeviceUnderTest):
     # Testing Prologue
     # -------------------------------------------------------------------------
 
-    log.info(f"{dut_name}: Starting Tests ...")
+    log.info(f"{dut_name}: Starting Checks ...")
 
     try:
         await dut.setup()
@@ -68,7 +68,7 @@ async def execute_design_checks(dut: AsyncDeviceUnderTest):
             log.critical(format_exc_message(exc))
 
         dut.result_counts["FAIL"] = 1
-        log.info(f"{dut_name}: {SUMMARY_CLRD} ----\tTestcases: PASS=0, FAIL=1, INFO=0")
+        log.info(f"{dut_name}: {SUMMARY_CLRD} ----\tChecks: PASS=0, FAIL=1, INFO=0")
         return
 
     # -------------------------------------------------------------------------
@@ -93,7 +93,7 @@ async def execute_design_checks(dut: AsyncDeviceUnderTest):
     )
 
     log.info(
-        f"{dut_name}: {SUMMARY_CLRD} {ttc:4}\tTestcases: PASS={c_pass}, FAIL={c_fail}, INFO={c_info}, SKIP={c_skip}"
+        f"{dut_name}: {SUMMARY_CLRD} {ttc:4}\tChecks: PASS={c_pass}, FAIL={c_fail}, INFO={c_info}, SKIP={c_skip}"
     )
 
     try:
@@ -114,7 +114,7 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
 
     device = dut.device
     dev_tc_dir = dut.testcases_dir
-    dut_name = f"DUT: {device.name}"
+    dut_name = device.name
 
     # -------------------------------------------------------------------------
     # Testing all Design Services and related Testing Services
@@ -162,7 +162,7 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
                         CheckSkipResult(
                             device=device,
                             message=f"Missing: device {device.name} support for "
-                            f"testcases: {tc_name}",
+                            f"Checks: {tc_name}",
                         )
                     ]
 
@@ -191,19 +191,19 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
 
             if c_fail:
                 log.warning(
-                    f"{dut_name}: {FAIL_CLRD}\tTestcases: {tc_name}: "
+                    f"{dut_name}: {FAIL_CLRD}\tChecks: {tc_name}: "
                     f"PASS={c_pass}, FAIL={c_fail}, INFO={c_info}",
                 )
             elif c_skip:
                 log.info(
-                    f"{dut_name}: {SKIP_CLRD}\tTestcases: {tc_name}",
+                    f"{dut_name}: {SKIP_CLRD}\tChecks: {tc_name}",
                 )
             else:
                 log.info(
-                    f"{dut_name}: {PASS_CLRD}\tTestcases: {tc_name}: "
+                    f"{dut_name}: {PASS_CLRD}\tChecks: {tc_name}: "
                     f"PASS={c_pass}, INFO={c_info}",
                 )
 
-            await testcases_save_results(
+            await device_checks_save_results(
                 dut, tc_name, results, results_dir=dev_resuls_dir
             )

@@ -24,10 +24,10 @@ from .dut import AsyncDeviceUnderTest
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["testcases_save_results"]
+__all__ = ["device_checks_save_results"]
 
 
-async def testcases_save_results(
+async def device_checks_save_results(
     dut: AsyncDeviceUnderTest,
     filename: str,
     results: List[trt.CheckResult],
