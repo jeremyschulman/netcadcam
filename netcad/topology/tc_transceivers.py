@@ -15,8 +15,8 @@ from pydantic import BaseModel
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device, DeviceInterface
-from netcad.testing_services import TestCases, TestCase
-from netcad.testing_services import testing_service
+from netcad.checks import CheckCollection, Check
+from netcad.checks import design_checks
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -46,15 +46,15 @@ class TransceiverTestExpectations(BaseModel):
     type: str  # the tranceiver physical type name (industry standard)
 
 
-class TransceiverTestCase(TestCase):
-    test_params: TransceiverTestParams
+class TransceiverTestCase(Check):
+    check_params: TransceiverTestParams
     expected_results: TransceiverTestExpectations
 
-    def test_case_id(self) -> str:
-        return str(self.test_params.interface)
+    def check_id(self) -> str:
+        return str(self.check_params.interface)
 
 
-class TransceiverListTestCase(TestCase):
+class TransceiverListTestCase(Check):
     def __init__(self, **kwargs):
         super().__init__(
             test_case="transceiver-list",
@@ -63,14 +63,14 @@ class TransceiverListTestCase(TestCase):
             **kwargs
         )
 
-    def test_case_id(self) -> str:
+    def check_id(self) -> str:
         return "exclusive_list"
 
 
-@testing_service
-class TransceiverTestCases(TestCases):
+@design_checks
+class TransceiverTestCases(CheckCollection):
     service = "transceivers"
-    tests: Optional[List[TransceiverTestCase]]
+    checks: Optional[List[TransceiverTestCase]]
 
     @classmethod
     def build(cls, device: Device, **kwargs) -> "TransceiverTestCases":
@@ -89,7 +89,7 @@ class TransceiverTestCases(TestCases):
             xcvr = port_profile.transceiver
 
             return TransceiverTestCase(
-                test_params=TransceiverTestParams(interface=iface.name),
+                check_params=TransceiverTestParams(interface=iface.name),
                 expected_results=TransceiverTestExpectations(
                     model=iface.profile.port_profile.name, type=xcvr.type
                 ),
@@ -97,5 +97,5 @@ class TransceiverTestCases(TestCases):
 
         return TransceiverTestCases(
             device=device.name,
-            tests=[_build_one_tc(iface) for iface in sorted(interfaces)],
+            checks=[_build_one_tc(iface) for iface in sorted(interfaces)],
         )

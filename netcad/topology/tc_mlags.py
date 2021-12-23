@@ -16,8 +16,8 @@ from pydantic import BaseModel
 
 from netcad.device import DeviceMLagPairMember, DeviceMLagPairGroup
 from netcad.device import InterfaceLag
-from netcad.testing_services import TestCases, TestCase
-from netcad.testing_services import testing_service
+from netcad.checks import CheckCollection, Check
+from netcad.checks import design_checks
 
 from . import tc_lags as lags
 
@@ -39,18 +39,18 @@ class MLagSystemTestParams(BaseModel):
     name = "mlag_system"
 
 
-class MLagSystemTestCase(TestCase):
-    test_case = "mlag_system"
-    test_params: MLagSystemTestParams
+class MLagSystemTestCase(Check):
+    check_type = "mlag_system"
+    check_params: MLagSystemTestParams
 
-    def test_case_id(self) -> str:
-        return self.test_case
+    def check_id(self) -> str:
+        return self.check_type
 
 
-@testing_service
-class MLagTestCases(TestCases):
+@design_checks
+class MLagTestCases(CheckCollection):
     service = "mlags"
-    tests: Optional[List[lags.LagTestCase]]
+    checks: Optional[List[lags.LagTestCase]]
 
     @classmethod
     def build(cls, device: DeviceMLagPairMember, **kwargs) -> Optional["MLagTestCases"]:
@@ -76,9 +76,9 @@ class MLagTestCases(TestCases):
 
         test_cases = MLagTestCases(
             device=device.name,
-            tests=[
+            checks=[
                 lags.LagTestCase(
-                    test_params=lags.LagTestParams(interface=mlag_iface.name),
+                    check_params=lags.LagTestParams(interface=mlag_iface.name),
                     expected_results=lags.LagTestExpectations(
                         enabled=mlag_dev.interfaces[mlag_iface.name].enabled,
                         interfaces=[

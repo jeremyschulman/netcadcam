@@ -56,12 +56,12 @@ __all__ = []
 
 @clig_show.command(name="tests")
 @opt_devices()
-@opt_designs(required=True)
+@opt_designs()
 @click.option(
     "--tests-dir",
     help="location to read test-cases",
     type=click.Path(path_type=Path, resolve_path=True, exists=True, writable=True),
-    envvar=Environment.NETCAD_TESTCASESDIR,
+    envvar=Environment.NETCAD_CHECKSDIR,
 )
 @click.option(
     "-ef",
@@ -110,7 +110,7 @@ def cli_report_tests(devices: Tuple[str], designs: Tuple[str], **optionals):
     # bind a test-case-dir Path attribute (tcr_dir) to each Device instance so
     # that the results can be retrieved and processed.
 
-    tc_dir = netcad_globals.g_netcad_testcases_dir
+    tc_dir = netcad_globals.g_netcad_checks_dir
 
     for device in device_objs:
         dev_tcr_dir = tc_dir / device.name / "results"
@@ -236,10 +236,10 @@ def show_design_brief_summary_table(
             device.name,
             color_pass_fail(dev_cntrs),
             Text(str(dev_tc_counts)),
-            Text(str(dev_cntrs[trt.TestCaseStatus.PASS]), style=pass_style),
-            Text(str(dev_cntrs[trt.TestCaseStatus.FAIL]), style=fail_style),
-            Text(str(dev_cntrs[trt.TestCaseStatus.INFO]), style=info_style),
-            Text(str(dev_cntrs[trt.TestCaseStatus.SKIP]), style=skip_sytle),
+            Text(str(dev_cntrs[trt.CheckStatus.PASS]), style=pass_style),
+            Text(str(dev_cntrs[trt.CheckStatus.FAIL]), style=fail_style),
+            Text(str(dev_cntrs[trt.CheckStatus.INFO]), style=info_style),
+            Text(str(dev_cntrs[trt.CheckStatus.SKIP]), style=skip_sytle),
         )
 
     table.title = Text(
@@ -296,10 +296,10 @@ def show_device_brief_summary_table(console: Console, device: Device, optionals:
             tc_name,
             color_pass_fail(tcr_cntrs),
             Text(str(tcr_total)),
-            Text(str(tcr_cntrs[trt.TestCaseStatus.PASS]), style=pass_style),
-            Text(str(tcr_cntrs[trt.TestCaseStatus.FAIL]), style=fail_style),
-            Text(str(tcr_cntrs[trt.TestCaseStatus.INFO]), style=info_style),
-            Text(str(tcr_cntrs[trt.TestCaseStatus.SKIP]), style=skip_sytle),
+            Text(str(tcr_cntrs[trt.CheckStatus.PASS]), style=pass_style),
+            Text(str(tcr_cntrs[trt.CheckStatus.FAIL]), style=fail_style),
+            Text(str(tcr_cntrs[trt.CheckStatus.INFO]), style=info_style),
+            Text(str(tcr_cntrs[trt.CheckStatus.SKIP]), style=skip_sytle),
         )
 
     table.title = Text(
@@ -328,16 +328,16 @@ def filter_results(results: dict, optionals: dict) -> List[Dict]:
     """
     inc_all = optionals["include_all"]
 
-    status_allows = {trt.TestCaseStatus.FAIL}
+    status_allows = {trt.CheckStatus.FAIL}
 
     inc_fields = optionals["include_fields"]
     exc_fields = optionals["exclude_fields"]
 
     if optionals["include_info"] or inc_all:
-        status_allows.add(trt.TestCaseStatus.INFO)
+        status_allows.add(trt.CheckStatus.INFO)
 
     if optionals["include_pass"] or inc_all:
-        status_allows.add(trt.TestCaseStatus.PASS)
+        status_allows.add(trt.CheckStatus.PASS)
 
     filter_flds_in = lambda i: i.get("field") in inc_fields
     filter_flds_out = lambda i: i.get("field") not in exc_fields
@@ -376,10 +376,10 @@ def show_device_test_logs(console: Console, device: Device, optionals: dict):
 
 
 _TCS_2_TRT = {
-    trt.TestCaseStatus.PASS: trt.PassTestCase,
-    trt.TestCaseStatus.FAIL: trt.FailTestCase,
-    trt.TestCaseStatus.INFO: trt.InfoTestCase,
-    trt.TestCaseStatus.SKIP: trt.SkipTestCases,
+    trt.CheckStatus.PASS: trt.CheckPassResult,
+    trt.CheckStatus.FAIL: trt.CheckFailResult,
+    trt.CheckStatus.INFO: trt.CheckInfoLog,
+    trt.CheckStatus.SKIP: trt.CheckSkipResult,
 }
 
 
@@ -400,7 +400,7 @@ def show_log_table(
     )
 
     for result in results:
-        r_tcr = _TCS_2_TRT.get(result["status"], trt.InfoTestCase)
+        r_tcr = _TCS_2_TRT.get(result["status"], trt.CheckInfoLog)
         log_msg = r_tcr.log_result(result)
 
         table.add_row(
@@ -427,7 +427,7 @@ def _pretty_dict_table(obj):
 
 
 def _colorize_status(status):
-    options = trt.TestCaseStatus
+    options = trt.CheckStatus
 
     color = {
         options.PASS: "green",

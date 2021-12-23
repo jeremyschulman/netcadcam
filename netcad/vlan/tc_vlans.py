@@ -23,8 +23,8 @@ from netcad.vlan import VlanProfile
 from netcad.device.l2_interfaces import InterfaceL2Access, InterfaceL2Trunk
 from netcad.device.l3_interfaces import InterfaceVlan
 
-from netcad.testing_services import TestCases, TestCase
-from netcad.testing_services.testing_registry import testing_service
+from netcad.checks import CheckCollection, Check
+from netcad.checks.check_registry import design_checks
 
 
 # -----------------------------------------------------------------------------
@@ -56,22 +56,22 @@ class VlanTestExpectations(BaseModel):
     interfaces: List[str]
 
 
-class VlanTestCase(TestCase):
-    test_case = "interface"
-    test_params: VlanTestParams
+class VlanTestCase(Check):
+    check_type = "interface"
+    check_params: VlanTestParams
     expected_results: VlanTestExpectations
 
-    def test_case_id(self) -> str:
-        return str(self.test_params.vlan_id)
+    def check_id(self) -> str:
+        return str(self.check_params.vlan_id)
 
 
-class VlanTestCaseExclusiveList(TestCase):
-    test_case = "exclusive_list"
-    test_params: Optional[BaseModel] = None
+class VlanTestCaseExclusiveList(Check):
+    check_type = "exclusive_list"
+    check_params: Optional[BaseModel] = None
     expected_results: Optional[BaseModel] = None
 
-    def test_case_id(self) -> str:
-        return self.test_case
+    def check_id(self) -> str:
+        return self.check_type
 
 
 # -----------------------------------------------------------------------------
@@ -80,10 +80,10 @@ class VlanTestCaseExclusiveList(TestCase):
 # -----------------------------------------------------------------------------
 
 
-@testing_service
-class VlanTestCases(TestCases):
+@design_checks
+class VlanTestCases(CheckCollection):
     service = "vlans"
-    tests: Optional[List[VlanTestCase]]
+    checks: Optional[List[VlanTestCase]]
 
     @classmethod
     def build(cls, device: Device, **kwargs) -> "VlanTestCases":
@@ -138,10 +138,10 @@ class VlanTestCases(TestCases):
 
         test_cases = VlanTestCases(
             device=device.name,
-            tests=[
+            checks=[
                 VlanTestCase(
-                    test_case="interfaces",
-                    test_params=VlanTestParams(vlan_id=vlan_p.vlan_id),
+                    check_type="interfaces",
+                    check_params=VlanTestParams(vlan_id=vlan_p.vlan_id),
                     expected_results=VlanTestExpectations(
                         vlan=vlan_p, interfaces=if_names
                     ),
@@ -153,5 +153,5 @@ class VlanTestCases(TestCases):
         )
 
         # return the test-cases sorted by VLAN-ID
-        test_cases.tests.sort(key=lambda tc: tc.test_params.vlan_id)
+        test_cases.checks.sort(key=lambda tc: tc.check_params.vlan_id)
         return test_cases

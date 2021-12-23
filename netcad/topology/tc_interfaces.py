@@ -15,8 +15,8 @@ from pydantic import BaseModel, PositiveInt
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device, DeviceInterface
-from netcad.testing_services import TestCases, TestCase
-from netcad.testing_services import testing_service
+from netcad.checks import CheckCollection, Check
+from netcad.checks import design_checks
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -54,33 +54,33 @@ class InterfaceTestNotUsedExpectations(BaseModel):
     used: Literal[False]
 
 
-class InterfaceTestCase(TestCase):
-    test_params: InterfaceTestParams
+class InterfaceTestCase(Check):
+    check_params: InterfaceTestParams
     expected_results: Union[
         InterfaceTestUsedExpectations, InterfaceTestNotUsedExpectations
     ]
 
-    def test_case_id(self) -> str:
-        return str(self.test_params.interface)
+    def check_id(self) -> str:
+        return str(self.check_params.interface)
 
 
-class InterfaceListTestCase(TestCase):
+class InterfaceListTestCase(Check):
     def __init__(self, **kwargs):
         super().__init__(
-            test_case="interface-list",
-            test_params=BaseModel(),
+            check_type="interface-list",
+            check_params=BaseModel(),
             expected_results=BaseModel(),
             **kwargs
         )
 
-    def test_case_id(self) -> str:
+    def check_id(self) -> str:
         return "exclusive_list"
 
 
-@testing_service
-class InterfaceTestCases(TestCases):
+@design_checks
+class InterfaceTestCases(CheckCollection):
     service = "interfaces"
-    tests: Optional[List[InterfaceTestCase]]
+    checks: Optional[List[InterfaceTestCase]]
 
     @classmethod
     def build(cls, device: Device, **kwargs) -> "InterfaceTestCases":
@@ -113,7 +113,7 @@ class InterfaceTestCases(TestCases):
                     expected_results.oper_up = None
 
             return InterfaceTestCase(
-                test_params=InterfaceTestParams(
+                check_params=InterfaceTestParams(
                     interface=iface.name, interface_flags=if_flags
                 ),
                 expected_results=expected_results,
@@ -121,12 +121,14 @@ class InterfaceTestCases(TestCases):
 
         test_cases = InterfaceTestCases(
             device=device.name,
-            tests=[
+            checks=[
                 build_test_case(iface=interface)
                 for if_name, interface in device.interfaces.items()
             ],
         )
 
         # return the test cases sorted by the lag interface name
-        test_cases.tests.sort(key=lambda tc: DeviceInterface(tc.test_params.interface))
+        test_cases.checks.sort(
+            key=lambda tc: DeviceInterface(tc.check_params.interface)
+        )
         return test_cases

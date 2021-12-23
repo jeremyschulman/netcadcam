@@ -15,8 +15,8 @@ from pydantic import BaseModel
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device, DeviceInterface
-from netcad.testing_services import TestCases, TestCase
-from netcad.testing_services import testing_service
+from netcad.checks import CheckCollection, Check
+from netcad.checks import design_checks
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -45,18 +45,18 @@ class InterfaceCablingdExpectations(BaseModel):
     port_id: str
 
 
-class InterfaceCablingTestCase(TestCase):
-    test_params: InterfaceCablingTestParams
+class InterfaceCablingTestCase(Check):
+    check_params: InterfaceCablingTestParams
     expected_results: InterfaceCablingdExpectations
 
-    def test_case_id(self) -> str:
-        return str(self.test_params.interface)
+    def check_id(self) -> str:
+        return str(self.check_params.interface)
 
 
-@testing_service
-class InterfaceCablingTestCases(TestCases):
+@design_checks
+class InterfaceCablingTestCases(CheckCollection):
     service = "cabling"
-    tests: Optional[List[InterfaceCablingTestCase]]
+    checks: Optional[List[InterfaceCablingTestCase]]
 
     @classmethod
     def build(cls, device: Device, **kwargs) -> "InterfaceCablingTestCases":
@@ -76,9 +76,9 @@ class InterfaceCablingTestCases(TestCases):
         test_cases = InterfaceCablingTestCases(
             exclusive=False,
             device=device.name,
-            tests=[
+            checks=[
                 InterfaceCablingTestCase(
-                    test_params=InterfaceCablingTestParams(interface=interface.name),
+                    check_params=InterfaceCablingTestParams(interface=interface.name),
                     expected_results=InterfaceCablingdExpectations(
                         device=interface.cable_peer.device.name,
                         port_id=interface.cable_peer.cable_port_id,

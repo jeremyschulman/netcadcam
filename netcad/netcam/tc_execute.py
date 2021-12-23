@@ -13,7 +13,7 @@ from netcad.logger import get_logger
 from netcad.cli.keywords import markup_color
 from netcad.debug import debug_enabled, format_exc_message
 
-from .tc_result_types import TestCaseStatus, SkipTestCases
+from .tc_result_types import CheckStatus, CheckSkipResult
 from .tc_save import testcases_save_results
 from .dut import AsyncDeviceUnderTest
 
@@ -21,7 +21,7 @@ from .dut import AsyncDeviceUnderTest
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["execute_testcases"]
+__all__ = ["execute_design_checks"]
 
 # -----------------------------------------------------------------------------
 #
@@ -36,7 +36,7 @@ SKIP_CLRD = markup_color("SKIP", "grey70")
 SUMMARY_CLRD = markup_color("DONE", "bright_yellow")
 
 
-async def execute_testcases(dut: AsyncDeviceUnderTest):
+async def execute_design_checks(dut: AsyncDeviceUnderTest):
     device = dut.device
     dev_name = device.name
     dut_name = f"DUT: {dev_name}"
@@ -86,10 +86,10 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
     ttc = sum(total_test_counts.values())
 
     c_pass, c_fail, c_info, c_skip = (
-        total_test_counts[TestCaseStatus.PASS],
-        total_test_counts[TestCaseStatus.FAIL],
-        total_test_counts[TestCaseStatus.INFO],
-        total_test_counts[TestCaseStatus.SKIP],
+        total_test_counts[CheckStatus.PASS],
+        total_test_counts[CheckStatus.FAIL],
+        total_test_counts[CheckStatus.INFO],
+        total_test_counts[CheckStatus.SKIP],
     )
 
     log.info(
@@ -145,7 +145,7 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
 
             testcases = await testing_service.load(testcase_dir=dev_tc_dir)
 
-            if not len(testcases.tests):
+            if not len(testcases.checks):
                 # if the test file was generated with an empty set of tests,
                 # which could happen depending on the Developer of the testing
                 # service, then skill this and go onto the next one.
@@ -159,7 +159,7 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
 
                 if not results:
                     results = [
-                        SkipTestCases(
+                        CheckSkipResult(
                             device=device,
                             message=f"Missing: device {device.name} support for "
                             f"testcases: {tc_name}",
@@ -180,10 +180,10 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
             dut.result_counts.update(result_counts)
 
             c_pass, c_fail, c_info, c_skip = (
-                result_counts[TestCaseStatus.PASS],
-                result_counts[TestCaseStatus.FAIL],
-                result_counts[TestCaseStatus.INFO],
-                result_counts[TestCaseStatus.SKIP],
+                result_counts[CheckStatus.PASS],
+                result_counts[CheckStatus.FAIL],
+                result_counts[CheckStatus.INFO],
+                result_counts[CheckStatus.SKIP],
             )
 
             dev_resuls_dir = dev_tc_dir / "results"

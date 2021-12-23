@@ -1,10 +1,10 @@
 from netcad.registry import Registry
-from .test_cases import TestCases
+from .check_collection import CheckCollection
 
-__all__ = ["TestingService", "testing_service"]
+__all__ = ["CheckRegistry", "design_checks"]
 
 
-class TestingService(Registry, registry_name="test_services"):
+class CheckRegistry(Registry, registry_name="test_services"):
     """
     TestingServices registry used to register TestCases class so that they can
     be looked up by name for the purposes of building tests, ...
@@ -32,9 +32,9 @@ class TestingService(Registry, registry_name="test_services"):
         cls - as is
         """
 
-        if not issubclass(cls, TestCases):
+        if not issubclass(cls, CheckCollection):
             raise RuntimeError(
-                f"Forbidden use of TestingService registration on non TestCases class: {cls.__name__}"
+                f"Forbidden use of TestingService registration on non {CheckCollection.__name__} class: {cls.__name__}"
             )
 
         try:
@@ -49,4 +49,4 @@ class TestingService(Registry, registry_name="test_services"):
 
 
 # decorator function is the registration, see __call__ usage above.
-testing_service = TestingService()
+design_checks = CheckRegistry()

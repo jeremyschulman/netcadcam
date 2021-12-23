@@ -17,17 +17,17 @@ import aiofiles
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from . import TestCase
+from . import Check
 
 
 # noinspection PyUnresolvedReferences
-class TestCases(BaseModel):
+class CheckCollection(BaseModel):
     """
     Attributes
     ----------
     service: str
-        The name of the testing service, "cabling" for example, that allows the
-        Designer to register/retrieve test-cases by name.
+        The name of the check collection service, "cabling" for example, that
+        allows the Designer to register/retrieve checks by name.
 
     device: str
         The name of the device for which the tests will be executed against by
@@ -42,16 +42,15 @@ class TestCases(BaseModel):
         not in the tests list, then an exception will be raised by the testing
         engine.
 
-    tests: List[TestCases], optional
-        The list of specific test cases that will be executed by the testing
+    checks: List[Checks], optional
+        The list of specific checks that will be executed by the validation
         engine.
-
     """
 
     service: str
     device: str
     exclusive: Optional[bool] = Field(default=True)
-    tests: Optional[List[TestCase]] = Field(default_factory=list)
+    checks: Optional[List[Check]] = Field(default_factory=list)
 
     @staticmethod
     def filepath(testcase_dir: Path, service: str) -> Path:
@@ -75,5 +74,5 @@ class TestCases(BaseModel):
             return parse_obj_as(cls, json.loads(await infile.read()))
 
     @classmethod
-    def build(cls, obj: Any, design_service=None) -> "TestCases":
+    def build(cls, obj: Any, design_service=None) -> "CheckCollection":
         raise NotImplementedError()

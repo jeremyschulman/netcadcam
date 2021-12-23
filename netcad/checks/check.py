@@ -14,7 +14,7 @@ from pydantic import BaseModel
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["TestCase"]
+__all__ = ["Check"]
 
 # -----------------------------------------------------------------------------
 #
@@ -26,35 +26,36 @@ __all__ = ["TestCase"]
 # disabling pycharm inspections because: https://youtrack.jetbrains.com/issue/PY-16760)
 
 # noinspection PyUnresolvedReferences
-class TestCase(BaseModel):
+class Check(BaseModel):
     """
-    TestCase is a base abstract class used to contain the specifications for a
-    testable service.
+    Check is a base abstract class used to contain the specifications for a
+    specific design network check.
 
     Attributes
     ----------
-    test_case: str, optional
-        Uniquely identifies the type of the test case within the service.  If
-        not provided, defaults to the test cases service name.
+    check_type: str, optional
+        Uniquely identifies the type of check within the service.  If
+        not provided, defaults to the design service name.
 
-    test_params: BaseModel
-        A pydantic model that defines the required test-case parameters that
-        will be used by the testing system at audit/execution time.
+    check_params: BaseModel
+        A pydantic model that defines the required check parameters that will be
+        used by the validator at audit/execution time.
 
     expected_results: BaseModel
         A pydantic model that defines the expected test-case results so that the
         testing system knows the "correct answer".
     """
 
-    test_case: Optional[str]
-    test_params: BaseModel
+    check_type: Optional[str]
+    check_params: BaseModel
     expected_results: BaseModel
 
-    def test_case_id(self) -> str:
+    def check_id(self) -> str:
         """
-        Returns a humaized string form to identify the test case.  This value
-        will be used in testing reports and testing engines that may need an ID
-        like value.  pytest comest to mind.
+        Returns a humaized string form to identify a specific check.  This value
+        will be used in reports and validator engines that may need an ID like
+        value.  pytest comest to mind.  For example, when checking "interfaces"
+        the `check_id` would be the interface name.
         """
         raise NotImplementedError()
 
@@ -68,4 +69,4 @@ class TestCase(BaseModel):
         """By default exclude any optional/None fields from serialization"""
         # TODO: may rethink this default.
         # kwargs["exclude_none"] = True
-        return super(TestCase, self).dict(**kwargs)
+        return super(Check, self).dict(**kwargs)

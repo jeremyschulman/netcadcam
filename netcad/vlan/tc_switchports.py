@@ -18,8 +18,8 @@ from netcad.device import Device
 from netcad.vlan import VlanProfile
 from netcad.device.l2_interfaces import InterfaceL2Access, InterfaceL2Trunk
 
-from netcad.testing_services import TestCases, TestCase
-from netcad.testing_services.testing_registry import testing_service
+from netcad.checks import CheckCollection, Check
+from netcad.checks.check_registry import design_checks
 
 
 # -----------------------------------------------------------------------------
@@ -56,19 +56,19 @@ class SwitchportTrunkExpectation(SwitchportAnyExpectations):
 SwitchportExpectations = Union[SwitchportAccessExpectation, SwitchportTrunkExpectation]
 
 
-class SwitchportTestCase(TestCase):
-    test_case = "switchport"
-    test_params: SwitchportTestParams
+class SwitchportTestCase(Check):
+    check_type = "switchport"
+    check_params: SwitchportTestParams
     expected_results: SwitchportExpectations
 
-    def test_case_id(self) -> str:
-        return str(self.test_params.if_name)
+    def check_id(self) -> str:
+        return str(self.check_params.if_name)
 
 
-@testing_service
-class SwitchportTestCases(TestCases):
+@design_checks
+class SwitchportTestCases(CheckCollection):
     service = "switchports"
-    tests: Optional[List[SwitchportTestCase]]
+    checks: Optional[List[SwitchportTestCase]]
 
     @classmethod
     def build(cls, device: Device, **kwargs) -> "SwitchportTestCases":
@@ -91,7 +91,7 @@ class SwitchportTestCases(TestCases):
                 continue
 
             test_cases.append(
-                SwitchportTestCase(test_params=tc_params, expected_results=tc_expd)
+                SwitchportTestCase(check_params=tc_params, expected_results=tc_expd)
             )
 
-        return SwitchportTestCases(device=device.name, tests=test_cases)
+        return SwitchportTestCases(device=device.name, checks=test_cases)

@@ -15,8 +15,8 @@ from pydantic import BaseModel, Field
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device
-from netcad.testing_services import TestCases, TestCase
-from netcad.testing_services import testing_service
+from netcad.checks import CheckCollection, Check
+from netcad.checks import design_checks
 
 
 class DeviceInformationTestParams(BaseModel):
@@ -28,12 +28,12 @@ class DeviceInformationTestExpectations(BaseModel):
     product_model: str
 
 
-class DeviceInformationTestCase(TestCase):
-    test_params: DeviceInformationTestParams
+class DeviceInformationTestCase(Check):
+    check_params: DeviceInformationTestParams
     expected_results: DeviceInformationTestExpectations
 
-    def test_case_id(self) -> str:
-        return self.test_params.device
+    def check_id(self) -> str:
+        return self.check_params.device
 
 
 class DeviceInterfaceInfo(BaseModel):
@@ -80,10 +80,10 @@ def _interfaces_as_dict(device: Device) -> dict:
     return as_dict
 
 
-@testing_service
-class DeviceInformationTestCases(TestCases):
+@design_checks
+class DeviceInformationTestCases(CheckCollection):
     service = "device"
-    tests: List[DeviceInformationTestCase]
+    checks: List[DeviceInformationTestCase]
     interfaces: Dict[str, DeviceInterfaceInfo]
 
     @classmethod
@@ -92,9 +92,9 @@ class DeviceInformationTestCases(TestCases):
         return DeviceInformationTestCases(
             device=device.name,
             interfaces=_interfaces_as_dict(device),
-            tests=[
+            checks=[
                 DeviceInformationTestCase(
-                    test_params=DeviceInformationTestParams(
+                    check_params=DeviceInformationTestParams(
                         device=device.name, os_name=device.os_name
                     ),
                     expected_results=DeviceInformationTestExpectations(

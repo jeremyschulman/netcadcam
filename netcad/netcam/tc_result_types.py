@@ -17,24 +17,24 @@ from pydantic import validator, BaseModel, Field
 
 from netcad.device import Device
 from netcad.helpers import StrEnum
-from netcad.testing_services.test_case import TestCase
+from netcad.checks.check import Check
 
 # -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
 
 __all__ = [
-    "CollectionTestResults",
-    "TestCaseStatus",
-    "PassTestCase",
-    "FailTestCase",
-    "InfoTestCase",
-    "ResultsTestCase",
-    "SkipTestCases",
-    "FailMissingMembersResult",
-    "FailExtraMembersResult",
-    "FailFieldMismatchResult",
-    "FailNoExistsResult",
+    "CheckResultsCollection",
+    "CheckStatus",
+    "CheckPassResult",
+    "CheckFailResult",
+    "CheckInfoLog",
+    "CheckResult",
+    "CheckSkipResult",
+    "CheckFailMissingMembers",
+    "CheckFailExtraMembers",
+    "CheckFailFieldMismatch",
+    "CheckFailNoExists",
 ]
 
 
@@ -48,24 +48,24 @@ __all__ = [
 AnyMeasurementType = Union[bool, int, float, List, Dict, None, str]
 
 
-class TestCaseStatus(StrEnum):
+class CheckStatus(StrEnum):
     PASS = enum.auto()
     FAIL = enum.auto()
     INFO = enum.auto()
     SKIP = enum.auto()
 
 
-class ResultsTestCase(BaseModel):
-    status: TestCaseStatus
+class CheckResult(BaseModel):
+    status: CheckStatus
     device: Device
-    test_case: TestCase
-    test_case_id: Optional[str]
+    check: Check
+    check_id: Optional[str]
     measurement: AnyMeasurementType
 
     # noinspection PyUnusedLocal
-    @validator("test_case_id", always=True)
+    @validator("check_id", always=True)
     def _save_tc_id(cls, value, values: dict):
-        return values["test_case"].test_case_id()
+        return values["check"].check_id()
 
     class Config:
         arbitrary_types_allowed = True
@@ -77,13 +77,13 @@ class ResultsTestCase(BaseModel):
 
 # -----------------------------------------------------------------------------
 #
-#                         When a testcase passes ...
+#                         When a check passes ...
 #
 # -----------------------------------------------------------------------------
 
 
-class PassTestCase(ResultsTestCase):
-    status = TestCaseStatus.PASS
+class CheckPassResult(CheckResult):
+    status = CheckStatus.PASS
     field: Optional[str]
 
     @staticmethod
@@ -91,24 +91,24 @@ class PassTestCase(ResultsTestCase):
         """
         The log message to report to the User when results are processed.
         """
-        expected = result["test_case"]["expected_results"]
+        expected = result["check"]["expected_results"]
         if (field := result.get("field")) and field in expected:
             expected = expected[field]
         return dict(expected=expected, measured=result["measurement"])
 
 
-class NoneTestCase(TestCase):
-    test_params = BaseModel()
+class NoCheck(Check):
+    check_params = BaseModel()
     expected_results = BaseModel()
 
-    def test_case_id(self) -> str:
+    def check_id(self) -> str:
         return "n/a"
 
 
-class SkipTestCases(ResultsTestCase):
-    status = TestCaseStatus.SKIP
+class CheckSkipResult(CheckResult):
+    status = CheckStatus.SKIP
     message: str
-    test_case: TestCase = Field(default_factory=NoneTestCase)
+    check: Check = Field(default_factory=NoCheck)
     measurement: Optional[AnyMeasurementType] = None
 
     @staticmethod
@@ -118,13 +118,13 @@ class SkipTestCases(ResultsTestCase):
 
 # -----------------------------------------------------------------------------
 #
-#                         When a testcase fails ...
+#                         When a check fails ...
 #
 # -----------------------------------------------------------------------------
 
 
-class FailTestCase(ResultsTestCase):
-    status = TestCaseStatus.FAIL
+class CheckFailResult(CheckResult):
+    status = CheckStatus.FAIL
     field: str
     error: Union[str, dict]
 
@@ -133,26 +133,26 @@ class FailTestCase(ResultsTestCase):
         return result["error"]
 
 
-class FailNoExistsResult(FailTestCase):
-    """The test case failed since the measure item does not exist"""
+class CheckFailNoExists(CheckFailResult):
+    """The check failed since the measure item does not exist"""
 
-    def __init__(self, device, test_case, **kwargs):
+    def __init__(self, device, check, **kwargs):
         kwargs.setdefault("field", "exists")
         kwargs.setdefault(
-            "error", dict(error="missing", expected=test_case.expected_results.dict())
+            "error", dict(error="missing", expected=check.expected_results.dict())
         )
 
-        super().__init__(device=device, test_case=test_case, **kwargs)
+        super().__init__(device=device, check=check, **kwargs)
 
 
-class FailFieldMismatchResult(FailTestCase):
+class CheckFailFieldMismatch(CheckFailResult):
     expected: Optional[AnyMeasurementType]
     error: Optional[Union[str, dict]]
 
-    def __init__(self, device, test_case, field, measurement, expected=None, **kwargs):
+    def __init__(self, device, check, field, measurement, expected=None, **kwargs):
 
         if expected is None:
-            expected = getattr(test_case.expected_results, field)
+            expected = getattr(check.expected_results, field)
 
         if "error" not in kwargs:
             kwargs["error"] = dict(
@@ -161,41 +161,41 @@ class FailFieldMismatchResult(FailTestCase):
 
         super().__init__(
             device=device,
-            test_case=test_case,
+            check=check,
             field=field,
             measurement=measurement,
             **kwargs,
         )
 
 
-class FailExtraMembersResult(FailTestCase):
+class CheckFailExtraMembers(CheckFailResult):
     expected: List
     extras: List
 
-    def __init__(self, device, test_case, expected, extras, **kwargs):
+    def __init__(self, device, check, expected, extras, **kwargs):
         if "error" not in kwargs:
             kwargs["error"] = dict(error="extras", expected=expected, extras=extras)
 
         super().__init__(
             device=device,
-            test_case=test_case,
+            check=check,
             expected=expected,
             extras=extras,
             **kwargs,
         )
 
 
-class FailMissingMembersResult(FailTestCase):
+class CheckFailMissingMembers(CheckFailResult):
     expected: List
     missing: List
 
-    def __init__(self, device, test_case, expected, missing, **kwargs):
+    def __init__(self, device, check, expected, missing, **kwargs):
         if "error" not in kwargs:
             kwargs["error"] = dict(error="missing", expected=expected, missing=missing)
 
         super().__init__(
             device=device,
-            test_case=test_case,
+            check=check,
             expected=expected,
             missing=missing,
             **kwargs,
@@ -204,13 +204,13 @@ class FailMissingMembersResult(FailTestCase):
 
 # -----------------------------------------------------------------------------
 #
-#            When a testcase wants to provide additional information ...
+#            When a check wants to provide additional information ...
 #
 # -----------------------------------------------------------------------------
 
 
-class InfoTestCase(ResultsTestCase):
-    status = TestCaseStatus.INFO
+class CheckInfoLog(CheckResult):
+    status = CheckStatus.INFO
     field: Optional[str]
 
     @staticmethod
@@ -218,4 +218,4 @@ class InfoTestCase(ResultsTestCase):
         return result["measurement"]
 
 
-CollectionTestResults = List[ResultsTestCase]
+CheckResultsCollection = List[CheckResult]

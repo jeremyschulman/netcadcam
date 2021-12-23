@@ -16,8 +16,8 @@ from pydantic import BaseModel
 
 from netcad.device import Device
 from netcad.device.l3_interfaces import InterfaceL3
-from netcad.testing_services import TestCases, TestCase
-from netcad.testing_services import testing_service
+from netcad.checks import CheckCollection, Check
+from netcad.checks import design_checks
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -45,31 +45,31 @@ class IPInterfaceTestExpectations(BaseModel):
     if_ipaddr: str
 
 
-class IPInterfaceTestCase(TestCase):
-    test_params: IPInterfaceTestParams
+class IPInterfaceTestCase(Check):
+    check_params: IPInterfaceTestParams
     expected_results: IPInterfaceTestExpectations
 
-    def test_case_id(self) -> str:
-        return str(self.test_params.if_name)
+    def check_id(self) -> str:
+        return str(self.check_params.if_name)
 
 
-class IPInterfaceExclusiveListTestCase(TestCase):
+class IPInterfaceExclusiveListTestCase(Check):
     def __init__(self, **kwargs):
         super().__init__(
-            test_case="ipaddrs-list",
-            test_params=BaseModel(),
+            check_type="ipaddrs-list",
+            check_params=BaseModel(),
             expected_results=BaseModel(),
             **kwargs
         )
 
-    def test_case_id(self) -> str:
+    def check_id(self) -> str:
         return "exclusive_list"
 
 
-@testing_service
-class IPInterfacesTestCases(TestCases):
+@design_checks
+class IPInterfacesTestCases(CheckCollection):
     service = "ipaddrs"
-    tests: Optional[List[IPInterfaceTestCase]]
+    checks: Optional[List[IPInterfaceTestCase]]
 
     @classmethod
     def build(cls, device: Device, **kwargs) -> Optional["IPInterfacesTestCases"]:
@@ -82,9 +82,9 @@ class IPInterfacesTestCases(TestCases):
 
         return IPInterfacesTestCases(
             device=device.name,
-            tests=[
+            checks=[
                 IPInterfaceTestCase(
-                    test_params=IPInterfaceTestParams(if_name=iface.name),
+                    check_params=IPInterfaceTestParams(if_name=iface.name),
                     expected_results=IPInterfaceTestExpectations(
                         if_ipaddr=str(iface.profile.if_ipaddr or "is_reserved")
                     ),

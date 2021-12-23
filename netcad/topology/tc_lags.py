@@ -16,10 +16,10 @@ from pydantic import BaseModel
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device, DeviceInterface
-from netcad.testing_services import TestCases, TestCase
+from netcad.checks import CheckCollection, Check
 from netcad.device import InterfaceLag
 
-from netcad.testing_services import testing_service
+from netcad.checks import design_checks
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -54,18 +54,18 @@ class LagTestExpectations(BaseModel):
     interfaces: List[LagTestExpectedInterfaceStatus]
 
 
-class LagTestCase(TestCase):
-    test_params: LagTestParams
+class LagTestCase(Check):
+    check_params: LagTestParams
     expected_results: LagTestExpectations
 
-    def test_case_id(self) -> str:
-        return str(self.test_params.interface)
+    def check_id(self) -> str:
+        return str(self.check_params.interface)
 
 
-@testing_service
-class LagTestCases(TestCases):
+@design_checks
+class LagTestCases(CheckCollection):
     service = "lags"
-    tests: Optional[List[LagTestCase]]
+    checks: Optional[List[LagTestCase]]
 
     @classmethod
     def build(cls, device: Device, **kwargs) -> Optional["LagTestCases"]:
@@ -100,10 +100,10 @@ class LagTestCases(TestCases):
 
         test_cases = LagTestCases(
             device=device.name,
-            tests=[
+            checks=[
                 LagTestCase(
-                    test_case="lag",
-                    test_params=LagTestParams(interface=lag_name),
+                    check_type="lag",
+                    check_params=LagTestParams(interface=lag_name),
                     expected_results=LagTestExpectations(
                         enabled=device.interfaces[lag_name].enabled,
                         interfaces=[
@@ -120,5 +120,7 @@ class LagTestCases(TestCases):
         )
 
         # return the test cases sorted by the lag interface name
-        test_cases.tests.sort(key=lambda tc: DeviceInterface(tc.test_params.interface))
+        test_cases.checks.sort(
+            key=lambda tc: DeviceInterface(tc.check_params.interface)
+        )
         return test_cases

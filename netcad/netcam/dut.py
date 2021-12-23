@@ -20,7 +20,7 @@ import aiofiles
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device
-from netcad.testing_services import TestCases
+from netcad.checks import CheckCollection
 
 
 # -----------------------------------------------------------------------------
@@ -38,7 +38,7 @@ __all__ = ["DeviceUnderTest", "AsyncDeviceUnderTest"]
 # -----------------------------------------------------------------------------
 
 if TYPE_CHECKING:
-    from netcad.netcam import CollectionTestResults
+    from netcad.netcam import CheckResultsCollection
 
 
 class _BaseDeviceUnderTest:
@@ -85,8 +85,8 @@ class AsyncDeviceUnderTest(_BaseDeviceUnderTest):
 
     @singledispatchmethod
     async def execute_testcases(
-        self, testcases: TestCases
-    ) -> Optional["CollectionTestResults"]:
+        self, testcases: CheckCollection
+    ) -> Optional["CheckResultsCollection"]:
         """
         The default testcase executor behavior will return None to indicate that
         the underlying plugin does not support the specific test-cases.
