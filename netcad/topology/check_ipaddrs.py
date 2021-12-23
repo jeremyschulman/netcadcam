@@ -16,17 +16,17 @@ from pydantic import BaseModel
 
 from netcad.device import Device
 from netcad.device.l3_interfaces import InterfaceL3
-from netcad.testing_services import TestCases, TestCase
-from netcad.testing_services import testing_service
+from netcad.checks import CheckCollection, Check
+from netcad.checks import register_collection
 
 # -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
 
 __all__ = [
-    "IPInterfacesTestCases",
-    "IPInterfaceTestCase",
-    "IPInterfaceExclusiveListTestCase",
+    "IpInterfacesCheckCollection",
+    "IpInterfaceCheck",
+    "IpInterfaceCheckExclusiveList",
 ]
 
 
@@ -37,42 +37,42 @@ __all__ = [
 # -----------------------------------------------------------------------------
 
 
-class IPInterfaceTestParams(BaseModel):
+class IpInterfaceCheckParams(BaseModel):
     if_name: str
 
 
-class IPInterfaceTestExpectations(BaseModel):
+class IpInterfaceCheckExpectations(BaseModel):
     if_ipaddr: str
 
 
-class IPInterfaceTestCase(TestCase):
-    test_params: IPInterfaceTestParams
-    expected_results: IPInterfaceTestExpectations
+class IpInterfaceCheck(Check):
+    check_params: IpInterfaceCheckParams
+    expected_results: IpInterfaceCheckExpectations
 
-    def test_case_id(self) -> str:
-        return str(self.test_params.if_name)
+    def check_id(self) -> str:
+        return str(self.check_params.if_name)
 
 
-class IPInterfaceExclusiveListTestCase(TestCase):
+class IpInterfaceCheckExclusiveList(Check):
     def __init__(self, **kwargs):
         super().__init__(
-            test_case="ipaddrs-list",
-            test_params=BaseModel(),
+            check_type="ipaddrs-list",
+            check_params=BaseModel(),
             expected_results=BaseModel(),
             **kwargs
         )
 
-    def test_case_id(self) -> str:
+    def check_id(self) -> str:
         return "exclusive_list"
 
 
-@testing_service
-class IPInterfacesTestCases(TestCases):
-    service = "ipaddrs"
-    tests: Optional[List[IPInterfaceTestCase]]
+@register_collection
+class IpInterfacesCheckCollection(CheckCollection):
+    name = "ipaddrs"
+    checks: Optional[List[IpInterfaceCheck]]
 
     @classmethod
-    def build(cls, device: Device, **kwargs) -> Optional["IPInterfacesTestCases"]:
+    def build(cls, device: Device, **kwargs) -> Optional["IpInterfacesCheckCollection"]:
         if_l3_list = [
             iface
             for iface in device.interfaces.used().values()
@@ -80,12 +80,12 @@ class IPInterfacesTestCases(TestCases):
             and (iface.profile.if_ipaddr or iface.profile.is_reserved)
         ]
 
-        return IPInterfacesTestCases(
+        return IpInterfacesCheckCollection(
             device=device.name,
-            tests=[
-                IPInterfaceTestCase(
-                    test_params=IPInterfaceTestParams(if_name=iface.name),
-                    expected_results=IPInterfaceTestExpectations(
+            checks=[
+                IpInterfaceCheck(
+                    check_params=IpInterfaceCheckParams(if_name=iface.name),
+                    expected_results=IpInterfaceCheckExpectations(
                         if_ipaddr=str(iface.profile.if_ipaddr or "is_reserved")
                     ),
                 )

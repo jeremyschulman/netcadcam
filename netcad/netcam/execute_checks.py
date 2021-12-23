@@ -13,15 +13,15 @@ from netcad.logger import get_logger
 from netcad.cli.keywords import markup_color
 from netcad.debug import debug_enabled, format_exc_message
 
-from .tc_result_types import TestCaseStatus, SkipTestCases
-from .tc_save import testcases_save_results
+from netcad.checks.check_result_types import CheckStatus, CheckSkipResult
+from .save_check_results import device_checks_save_results
 from .dut import AsyncDeviceUnderTest
 
 # -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["execute_testcases"]
+__all__ = ["execute_device_checks"]
 
 # -----------------------------------------------------------------------------
 #
@@ -36,15 +36,15 @@ SKIP_CLRD = markup_color("SKIP", "grey70")
 SUMMARY_CLRD = markup_color("DONE", "bright_yellow")
 
 
-async def execute_testcases(dut: AsyncDeviceUnderTest):
+async def execute_device_checks(dut: AsyncDeviceUnderTest):
     device = dut.device
     dev_name = device.name
-    dut_name = f"DUT: {dev_name}"
+    dut_name = f"{dev_name:<16}"
 
     log = get_logger()
     if not dut.testcases_dir.is_dir():
         log.error(
-            f"{dut_name}:Missing expected testcase directory: "
+            f"{dut_name}:Missing expected checks directory: "
             f"{dut.testcases_dir.absolute()}, skipping"
         )
         return
@@ -53,7 +53,7 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
     # Testing Prologue
     # -------------------------------------------------------------------------
 
-    log.info(f"{dut_name}: Starting Tests ...")
+    log.info(f"{dut_name}: Starting Checks ...")
 
     try:
         await dut.setup()
@@ -68,7 +68,7 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
             log.critical(format_exc_message(exc))
 
         dut.result_counts["FAIL"] = 1
-        log.info(f"{dut_name}: {SUMMARY_CLRD} ----\tTestcases: PASS=0, FAIL=1, INFO=0")
+        log.info(f"{dut_name}: {SUMMARY_CLRD} ----\tChecks: PASS=0, FAIL=1, INFO=0")
         return
 
     # -------------------------------------------------------------------------
@@ -86,14 +86,14 @@ async def execute_testcases(dut: AsyncDeviceUnderTest):
     ttc = sum(total_test_counts.values())
 
     c_pass, c_fail, c_info, c_skip = (
-        total_test_counts[TestCaseStatus.PASS],
-        total_test_counts[TestCaseStatus.FAIL],
-        total_test_counts[TestCaseStatus.INFO],
-        total_test_counts[TestCaseStatus.SKIP],
+        total_test_counts[CheckStatus.PASS],
+        total_test_counts[CheckStatus.FAIL],
+        total_test_counts[CheckStatus.INFO],
+        total_test_counts[CheckStatus.SKIP],
     )
 
     log.info(
-        f"{dut_name}: {SUMMARY_CLRD} {ttc:4}\tTestcases: PASS={c_pass}, FAIL={c_fail}, INFO={c_info}, SKIP={c_skip}"
+        f"{dut_name}: {SUMMARY_CLRD} {ttc:4}\tChecks: PASS={c_pass}, FAIL={c_fail}, INFO={c_info}, SKIP={c_skip}"
     )
 
     try:
@@ -114,7 +114,7 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
 
     device = dut.device
     dev_tc_dir = dut.testcases_dir
-    dut_name = f"DUT: {device.name}"
+    dut_name = f"{device.name:<16}"
 
     # -------------------------------------------------------------------------
     # Testing all Design Services and related Testing Services
@@ -125,14 +125,14 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
         # there could be design services without defined testing services, so
         # skip if that is the case.
 
-        if not design_service.testing_services:
+        if not design_service.check_collections:
             continue
 
         # log.info(f"{dut_name}: Design Service: {ds_name}")
 
-        for testing_service in design_service.testing_services:
+        for testing_service in design_service.check_collections:
 
-            tc_name = testing_service.get_service_name()
+            tc_name = testing_service.get_name()
             tc_file = testing_service.filepath(testcase_dir=dev_tc_dir, service=tc_name)
             if not tc_file.exists():
                 # if there are no test cases for this test-service, this
@@ -145,7 +145,7 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
 
             testcases = await testing_service.load(testcase_dir=dev_tc_dir)
 
-            if not len(testcases.tests):
+            if not len(testcases.checks):
                 # if the test file was generated with an empty set of tests,
                 # which could happen depending on the Developer of the testing
                 # service, then skill this and go onto the next one.
@@ -159,10 +159,10 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
 
                 if not results:
                     results = [
-                        SkipTestCases(
+                        CheckSkipResult(
                             device=device,
                             message=f"Missing: device {device.name} support for "
-                            f"testcases: {tc_name}",
+                            f"Checks: {tc_name}",
                         )
                     ]
 
@@ -180,10 +180,10 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
             dut.result_counts.update(result_counts)
 
             c_pass, c_fail, c_info, c_skip = (
-                result_counts[TestCaseStatus.PASS],
-                result_counts[TestCaseStatus.FAIL],
-                result_counts[TestCaseStatus.INFO],
-                result_counts[TestCaseStatus.SKIP],
+                result_counts[CheckStatus.PASS],
+                result_counts[CheckStatus.FAIL],
+                result_counts[CheckStatus.INFO],
+                result_counts[CheckStatus.SKIP],
             )
 
             dev_resuls_dir = dev_tc_dir / "results"
@@ -191,19 +191,19 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
 
             if c_fail:
                 log.warning(
-                    f"{dut_name}: {FAIL_CLRD}\tTestcases: {tc_name}: "
+                    f"{dut_name}: {FAIL_CLRD}\tChecks: {tc_name}: "
                     f"PASS={c_pass}, FAIL={c_fail}, INFO={c_info}",
                 )
             elif c_skip:
                 log.info(
-                    f"{dut_name}: {SKIP_CLRD}\tTestcases: {tc_name}",
+                    f"{dut_name}: {SKIP_CLRD}\tChecks: {tc_name}",
                 )
             else:
                 log.info(
-                    f"{dut_name}: {PASS_CLRD}\tTestcases: {tc_name}: "
+                    f"{dut_name}: {PASS_CLRD}\tChecks: {tc_name}: "
                     f"PASS={c_pass}, INFO={c_info}",
                 )
 
-            await testcases_save_results(
+            await device_checks_save_results(
                 dut, tc_name, results, results_dir=dev_resuls_dir
             )

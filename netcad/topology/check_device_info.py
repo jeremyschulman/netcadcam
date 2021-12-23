@@ -15,25 +15,25 @@ from pydantic import BaseModel, Field
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device
-from netcad.testing_services import TestCases, TestCase
-from netcad.testing_services import testing_service
+from netcad.checks import CheckCollection, Check
+from netcad.checks import register_collection
 
 
-class DeviceInformationTestParams(BaseModel):
+class DeviceInformationCheckParams(BaseModel):
     device: str
     os_name: str
 
 
-class DeviceInformationTestExpectations(BaseModel):
+class DeviceInformationCheckExpectations(BaseModel):
     product_model: str
 
 
-class DeviceInformationTestCase(TestCase):
-    test_params: DeviceInformationTestParams
-    expected_results: DeviceInformationTestExpectations
+class DeviceInformationCheck(Check):
+    check_params: DeviceInformationCheckParams
+    expected_results: DeviceInformationCheckExpectations
 
-    def test_case_id(self) -> str:
-        return self.test_params.device
+    def check_id(self) -> str:
+        return self.check_params.device
 
 
 class DeviceInterfaceInfo(BaseModel):
@@ -80,24 +80,24 @@ def _interfaces_as_dict(device: Device) -> dict:
     return as_dict
 
 
-@testing_service
-class DeviceInformationTestCases(TestCases):
-    service = "device"
-    tests: List[DeviceInformationTestCase]
+@register_collection
+class DeviceInformationCheckCollection(CheckCollection):
+    name = "device"
+    checks: List[DeviceInformationCheck]
     interfaces: Dict[str, DeviceInterfaceInfo]
 
     @classmethod
-    def build(cls, device: Device, **kwargs) -> "DeviceInformationTestCases":
+    def build(cls, device: Device, **kwargs) -> "DeviceInformationCheckCollection":
 
-        return DeviceInformationTestCases(
+        return DeviceInformationCheckCollection(
             device=device.name,
             interfaces=_interfaces_as_dict(device),
-            tests=[
-                DeviceInformationTestCase(
-                    test_params=DeviceInformationTestParams(
+            checks=[
+                DeviceInformationCheck(
+                    check_params=DeviceInformationCheckParams(
                         device=device.name, os_name=device.os_name
                     ),
-                    expected_results=DeviceInformationTestExpectations(
+                    expected_results=DeviceInformationCheckExpectations(
                         product_model=device.product_model
                     ),
                 )

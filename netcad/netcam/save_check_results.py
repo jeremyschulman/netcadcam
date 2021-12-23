@@ -17,20 +17,20 @@ import aiofiles
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from . import tc_result_types as trt
+from ..checks import check_result_types as trt
 from .dut import AsyncDeviceUnderTest
 
 # -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["testcases_save_results"]
+__all__ = ["device_checks_save_results"]
 
 
-async def testcases_save_results(
+async def device_checks_save_results(
     dut: AsyncDeviceUnderTest,
     filename: str,
-    results: List[trt.ResultsTestCase],
+    results: List[trt.CheckResult],
     results_dir: Path,
 ):
     """
@@ -56,7 +56,7 @@ async def testcases_save_results(
     for res in results:
         res_dict = res.dict()
         res_dict["device"] = dut.device.name
-        res_dict["test_case"] = res_dict["test_case"]
+        res_dict["check"] = res_dict["check"]
         json_payload.append(res_dict)
 
     async with aiofiles.open(results_file, "w+") as ofile:

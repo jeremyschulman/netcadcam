@@ -7,6 +7,7 @@ from itertools import filterfalse
 from operator import attrgetter
 from collections import UserDict
 from functools import lru_cache
+from copy import copy
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -20,8 +21,8 @@ from netcad.design_services import DesignService
 # -----------------------------------------------------------------------------
 
 from .vlan_profile import VlanProfile
-from .tc_vlans import VlanTestCases
-from .tc_switchports import SwitchportTestCases
+from .check_vlans import VlanCheckCollection
+from .check_switchports import SwitchportCheckCollection
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -48,12 +49,12 @@ class DeviceVlanDesignService(DesignService):
     devices, has only one device.
     """
 
-    DESIGN_CHECKS = [VlanTestCases, SwitchportTestCases]
+    CHECKS = [VlanCheckCollection, SwitchportCheckCollection]
 
     def __init__(self, device: Device, service_name: Optional[str] = "vlans"):
         super().__init__(service_name=service_name)
         self.device = device
-        self.testing_services = [VlanTestCases, SwitchportTestCases]
+        self.check_collections = copy(self.__class__.CHECKS)
         self.add_devices(device)
         self.alias_names = dict()
 

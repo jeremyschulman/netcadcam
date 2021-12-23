@@ -15,18 +15,18 @@ from pydantic import BaseModel
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device, DeviceInterface
-from netcad.testing_services import TestCases, TestCase
-from netcad.testing_services import testing_service
+from netcad.checks import CheckCollection, Check
+from netcad.checks import register_collection
 
 # -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
 
 __all__ = [
-    "InterfaceCablingTestCases",
-    "InterfaceCablingTestCase",
+    "InterfaceCablingCheckCollection",
+    "InterfaceCablingCheck",
     "InterfaceCablingdExpectations",
-    "InterfaceCablingTestParams",
+    "InterfaceCablingCheckParams",
 ]
 
 # -----------------------------------------------------------------------------
@@ -36,7 +36,7 @@ __all__ = [
 # -----------------------------------------------------------------------------
 
 
-class InterfaceCablingTestParams(BaseModel):
+class InterfaceCablingCheckParams(BaseModel):
     interface: str
 
 
@@ -45,21 +45,21 @@ class InterfaceCablingdExpectations(BaseModel):
     port_id: str
 
 
-class InterfaceCablingTestCase(TestCase):
-    test_params: InterfaceCablingTestParams
+class InterfaceCablingCheck(Check):
+    check_params: InterfaceCablingCheckParams
     expected_results: InterfaceCablingdExpectations
 
-    def test_case_id(self) -> str:
-        return str(self.test_params.interface)
+    def check_id(self) -> str:
+        return str(self.check_params.interface)
 
 
-@testing_service
-class InterfaceCablingTestCases(TestCases):
-    service = "cabling"
-    tests: Optional[List[InterfaceCablingTestCase]]
+@register_collection
+class InterfaceCablingCheckCollection(CheckCollection):
+    name = "cabling"
+    checks: Optional[List[InterfaceCablingCheck]]
 
     @classmethod
-    def build(cls, device: Device, **kwargs) -> "InterfaceCablingTestCases":
+    def build(cls, device: Device, **kwargs) -> "InterfaceCablingCheckCollection":
 
         # only used physical interfaces that have a cabling peer relationship.
         # exclude any interfaces that are disabled, since the cabling tests will
@@ -73,12 +73,12 @@ class InterfaceCablingTestCases(TestCases):
             )
         )
 
-        test_cases = InterfaceCablingTestCases(
+        return InterfaceCablingCheckCollection(
             exclusive=False,
             device=device.name,
-            tests=[
-                InterfaceCablingTestCase(
-                    test_params=InterfaceCablingTestParams(interface=interface.name),
+            checks=[
+                InterfaceCablingCheck(
+                    check_params=InterfaceCablingCheckParams(interface=interface.name),
                     expected_results=InterfaceCablingdExpectations(
                         device=interface.cable_peer.device.name,
                         port_id=interface.cable_peer.cable_port_id,
@@ -87,5 +87,3 @@ class InterfaceCablingTestCases(TestCases):
                 for interface in interfaces
             ],
         )
-
-        return test_cases

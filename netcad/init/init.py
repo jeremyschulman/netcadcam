@@ -17,12 +17,10 @@ import toml
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.config import netcad_globals
+from netcad.config import netcad_globals, defaults as d
 from netcad.config import Environment
 from netcad.config.loader import import_objectref
 from netcad.logger import get_logger
-
-from netcad import defaults as d
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -158,10 +156,10 @@ def _init_proj_dirs():
     # NETCAD_TESTCASESDIR
     # -------------------------------------------------------------------------
 
-    netcad_globals.g_netcad_testcases_dir = ensure_directory(
+    netcad_globals.g_netcad_checks_dir = ensure_directory(
         project_dir=project_dir,
-        env_var=Environment.NETCAD_TESTCASESDIR,
-        default_value=d.DEFAULT_NETCAD_TESTCASESDIR,
+        env_var=Environment.NETCAD_CHECKSDIR,
+        default_value=d.DEFAULT_NETCAD_CHECKSDIR,
     )
 
     # -------------------------------------------------------------------------

@@ -15,19 +15,19 @@ from pydantic import BaseModel
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device, DeviceInterface
-from netcad.testing_services import TestCases, TestCase
-from netcad.testing_services import testing_service
+from netcad.checks import CheckCollection, Check
+from netcad.checks import register_collection
 
 # -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
 
 __all__ = [
-    "TransceiverTestCases",
-    "TransceiverTestCase",
-    "TransceiverTestParams",
-    "TransceiverTestExpectations",
-    "TransceiverListTestCase",
+    "TransceiverCheckCollection",
+    "TransceiverCheck",
+    "TransceiverCheckParams",
+    "TransceiverCheckExpectations",
+    "TransceiverCheckExclusiveList",
 ]
 
 # -----------------------------------------------------------------------------
@@ -37,43 +37,43 @@ __all__ = [
 # -----------------------------------------------------------------------------
 
 
-class TransceiverTestParams(BaseModel):
+class TransceiverCheckParams(BaseModel):
     interface: str
 
 
-class TransceiverTestExpectations(BaseModel):
+class TransceiverCheckExpectations(BaseModel):
     model: str  # the transceiver product model name (vendor specific)
     type: str  # the tranceiver physical type name (industry standard)
 
 
-class TransceiverTestCase(TestCase):
-    test_params: TransceiverTestParams
-    expected_results: TransceiverTestExpectations
+class TransceiverCheck(Check):
+    check_params: TransceiverCheckParams
+    expected_results: TransceiverCheckExpectations
 
-    def test_case_id(self) -> str:
-        return str(self.test_params.interface)
+    def check_id(self) -> str:
+        return str(self.check_params.interface)
 
 
-class TransceiverListTestCase(TestCase):
+class TransceiverCheckExclusiveList(Check):
     def __init__(self, **kwargs):
         super().__init__(
-            test_case="transceiver-list",
-            test_params=BaseModel(),
+            check_type="transceiver-list",
+            check_params=BaseModel(),
             expected_results=BaseModel(),
             **kwargs
         )
 
-    def test_case_id(self) -> str:
+    def check_id(self) -> str:
         return "exclusive_list"
 
 
-@testing_service
-class TransceiverTestCases(TestCases):
-    service = "transceivers"
-    tests: Optional[List[TransceiverTestCase]]
+@register_collection
+class TransceiverCheckCollection(CheckCollection):
+    name = "transceivers"
+    checks: Optional[List[TransceiverCheck]]
 
     @classmethod
-    def build(cls, device: Device, **kwargs) -> "TransceiverTestCases":
+    def build(cls, device: Device, **kwargs) -> "TransceiverCheckCollection":
 
         # find all interfaces that have a designed transceiver assicated to the
         # interface profile -> port-profile.
@@ -88,14 +88,14 @@ class TransceiverTestCases(TestCases):
             port_profile = iface.profile.port_profile
             xcvr = port_profile.transceiver
 
-            return TransceiverTestCase(
-                test_params=TransceiverTestParams(interface=iface.name),
-                expected_results=TransceiverTestExpectations(
+            return TransceiverCheck(
+                check_params=TransceiverCheckParams(interface=iface.name),
+                expected_results=TransceiverCheckExpectations(
                     model=iface.profile.port_profile.name, type=xcvr.type
                 ),
             )
 
-        return TransceiverTestCases(
+        return TransceiverCheckCollection(
             device=device.name,
-            tests=[_build_one_tc(iface) for iface in sorted(interfaces)],
+            checks=[_build_one_tc(iface) for iface in sorted(interfaces)],
         )

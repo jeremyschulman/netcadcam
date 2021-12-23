@@ -3,6 +3,7 @@
 # -----------------------------------------------------------------------------
 
 from typing import List, Optional
+from typing import TYPE_CHECKING
 from itertools import chain
 from operator import itemgetter
 
@@ -19,24 +20,24 @@ from pydantic import BaseModel
 from netcad.logger import get_logger
 from netcad.device import Device
 from netcad.vlan import VlanProfile
-
 from netcad.device.l2_interfaces import InterfaceL2Access, InterfaceL2Trunk
 from netcad.device.l3_interfaces import InterfaceVlan
+from netcad.checks import CheckCollection, Check
+from netcad.checks.check_registry import register_collection
 
-from netcad.testing_services import TestCases, TestCase
-from netcad.testing_services.testing_registry import testing_service
-
+if TYPE_CHECKING:
+    from netcad.vlan.vlan_design_service import VlansDesignService
 
 # -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
 
 __all__ = [
-    "VlanTestCase",
-    "VlanTestParams",
-    "VlanTestExpectations",
-    "VlanTestCases",
-    "VlanTestCaseExclusiveList",
+    "VlanCheck",
+    "VlanCheckParams",
+    "VlanCheckExpectations",
+    "VlanCheckCollection",
+    "VlanCheckExclusiveList",
 ]
 
 
@@ -47,31 +48,39 @@ __all__ = [
 # -----------------------------------------------------------------------------
 
 
-class VlanTestParams(BaseModel):
+class VlanCheckParams(BaseModel):
     vlan_id: int
 
 
-class VlanTestExpectations(BaseModel):
+class VlanCheckExpectations(BaseModel):
     vlan: VlanProfile
     interfaces: List[str]
 
 
-class VlanTestCase(TestCase):
-    test_case = "interface"
-    test_params: VlanTestParams
-    expected_results: VlanTestExpectations
+class VlanCheck(Check):
+    check_type = "interface"
+    check_params: VlanCheckParams
+    expected_results: VlanCheckExpectations
 
-    def test_case_id(self) -> str:
-        return str(self.test_params.vlan_id)
+    def check_id(self) -> str:
+        return str(self.check_params.vlan_id)
 
 
-class VlanTestCaseExclusiveList(TestCase):
-    test_case = "exclusive_list"
-    test_params: Optional[BaseModel] = None
-    expected_results: Optional[BaseModel] = None
+# -----------------------------------------------------------------------------
+# Check for exclusive list of Vlans
+# -----------------------------------------------------------------------------
 
-    def test_case_id(self) -> str:
-        return self.test_case
+
+class VlanExclusiveListExpectations(BaseModel):
+    vlans: List[VlanProfile]
+
+
+class VlanCheckExclusiveList(Check):
+    check_type = "exclusive_list"
+    expected_results: VlanExclusiveListExpectations
+
+    def check_id(self) -> str:
+        return self.check_type
 
 
 # -----------------------------------------------------------------------------
@@ -80,13 +89,16 @@ class VlanTestCaseExclusiveList(TestCase):
 # -----------------------------------------------------------------------------
 
 
-@testing_service
-class VlanTestCases(TestCases):
-    service = "vlans"
-    tests: Optional[List[VlanTestCase]]
+@register_collection
+class VlanCheckCollection(CheckCollection):
+    name = "vlans"
+    checks: Optional[List[VlanCheck]]
+    exclusive: Optional[VlanCheckExclusiveList]
 
     @classmethod
-    def build(cls, device: Device, **kwargs) -> "VlanTestCases":
+    def build(
+        cls, device: Device, design_service: "VlansDesignService"
+    ) -> "VlanCheckCollection":
         from netcad.vlan.vlan_design_service import DeviceVlanDesignService
 
         device_vlans = list(
@@ -132,17 +144,24 @@ class VlanTestCases(TestCases):
 
                 map_vlan_ifaces[vlan].append(if_name)
 
-        # Create the instance of the Vlans Test Cases so that it can be stored
-        # and used by the 'netcam' tooling.  Keep the test cases sorted by
-        # VLAN-ID value; which is how the VlanProfile object is sortable.
+        # Create the instance of the Vlans check collections so that it can be
+        # stored and used by the 'netcam' tooling.
 
-        test_cases = VlanTestCases(
+        # create the check for exclusive list of Vlans, by default
+        # TODO: make this control configurable in the DesignService.
+
+        exl_check = VlanCheckExclusiveList(
+            expected_results=VlanExclusiveListExpectations(vlans=list(map_vlan_ifaces))
+        )
+
+        collection = VlanCheckCollection(
             device=device.name,
-            tests=[
-                VlanTestCase(
-                    test_case="interfaces",
-                    test_params=VlanTestParams(vlan_id=vlan_p.vlan_id),
-                    expected_results=VlanTestExpectations(
+            exclusive=exl_check,
+            checks=[
+                VlanCheck(
+                    check_type="interfaces",
+                    check_params=VlanCheckParams(vlan_id=vlan_p.vlan_id),
+                    expected_results=VlanCheckExpectations(
                         vlan=vlan_p, interfaces=if_names
                     ),
                 )
@@ -153,5 +172,5 @@ class VlanTestCases(TestCases):
         )
 
         # return the test-cases sorted by VLAN-ID
-        test_cases.tests.sort(key=lambda tc: tc.test_params.vlan_id)
-        return test_cases
+        collection.checks.sort(key=lambda tc: tc.check_params.vlan_id)
+        return collection

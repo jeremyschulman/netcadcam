@@ -18,8 +18,8 @@ from netcad.device import Device
 from netcad.vlan import VlanProfile
 from netcad.device.l2_interfaces import InterfaceL2Access, InterfaceL2Trunk
 
-from netcad.testing_services import TestCases, TestCase
-from netcad.testing_services.testing_registry import testing_service
+from netcad.checks import CheckCollection, Check
+from netcad.checks.check_registry import register_collection
 
 
 # -----------------------------------------------------------------------------
@@ -27,14 +27,14 @@ from netcad.testing_services.testing_registry import testing_service
 # -----------------------------------------------------------------------------
 
 __all__ = [
-    "SwitchportTestCases",
-    "SwitchportTestCase",
+    "SwitchportCheckCollection",
+    "SwitchportCheck",
     "SwitchportTrunkExpectation",
     "SwitchportAccessExpectation",
 ]
 
 
-class SwitchportTestParams(BaseModel):
+class SwitchportCheckParams(BaseModel):
     if_name: str
 
 
@@ -56,28 +56,28 @@ class SwitchportTrunkExpectation(SwitchportAnyExpectations):
 SwitchportExpectations = Union[SwitchportAccessExpectation, SwitchportTrunkExpectation]
 
 
-class SwitchportTestCase(TestCase):
-    test_case = "switchport"
-    test_params: SwitchportTestParams
+class SwitchportCheck(Check):
+    check_type = "switchport"
+    check_params: SwitchportCheckParams
     expected_results: SwitchportExpectations
 
-    def test_case_id(self) -> str:
-        return str(self.test_params.if_name)
+    def check_id(self) -> str:
+        return str(self.check_params.if_name)
 
 
-@testing_service
-class SwitchportTestCases(TestCases):
-    service = "switchports"
-    tests: Optional[List[SwitchportTestCase]]
+@register_collection
+class SwitchportCheckCollection(CheckCollection):
+    name = "switchports"
+    checks: Optional[List[SwitchportCheck]]
 
     @classmethod
-    def build(cls, device: Device, **kwargs) -> "SwitchportTestCases":
+    def build(cls, device: Device, **kwargs) -> "SwitchportCheckCollection":
 
-        test_cases = list()
+        checks = list()
 
         for if_name, interface in device.interfaces.used().items():
             if_prof = interface.profile
-            tc_params = SwitchportTestParams(if_name=if_name)
+            tc_params = SwitchportCheckParams(if_name=if_name)
 
             if isinstance(if_prof, InterfaceL2Access):
                 tc_expd = SwitchportAccessExpectation(vlan=if_prof.vlan)
@@ -90,8 +90,8 @@ class SwitchportTestCases(TestCases):
             else:
                 continue
 
-            test_cases.append(
-                SwitchportTestCase(test_params=tc_params, expected_results=tc_expd)
+            checks.append(
+                SwitchportCheck(check_params=tc_params, expected_results=tc_expd)
             )
 
-        return SwitchportTestCases(device=device.name, tests=test_cases)
+        return SwitchportCheckCollection(device=device.name, checks=checks)

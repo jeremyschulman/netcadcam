@@ -1,19 +1,8 @@
-from .tc_execute import execute_testcases
+from .execute_checks import execute_device_checks
 
-from .tc_result_types import (
-    CollectionTestResults,
-    PassTestCase,
-    FailTestCase,
-    FailNoExistsResult,
-    FailFieldMismatchResult,
-    FailMissingMembersResult,
-    FailExtraMembersResult,
-    InfoTestCase,
-    ResultsTestCase,
-    SkipTestCases,
-)
+from netcad.checks.check_result_types import CheckFailResult, CheckResultsCollection
 
 
 def any_failures(results):
-    is_failure = lambda r: isinstance(r, FailTestCase)
+    is_failure = lambda r: isinstance(r, CheckFailResult)
     return any(map(is_failure, results))

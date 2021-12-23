@@ -1,10 +1,10 @@
 from netcad.registry import Registry
-from .test_cases import TestCases
+from .check_collection import CheckCollection
 
-__all__ = ["TestingService", "testing_service"]
+__all__ = ["CheckRegistry", "register_collection"]
 
 
-class TestingService(Registry, registry_name="test_services"):
+class CheckRegistry(Registry, registry_name="test_services"):
     """
     TestingServices registry used to register TestCases class so that they can
     be looked up by name for the purposes of building tests, ...
@@ -16,7 +16,7 @@ class TestingService(Registry, registry_name="test_services"):
 
             @testing_services
             class FooTestCases(TestCases):
-                service = 'foo-service'
+                name = 'foo-service'
                 ...
 
         The __call__ decorator will validate that the decorating class is of
@@ -32,21 +32,21 @@ class TestingService(Registry, registry_name="test_services"):
         cls - as is
         """
 
-        if not issubclass(cls, TestCases):
+        if not issubclass(cls, CheckCollection):
             raise RuntimeError(
-                f"Forbidden use of TestingService registration on non TestCases class: {cls.__name__}"
+                f"Forbidden use of TestingService registration on non {CheckCollection.__name__} class: {cls.__name__}"
             )
 
         try:
-            service_name = cls.get_service_name()
+            name = cls.get_name()
         except (KeyError, AttributeError):
             raise RuntimeError(
-                f"TestCases: {cls.__name__}: missing `service` name attribute."
+                f"TestCases: {cls.__name__}: missing `name` name attribute."
             )
 
-        self.registry_add(service_name, cls)
+        self.registry_add(name, cls)
         return cls
 
 
 # decorator function is the registration, see __call__ usage above.
-testing_service = TestingService()
+register_collection = CheckRegistry()

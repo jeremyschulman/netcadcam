@@ -30,7 +30,7 @@ from netcad.cli.device_inventory import get_devices_from_designs
 # from netcad.netcam.loader import import_netcam_plugins
 
 from netcad.cli.netcam.cli_netcam_main import cli
-from netcad.netcam import execute_testcases
+from netcad.netcam import execute_device_checks
 from netcad.cli.keywords import color_pass_fail
 
 
@@ -48,21 +48,22 @@ __all__ = []
 # -----------------------------------------------------------------------------
 
 
-@cli.command(name="test")
+@cli.command(name="check")
 @opt_devices()
 @opt_designs()
 @click.option(
-    "--tests-dir",
-    help="location to read test-cases",
+    "--checks-dir",
+    help="location to read device checks",
     type=click.Path(path_type=Path, resolve_path=True, exists=True, writable=True),
-    envvar=Environment.NETCAD_TESTCASESDIR,
+    envvar=Environment.NETCAD_CHECKSDIR,
 )
-def cli_test_device(devices: Tuple[str], designs: Tuple[str], tests_dir: Path):
+def cli_test_device(devices: Tuple[str], designs: Tuple[str], checks_dir: Path):
     """
-    Execute tests to validate the operational state of devices.
+    Execute checks to validate the operational state of devices.
 
-    This command will use the device test cases to validate the running state
-    compared to the expected states defined by the tests.
+    This command will use the device checks to validate the running state
+    compared to the expected states defined by the design via the "netcad build
+    checks ..." command.
 
     \f
     Parameters
@@ -75,8 +76,8 @@ def cli_test_device(devices: Tuple[str], designs: Tuple[str], tests_dir: Path):
     devices:
         The list of deice hostnames that should be processed by this command.
 
-    tests_dir:
-        The Path instance to the parent directory of test-cases.  Subdirectories
+    checks_dir:
+        The Path instance to the parent directory of checks.  Subdirectories
         exist for each device by hostname.
     """
 
@@ -90,8 +91,8 @@ def cli_test_device(devices: Tuple[str], designs: Tuple[str], tests_dir: Path):
     # the design. we keep this collection as a dictionary so that we can refer
     # back to the DUT by device name when be build the summary table.
 
-    tc_dir = netcad_globals.g_netcad_testcases_dir
-    netcam_plugins = netcad_globals.g_netcam_plugins_catalog
+    tc_dir = checks_dir or netcad_globals.g_netcad_checks_dir
+    netcam_plugins = netcad_globals.g_netcam_plugins_os_catalog
 
     duts = {}
 
@@ -125,7 +126,7 @@ def cli_test_device(devices: Tuple[str], designs: Tuple[str], tests_dir: Path):
         #       in a check and execute the plugin running differently. For now, only
         #       asyncio plugins are supported.
 
-        await asyncio.gather(*(execute_testcases(dut) for dut in duts.values()))
+        await asyncio.gather(*(execute_device_checks(dut) for dut in duts.values()))
 
     ts_start = datetime.now()
     asyncio.run(run_tests())
@@ -187,10 +188,10 @@ def display_summary_table(duts: Dict[str, DeviceUnderTest], duration):
 
     console.print(
         "\n",
-        "Overall Test Results: ",
+        "Overall Check Results: ",
         pass_fail,
         "\n",
-        f"{len(duts)} Devices, {gt_sum} Testscases\n",
+        f"{len(duts)} Devices, {gt_sum} Checks\n",
         f"Duration {duration}\n",
     )
 

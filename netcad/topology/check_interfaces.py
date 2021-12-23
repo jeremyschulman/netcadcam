@@ -15,20 +15,20 @@ from pydantic import BaseModel, PositiveInt
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device, DeviceInterface
-from netcad.testing_services import TestCases, TestCase
-from netcad.testing_services import testing_service
+from netcad.checks import CheckCollection, Check
+from netcad.checks import register_collection
 
 # -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
 
 __all__ = [
-    "InterfaceTestCases",
-    "InterfaceTestCase",
-    "InterfaceTestParams",
-    "InterfaceTestUsedExpectations",
-    "InterfaceTestNotUsedExpectations",
-    "InterfaceListTestCase",
+    "InterfaceCheckCollection",
+    "InterfaceCheck",
+    "InterfaceCheckParams",
+    "InterfaceCheckUsedExpectations",
+    "InterfaceCheckNotUsedExpectations",
+    "InterfaceCheckExclusiveList",
 ]
 
 # -----------------------------------------------------------------------------
@@ -38,60 +38,60 @@ __all__ = [
 # -----------------------------------------------------------------------------
 
 
-class InterfaceTestParams(BaseModel):
+class InterfaceCheckParams(BaseModel):
     interface: str
     interface_flags: Optional[dict]
 
 
-class InterfaceTestUsedExpectations(BaseModel):
+class InterfaceCheckUsedExpectations(BaseModel):
     used: Literal[True]
     oper_up: Optional[bool]
     desc: str
     speed: Optional[PositiveInt]
 
 
-class InterfaceTestNotUsedExpectations(BaseModel):
+class InterfaceCheckNotUsedExpectations(BaseModel):
     used: Literal[False]
 
 
-class InterfaceTestCase(TestCase):
-    test_params: InterfaceTestParams
+class InterfaceCheck(Check):
+    check_params: InterfaceCheckParams
     expected_results: Union[
-        InterfaceTestUsedExpectations, InterfaceTestNotUsedExpectations
+        InterfaceCheckUsedExpectations, InterfaceCheckNotUsedExpectations
     ]
 
-    def test_case_id(self) -> str:
-        return str(self.test_params.interface)
+    def check_id(self) -> str:
+        return str(self.check_params.interface)
 
 
-class InterfaceListTestCase(TestCase):
+class InterfaceCheckExclusiveList(Check):
     def __init__(self, **kwargs):
         super().__init__(
-            test_case="interface-list",
-            test_params=BaseModel(),
+            check_type="interface-list",
+            check_params=BaseModel(),
             expected_results=BaseModel(),
             **kwargs
         )
 
-    def test_case_id(self) -> str:
+    def check_id(self) -> str:
         return "exclusive_list"
 
 
-@testing_service
-class InterfaceTestCases(TestCases):
-    service = "interfaces"
-    tests: Optional[List[InterfaceTestCase]]
+@register_collection
+class InterfaceCheckCollection(CheckCollection):
+    name = "interfaces"
+    checks: Optional[List[InterfaceCheck]]
 
     @classmethod
-    def build(cls, device: Device, **kwargs) -> "InterfaceTestCases":
-        def build_test_case(iface: DeviceInterface):
+    def build(cls, device: Device, **kwargs) -> "InterfaceCheckCollection":
+        def build_check(iface: DeviceInterface):
 
             # if the interface is not used, meaning it is not part of the
             # design, then there is no profile, and .enabled=False.  No other
             # interface valiation is required for operational state.
 
             if not iface.used:
-                expected_results = InterfaceTestNotUsedExpectations(used=False)
+                expected_results = InterfaceCheckNotUsedExpectations(used=False)
                 if_flags = None
 
             # if the interface is used (in design) it still could be shutdown
@@ -102,7 +102,7 @@ class InterfaceTestCases(TestCases):
                 port_profile = iface.profile.port_profile
                 if_flags = iface.profile.profile_flags
 
-                expected_results = InterfaceTestUsedExpectations(
+                expected_results = InterfaceCheckUsedExpectations(
                     used=True,
                     desc=iface.desc,
                     oper_up=iface.enabled,
@@ -112,21 +112,23 @@ class InterfaceTestCases(TestCases):
                 if iface.profile.is_reserved:
                     expected_results.oper_up = None
 
-            return InterfaceTestCase(
-                test_params=InterfaceTestParams(
+            return InterfaceCheck(
+                check_params=InterfaceCheckParams(
                     interface=iface.name, interface_flags=if_flags
                 ),
                 expected_results=expected_results,
             )
 
-        test_cases = InterfaceTestCases(
+        collection = InterfaceCheckCollection(
             device=device.name,
-            tests=[
-                build_test_case(iface=interface)
+            checks=[
+                build_check(iface=interface)
                 for if_name, interface in device.interfaces.items()
             ],
         )
 
-        # return the test cases sorted by the lag interface name
-        test_cases.tests.sort(key=lambda tc: DeviceInterface(tc.test_params.interface))
-        return test_cases
+        # return the checks sorted by the lag interface name
+        collection.checks.sort(
+            key=lambda tc: DeviceInterface(tc.check_params.interface)
+        )
+        return collection

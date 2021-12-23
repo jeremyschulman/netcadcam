@@ -22,9 +22,9 @@ def cli_netcam_plugins_list():
     for pg_obj in netcad_globals.g_netcam_plugins:
         table.add_row(
             pg_obj.name,
-            pg_obj.description or pg_obj.plugin_description or "",
+            pg_obj.plugin_description or "",
             pg_obj.package,
-            Pretty(pg_obj.supports),
+            Pretty(pg_obj.config["supports"]),
         )
 
     Console().print(table)

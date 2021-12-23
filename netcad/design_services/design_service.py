@@ -14,7 +14,7 @@ from netcad.device import Device
 # -----------------------------------------------------------------------------
 
 from netcad.registry import Registry
-from netcad.testing_services import TestCases
+from netcad.checks import CheckCollection
 
 # -----------------------------------------------------------------------------
 # Exports`
@@ -43,6 +43,9 @@ class DesignService(Registry, registry_name="design_services"):
         example, the MLagDesginService would only include devices that are part
         of an MLAG arrangement.
 
+    check_collections:
+        The list of CheckCollection classes that will be used to validate this
+        design service against the operatiional state of the network.
     """
 
     def __init__(self, service_name: str, devices: Optional[Iterable[Device]] = None):
@@ -71,7 +74,7 @@ class DesignService(Registry, registry_name="design_services"):
         if devices:
             self.add_devices(*devices)
 
-        self.testing_services: Optional[List[Type[TestCases]]] = list()
+        self.check_collections: List[Type[CheckCollection]] = list()
 
     def add_devices(self, *devices: Device):
         """
