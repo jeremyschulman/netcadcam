@@ -27,7 +27,19 @@ __all__ = [
     "InterfaceCablingCheck",
     "InterfaceCablingdExpectations",
     "InterfaceCablingCheckParams",
+    "NoValidateCabling",
 ]
+
+
+class NoValidateCablingSential:
+    def __str__(self):
+        return "no-validate"
+
+
+# sentical value to mark the interface.cable_peer.cable_port_id so that this
+# checking collection does to perform a cable check on that interface.
+
+NoValidateCabling = NoValidateCablingSential()
 
 # -----------------------------------------------------------------------------
 #
@@ -64,11 +76,19 @@ class InterfaceCablingCheckCollection(CheckCollection):
         # only used physical interfaces that have a cabling peer relationship.
         # exclude any interfaces that are disabled, since the cabling tests will
         # use a layer-2 protocol (LLDP or CDP) to validate the neighbor
-        # relationship.
+        # relationship.  If the peering cable port-id is marked as "no-validate"
+        # using the sential object, then skip that one too.
+
+        def should_check_lldp(_iface: DeviceInterface):
+            return (
+                _iface.cable_peer
+                and not _iface.profile.is_virtual
+                and _iface.cable_peer.cable_port_id is not NoValidateCabling
+            )
 
         interfaces: List[DeviceInterface] = sorted(
             filter(
-                lambda iface: iface.cable_peer and not iface.profile.is_virtual,
+                should_check_lldp,
                 device.interfaces.used(include_disabled=False).values(),
             )
         )
