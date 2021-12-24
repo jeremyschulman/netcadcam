@@ -4,6 +4,7 @@ from setuptools import setup
 packages = [
     "netcad",
     "netcad.cabling",
+    "netcad.checks",
     "netcad.cli",
     "netcad.cli.cli_get",
     "netcad.cli.netcad",
@@ -19,7 +20,6 @@ packages = [
     "netcad.netcam",
     "netcad.origin",
     "netcad.phy_port",
-    "netcad.testing_services",
     "netcad.topology",
     "netcad.vlan",
 ]
