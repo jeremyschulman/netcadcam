@@ -8,4 +8,5 @@ from . import cli_report_devices
 from . import cli_diagram
 from . import cli_report_interfaces
 from . import cli_report_ipaddrs
-from . import cli_report_vlans
+from . import cli_show_switchports
+from . import cli_show_vlans
