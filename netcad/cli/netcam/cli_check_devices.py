@@ -87,6 +87,8 @@ def cli_test_device(devices: Tuple[str], designs: Tuple[str], checks_dir: Path):
         log.error("No devices located in the given designs")
         return
 
+    device_objs = [dev for dev in device_objs if not dev.is_pseudo]
+
     # create the device-under-test (DUT) instances for each of the devices in
     # the design. we keep this collection as a dictionary so that we can refer
     # back to the DUT by device name when be build the summary table.

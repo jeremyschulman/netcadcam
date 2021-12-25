@@ -107,6 +107,8 @@ def cli_report_tests(
         log.error("No devices located in the given designs")
         return
 
+    device_objs = [dev for dev in device_objs if not dev.is_pseudo]
+
     log.info(f"Showing test logs for {len(device_objs)} devices.")
 
     # bind a test-case-dir Path attribute (tcr_dir) to each Device instance so
@@ -207,7 +209,8 @@ def show_design_brief_summary_table(
     # if the User provided a filtered list of devices, then reduce the set of
     # all devices by those that they want to see.
 
-    dev_objs = design.devices.values()
+    dev_objs = [dev for dev in design.devices.values() if not dev.is_pseudo]
+
     if devices:
         dev_objs = filter(lambda d: d.name in devices, dev_objs)
 

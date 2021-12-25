@@ -2,7 +2,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional, TypeVar, List, Type
+from typing import Optional, TypeVar, List, Type, Dict
 from typing import TYPE_CHECKING
 import os
 from copy import deepcopy
@@ -36,7 +36,7 @@ if TYPE_CHECKING:
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["Device", "DeviceInterface"]
+__all__ = ["Device", "DeviceInterface", "DeviceCatalog"]
 
 # -----------------------------------------------------------------------------
 #
@@ -305,3 +305,7 @@ class Device(Registry, registry_name="devices"):
         The default comparison will be based on the device name.
         """
         return self.name < other.name
+
+
+# A device catalog is a dictionary of devices key=dev.name, value=device-obj
+DeviceCatalog = Dict[str, Device]
