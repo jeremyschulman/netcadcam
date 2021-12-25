@@ -209,7 +209,8 @@ def show_design_brief_summary_table(
     # if the User provided a filtered list of devices, then reduce the set of
     # all devices by those that they want to see.
 
-    dev_objs = design.devices.values()
+    dev_objs = [dev for dev in design.devices.values() if not dev.is_pseudo]
+
     if devices:
         dev_objs = filter(lambda d: d.name in devices, dev_objs)
 
