@@ -42,9 +42,9 @@ if TYPE_CHECKING:
 
 
 class _BaseDeviceUnderTest:
-    def __init__(self, *, device: Device, testcases_dir: Path):
+    def __init__(self, *, device: Device):
         self.device = device
-        self.testcases_dir = testcases_dir
+        self.testcases_dir: Optional[Path] = None
         self.device_info: Optional[Dict] = None
         self.result_counts = Counter()
 
@@ -63,7 +63,7 @@ class DeviceUnderTest(_BaseDeviceUnderTest):
     def setup(self):
         raise NotImplementedError()
 
-    def execute_testing(self):
+    def execute_checks(self):
         raise NotImplementedError()
 
     def teardown(self):
@@ -84,7 +84,7 @@ class AsyncDeviceUnderTest(_BaseDeviceUnderTest):
             self.device_info = json.loads(payload)
 
     @singledispatchmethod
-    async def execute_testcases(
+    async def execute_checks(
         self, testcases: CheckCollection
     ) -> Optional["CheckResultsCollection"]:
         """

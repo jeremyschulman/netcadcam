@@ -152,7 +152,7 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
                 continue
 
             try:
-                results = await dut.execute_testcases(testcases)
+                results = await dut.execute_checks(testcases)
 
                 # if the testing plugin returns None, then these tests are
                 # marked as "skipped"
