@@ -31,8 +31,10 @@ and `netcam` for the features that interactive with the devices, such as
 checking the operational state.
 
 ---
+
 **WARNING**: The netcadcam project is under active development and is not released on PyPi.  Code
 is subject to change without notice.
+
 ---
 
 * **Extensible** - Extensible so a User can create new design composition elements to support
