@@ -5,6 +5,9 @@ References
 https://www.arista.com/assets/data/pdf/Datasheets/Transceiver-Data-Sheet.pdf
 """
 
+#  Copyright (c) 2021 Jeremy Schulman
+#  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
 from netcad.helpers import StrEnum
 
 
