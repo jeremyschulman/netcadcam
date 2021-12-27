@@ -1,4 +1,4 @@
-# NetCadCamn - Network Automation by Design
+# NetCadCam - Network Automation by Design
 
 This repository contains the core framework library for the netcadcam project.
 
@@ -8,7 +8,7 @@ The primary goal of this project is to answer the question:
 "Network Automation by Design" is the name I am giving to the concept that a
 User can:
 
-* Declaratively represent the expected operational state of a network as
+* Declaratively represent the **expected operational state** of a network as
 a design
 </br></br>
 * Software systems could automatically generate the collection of
