@@ -32,14 +32,38 @@ checking the operational state.
 
 ---
 
-**WARNING**: The netcadcam project is under active development and is not released on PyPi.  Code
-is subject to change without notice.
+**WARNING**: The netcadcam project is under active development, is very nascent,
+and is not released on PyPi.  Code is subject to change without notice.  Once
+the API has settled a bit, docs will be written.
+
+The best way to "see" how this project is used is via the example, found
+[here](https://github.com/jeremyschulman/netcad-demo-clabs1).
 
 ---
 
+* **Plugins** - The netcadcam framework takes a "plugin" approach to integration with network
+devices and external systems, such as Netbox.  At this time there are two device
+integrations, one for Arista EOS and another for Meraki devices.  These
+integrations are stored in separate repos.
+</br></br>
 * **Extensible** - Extensible so a User can create new design composition elements to support
 network features specific to their needs; for example Wireless, PTP, multicast,
 equipment vendor specific features, etc.
 </br></br>
 * **Syndication** - Syndicates design artifacts with other systems of record such as Netbox,
 Nautobot, InfoBlox, other IPAM products.
+
+## Design Elements
+
+This core repository contains the following design-elements:
+* Topology
+* VLANs
+* LAGs
+* MLags (Arista)
+* IP Address Management
+
+## Network Device Integrations
+These device integrations provide the design-element "checking" features.
+
+* [Arista EOS via eAPI](https://github.com/jeremyschulman/netcam-aioeos)
+* Meraki via Dashboard API
