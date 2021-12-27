@@ -1,3 +1,6 @@
+#  Copyright (c) 2021 Jeremy Schulman
+#  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
 # -----------------------------------------------------------------------------
 # System Imports
 # -----------------------------------------------------------------------------
@@ -106,10 +109,8 @@ def cli_test_device(devices: Tuple[str], designs: Tuple[str], checks_dir: Path):
                     f"Missing testing plugin for {dev_obj.name}: os-name: {dev_obj.os_name}"
                 )
 
-            # TODO: fix the way the plugin is called
-            duts[dev_obj] = pg_obj.plugin_get_dut(  # noqa
-                device=dev_obj, testcases_dir=tc_dir.joinpath(dev_obj.name)
-            )
+            duts[dev_obj] = dut_obj = pg_obj.module.plugin_get_dut(device=dev_obj)
+            dut_obj.testcases_dir = tc_dir.joinpath(dev_obj.name)
 
         remove_unsupported = [dev for dev, dut in duts.items() if not dut]
         for dev_obj in remove_unsupported:

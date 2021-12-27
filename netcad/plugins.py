@@ -1,10 +1,13 @@
+#  Copyright (c) 2021 Jeremy Schulman
+#  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
 # -----------------------------------------------------------------------------
 # System Imports
 # -----------------------------------------------------------------------------
 
 import types
 from typing import Optional, Protocol, get_args, get_type_hints, Dict
-from pathlib import Path
+from typing import TYPE_CHECKING
 import inspect
 
 # -----------------------------------------------------------------------------
@@ -13,6 +16,9 @@ import inspect
 
 from netcad.device import Device
 from netcad.init.loader import netcad_import_package
+
+if TYPE_CHECKING:
+    from netcad.netcam.dut import DeviceUnderTest
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -43,7 +49,7 @@ class NetcadPluginModule(Protocol):
 
 
 class NetcamPluginModule(NetcadPluginModule):
-    def plugin_get_dut(self, device: "Device", testcase_dir: Path):
+    def plugin_get_dut(self, device: "Device") -> "DeviceUnderTest":
         """Obtain the DUT instance for a given Device instance"""
 
 

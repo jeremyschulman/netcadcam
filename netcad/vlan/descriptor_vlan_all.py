@@ -6,6 +6,9 @@ For details on Python Descriptors in general, see:
 https://docs.python.org/3/howto/descriptor.html
 """
 
+#  Copyright (c) 2021 Jeremy Schulman
+#  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
 # -----------------------------------------------------------------------------
 # System Imports
 # -----------------------------------------------------------------------------
