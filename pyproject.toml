@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "netcad"
-version = "0.4.0"
-description = "Network Configuration Database"
+version = "0.0.1"
+description = "NetCadCam - Network Automation by Design"
 authors = ["Jeremy Schulman"]
 readme = "README.md"
 
