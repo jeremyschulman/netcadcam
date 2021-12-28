@@ -43,7 +43,8 @@ __all__ = []
 @opt_designs()
 @opt_devices()
 @click.option(
-    "--configs-dir",
+    "--save-dir",
+    "configs_dir",
     help="location to store configs",
     type=click.Path(path_type=Path, resolve_path=True, exists=True, writable=True),
     default="configs",

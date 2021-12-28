@@ -81,7 +81,7 @@ __all__ = []
     help="include only field from report",
 )
 @click.option(
-    "--tests",
+    "--checks",
     "testing_service_names",
     multiple=True,
     help="display only logs from <test>",
