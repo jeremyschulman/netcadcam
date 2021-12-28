@@ -47,7 +47,8 @@ DevicesList = List[Device]
 @opt_devices()
 @opt_designs()
 @click.option(
-    "--checks-dir",
+    "--save-dir",
+    "checks_dir",
     help="location to store generated checks",
     type=click.Path(path_type=Path, resolve_path=True, exists=True, writable=True),
     envvar=Environment.NETCAD_CHECKSDIR,
