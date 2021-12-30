@@ -67,6 +67,9 @@ def load_design(design_name: str) -> Design:
 
     design_inst = Design(name=design_name, config=design_config.get("config"))
 
+    if group := design_config.get("group"):
+        design_inst.group = group
+
     # Execute the design function in the module if present.  If one is not
     # found, then this is a Designer error, and raise a Runtime exception.
 
