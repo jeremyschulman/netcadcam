@@ -41,6 +41,7 @@ __all__ = [
     "VlanCheckExpectations",
     "VlanCheckCollection",
     "VlanCheckExclusiveList",
+    "VlanExclusiveListExpectations",
 ]
 
 

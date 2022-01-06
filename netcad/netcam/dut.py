@@ -31,7 +31,7 @@ from netcad.checks import CheckCollection
 # -----------------------------------------------------------------------------
 
 
-__all__ = ["DeviceUnderTest", "AsyncDeviceUnderTest"]
+__all__ = ["DeviceUnderTest", "AsyncDeviceUnderTest", "SetupError"]
 
 
 # -----------------------------------------------------------------------------
@@ -42,6 +42,10 @@ __all__ = ["DeviceUnderTest", "AsyncDeviceUnderTest"]
 
 if TYPE_CHECKING:
     from netcad.netcam import CheckResultsCollection
+
+
+class SetupError(RuntimeError):
+    pass
 
 
 class _BaseDeviceUnderTest:

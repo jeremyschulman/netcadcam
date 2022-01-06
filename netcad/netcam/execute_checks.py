@@ -15,6 +15,7 @@ from logging import Logger
 from netcad.logger import get_logger
 from netcad.cli.keywords import markup_color
 from netcad.debug import debug_enabled, format_exc_message
+from netcad.netcam.dut import SetupError
 
 from netcad.checks.check_result_types import CheckStatus, CheckSkipResult
 from .save_check_results import device_checks_save_results
@@ -61,11 +62,17 @@ async def execute_device_checks(dut: AsyncDeviceUnderTest):
     try:
         await dut.setup()
 
+    except SetupError as exc:
+        errmsg = str(exc) or exc.__class__.__name__
+        log.error(f"{dut_name}: {FAIL_CLRD}:\t!!! Setup failed: {errmsg}, aborting.")
+
+        dut.result_counts["FAIL"] = 1
+        log.info(f"{dut_name}: {SUMMARY_CLRD} ----\tChecks: PASS=0, FAIL=1, INFO=0")
+        return
+
     except Exception as exc:
         errmsg = str(exc) or exc.__class__.__name__
-        log.critical(
-            f"{dut_name}: {FAIL_CLRD}:\t!!! Startup failed: {errmsg}, aborting."
-        )
+        log.critical(f"{dut_name}: {FAIL_CLRD}:\t!!! Setup failed: {errmsg}, aborting.")
 
         if debug_enabled():
             log.critical(format_exc_message(exc))
@@ -131,8 +138,6 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
         if not design_service.check_collections:
             continue
 
-        # log.info(f"{dut_name}: Design Service: {ds_name}")
-
         for testing_service in design_service.check_collections:
 
             tc_name = testing_service.get_name()
@@ -142,8 +147,6 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
                 # continue to the next one.  Deactivated the log message as not
                 # sure if this is adding any value or potential confusion.  So
                 # leaving it out for now.
-
-                # log.info(f"{dut_name}: {SKIP_CLRD}\tTestcases: {tc_name}: None")
                 continue
 
             testcases = await testing_service.load(testcase_dir=dev_tc_dir)
@@ -173,10 +176,11 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
                 import traceback
 
                 exc_info = traceback.format_tb(exc.__traceback__, -2)
+                trace_txt = "\n".join(exc_info)
                 log.critical(
-                    f"{dut_name}: Exception during exection: {exc}, aborting {tc_name}\n"
-                    "\n".join(exc_info)
+                    f"{dut_name}: Exception during exection: {repr(exc)}, aborting {tc_name}\n"
                 )
+                log.critical(f"{dut_name}: Trace: \n{trace_txt}")
                 continue
 
             result_counts = Counter(r.status for r in results)

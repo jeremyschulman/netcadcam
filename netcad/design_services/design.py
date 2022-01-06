@@ -5,7 +5,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 from copy import deepcopy
 from types import ModuleType
 
@@ -65,6 +65,11 @@ class Design(Registry, registry_name="designs"):
         self.registry_add(name=name, obj=self)
         self.name = name
         self.module: Optional[ModuleType] = None
+
+        # if the design groups other designs, then the `group` attribute holds
+        # that list of design-names.
+
+        self.group: Optional[List[str]] = None
 
         # collection of notes defined by the Designer
         self.notes = DesignNotes()

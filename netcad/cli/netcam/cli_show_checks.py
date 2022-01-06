@@ -343,6 +343,7 @@ def filter_results(results: dict, optionals: dict) -> List[Dict]:
 
     if optionals["include_info"] or inc_all:
         status_allows.add(trt.CheckStatus.INFO)
+        status_allows.add(trt.CheckStatus.SKIP)
 
     if optionals["include_pass"] or inc_all:
         status_allows.add(trt.CheckStatus.PASS)

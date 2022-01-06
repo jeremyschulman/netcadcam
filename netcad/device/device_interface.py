@@ -151,7 +151,7 @@ class DeviceInterface(object):
 
     @property
     def cable_port_id(self) -> str:
-        if not self._cable_port_id:
+        if self._cable_port_id is None:
             return self.name
 
         return (

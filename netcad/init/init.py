@@ -23,7 +23,7 @@ import toml
 from netcad.config import netcad_globals, defaults as d
 from netcad.config import Environment
 from netcad.config.loader import import_objectref
-from netcad.logger import get_logger
+
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -59,17 +59,25 @@ def init():
 
 
 def _init_debug():
-
-    log = get_logger()
+    errmsg = None
 
     if not (debug_val := environ.get("NETCAD_DEBUG")):
         return
 
     if not (debug_val.isdigit()):
-        log.error(f"NETCAD_DEBUG value must be >= 0: {debug_val}, debug is disabled.")
+        errmsg = f"NETCAD_DEBUG value must be >= 0: {debug_val}, debug is disabled."
+        debug_val = 1
 
     netcad_globals.g_debug_level = int(debug_val)
-    log.debug(f"NETCAD_DEBUG set to {netcad_globals.g_debug_level}")
+
+    from netcad.logger import get_logger
+
+    log = get_logger()
+
+    if errmsg:
+        log.error(f"NETCAD_DEBUG '{debug_val}' set to {netcad_globals.g_debug_level}")
+    else:
+        log.debug(f"NETCAD_DEBUG set to {netcad_globals.g_debug_level}")
 
 
 def _init_design_configs():
@@ -190,6 +198,8 @@ def _init_user_environment():
 
     # if the User did not provision an entry point reference then nothing more
     # to do here; just log a debug for safekeeping.
+
+    from netcad.logger import get_logger
 
     log = get_logger()
 
