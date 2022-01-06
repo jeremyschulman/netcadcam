@@ -15,6 +15,7 @@ from logging import Logger
 from netcad.logger import get_logger
 from netcad.cli.keywords import markup_color
 from netcad.debug import debug_enabled, format_exc_message
+from netcad.netcam.dut import SetupError
 
 from netcad.checks.check_result_types import CheckStatus, CheckSkipResult
 from .save_check_results import device_checks_save_results
@@ -61,11 +62,17 @@ async def execute_device_checks(dut: AsyncDeviceUnderTest):
     try:
         await dut.setup()
 
+    except SetupError as exc:
+        errmsg = str(exc) or exc.__class__.__name__
+        log.error(f"{dut_name}: {FAIL_CLRD}:\t!!! Setup failed: {errmsg}, aborting.")
+
+        dut.result_counts["FAIL"] = 1
+        log.info(f"{dut_name}: {SUMMARY_CLRD} ----\tChecks: PASS=0, FAIL=1, INFO=0")
+        return
+
     except Exception as exc:
         errmsg = str(exc) or exc.__class__.__name__
-        log.critical(
-            f"{dut_name}: {FAIL_CLRD}:\t!!! Startup failed: {errmsg}, aborting."
-        )
+        log.critical(f"{dut_name}: {FAIL_CLRD}:\t!!! Setup failed: {errmsg}, aborting.")
 
         if debug_enabled():
             log.critical(format_exc_message(exc))

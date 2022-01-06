@@ -17,6 +17,8 @@ from rich.logging import RichHandler
 # python logging format, defined here:
 # https://docs.python.org/3/library/logging.html#logrecord-attributes
 
+from netcad.config import netcad_globals
+
 # -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
@@ -49,8 +51,8 @@ def get_logger(show_path=False) -> logging.Logger:
     -------
     logging.Logger
     """
+
     logging.basicConfig(
-        level=DEFAULT_LOG_LEVEL,
         format=DEFAULT_LOG_FORMAT,
         datefmt=DEFAULT_DATE_FORMAT,
         handlers=[
@@ -63,4 +65,7 @@ def get_logger(show_path=False) -> logging.Logger:
         ],
     )
 
-    return logging.getLogger(__package__)
+    log_level = "DEBUG" if netcad_globals.g_debug_level else DEFAULT_LOG_LEVEL
+    log = logging.getLogger(__package__)
+    log.setLevel(log_level)
+    return log
