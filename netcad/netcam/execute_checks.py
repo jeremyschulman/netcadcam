@@ -131,8 +131,6 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
         if not design_service.check_collections:
             continue
 
-        # log.info(f"{dut_name}: Design Service: {ds_name}")
-
         for testing_service in design_service.check_collections:
 
             tc_name = testing_service.get_name()
@@ -142,8 +140,6 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
                 # continue to the next one.  Deactivated the log message as not
                 # sure if this is adding any value or potential confusion.  So
                 # leaving it out for now.
-
-                # log.info(f"{dut_name}: {SKIP_CLRD}\tTestcases: {tc_name}: None")
                 continue
 
             testcases = await testing_service.load(testcase_dir=dev_tc_dir)
@@ -173,10 +169,11 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
                 import traceback
 
                 exc_info = traceback.format_tb(exc.__traceback__, -2)
+                trace_txt = "\n".join(exc_info)
                 log.critical(
-                    f"{dut_name}: Exception during exection: {exc}, aborting {tc_name}\n"
-                    "\n".join(exc_info)
+                    f"{dut_name}: Exception during exection: {repr(exc)}, aborting {tc_name}\n"
                 )
+                log.critical(f"{dut_name}: Trace: \n{trace_txt}")
                 continue
 
             result_counts = Counter(r.status for r in results)
