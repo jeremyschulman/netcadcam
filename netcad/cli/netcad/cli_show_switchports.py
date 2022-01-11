@@ -95,7 +95,7 @@ def show_device_switchports_table(device: Device):
     def fmt_vlan(_vlan):
         return f"{_vlan.vlan_id:>4} ({_vlan.name})"
 
-    for intf_obj in device.interfaces.used().values():
+    for intf_obj in sorted(device.interfaces.used().values()):
 
         if isinstance(intf_obj.profile, InterfaceL2Access):
             swp_p = intf_obj.profile
@@ -114,7 +114,7 @@ def show_device_switchports_table(device: Device):
             swp_p = intf_obj.profile
             nvlan = swp_p.native_vlan
             allowed = "\n".join(
-                [fmt_vlan(vlan) for vlan in swp_p.trunk_allowed_vlans()]
+                [fmt_vlan(vlan) for vlan in sorted(swp_p.trunk_allowed_vlans())]
             )
 
             table.add_row(
