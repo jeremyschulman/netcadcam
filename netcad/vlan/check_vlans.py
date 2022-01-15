@@ -22,19 +22,14 @@ from pydantic import BaseModel
 
 from netcad.logger import get_logger
 from netcad.device import Device
+from netcad.vlan import VlanProfile
+from netcad.device.l2_interfaces import InterfaceL2Access, InterfaceL2Trunk
+from netcad.device.l3_interfaces import InterfaceVlan
 from netcad.checks import CheckCollection, Check
 from netcad.checks.check_registry import register_collection
 
-# -----------------------------------------------------------------------------
-# Module Private Imports
-# -----------------------------------------------------------------------------
-
-from ..vlan_profile import VlanProfile
-from ..profiles import InterfaceL2Access, InterfaceL2Trunk, InterfaceVlan
-
 if TYPE_CHECKING:
-    from ..vlan_design_service import VlansDesignService
-
+    from netcad.vlan.vlan_design_service import VlansDesignService
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -81,7 +76,7 @@ class VlanCheck(Check):
 
 
 class VlanExclusiveListExpectations(BaseModel):
-    vlans: List["VlanProfile"]
+    vlans: List[VlanProfile]
 
 
 class VlanCheckExclusiveList(Check):
@@ -108,7 +103,7 @@ class VlanCheckCollection(CheckCollection):
     def build(
         cls, device: Device, design_service: "VlansDesignService"
     ) -> "VlanCheckCollection":
-        from netcad.vlans.vlan_design_service import DeviceVlanDesignService
+        from netcad.vlan.vlan_design_service import DeviceVlanDesignService
 
         device_vlans = list(
             chain.from_iterable(
