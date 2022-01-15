@@ -18,8 +18,8 @@ from pydantic import BaseModel
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device
-from netcad.vlans import VlanProfile
-from netcad.vlans.profiles.l2_interfaces import InterfaceL2Access, InterfaceL2Trunk
+from netcad.vlan import VlanProfile
+from netcad.device.l2_interfaces import InterfaceL2Access, InterfaceL2Trunk
 
 from netcad.checks import CheckCollection, Check
 from netcad.checks.check_registry import register_collection
