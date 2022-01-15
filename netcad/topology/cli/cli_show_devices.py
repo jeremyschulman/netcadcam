@@ -22,7 +22,7 @@ from rich.table import Table
 # -----------------------------------------------------------------------------
 
 from netcad.logger import get_logger
-from netcad.design_services import Design
+from netcad.design import Design
 from netcad.cli.common_opts import opt_designs
 from netcad.cli.device_inventory import get_devices_from_designs
 
@@ -30,7 +30,7 @@ from netcad.cli.device_inventory import get_devices_from_designs
 # Private Module Imports
 # -----------------------------------------------------------------------------
 
-from .clig_netcad_show import clig_design_show
+from netcad.cli.netcad.clig_netcad_show import clig_design_show
 
 # -----------------------------------------------------------------------------
 # Exports (none)
@@ -51,7 +51,7 @@ __all__ = []
 @click.option("--all", "include_pseudo", help="show pseudo devices", is_flag=True)
 def cli_design_report_devices(designs: Tuple[str], **flags):
     """
-    report network device usage
+    show devices in design
 
     This command will report on the devices in each of the networks provided, a
     separate table per network.  If a network contains "pseudo" devices, for

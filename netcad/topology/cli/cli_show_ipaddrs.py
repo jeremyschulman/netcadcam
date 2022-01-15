@@ -38,7 +38,7 @@ from netcad.cli.netcad.clig_netcad_show import clig_design_show
 @opt_devices()
 def cli_design_report_interfaces(devices: Tuple[str], designs: Tuple[str]):
     """
-    report IP addresses used in design.
+    show IP addresses used in design
 
     \f
     Parameters

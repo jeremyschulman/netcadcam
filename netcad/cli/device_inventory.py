@@ -12,7 +12,7 @@ from typing import Sequence, List, Optional
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device
-from netcad.design_services import load_design
+from netcad.design import load_design
 
 # -----------------------------------------------------------------------------
 # Exports

@@ -14,18 +14,18 @@ from copy import copy
 
 from netcad.device import Device
 from netcad.cabling import CableByCableId
-from netcad.design_services.design_service import DesignService
+from netcad.design.design_service import DesignService
 
 # -----------------------------------------------------------------------------
 # Private Module Imports
 # -----------------------------------------------------------------------------
 
-from .check_transceivers import TransceiverCheckCollection
-from .check_device_info import DeviceInformationCheckCollection
-from .check_cabling_nei import InterfaceCablingCheckCollection
-from .check_interfaces import InterfaceCheckCollection
-from .check_lags import LagCheckCollection
-from .check_ipaddrs import IpInterfacesCheckCollection
+from .checks.check_transceivers import TransceiverCheckCollection
+from .checks.check_device_info import DeviceInformationCheckCollection
+from .checks.check_cabling_nei import InterfaceCablingCheckCollection
+from .checks.check_interfaces import InterfaceCheckCollection
+from .checks.check_lags import LagCheckCollection
+from .checks.check_ipaddrs import IpInterfacesCheckCollection
 
 # -----------------------------------------------------------------------------
 # Exports

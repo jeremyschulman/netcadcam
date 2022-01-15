@@ -23,7 +23,7 @@ from rich.console import Pretty
 
 from netcad.logger import get_logger
 from netcad.device import Device
-from netcad.vlan.vlan_design_service import DeviceVlanDesignService
+from netcad.vlans.vlan_design_service import DeviceVlanDesignService
 
 from netcad.cli.device_inventory import get_devices_from_designs
 from netcad.cli.common_opts import opt_devices, opt_designs
@@ -32,7 +32,7 @@ from netcad.cli.common_opts import opt_devices, opt_designs
 # Module Private Imports
 # -----------------------------------------------------------------------------
 
-from .clig_netcad_show import clig_design_show
+from netcad.cli.netcad.clig_netcad_show import clig_design_show
 
 # -----------------------------------------------------------------------------
 # Exports (none)
@@ -52,7 +52,7 @@ __all__ = []
 @opt_devices()
 def cli_report_vlans(devices: Tuple[str], designs: Tuple[str]):
     """
-    report VLANs used by devices in design
+    show VLANs used by design
     """
     log = get_logger()
 

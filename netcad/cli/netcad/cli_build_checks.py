@@ -23,7 +23,7 @@ from netcad.logger import get_logger
 from netcad.config import Environment
 from netcad.cli.common_opts import opt_devices, opt_designs
 from netcad.device import Device
-from netcad.design_services import load_design
+from netcad.design import load_design
 
 from .clig_build import clig_build
 
