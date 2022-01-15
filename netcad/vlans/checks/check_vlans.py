@@ -25,11 +25,15 @@ from netcad.device import Device
 from netcad.checks import CheckCollection, Check
 from netcad.checks.check_registry import register_collection
 
+# -----------------------------------------------------------------------------
+# Module Private Imports
+# -----------------------------------------------------------------------------
+
+from ..vlan_profile import VlanProfile
+from ..profiles import InterfaceL2Access, InterfaceL2Trunk, InterfaceVlan
+
 if TYPE_CHECKING:
-    from netcad.device.l3_interfaces import InterfaceVlan
-    from netcad.vlans.vlan_design_service import VlansDesignService
-    from netcad.vlans import VlanProfile
-    from netcad.vlans.profiles.l2_interfaces import InterfaceL2Access, InterfaceL2Trunk
+    from ..vlan_design_service import VlansDesignService
 
 
 # -----------------------------------------------------------------------------
@@ -58,7 +62,7 @@ class VlanCheckParams(BaseModel):
 
 
 class VlanCheckExpectations(BaseModel):
-    vlan: "VlanProfile"
+    vlan: VlanProfile
     interfaces: List[str]
 
 

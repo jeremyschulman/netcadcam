@@ -23,9 +23,10 @@ from netcad.design_services import DesignService
 # Module Private Imports
 # -----------------------------------------------------------------------------
 
+from .checks.check_vlans import VlanCheckCollection
+from .checks.check_switchports import SwitchportCheckCollection
 from .vlan_profile import VlanProfile
-from netcad.vlans.checks.check_vlans import VlanCheckCollection
-from netcad.vlans.checks.check_switchports import SwitchportCheckCollection
+
 
 # -----------------------------------------------------------------------------
 # Exports
