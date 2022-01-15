@@ -6,6 +6,8 @@
 # -----------------------------------------------------------------------------
 
 from typing import Tuple
+from collections import defaultdict
+from itertools import chain
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -13,6 +15,7 @@ from typing import Tuple
 
 from rich.console import Console
 from rich.table import Table
+from rich.console import Pretty
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -20,7 +23,8 @@ from rich.table import Table
 
 from netcad.logger import get_logger
 from netcad.device import Device
-from netcad.device.l2_interfaces import InterfaceL2Access, InterfaceL2Trunk
+from netcad.vlans.vlan_design_service import DeviceVlanDesignService
+
 from netcad.cli.device_inventory import get_devices_from_designs
 from netcad.cli.common_opts import opt_devices, opt_designs
 
@@ -28,7 +32,7 @@ from netcad.cli.common_opts import opt_devices, opt_designs
 # Module Private Imports
 # -----------------------------------------------------------------------------
 
-from .clig_netcad_show import clig_design_show
+from netcad.cli.netcad.clig_netcad_show import clig_design_show
 
 # -----------------------------------------------------------------------------
 # Exports (none)
@@ -43,7 +47,7 @@ __all__ = []
 # -----------------------------------------------------------------------------
 
 
-@clig_design_show.command(name="switchports")
+@clig_design_show.command(name="vlans")
 @opt_designs()
 @opt_devices()
 def cli_report_vlans(devices: Tuple[str], designs: Tuple[str]):
@@ -60,7 +64,7 @@ def cli_report_vlans(devices: Tuple[str], designs: Tuple[str]):
 
     print(f"Showing {len(dev_objs)} devices ...")
     for dev in dev_objs:
-        show_device_switchports_table(dev)
+        show_device_vlan_table(dev)
 
 
 # -----------------------------------------------------------------------------
@@ -70,61 +74,43 @@ def cli_report_vlans(devices: Tuple[str], designs: Tuple[str]):
 # -----------------------------------------------------------------------------
 
 
-def show_device_switchports_table(device: Device):
+def show_device_vlan_table(device: Device):
 
     # each device instance may have one or more device-vlan design services.
     # Typically, it will be one, but perhaps a Designer comes up with a usage
     # that does have more than one.  So handle that, just in case ;-)
 
+    vlans = list(
+        chain.from_iterable(
+            svc.all_vlans() for svc in device.services_of(DeviceVlanDesignService)
+        )
+    )
+
     console = Console()
 
     table = Table(
-        "Interface",
-        "Description",
-        "Profile",
-        "Switchport\nMode",
-        "Access/Native VLAN",
-        "Trunk Allowed VLANs",
-        title=f"Device: {device.name}, Switchports",
+        "VLAN-ID",
+        "VLAN Name",
+        "Interfaces",
+        title=f"Device: {device.name}, VLANS ({len(vlans)})",
         title_justify="left",
         show_header=True,
-        show_lines=True,
         header_style="bold magenta",
     )
 
-    def fmt_vlan(_vlan):
-        return f"{_vlan.vlan_id:>4} ({_vlan.name})"
+    # correlate the vlans to each used by interfaces
 
-    for intf_obj in sorted(device.interfaces.used().values()):
-
-        if isinstance(intf_obj.profile, InterfaceL2Access):
-            swp_p = intf_obj.profile
-            vlan = swp_p.vlan
-            table.add_row(
-                intf_obj.name,
-                intf_obj.desc,
-                intf_obj.profile.name,
-                "access",
-                fmt_vlan(vlan),
-                "",
-            )
+    vlan_interfaces = defaultdict(list)
+    for iface in device.interfaces.used().values():
+        if not (vlans_used := getattr(iface.profile, "vlans_used", None)):
             continue
+        for vlan in vlans_used():
+            vlan_interfaces[vlan].append(iface)
 
-        if isinstance(intf_obj.profile, InterfaceL2Trunk):
-            swp_p = intf_obj.profile
-            nvlan = swp_p.native_vlan
-            allowed = "\n".join(
-                [fmt_vlan(vlan) for vlan in sorted(swp_p.trunk_allowed_vlans())]
-            )
+    for vlan in vlans:
+        if interfaces := vlan_interfaces.get(vlan):
+            interfaces = [iface.name for iface in sorted(interfaces)]
 
-            table.add_row(
-                intf_obj.name,
-                intf_obj.desc,
-                intf_obj.profile.name,
-                "trunk",
-                fmt_vlan(nvlan),
-                allowed,
-            )
-            continue
+        table.add_row(str(vlan.vlan_id), vlan.name, Pretty(interfaces))
 
     console.print("\n", table)

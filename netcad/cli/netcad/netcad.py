@@ -13,7 +13,7 @@ import sys
 
 from netcad.logger import get_logger
 from netcad.debug import format_exc_message
-from netcad.init import init, init_plugings
+from netcad.init import init, init_plugings, builtin_plugins
 from .cli_netcad_main import cli
 
 # -----------------------------------------------------------------------------
@@ -30,6 +30,7 @@ def script():
     """
     try:
         init()
+        builtin_plugins.init_netcad_builtin_plugins()
         init_plugings.init_netcad_plugins()
         cli()
 
