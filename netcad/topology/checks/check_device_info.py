@@ -18,8 +18,14 @@ from pydantic import BaseModel, Field
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device
-from netcad.checks import CheckCollection, Check
-from netcad.checks import register_collection
+from netcad.checks import CheckCollection, Check, register_collection
+
+
+# -----------------------------------------------------------------------------
+#
+#                                 CODE BEGINS
+#
+# -----------------------------------------------------------------------------
 
 
 class DeviceInformationCheckParams(BaseModel):

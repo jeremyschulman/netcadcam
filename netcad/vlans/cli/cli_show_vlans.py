@@ -52,7 +52,7 @@ __all__ = []
 @opt_devices()
 def cli_report_vlans(devices: Tuple[str], designs: Tuple[str]):
     """
-    report VLANs used by devices in design
+    show VLANs used by design
     """
     log = get_logger()
 

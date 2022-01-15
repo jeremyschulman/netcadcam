@@ -32,7 +32,7 @@ from netcad.origin import OriginDeviceType
 from netcad.jinja2.env import get_env
 
 if TYPE_CHECKING:
-    from netcad.design_services import Design, DesignServiceCatalog, DesignServiceLike
+    from netcad.design import Design, DesignServiceCatalog, DesignServiceLike
 
 
 # -----------------------------------------------------------------------------

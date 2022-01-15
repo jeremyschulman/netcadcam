@@ -24,7 +24,7 @@ import aiofiles
 from . import Check
 
 if TYPE_CHECKING:
-    from netcad.design_services import DesignService
+    from netcad.design import DesignService
 
 
 # noinspection PyUnresolvedReferences

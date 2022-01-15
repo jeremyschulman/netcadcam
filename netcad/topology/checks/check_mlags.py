@@ -22,8 +22,7 @@ from netcad.device import InterfaceLag
 from netcad.checks import CheckCollection, Check
 from netcad.checks import register_collection
 
-from . import check_lags as lags
-
+from netcad.topology.checks import check_lags as lags
 
 # -----------------------------------------------------------------------------
 # Exports

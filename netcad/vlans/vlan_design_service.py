@@ -17,7 +17,7 @@ from copy import copy
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device
-from netcad.design_services import DesignService
+from netcad.design import DesignService
 
 # -----------------------------------------------------------------------------
 # Module Private Imports

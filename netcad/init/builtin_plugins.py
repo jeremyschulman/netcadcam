@@ -4,10 +4,13 @@
 from netcad.plugins import NetcadPlugin
 
 
-BUILTIN_PLUGINS = [dict(name="netcad.vlans", package="netcad.vlans")]
+BUILTIN_PLUGINS = [
+    "netcad.topology",
+    "netcad.vlans"
+]
 
 
 def init_netcad_builtin_plugins():
     for pg_item in BUILTIN_PLUGINS:
-        pg_obj = NetcadPlugin(config=pg_item)
+        pg_obj = NetcadPlugin(config=dict(name=pg_item, package=pg_item))
         pg_obj.load()

@@ -5,8 +5,4 @@ from .netcad import script
 from . import cli_build_configs
 from . import cli_build_checks
 from . import cli_design_list
-from . import cli_show_cabling
-from . import cli_report_devices
 from . import cli_diagram
-from . import cli_report_interfaces
-from . import cli_report_ipaddrs

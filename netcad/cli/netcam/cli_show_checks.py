@@ -28,7 +28,7 @@ from rich.pretty import Pretty
 from netcad.device import Device
 from netcad.config import Environment, netcad_globals
 from netcad.logger import get_logger
-from netcad.design_services import Design
+from netcad.design import Design
 
 from netcad.cli.common_opts import opt_devices, opt_designs
 from netcad.cli.device_inventory import get_devices_from_designs

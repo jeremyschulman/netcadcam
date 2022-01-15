@@ -45,7 +45,7 @@ from netcad.cli.netcad.clig_netcad_show import clig_design_show
 @opt_devices(required=True)
 def cli_design_report_interfaces(devices: Tuple[str], designs: Tuple[str], **flags):
     """
-    report device interfaces usage
+    show device interfaces usage
 
     \b
     The output includes the interface name, description, assigned profile, and

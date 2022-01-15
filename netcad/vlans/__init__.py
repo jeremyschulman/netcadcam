@@ -8,7 +8,7 @@
 from netcad import __version__ as plugin_version  # noqa
 
 # -----------------------------------------------------------------------------
-# Module Imports
+# Private Module Imports
 # -----------------------------------------------------------------------------
 
 from .vlan_profile import VlanProfile, VlanProfileLike
