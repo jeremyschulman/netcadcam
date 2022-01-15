@@ -2,19 +2,27 @@
 #  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 # -----------------------------------------------------------------------------
-# System Imports
-# -----------------------------------------------------------------------------
-
-import sys
-
-# -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.logger import get_logger
-from netcad.debug import format_exc_message
-from netcad.init import init, init_plugings, builtin_plugins
-from .cli_netcad_main import cli
+from netcad import __version__ as plugin_version  # noqa
+
+# -----------------------------------------------------------------------------
+# Module Imports
+# -----------------------------------------------------------------------------
+
+from .vlan_profile import VlanProfile, VlanProfileLike
+from .descriptor_peer_vlan_info import VlansFromPeer
+from .descriptor_vlan_all import VlansAll
+from .profiles.l2_interfaces import InterfaceL2, InterfaceL2Access, InterfaceL2Trunk
+from .profiles.vlan_interface import InterfaceVlan
+from .vlan_design_service import (
+    VlansDesignService,
+    DeviceVlanDesignService,
+    DeviceVlanDesignServiceLike,
+)
+
+from . import cli
 
 # -----------------------------------------------------------------------------
 #
@@ -23,19 +31,6 @@ from .cli_netcad_main import cli
 # -----------------------------------------------------------------------------
 
 
-def script():
-    """
-    This function is the main entry point for the CLI tool when the User
-    invokes the "netcad" command from the terminal.
-    """
-    try:
-        init()
-        builtin_plugins.init_netcad_builtin_plugins()
-        init_plugings.init_netcad_plugins()
-        cli()
-
-    except Exception as exc:
-        exc_msg = format_exc_message(exc)
-        log = get_logger()
-        log.critical(exc_msg)
-        sys.exit(1)
+def plugin_init(config: dict):
+    """unused by init autoloading for builtin-plugin modules"""
+    pass
