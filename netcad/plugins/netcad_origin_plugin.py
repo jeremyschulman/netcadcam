@@ -61,10 +61,17 @@ class NetcadOriginPlugin(Plugin):
         # setup any global config.
         super().load()
 
-        # now import any packages supporting the design services.
-        for svc_name, svc_pkg in self.config["services"].items():
-            pg_cfg = dict(name=svc_name, package=svc_pkg)
-            self.services[svc_name] = _NetcadOriginServicePlugin(config=pg_cfg)
+        # now import any packages supporting the design services.  by default
+        # the configuration will include the 'service' name value so that the
+        # underlying origin processor will be able to associate the User defined
+        # service-name with other meta-data.
+
+        svc: dict
+        for svc in self.config["services"]:
+            svc_name = svc.get("name")
+            svc_config = svc.setdefault("config", {})
+            svc_config.setdefault("service", svc_name)
+            self.services[svc_name] = _NetcadOriginServicePlugin(config=svc)
             self.services[svc_name].load()
 
     @classmethod
