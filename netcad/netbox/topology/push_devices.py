@@ -1,5 +1,6 @@
 #  Copyright (c) 2021 Jeremy Schulman
 #  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
 import asyncio
 
 from netcad.design import Design
@@ -28,6 +29,8 @@ async def netbox_push_devices(origin: NetboxTopologyOrigin, design: Design):
 
     for hostname, rec in origin.devices.items():
         device = design.devices[hostname]
+        origin.log.info(f"{origin.log_origin}: DEVICE.ENSURE: {device.name}")
+
         if not rec:
             tasks[_create_missing(origin, device=device)] = hostname
         else:
@@ -35,7 +38,7 @@ async def netbox_push_devices(origin: NetboxTopologyOrigin, design: Design):
 
     async for coro, res in as_completed(tasks):
         hostname = tasks[coro]
-        origin.log.info(f"{origin.log_origin}: DEVICE: {hostname} - done.")
+        origin.log.info(f"{origin.log_origin}: DEVICE.ENSURE {hostname} - OK.")
 
 
 async def _create_missing(origin: NetboxTopologyOrigin, device: Device):
@@ -54,7 +57,7 @@ async def _create_missing(origin: NetboxTopologyOrigin, device: Device):
         The design device that needs to be created in Netbox.
     """
 
-    origin.log.info(f"{origin.log_origin}: DEVICE:CREATE: {device.name}")
+    origin.log.info(f"{origin.log_origin}: DEVICE.CREATE: {device.name}")
 
     # -------------------------------------------------------------------------
     # Obtain the netbox device-type object from the device instance. this will
@@ -98,9 +101,6 @@ async def _create_missing(origin: NetboxTopologyOrigin, device: Device):
     # now create the device record in netbox
     # -------------------------------------------------------------------------
 
-    breakpoint()
-    x = 1
-
     res = await origin.api.post(
         "/dcim/devices/",
         json=dict(
@@ -113,11 +113,14 @@ async def _create_missing(origin: NetboxTopologyOrigin, device: Device):
 
     if res.is_error:
         origin.log.error(
-            f"{origin.log_origin}: DEVICE:CREATE:FAIL: {device.name}: {res.text}"
+            f"{origin.log_origin}: DEVICE.CREATE.FAIL: {device.name}: {res.text}"
         )
         return
 
     origin.devices[device.name] = res.json()
+    origin.log.info(
+        f"{origin.log_origin}: DEVICE.[green]CREATED[/green]: {device.name}"
+    )
 
 
 async def _check_existing(origin: NetboxTopologyOrigin, record: dict, device: Device):
@@ -137,4 +140,4 @@ async def _check_existing(origin: NetboxTopologyOrigin, record: dict, device: De
     Returns
     -------
     """
-    origin.log.info(f"{origin.log_origin}: DEVICE:EXISTS: {device.name}")
+    origin.log.info(f"{origin.log_origin}: DEVICE.[blue]EXISTS[/blue]: {device.name}")
