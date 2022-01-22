@@ -14,17 +14,22 @@ class NetboxClient(NetboxDevices, NetboxCabling):
 
 
 class NetboxTopologyOrigin:
+    """origin for netbox topology service plugin"""
+
     def __init__(self):
+        """construct the origin instance for push to netbox topology service"""
         self.config = g_netbox_topology_config
         self.name = self.config["service"]
         self.api = NetboxClient()
         self.cache = NetboxCache()
         self.log = get_logger()
-        self.log_origin = "origin/Netbox:Topology"
+        self.log_origin = f"origin/Netbox:{self.name}"
         self.devices = dict()
 
     async def __aenter__(self):
+        """async context manager returns self"""
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """async context manager closes netbox client session"""
         await self.api.aclose()
