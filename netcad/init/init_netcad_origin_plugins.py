@@ -2,19 +2,17 @@
 #  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 # -----------------------------------------------------------------------------
-# System Imports
-# -----------------------------------------------------------------------------
-
-import sys
-
-# -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.logger import get_logger
-from netcad.debug import format_exc_message
-from netcad.init import init, init_netcad_plugins, builtin_plugins
-from .cli_netcad_main import cli
+from netcad.config import netcad_globals
+from netcad.plugins import NetcadOriginPlugin
+
+# -----------------------------------------------------------------------------
+# Exports
+# -----------------------------------------------------------------------------
+
+__all__ = ["init_netcad_origin_plugins"]
 
 # -----------------------------------------------------------------------------
 #
@@ -23,19 +21,16 @@ from .cli_netcad_main import cli
 # -----------------------------------------------------------------------------
 
 
-def script():
-    """
-    This function is the main entry point for the CLI tool when the User
-    invokes the "netcad" command from the terminal.
-    """
-    try:
-        init()
-        builtin_plugins.init_netcad_builtin_plugins()
-        init_netcad_plugins.init_netcad_plugins()
-        cli()
+def init_netcad_origin_plugins():
 
-    except Exception as exc:
-        exc_msg = format_exc_message(exc)
-        log = get_logger()
-        log.critical(exc_msg)
-        sys.exit(1)
+    # if there are no User defined plugins, then return.
+    try:
+        origins_list = netcad_globals.g_config["netcad"]["origin"]
+
+    except KeyError:
+        # TODO: log this with a debug messagte
+        return
+
+    netcad_globals.g_netcad_plugins_catalog = NetcadOriginPlugin.init(origins_list)
+
+    return netcad_globals.g_netcad_plugins_catalog

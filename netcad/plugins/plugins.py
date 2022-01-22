@@ -7,30 +7,19 @@
 
 import types
 from typing import Optional, Protocol, get_args, get_type_hints, Dict
-from typing import TYPE_CHECKING
 import inspect
 
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.device import Device
 from netcad.init.loader import netcad_import_package
-
-if TYPE_CHECKING:
-    from netcad.netcam.dut import DeviceUnderTest
 
 # -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = [
-    "NetcadPluginModule",
-    "NetcamPluginModule",
-    "NetcamPlugin",
-    "NetcadPlugin",
-    "PluginCatalog",
-]
+__all__ = ["Plugin", "PluginProtocol", "PluginCatalog"]
 
 # -----------------------------------------------------------------------------
 #
@@ -39,7 +28,11 @@ __all__ = [
 # -----------------------------------------------------------------------------
 
 
-class NetcadPluginModule(Protocol):
+class PluginProtocol(Protocol):
+    """
+    All plugin modules support the following attribute & methods.
+    """
+
     plugin_version: str
     plugin_description: Optional[str] = None
     plugin_author: Optional[str] = None
@@ -48,13 +41,10 @@ class NetcadPluginModule(Protocol):
         """The plugin initialization function"""
 
 
-class NetcamPluginModule(NetcadPluginModule):
-    def plugin_get_dut(self, device: "Device") -> "DeviceUnderTest":
-        """Obtain the DUT instance for a given Device instance"""
-
-
 class Plugin:
-    _plugin_typeref = NetcadPluginModule
+    """Base class for all Netcadcam plugins"""
+
+    _plugin_typeref = PluginProtocol
 
     def __init__(self, config: dict):
         self.config = config
@@ -141,14 +131,6 @@ class Plugin:
             return getattr(self.module, item)
 
         raise AttributeError(item)
-
-
-class NetcadPlugin(Plugin):
-    _plugin_typeref = NetcadPluginModule
-
-
-class NetcamPlugin(Plugin):
-    _plugin_typeref = NetcamPluginModule
 
 
 PluginCatalog = Dict[str, Plugin]
