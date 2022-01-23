@@ -16,7 +16,7 @@ from typing import Optional, Type, Sequence
 # -----------------------------------------------------------------------------
 
 from netcad.device.device_interface import DeviceInterface
-from .interface_profile import InterfaceProfile, InterfaceVirtual
+from netcad.device.profiles.interface_profile import InterfaceProfile, InterfaceVirtual
 
 # -----------------------------------------------------------------------------
 # Exports

@@ -6,54 +6,37 @@
 # -----------------------------------------------------------------------------
 
 from typing import Optional
-from ipaddress import IPv4Address
 
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from .interface_profile import InterfaceVirtual, InterfaceProfile
+from netcad.config import netcad_globals
+from netcad.plugins import NetcadOriginPlugin, NetcadOriginPluginCatalog
 
 # -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = [
-    "InterfaceL3",
-    "InterfaceIsLoopback",
-    "InterfaceIsManagement",
-    "InterfaceIsInVRF",
-]
+__all__ = ["init_netcad_origin_plugins", "NetcadOriginPluginCatalog"]
 
 # -----------------------------------------------------------------------------
 #
-#                        Interface Profiles for VLANs
+#                                 CODE BEGINS
 #
 # -----------------------------------------------------------------------------
 
 
-class InterfaceL3(InterfaceProfile):
-    def __init__(self, if_ipaddr: Optional[IPv4Address] = None, **params):
-        super(InterfaceL3, self).__init__(**params)
-        self.if_ipaddr = if_ipaddr
+def init_netcad_origin_plugins() -> Optional[NetcadOriginPluginCatalog]:
 
+    # if there are no User defined plugins, then return.
+    try:
+        origins_list = netcad_globals.g_config["netcad"]["origin"]
 
-class InterfaceIsManagement(InterfaceL3):
-    """
-    An interface that is only used for out of band management
-    """
+    except KeyError:
+        # TODO: log this with a debug messagte
+        return
 
-    is_mgmt_only = True
+    netcad_globals.g_netcad_plugins_catalog = NetcadOriginPlugin.init(origins_list)
 
-
-class InterfaceIsLoopback(InterfaceVirtual, InterfaceL3):
-    """
-    A loopback interface is a virtual IP address
-    """
-
-    is_loopback = True
-
-
-class InterfaceIsInVRF(InterfaceL3):
-    is_in_vrf = True
-    vrf: Optional[str] = "management"
+    return netcad_globals.g_netcad_plugins_catalog

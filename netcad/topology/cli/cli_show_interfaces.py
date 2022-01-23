@@ -19,7 +19,8 @@ from rich.table import Table, Text
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.device import Device, interface_profile as ip
+from netcad.device import Device
+from netcad.device.profiles import interface_profile as ip
 from netcad.logger import get_logger
 
 from netcad.cli import keywords

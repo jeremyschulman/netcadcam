@@ -12,7 +12,7 @@ import re
 from collections import defaultdict
 
 if TYPE_CHECKING:
-    from netcad.device.interface_profile import InterfaceProfile
+    from netcad.device.profiles import InterfaceProfile
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -214,8 +214,8 @@ class DeviceInterface(object):
     # -------------------------------------------------------------------------
 
     @property
-    def desc(self):
-        return self._desc or (self.profile.desc if self.profile else None)
+    def desc(self) -> str:
+        return self._desc or (self.profile.desc if self.profile else "")
 
     @desc.setter
     def desc(self, value):

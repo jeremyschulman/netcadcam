@@ -3,8 +3,8 @@
 
 from typing import Set
 
-from netcad.device.interface_profile import InterfaceVirtual
-from netcad.device.l3_interfaces import InterfaceL3
+from netcad.device.profiles.interface_profile import InterfaceVirtual
+from netcad.device.profiles.l3_interfaces import InterfaceL3
 
 from ..vlan_profile import VlanProfile
 

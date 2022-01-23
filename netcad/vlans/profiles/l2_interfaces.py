@@ -11,7 +11,7 @@ from typing import Set, Optional, List
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.device.interface_profile import InterfaceProfile
+from netcad.device.profiles.interface_profile import InterfaceProfile
 from netcad.vlans import VlanProfile
 
 # -----------------------------------------------------------------------------
