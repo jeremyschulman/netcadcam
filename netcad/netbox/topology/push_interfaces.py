@@ -8,7 +8,7 @@
 from netcad.design import Design
 from netcad.device import DeviceInterface
 from netcad.device import profiles
-from netcad.igather import as_completed
+from netcad.igather import igather
 
 # -----------------------------------------------------------------------------
 # Private Module Imports
@@ -46,10 +46,15 @@ async def netbox_push_interfaces(origin: NetboxTopologyOrigin, design: Design):
             )
             tasks[task] = interface
 
-    async for coro, res in as_completed(tasks):
-        # bar.update(task_id=bar_task, advance=1)
-        hostname = tasks[coro]
-        # origin.log.info(f"{origin.log_origin}: DEVICE.ENSURE {hostname} - OK.")
+    # execute all tasks wait for completion.
+    await igather(tasks)
+
+
+# -----------------------------------------------------------------------------
+#
+#                                 PRIVATE CODE BEGINS
+#
+# -----------------------------------------------------------------------------
 
 
 async def _create_missing(origin: NetboxTopologyOrigin, interface: DeviceInterface):
@@ -73,6 +78,42 @@ async def _create_missing(origin: NetboxTopologyOrigin, interface: DeviceInterfa
 
     hostname = interface.device.name
     if_name = interface.name
+    if not (if_profile := interface.profile):
+        origin.log.error(
+            f"{origin.log_origin}: {hostname}: interface missing profile: {if_name}"
+        )
+        return
+
+    # -------------------------------------------------------------------------
+    # map the interface profile type to a netbox interface type
+    # -------------------------------------------------------------------------
+
+    if isinstance(if_profile, profiles.InterfaceLag):
+        if_type = "lag"
+    elif isinstance(if_profile, profiles.InterfaceVirtual):
+        if_type = "virtual"
+    else:
+        if_type = "other"
+        origin.log.warning(
+            f"{origin.log_origin}: {hostname}: interface unmapped profile type: {if_name}/{if_profile}"
+        )
+
+    # -------------------------------------------------------------------------
+    # create the interface.  when OK update the origin interfaces cache
+    # to store the new netbox interface record
+    # -------------------------------------------------------------------------
+
+    post_body = dict(
+        device=origin.devices[hostname]["id"],
+        name=if_name,
+        type=if_type,
+        description=interface.desc,
+        enabled=interface.enabled,
+    )
+
+    res = await origin.api.post("/dcim/interfaces/", json=post_body)
+    res.raise_for_status()
+    origin.interfaces[hostname][if_name] = res.json()
     origin.log.info(
         f"{origin.log_origin}: {hostname}: interface.{colorize.created}: {if_name}"
     )
