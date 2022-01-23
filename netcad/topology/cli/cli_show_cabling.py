@@ -23,7 +23,7 @@ from netcad.logger import get_logger
 from netcad.config import netcad_globals
 from netcad.device import Device, DeviceInterface
 from netcad.phy_port import PhyPortProfile
-from netcad.device.interface_profile import InterfaceVirtual
+from netcad.device.profiles.interface_profile import InterfaceVirtual
 from netcad.cabling.cable_plan import CablePlanner
 
 from netcad.cli.netcad.clig_netcad_show import clig_design_show

@@ -56,7 +56,6 @@ opt_designs = lambda **params: click.option(
     multiple=True,
     metavar="[DESIGN]",
     help="design(s)",
-    is_eager=True,
     callback=unique_required_design_collection,
     **params,
 )

@@ -12,7 +12,7 @@ from ipaddress import IPv4Address
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from .interface_profile import InterfaceVirtual, InterfaceProfile
+from netcad.device.profiles.interface_profile import InterfaceVirtual, InterfaceProfile
 
 # -----------------------------------------------------------------------------
 # Exports

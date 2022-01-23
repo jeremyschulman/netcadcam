@@ -54,7 +54,7 @@ class NetcadOriginPlugin(Plugin):
                 f'Missing required "service" list in netcad.origins.name={self.name}'
             )
 
-        self.services = dict()
+        self.services: Dict[str, _NetcadOriginServicePlugin] = dict()
 
     def load(self):
         # load the origin package and call the plugin-init function; used to
@@ -114,4 +114,4 @@ class NetcadOriginPlugin(Plugin):
         return catalog
 
 
-NetcadOriginPluginCatalog = Dict[str, Plugin]
+NetcadOriginPluginCatalog = Dict[str, NetcadOriginPlugin]

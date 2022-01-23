@@ -5,7 +5,9 @@ import asyncio
 
 from netcad.design import Design
 from netcad.device import Device
-from netcad.igather import as_completed
+from netcad.igather import igather
+
+from .. import colorize
 from .origin import NetboxTopologyOrigin
 
 
@@ -15,34 +17,28 @@ async def netbox_push_devices(origin: NetboxTopologyOrigin, design: Design):
     # fetch devices from netbox
     # -------------------------------------------------------------------------
 
-    tasks = {origin.api.fetch_device(hostname=name): name for name in design.devices}
-
-    async for coro, res in as_completed(tasks):
-        hostname = tasks[coro]
-        origin.devices[hostname] = res
-
-    tasks.clear()
+    await origin.fetch_devices(design)
 
     # -------------------------------------------------------------------------
     # take action depending on whether or not the device(s) exist in Netbox
     # -------------------------------------------------------------------------
 
+    tasks = dict()
+
     for hostname, rec in origin.devices.items():
         device = design.devices[hostname]
-        origin.log.info(f"{origin.log_origin}: DEVICE.ENSURE: {device.name}")
 
         if not rec:
             tasks[_create_missing(origin, device=device)] = hostname
         else:
             tasks[_check_existing(origin=origin, record=rec, device=device)] = hostname
 
-    async for coro, res in as_completed(tasks):
-        hostname = tasks[coro]
-        origin.log.info(f"{origin.log_origin}: DEVICE.ENSURE {hostname} - OK.")
+    await igather(tasks)
 
 
 async def _create_missing(origin: NetboxTopologyOrigin, device: Device):
     """
+    This function creates devices into Netbox that are not currently present.
     When creating a new netbox device, the following fields are required:
         * device_type (int)
         * device_role (int)
@@ -56,8 +52,6 @@ async def _create_missing(origin: NetboxTopologyOrigin, device: Device):
     device: Device
         The design device that needs to be created in Netbox.
     """
-
-    origin.log.info(f"{origin.log_origin}: DEVICE.CREATE: {device.name}")
 
     # -------------------------------------------------------------------------
     # Obtain the netbox device-type object from the device instance. this will
@@ -118,9 +112,7 @@ async def _create_missing(origin: NetboxTopologyOrigin, device: Device):
         return
 
     origin.devices[device.name] = res.json()
-    origin.log.info(
-        f"{origin.log_origin}: DEVICE.[green]CREATED[/green]: {device.name}"
-    )
+    origin.log.info(f"{origin.log_origin}: {device.name}: device.{colorize.created}")
 
 
 async def _check_existing(origin: NetboxTopologyOrigin, record: dict, device: Device):
@@ -140,4 +132,5 @@ async def _check_existing(origin: NetboxTopologyOrigin, record: dict, device: De
     Returns
     -------
     """
-    origin.log.info(f"{origin.log_origin}: DEVICE.[blue]EXISTS[/blue]: {device.name}")
+    origin.log.info(f"{origin.log_origin}: {device.name}: device.{colorize.ok}")
+    # TODO: need to validate that the device is not different than in design.

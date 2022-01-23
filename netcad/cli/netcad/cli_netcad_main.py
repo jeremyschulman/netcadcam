@@ -42,16 +42,3 @@ def clig_get():
 def cli_init():
     """initialize netcad project files"""
     pass
-
-
-# -----------------------------------------------------------------------------
-#
-#                                   push
-#
-# -----------------------------------------------------------------------------
-
-
-@cli.group("push")
-def clig_push():
-    """push subcommands ..."""
-    pass

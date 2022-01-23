@@ -5,38 +5,43 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional
+import asyncio
+from typing import Tuple
 
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.config import netcad_globals
-from netcad.plugins import NetcadOriginPlugin, NetcadOriginPluginCatalog
+from netcad.logger import get_logger
+from netcad.init.init_netcad_origin_plugins import init_netcad_origin_plugins
+from netcad.design import load_design
 
 # -----------------------------------------------------------------------------
-# Exports
+# Private Module Imports
 # -----------------------------------------------------------------------------
 
-__all__ = ["init_netcad_origin_plugins", "NetcadOriginPluginCatalog"]
+from ..common_opts import opt_designs
+from .cli_netcad_main import cli
 
 # -----------------------------------------------------------------------------
 #
-#                                 CODE BEGINS
+#                                   push
 #
 # -----------------------------------------------------------------------------
 
 
-def init_netcad_origin_plugins() -> Optional[NetcadOriginPluginCatalog]:
+@cli.command("push")
+@opt_designs()
+def cli_push(designs: Tuple[str]):
+    """push design(s) to origin(s) ..."""
 
-    # if there are no User defined plugins, then return.
-    try:
-        origins_list = netcad_globals.g_config["netcad"]["origin"]
+    log = get_logger()
 
-    except KeyError:
-        # TODO: log this with a debug messagte
-        return
+    origins = init_netcad_origin_plugins()
 
-    netcad_globals.g_netcad_plugins_catalog = NetcadOriginPlugin.init(origins_list)
-
-    return netcad_globals.g_netcad_plugins_catalog
+    for design_name in designs:
+        design = load_design(design_name)
+        for or_name, or_obj in origins.items():
+            for svc in or_obj.services.values():
+                log.info(f"PUSH: {design_name} -> {or_name}.{svc.name}")
+                asyncio.run(svc.plugin_origin_push(design))

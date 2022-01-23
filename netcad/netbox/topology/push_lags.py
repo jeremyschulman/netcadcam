@@ -4,5 +4,5 @@
 from netcad.design import Design
 
 
-async def netbox_push_lags(design: Design):
+async def netbox_push_lags(origin, design: Design):
     ...

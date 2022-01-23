@@ -4,5 +4,5 @@
 from netcad.design import Design
 
 
-async def netbox_push_cabling(design: Design):
+async def netbox_push_cabling(origin, design: Design):
     ...

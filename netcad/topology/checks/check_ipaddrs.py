@@ -18,7 +18,7 @@ from pydantic import BaseModel
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device
-from netcad.device.l3_interfaces import InterfaceL3
+from netcad.device.profiles.l3_interfaces import InterfaceL3
 from netcad.checks import CheckCollection, Check
 from netcad.checks import register_collection
 
