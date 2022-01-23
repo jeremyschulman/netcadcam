@@ -6,6 +6,7 @@
 # -----------------------------------------------------------------------------
 
 from collections import defaultdict
+from operator import itemgetter
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -74,6 +75,11 @@ class NetboxTopologyOrigin:
 
         self.ipaddrs = defaultdict(dict)
 
+        # cached netbox cable records, key=cable-key
+        # value=cable-rec-dict
+
+        self.cabling = dict()
+
     async def fetch_devices(self, design: Design):
         """
         Fetch the netbox device records for each device in the design, and store
@@ -122,6 +128,28 @@ class NetboxTopologyOrigin:
             hostname = devrec["name"]
             for ip_rec in records:
                 self.ipaddrs[hostname][ip_rec["address"]] = ip_rec
+
+    async def fetch_interface_cabling(self):
+        tasks = {
+            self.api.paginate(
+                "/dcim/cables/", params=dict(device_id=devrec["id"])
+            ): devrec
+            for devrec in self.devices.values()
+        }
+
+        get_terms = itemgetter("termination_a", "termination_b")
+
+        async for coro, records in as_completed(tasks):
+            for cable_rec in records:
+                end_a, end_b = get_terms(cable_rec)
+                if not all((end_a, end_b)):
+                    continue
+
+                key_a = (end_a["device"]["name"], end_a["name"])
+                key_b = (end_b["device"]["name"], end_b["name"])
+
+                key = tuple(sorted((key_a, key_b)))
+                self.cabling[key] = cable_rec
 
     # -------------------------------------------------------------------------
     # OVERLOADS: object

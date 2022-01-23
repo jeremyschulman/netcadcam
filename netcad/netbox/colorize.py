@@ -4,3 +4,4 @@
 created = "[yellow1]created[/yellow1]"
 updated = "[blue]updated[/blue]"
 ok = "[green]ok[/green]"
+failed = "[red]failed[/red]"

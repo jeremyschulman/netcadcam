@@ -132,6 +132,17 @@ async def _update_existing(
     if_name = interface.name
     ip_addr = str(if_ipaddr)
 
-    origin.log.info(
-        f"{origin.log_origin}: {hostname}: {if_name}: ip-address.{colorize.updated}: {ip_addr}"
+    # check to see if the ip-address is assigned to the interface as expected.
+
+    asgn_if_id = record["assigned_object_id"]
+    nb_if_rec = origin.interfaces[hostname][interface.name]
+    if asgn_if_id == nb_if_rec["id"]:
+        origin.log.info(
+            f"{origin.log_origin}: {hostname}: {if_name}: ip-address.{colorize.ok}: {ip_addr}"
+        )
+        return
+
+    # TODO: need to handle the IP address -> interface re-assignment use-case.
+    origin.log.warning(
+        f"{origin.log_origin}: {hostname}: {if_name}: ip-address.{colorize.updated}: {ip_addr} (TODO)"
     )
