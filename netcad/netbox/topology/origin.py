@@ -69,13 +69,27 @@ class NetboxTopologyOrigin:
 
         self.interfaces = defaultdict(dict)
 
+        # cached netbox ip-address records, key1=hostname, key2=ip-address
+        # value=netbox-ipaddress-rec-dict
+
+        self.ipaddrs = defaultdict(dict)
+
     async def fetch_devices(self, design: Design):
+        """
+        Fetch the netbox device records for each device in the design, and store
+        these into the `devices` cache.  If a device record is not found, then
+        the value of None will be stored.
+        """
         tasks = {self.api.fetch_device(hostname=name): name for name in design.devices}
         async for coro, devrecs in as_completed(tasks):
             hostname = tasks[coro]
             self.devices[hostname] = next(iter(devrecs), None)
 
     async def fetch_interfaces(self):
+        """
+        Fetch the netbox interface records for all devices in the design.  Each
+        interface record is stored into the `interfaces` cache.
+        """
         tasks = {
             self.api.paginate(
                 "/dcim/interfaces/", params=dict(device_id=devrec["id"])
@@ -89,6 +103,25 @@ class NetboxTopologyOrigin:
             hostname = devrec["name"]
             for intf_rec in intf_recs:
                 self.interfaces[hostname][intf_rec["name"]] = intf_rec
+
+    async def fetch_ipaddrs(self):
+        """
+        Fetch the netbox ip-address records associated to devices in the design.
+        """
+
+        tasks = {
+            self.api.paginate(
+                "/ipam/ip-addresses/", params=dict(device_id=devrec["id"])
+            ): devrec
+            for devrec in self.devices.values()
+        }
+
+        res: Response
+        async for coro, records in as_completed(tasks):
+            devrec = tasks[coro]
+            hostname = devrec["name"]
+            for ip_rec in records:
+                self.ipaddrs[hostname][ip_rec["address"]] = ip_rec
 
     # -------------------------------------------------------------------------
     # OVERLOADS: object
