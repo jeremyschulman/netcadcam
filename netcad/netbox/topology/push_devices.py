@@ -65,22 +65,21 @@ async def _create_missing(origin: NetboxTopologyOrigin, device: Device):
     # Obtain the site and device-role information
     # -------------------------------------------------------------------------
 
-    if not (origin_metadata := getattr(device, "origin_metadata")):
-        device_role = origin.config.get("default_device_role")
-        site = origin.config.get("default_site")
-        if not all((device_role, site)):
-            raise RuntimeError(
-                "Missing netcad.origin.netbox.topology default values: "
-                "[default_device_role, default_site], check config file."
-            )
-    else:
-        topology_metadata = origin_metadata.get(origin.name)
-        device_role = topology_metadata.get("device_role")
-        site = topology_metadata.get("site")
-        if not all((device_role, site)):
-            raise RuntimeError(
-                f"Device {device.name} missing origin_metadata.{origin.name}.[device_role, site]"
-            )
+    if not hasattr(device, "origin_metadata"):
+        setattr(device, "origin_metadata", {})
+
+    topology_metadata: dict = device.origin_metadata.get(origin.name)
+    device_role = topology_metadata.setdefault(
+        "device_role", origin.config.get("default_device_role")
+    )
+    site = topology_metadata.setdefault(
+        "site", origin.config.get("default_device_site")
+    )
+
+    if not all((device_role, site)):
+        raise RuntimeError(
+            f"Device {device.name} missing origin_metadata.{origin.name}.[device_role, site]"
+        )
 
     site_rec, devrole_rec = await asyncio.gather(
         origin.cache.fetch(
@@ -117,6 +116,10 @@ async def _create_missing(origin: NetboxTopologyOrigin, device: Device):
 
 async def _check_existing(origin: NetboxTopologyOrigin, record: dict, device: Device):
     """
+    This function checks the existing netbox.device record against the design.
+    The primary check is on the device-type value.  If this is not the same,
+    then the User will see an ERROR log message so that they can manually
+    remediate.
 
     Parameters
     ----------
@@ -132,5 +135,56 @@ async def _check_existing(origin: NetboxTopologyOrigin, record: dict, device: De
     Returns
     -------
     """
-    origin.log.info(f"{origin.log_origin}: {device.name}: device.{colorize.ok}")
-    # TODO: need to validate that the device is not different than in design.
+
+    # -------------------------------------------------------------------------
+    # check for device-type match
+    # -------------------------------------------------------------------------
+
+    nb_dt = record["device_type"]
+    ds_dt = device.device_type_spec.origin_spec["device_type"]
+
+    if nb_dt["id"] != ds_dt["id"]:
+        nb_name = nb_dt["slug"]
+        ds_name = ds_dt["slug"]
+        origin.log.error(
+            f"{origin.log_origin}: {device.name}: "
+            f"device.device-type mismatch: netbox/{nb_name} != design/{ds_name}"
+        )
+        return
+
+    # -------------------------------------------------------------------------
+    # check for device-role match, last check.  return if OK
+    # -------------------------------------------------------------------------
+
+    topo_meta: dict = device.origin_metadata.get(origin.name)
+    match_dr = record["device_role"]["slug"] == topo_meta["device_role"]
+
+    if match_dr:
+        origin.log.info(f"{origin.log_origin}: {device.name}: device.{colorize.ok}")
+        return
+
+    # -------------------------------------------------------------------------
+    # obtain the device-role record ID, required for the patch request
+    # -------------------------------------------------------------------------
+
+    devrole_rec = await origin.cache.fetch(
+        client=origin.api,
+        url="/dcim/device-roles/",
+        params=dict(name=topo_meta["device_role"]),
+    )
+
+    # -------------------------------------------------------------------------
+    # issue the patch request and update the origin cache
+    # -------------------------------------------------------------------------
+
+    patch_body = dict(
+        device_type=nb_dt["id"],
+        site=record["site"]["id"],
+        device_role=devrole_rec["id"],
+    )
+
+    res = await origin.api.patch(f'/dcim/devices/{record["id"]}/', json=patch_body)
+    res.raise_for_status()
+    origin.devices[device.name] = res.json()
+
+    origin.log.info(f"{origin.log_origin}: {device.name}: device.{colorize.updated}")
