@@ -1,14 +1,39 @@
 #  Copyright (c) 2021 Jeremy Schulman
 #  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+# -----------------------------------------------------------------------------
+# Systme Imports
+# -----------------------------------------------------------------------------
+
 import asyncio
+
+# -----------------------------------------------------------------------------
+# Private Imports
+# -----------------------------------------------------------------------------
 
 from netcad.design import Design
 from netcad.device import Device
 from netcad.igather import igather
 
+# -----------------------------------------------------------------------------
+# Private Module Imports
+# -----------------------------------------------------------------------------
+
 from .. import colorize
 from .origin import NetboxTopologyOrigin
+
+# -----------------------------------------------------------------------------
+# Exports
+# -----------------------------------------------------------------------------
+
+__all__ = ["netbox_push_devices"]
+
+
+# -----------------------------------------------------------------------------
+#
+#                                 CODE BEGINS
+#
+# -----------------------------------------------------------------------------
 
 
 async def netbox_push_devices(origin: NetboxTopologyOrigin, design: Design):
@@ -27,11 +52,12 @@ async def netbox_push_devices(origin: NetboxTopologyOrigin, design: Design):
 
     for hostname, rec in origin.devices.items():
         device = design.devices[hostname]
-
-        if not rec:
-            tasks[_create_missing(origin, device=device)] = hostname
-        else:
-            tasks[_check_existing(origin=origin, record=rec, device=device)] = hostname
+        task = (
+            _update_existing(origin=origin, record=rec, device=device)
+            if rec
+            else _create_missing(origin, device=device)
+        )
+        tasks[task] = hostname
 
     await igather(tasks)
 
@@ -114,12 +140,18 @@ async def _create_missing(origin: NetboxTopologyOrigin, device: Device):
     origin.log.info(f"{origin.log_origin}: {device.name}: device.{colorize.created}")
 
 
-async def _check_existing(origin: NetboxTopologyOrigin, record: dict, device: Device):
+async def _update_existing(origin: NetboxTopologyOrigin, record: dict, device: Device):
     """
     This function checks the existing netbox.device record against the design.
     The primary check is on the device-type value.  If this is not the same,
     then the User will see an ERROR log message so that they can manually
     remediate.
+
+    This function will update the following fields:
+        * device-role
+
+    The origin.devices cache will be updated with the patch netbox device
+    record.
 
     Parameters
     ----------
@@ -131,9 +163,6 @@ async def _check_existing(origin: NetboxTopologyOrigin, record: dict, device: De
 
     device: Device
         The design device instance
-
-    Returns
-    -------
     """
 
     # -------------------------------------------------------------------------
