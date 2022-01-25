@@ -92,9 +92,15 @@ def cli_render(
     log.info(f"Building device configs into directory: {configs_dir.absolute()}")
 
     for dev_obj in device_objs:
+        design_obj = dev_obj.design
 
-        config_file = configs_dir / dev_obj.design.name / f"{dev_obj.name}.cfg"
-        config_file.parent.mkdir(parents=True, exist_ok=True)
+        save_folder = [dev_obj.design.name]
+        if folder := design_obj.design_config.get("folder"):  # noqa
+            save_folder.insert(0, folder)
+
+        save_dir = configs_dir.joinpath(*save_folder)
+        config_file = save_dir / f"{dev_obj.name}.cfg"
+        save_dir.mkdir(parents=True, exist_ok=True)
 
         if not dev_obj.template:
             log.warning(
