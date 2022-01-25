@@ -187,5 +187,4 @@ def load_design_singleton(design_name: str, pkg_name: str, design_config: dict):
         )
 
     design_inst.module = design_mod
-    design_inst.design_config = design_config
     return design_inst
