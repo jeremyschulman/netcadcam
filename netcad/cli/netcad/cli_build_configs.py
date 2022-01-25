@@ -93,7 +93,9 @@ def cli_render(
 
     for dev_obj in device_objs:
 
-        config_file = configs_dir.joinpath(dev_obj.name + ".cfg")
+        config_file = configs_dir / dev_obj.design.name / f"{dev_obj.name}.cfg"
+        config_file.parent.mkdir(parents=True, exist_ok=True)
+
         if not dev_obj.template:
             log.warning(
                 f"BUILD SKIP: device {dev_obj.name} - no template file defined."
@@ -112,9 +114,11 @@ def cli_render(
             )
 
         except jinja2.exceptions.UndefinedError as exc:
-            raise RuntimeError(
+            rt = RuntimeError(
                 f"Jinja2 undefined error: {dev_obj.name} {dev_obj.template}  -  {str(exc)}"
             )
+            rt.__traceback__ = exc.__traceback__
+            raise rt
 
         log.info(f"SAVE: {dev_obj.name} config: {config_file.name}")
         with config_file.open("w+") as ofile:

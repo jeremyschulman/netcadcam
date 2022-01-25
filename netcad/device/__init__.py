@@ -5,5 +5,3 @@ from .device import Device, DeviceInterface, DeviceCatalog
 from .device_group import PseudoDevice, DeviceGroup, DeviceGroupMember
 from .device_group_mlag import DeviceMLagPairGroup, DeviceMLagPairMember
 from .peer_interface_id import PeerInterfaceId
-from netcad.device.profiles.interface_profile import InterfaceProfile
-from netcad.device.profiles.lag_interfaces import InterfaceLag, InterfaceLagMember

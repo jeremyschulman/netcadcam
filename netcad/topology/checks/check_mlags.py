@@ -18,7 +18,7 @@ from pydantic import BaseModel
 # -----------------------------------------------------------------------------
 
 from netcad.device import DeviceMLagPairMember, DeviceMLagPairGroup
-from netcad.device import InterfaceLag
+from netcad.device.profiles import InterfaceLag
 from netcad.checks import CheckCollection, Check
 from netcad.checks import register_collection
 
