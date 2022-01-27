@@ -20,7 +20,7 @@ from pydantic import BaseModel
 
 from netcad.device import Device, DeviceInterface
 from netcad.checks import CheckCollection, Check
-from netcad.device import InterfaceLag
+from netcad.device.profiles import InterfaceLag
 
 from netcad.checks import register_collection
 

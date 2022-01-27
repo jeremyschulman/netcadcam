@@ -95,15 +95,16 @@ class CablePlanner(Registry):
             ifs_by_counts[len(interfaces)].append({label: interfaces})
 
         proper_cabling = ifs_by_counts.pop(2, None)
-        if not proper_cabling:
-            raise RuntimeError("No cabling", self, ifs_by_counts)
 
         if ifs_by_counts:
+            from pprint import pformat
+
+            content = pformat(dict(ifs_by_counts), indent=3)
             raise RuntimeError(
-                f"Cable plan: {self.name}: Improper cabling peer counts",
-                self,
-                dict(ifs_by_counts),
+                f"Cable plan: {self.name}: Improper cabling peer counts:\n{content}",
             )
+        elif not proper_cabling:
+            raise RuntimeError("No cabling", self, ifs_by_counts)
 
         self.validate_endpoints()
         self.validated = True

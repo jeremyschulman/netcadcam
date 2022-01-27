@@ -21,7 +21,7 @@ import jinja2
 
 from netcad.logger import get_logger
 from netcad.cli.common_opts import opt_devices, opt_designs
-from netcad.config import Environment
+from netcad.config import Environment, netcad_globals
 
 from netcad.cli.device_inventory import get_devices_from_designs
 from .clig_build import clig_build
@@ -92,8 +92,17 @@ def cli_render(
     log.info(f"Building device configs into directory: {configs_dir.absolute()}")
 
     for dev_obj in device_objs:
+        design_obj = dev_obj.design
 
-        config_file = configs_dir.joinpath(dev_obj.name + ".cfg")
+        save_folder = [dev_obj.design.name]
+        design_config = netcad_globals.g_netcad_designs[design_obj.name]
+        if folder := design_config.get("folder"):
+            save_folder.insert(0, folder)
+
+        save_dir = configs_dir.joinpath(*save_folder)
+        config_file = save_dir / f"{dev_obj.name}.cfg"
+        save_dir.mkdir(parents=True, exist_ok=True)
+
         if not dev_obj.template:
             log.warning(
                 f"BUILD SKIP: device {dev_obj.name} - no template file defined."
@@ -112,9 +121,11 @@ def cli_render(
             )
 
         except jinja2.exceptions.UndefinedError as exc:
-            raise RuntimeError(
+            rt = RuntimeError(
                 f"Jinja2 undefined error: {dev_obj.name} {dev_obj.template}  -  {str(exc)}"
             )
+            rt.__traceback__ = exc.__traceback__
+            raise rt
 
         log.info(f"SAVE: {dev_obj.name} config: {config_file.name}")
         with config_file.open("w+") as ofile:
