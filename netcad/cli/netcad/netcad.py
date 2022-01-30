@@ -13,7 +13,12 @@ import sys
 
 from netcad.logger import get_logger
 from netcad.debug import format_exc_message
-from netcad.init import init, init_netcad_plugins, builtin_plugins
+from netcad.init import (
+    init,
+    init_netcad_plugins,
+    builtin_plugins,
+    init_netcad_origin_plugins,
+)
 from .cli_netcad_main import cli
 
 # -----------------------------------------------------------------------------
@@ -28,14 +33,15 @@ def script():
     This function is the main entry point for the CLI tool when the User
     invokes the "netcad" command from the terminal.
     """
+
     try:
         init()
+        init_netcad_origin_plugins.init_netcad_origin_plugins()
         builtin_plugins.init_netcad_builtin_plugins()
         init_netcad_plugins.init_netcad_plugins()
         cli()
 
     except Exception as exc:
         exc_msg = format_exc_message(exc)
-        log = get_logger()
-        log.critical(exc_msg)
+        get_logger().critical(exc_msg)
         sys.exit(1)

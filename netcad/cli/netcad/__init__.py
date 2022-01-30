@@ -6,4 +6,5 @@ from .netcad import script
 from . import cli_build_configs
 from . import cli_build_checks
 from . import cli_design_list
+from . import cli_pull
 from . import cli_push

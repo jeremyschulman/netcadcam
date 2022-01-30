@@ -37,6 +37,7 @@ def init_netcad_origin_plugins() -> Optional[NetcadOriginPluginCatalog]:
         # TODO: log this with a debug messagte
         return
 
-    netcad_globals.g_netcad_plugins_catalog = NetcadOriginPlugin.init(origins_list)
-
+    netcad_globals.g_netcad_origin_plugins_catalog = NetcadOriginPlugin.init(
+        origins_list
+    )
     return netcad_globals.g_netcad_plugins_catalog

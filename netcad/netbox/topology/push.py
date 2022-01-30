@@ -12,7 +12,7 @@ from .push_lags import netbox_push_lags
 from .push_iface_ipaddrs import netbox_push_interface_ipaddrs
 
 
-async def plugin_origin_push(design: Design):
+async def plugin_origin_push(design: Design, **options):
     async with NetboxTopologyOrigin() as origin:
         await netbox_push_devices(origin, design)
         await netbox_push_interfaces(origin, design)

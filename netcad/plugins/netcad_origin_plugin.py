@@ -34,8 +34,11 @@ __all__ = ["NetcadOriginPlugin"]
 
 class _NetcadOriginServicePlugin(Plugin):
     class _PluginProtocol(PluginProtocol):
-        def plugin_origin_push(self, design: Design):
+        def plugin_origin_push(self, design: Design, **options):
             """Perform the 'push' action"""
+
+        def plugin_origin_pull(self, design: Design, **options):
+            """Perform the 'pull' action"""
 
     _plugin_typeref = _PluginProtocol
 
