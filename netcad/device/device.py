@@ -28,8 +28,9 @@ from netcad.device.device_interface import (
 from netcad.registry import Registry
 from netcad.config import Environment
 from netcad.config import netcad_globals
-from netcad.origin import OriginDeviceType
 from netcad.jinja2.env import get_env
+
+from .device_type import DeviceType
 
 if TYPE_CHECKING:
     from netcad.design import Design, DesignServiceCatalog, DesignServiceLike
@@ -236,10 +237,10 @@ class Device(Registry, registry_name="devices"):
         if getattr(cls, "product_model", None) and not os.getenv(
             Environment.NETCAD_NOVALIDATE
         ):
-            cls.init_interfaces()
+            cls.init_device_spec()
 
     @classmethod
-    def init_interfaces(cls):
+    def init_device_spec(cls):
         """
         Called from __init_subclass__, this function is used to retrieve the
         device-type specification using the designated product-model.
@@ -248,16 +249,15 @@ class Device(Registry, registry_name="devices"):
         device-product design initialization or validation.
         """
 
+        device_type = cls.device_type or cls.product_model
+
         try:
-            device_type = cls.device_type or cls.product_model
-            spec = cls.device_type_spec = OriginDeviceType.load(
-                product_model=device_type
-            )
+            spec = DeviceType.load(name=device_type)
 
         except FileNotFoundError:
             raise RuntimeError(
-                f"Missing device-type file for {cls.__name__}, product-model: {cls.product_model}.  "
-                'Try running "netcad get device-types" to fetch definitions.'
+                f"Device class {cls.__name__} missing spec for device-type: {device_type}.  "
+                'Try running "netcad pull device-types" to fetch definitions.'
             )
 
         # initialize the interfaces in the device so that those defined in the

@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Jeremy Schulman
+#  Copyright (c) 2021-2022 Jeremy Schulman
 #  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 # -----------------------------------------------------------------------------
@@ -17,64 +17,41 @@ from pydantic.dataclasses import dataclass
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from .origin import Origin
+from netcad.cache import Cache
+
 
 # -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["OriginDeviceType", "OriginDeviceTypeInterfaceSpec"]
+__all__ = ["DeviceType", "DeviceTypeInterfaceSpec"]
 
 
 @dataclass()
-class OriginDeviceTypeInterfaceSpec:
+class DeviceTypeInterfaceSpec:
     if_name: str
     if_type: str
     if_type_label: str
 
 
-class OriginDeviceType(Origin):
+class DeviceType:
+    CACHE_SUBDIR = "device-types"
+
     def __init__(self, origin_spec):
         self.origin_spec = origin_spec
 
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        if cls.origin_name:
-            cls.registry_add(cls.origin_name, cls)
-
     @property
-    def product_model(self) -> str:
+    def device_type(self) -> str:
         raise NotImplementedError()
 
     @property
     def interface_names(self) -> Iterable[AnyStr]:
         raise NotImplementedError()
 
-    def get_interface(self, if_name: str) -> OriginDeviceTypeInterfaceSpec:
+    def get_interface(self, if_name: str) -> DeviceTypeInterfaceSpec:
         raise NotImplementedError()
 
     @classmethod
-    def load(cls, product_model: str) -> "OriginDeviceType":
-        return cls.cache_load(
-            cache_subdir="device-types", cache_item_name=product_model
-        )
-
-    async def save(self):
-        await self.cache_save(
-            cache_subdir="device-types",
-            cache_item_name=self.product_model,
-            payload=self.origin_spec,
-        )
-
-    @classmethod
-    async def get(cls, product_models: Iterable[AnyStr]):
-        """
-        Gets the collection of product models from the origin and saves them to
-        the cache filesystem.
-
-        Parameters
-        ----------
-        product_models:
-            List of product-model string values.
-        """
-        raise NotImplementedError()
+    def load(cls, name: str) -> "DeviceType":
+        spec = Cache(subdir=cls.CACHE_SUBDIR).cache_load(cache_item_name=name)
+        return spec.factory("DeviceType")

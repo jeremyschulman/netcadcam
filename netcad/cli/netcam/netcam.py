@@ -13,11 +13,19 @@ import sys
 
 from netcad.logger import get_logger
 from netcad.debug import format_exc_message
-from netcad.init import init, init_netcam_plugings
+from netcad.init import init, init_netcam_plugings, init_netcad_origin_plugins
 
-# from netcad.netcam.loader import import_netcam_plugins
+# -----------------------------------------------------------------------------
+# Private Module Imports
+# -----------------------------------------------------------------------------
 
 from .cli_netcam_main import cli
+
+# -----------------------------------------------------------------------------
+# Exports
+# -----------------------------------------------------------------------------
+
+__all__ = ["script"]
 
 
 # -----------------------------------------------------------------------------
@@ -34,6 +42,7 @@ def script():
     """
     try:
         init()
+        init_netcad_origin_plugins.init_netcad_origin_plugins()
         init_netcam_plugings.import_netcam_plugins()
         cli()
 

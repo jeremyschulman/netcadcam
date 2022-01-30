@@ -84,11 +84,11 @@ def clig_get_device_types(devices: Tuple[str], designs: Tuple[str]):
     errors = 0
     product_models = set()
     for name, each_device in devices.items():
-        if not each_device.product_model:
+        if not each_device.device_type:
             log.error(f"Device missing product_model assignement: {name}")
             errors += 1
             continue
-        product_models.add(each_device.product_model)
+        product_models.add(each_device.device_type)
 
     if errors:
         log.error(f"Errors: {errors}, aborting.")
