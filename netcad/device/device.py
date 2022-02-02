@@ -67,18 +67,18 @@ class Device(Registry, registry_name="devices"):
         values they choose (i.e. does not need to be eos for Arista), but they
         must use names that are unqiue within their SOT.
 
+    device_type: str, optional
+        When used, this value selects the device type definition from the origin
+        that provides the device-type specification. Must exist in the source of
+        truth (SoT) defined as-is.  For example, if the product_model was
+        "DCS-7050SX3-48YC12", then that device-model/type must exist in the SOT.
+
     product_model: str, required
         The device product model value as expected to be reported from the
         device; for example from a "show version" command.  This value will also
         be used as the default `device_type` for obtaining device-type
         specifications.  If the product_model and the device specification value
         need to be different, then use the optional `device_type` value.
-
-    device_type: str, optional
-        When used, this value selects the device type definition from the origin
-        that provides the device-type specification. Must exist in the source of
-        truth (SoT) defined as-is.  For example, if the product_model was
-        "DCS-7050SX3-48YC12", then that device-model/type must exist in the SOT.
 
     interfaces: dict[str, DeviceInterface]
         Store the specific usage declaration for each of the interfaces defined
@@ -96,9 +96,11 @@ class Device(Registry, registry_name="devices"):
 
     os_name: Optional[str] = None
 
+    device_type: Optional[str] = None
+
     product_model: Optional[str] = None
 
-    device_type: Optional[str] = None
+    device_type_sepc: Optional[DeviceType] = None
 
     interfaces: DeviceInterfaces = None
 
@@ -252,7 +254,7 @@ class Device(Registry, registry_name="devices"):
         device_type = cls.device_type or cls.product_model
 
         try:
-            spec = DeviceType.load(name=device_type)
+            cls.device_type_spec = DeviceType.load(name=device_type)
 
         except FileNotFoundError:
             raise RuntimeError(
@@ -263,7 +265,7 @@ class Device(Registry, registry_name="devices"):
         # initialize the interfaces in the device so that those defined in the
         # spec exist; initializing the profile value to None.
 
-        for if_name in spec.interface_names:
+        for if_name in cls.device_type_spec.interface_names:
             cls.interfaces[if_name].profile = None
 
     # -------------------------------------------------------------------------

@@ -57,7 +57,7 @@ __all__ = []
 # -----------------------------------------------------------------------------
 
 
-@clig_show.command(name="checks")
+@clig_show.command(name="check")
 @opt_devices()
 @opt_designs()
 @click.option(
@@ -102,7 +102,7 @@ __all__ = []
 def cli_report_tests(
     devices: Tuple[str], designs: Tuple[str], checks_dir: Path, **optionals
 ):
-    """Show test results in tablular form."""
+    """Show check results in tablular form."""
 
     log = get_logger()
 
