@@ -43,7 +43,7 @@ __all__ = []
 DevicesList = List[Device]
 
 
-@clig_build.command(name="checks")
+@clig_build.command(name="check")
 @opt_devices()
 @opt_designs()
 @click.option(
