@@ -72,7 +72,7 @@ def _interfaces_as_dict(device: Device) -> dict:
         # TODO: perhaps log error?
 
         port_type = (
-            None if not (ifphy_prof := if_prof.port_profile) else ifphy_prof.name
+            None if not (ifphy_prof := if_prof.phy_profile) else ifphy_prof.name
         )
 
         flags = if_prof.profile_flags

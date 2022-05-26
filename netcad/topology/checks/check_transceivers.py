@@ -84,17 +84,17 @@ class TransceiverCheckCollection(CheckCollection):
         interfaces = [
             iface
             for iface in device.interfaces.used().values()
-            if iface.profile.port_profile and iface.profile.port_profile.transceiver
+            if iface.profile.phy_profile and iface.profile.phy_profile.transceiver
         ]
 
         def _build_one_tc(iface: DeviceInterface):
-            port_profile = iface.profile.port_profile
+            port_profile = iface.profile.phy_profile
             xcvr = port_profile.transceiver
 
             return TransceiverCheck(
                 check_params=TransceiverCheckParams(interface=iface.name),
                 expected_results=TransceiverCheckExpectations(
-                    model=iface.profile.port_profile.name, type=xcvr.type
+                    model=iface.profile.phy_profile.name, type=xcvr.type
                 ),
             )
 

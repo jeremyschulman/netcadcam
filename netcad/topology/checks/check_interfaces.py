@@ -102,7 +102,7 @@ class InterfaceCheckCollection(CheckCollection):
             # and descriptions as defined.
 
             else:
-                port_profile = iface.profile.port_profile
+                port_profile = iface.profile.phy_profile
                 if_flags = iface.profile.profile_flags
 
                 expected_results = InterfaceCheckUsedExpectations(

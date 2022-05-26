@@ -49,7 +49,7 @@ class InterfaceProfile(SafeIsAttribute):
     # `port_profile` stores the physical layer information that is associated to
     # this interface.
 
-    port_profile: Optional[PhyPortProfile] = None
+    phy_profile: Optional[PhyPortProfile] = None
 
     # `desc` stores the interface description.  Set as a class value when all
     # instances share the same interface description value.

@@ -42,7 +42,7 @@ class InterfaceL2Access(InterfaceL2):
 class InterfaceL2Trunk(InterfaceL2):
 
     native_vlan: Optional[VlanProfile]
-    vlans: List[VlanProfile]
+    allowed_vlans: List[VlanProfile]
 
     def vlans_used(self) -> Set[VlanProfile]:
         """
@@ -50,7 +50,7 @@ class InterfaceL2Trunk(InterfaceL2):
         native vlan, if defined.
         """
         native = {self.native_vlan} if hasattr(self, "native_vlan") else set()
-        return set(self.vlans) | native
+        return set(self.allowed_vlans) | native
 
     def trunk_allowed_vlans(self) -> Set[VlanProfile]:
         """

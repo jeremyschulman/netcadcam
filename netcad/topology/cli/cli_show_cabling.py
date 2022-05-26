@@ -95,7 +95,7 @@ def interface_profile_names(iface: DeviceInterface) -> Tuple[Text, Text]:
     if isinstance(if_prof, InterfaceVirtual):
         return if_prof.name, VIRTUAL
 
-    if not (port_prof := if_prof.port_profile):
+    if not (port_prof := if_prof.phy_profile):
         return if_prof.name, MISSING
 
     return Text(if_prof.name), Text(port_prof.name)
@@ -145,7 +145,7 @@ def cabling_table(table: Table, cables) -> Table:
         # red to indicate the error to the User.
 
         if all((dev_if.profile, rmt_if.profile)) and phy_is_different(
-            dev_if.profile.port_profile, rmt_if.profile.port_profile
+            dev_if.profile.phy_profile, rmt_if.profile.phy_profile
         ):
             dev_phy_prof.style = Style(color="red")
             rmt_phy_prof.style = Style(color="red")
