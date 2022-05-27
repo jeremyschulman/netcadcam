@@ -23,7 +23,7 @@ import toml
 from netcad.config import netcad_globals, defaults as d
 from netcad.config import Environment
 from netcad.config.loader import import_objectref
-
+from .init_device_types import init_import_device_types
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -47,6 +47,7 @@ def init():
     _init_debug()
     _init_config_contents()
     _init_proj_dirs()
+    init_import_device_types(netcad_globals.g_config)
     _init_design_configs()
     _init_user_environment()
 

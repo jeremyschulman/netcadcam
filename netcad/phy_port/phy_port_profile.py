@@ -21,7 +21,7 @@ from .phy_port_typedefs import (
     CableMediaType,
     CableTerminationType,
     PhyPortReachType,
-    TranscieverFormFactorType,
+    PhyPortFormFactorType,
 )
 
 # -----------------------------------------------------------------------------
@@ -49,7 +49,7 @@ class PortTransceiver(BaseModel):
 
     # `form_factor` denotes the physical format of the transciver
 
-    form_factor: TranscieverFormFactorType
+    form_factor: PhyPortFormFactorType
 
     # `reach` denotes short or long range (or other tbd)
 

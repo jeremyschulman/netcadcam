@@ -30,7 +30,7 @@ from netcad.config import Environment
 from netcad.config import netcad_globals
 from netcad.jinja2.env import get_env
 
-from .device_type import DeviceType
+from .device_type import DeviceType, DeviceTypeRegistry
 
 if TYPE_CHECKING:
     from netcad.design import Design, DesignServiceCatalog, DesignServiceLike
@@ -220,8 +220,8 @@ class Device(Registry, registry_name="devices"):
 
     def __init_subclass__(cls, **kwargs):
         """
-        Upon Device sub-class definition create a unique set of interface
-        definitions.  This step ensures that sub-classes do not *step on each
+        Upon Device subclass definition create a unique set of interface
+        definitions.  This step ensures that subclasses do not *step on each
         other* when declaring interface definitions at the class level.  Each
         Device _instance_ will get a deepcopy of these interfaces so that they
         can make one-off adjustments to the device standard.
@@ -253,20 +253,19 @@ class Device(Registry, registry_name="devices"):
 
         device_type = cls.device_type or cls.product_model
 
-        try:
-            cls.device_type_spec = DeviceType.load(name=device_type)
-
-        except FileNotFoundError:
+        cls.device_type_spec: DeviceType = DeviceTypeRegistry.registry_get(
+            name=device_type
+        )
+        if not cls.device_type_spec:
             raise RuntimeError(
                 f"Device class {cls.__name__} missing spec for device-type: {device_type}.  "
-                'Try running "netcad pull device-types" to fetch definitions.'
             )
 
         # initialize the interfaces in the device so that those defined in the
         # spec exist; initializing the profile value to None.
 
-        for if_name in cls.device_type_spec.interface_names:
-            cls.interfaces[if_name].profile = None
+        for iface in cls.device_type_spec.interfaces:
+            cls.interfaces[iface.name].profile = None
 
     # -------------------------------------------------------------------------
     #

@@ -44,14 +44,13 @@ def netcad_import_package(pkg_name: str) -> ModuleType:
     # given as an import reference within another file, for example "import foo
     # as bar" and the package name as given references "bar".  In this case the
     # direct import_module will fail resulting in a ModuleNotFound Error.
-
     try:
         return import_module(pkg_name)
     except ModuleNotFoundError:
         pass
 
-    # Try splitting the package as given into the from package and then an
-    # attribute within that module.  This will handle the case described above.
+    # Try splitting the package as given into the package and then an attribute
+    # within that module.  This will handle the case described above.
 
     from_pkg, design_name = pkg_name.rsplit(".", 1)
     return getattr(import_module(from_pkg), design_name)

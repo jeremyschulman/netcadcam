@@ -12,7 +12,7 @@ from netcad.plugins import NetcadPlugin
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["init_netcad_plugins"]
+__all__ = ["init_netcad_user_plugins"]
 
 
 # -----------------------------------------------------------------------------
@@ -22,7 +22,7 @@ __all__ = ["init_netcad_plugins"]
 # -----------------------------------------------------------------------------
 
 
-def init_netcad_plugins():
+def init_netcad_user_plugins():
 
     # if there are no User defined plugins, then return.
     try:

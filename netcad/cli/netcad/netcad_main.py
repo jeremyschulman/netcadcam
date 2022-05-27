@@ -15,9 +15,8 @@ from netcad.logger import get_logger
 from netcad.debug import format_exc_message
 from netcad.init import (
     init,
-    init_netcad_plugins,
-    builtin_plugins,
-    init_netcad_origin_plugins,
+    init_netcad_user_plugins,
+    init_netcad_builtin_plugins,
 )
 from .cli_netcad_main import cli
 
@@ -36,9 +35,8 @@ def script():
 
     try:
         init()
-        init_netcad_origin_plugins.init_netcad_origin_plugins()
-        builtin_plugins.init_netcad_builtin_plugins()
-        init_netcad_plugins.init_netcad_plugins()
+        init_netcad_builtin_plugins.init_netcad_builtin_plugins()
+        init_netcad_user_plugins.init_netcad_user_plugins()
         cli()
 
     except Exception as exc:

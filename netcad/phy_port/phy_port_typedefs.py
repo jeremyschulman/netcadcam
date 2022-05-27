@@ -8,8 +8,29 @@ https://www.arista.com/assets/data/pdf/Datasheets/Transceiver-Data-Sheet.pdf
 #  Copyright (c) 2021 Jeremy Schulman
 #  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from netcad.helpers import StrEnum
+# -----------------------------------------------------------------------------
+# System Imports
+# -----------------------------------------------------------------------------
+
 import enum
+
+# -----------------------------------------------------------------------------
+# Private Imports
+# -----------------------------------------------------------------------------
+
+from netcad.helpers import StrEnum
+
+# -----------------------------------------------------------------------------
+# Exports
+# -----------------------------------------------------------------------------
+
+__all__ = [
+    "PhyPortTypes",
+    "CableMediaType",
+    "CableTerminationType",
+    "PhyPortFormFactorType",
+    "PhyPortReachType",
+]
 
 
 class PhyPortTypes(StrEnum):
@@ -112,10 +133,11 @@ class CableTerminationType(StrEnum):
     RJ45 = enum.auto()
     AOC = enum.auto()
     TWX = enum.auto()
+    MPO = enum.auto()  # multi-fiber push on (aka MPT)
     virtual = enum.auto()  # for virtual networking
 
 
-class TranscieverFormFactorType(StrEnum):
+class PhyPortFormFactorType(StrEnum):
     """denotes the transciever form-factor type"""
 
     AOC = enum.auto()

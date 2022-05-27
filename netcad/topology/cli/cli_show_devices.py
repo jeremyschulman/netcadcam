@@ -87,12 +87,6 @@ def cli_design_report_devices(designs: Tuple[str], **flags):
     for design, devices in groupby(by_design, key=lambda d: d.design):
         show_network_devices(design, **flags)
 
-    # for design_name in designs:
-    #     cabler: CablePlanner
-    #     if not (cabler := CablePlanner.registry_get(name=design_name)):
-    #         log.error(f"No cabling found for design: {design_name}")
-    #         return
-
 
 # -----------------------------------------------------------------------------
 #
