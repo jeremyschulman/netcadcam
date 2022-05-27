@@ -2,6 +2,8 @@
 
 DIST_BASENAME := $(shell poetry version | tr ' ' '-')
 
+all: precheck
+
 build: setup.py requirements.txt
 
 setup.py:
@@ -15,3 +17,6 @@ clean:
 	rm -rf dist *.egg-info .pytest_cache
 	rm -f requirements.txt setup.py
 	rm -f poetry.lock
+
+precheck:
+	invoke precheck

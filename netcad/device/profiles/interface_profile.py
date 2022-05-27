@@ -19,7 +19,7 @@ import jinja2
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.phy_port.port_profile import PhyPortProfile
+from netcad.phy_port.phy_port_profile import PhyPortProfile
 from netcad.device.device_interface import DeviceInterface
 from netcad.helpers import SafeIsAttribute
 

@@ -71,9 +71,7 @@ def _interfaces_as_dict(device: Device) -> dict:
         # otherwise it is set to None.  It should never be None, FWIW.
         # TODO: perhaps log error?
 
-        port_type = (
-            None if not (ifphy_prof := if_prof.phy_profile) else ifphy_prof.name
-        )
+        port_type = None if not (ifphy_prof := if_prof.phy_profile) else ifphy_prof.name
 
         flags = if_prof.profile_flags
 

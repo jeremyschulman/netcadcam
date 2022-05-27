@@ -6,20 +6,23 @@
 # -----------------------------------------------------------------------------
 
 from typing import Optional
-import enum
 
 # -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
 
-from pydantic import PositiveInt
-from pydantic.dataclasses import dataclass, Field
+from pydantic import PositiveInt, BaseModel, Field
 
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.helpers import StrEnum
+from .phy_port_typedefs import (
+    CableMediaType,
+    CableTerminationType,
+    PhyPortReachType,
+    TranscieverFormFactorType,
+)
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -33,51 +36,7 @@ from netcad.helpers import StrEnum
 # -----------------------------------------------------------------------------
 
 
-class CableMediaType(StrEnum):
-    """Denotes the physical cable type"""
-
-    SMF = enum.auto()
-    MMF = enum.auto()
-    CAT5 = enum.auto()
-    CAT6 = enum.auto()
-    CAT7 = enum.auto()
-    AOC = enum.auto()
-    TWX = enum.auto()  # twinaxial
-    virtual = enum.auto()  # for virtual networking
-
-
-class CableTerminationType(StrEnum):
-    """denotes the physical connector termitnating the cable"""
-
-    LC = enum.auto()
-    SC = enum.auto()
-    ST = enum.auto()
-    RJ45 = enum.auto()
-    AOC = enum.auto()
-    TWX = enum.auto()
-    virtual = enum.auto()  # for virtual networking
-
-
-class TranscieverFormFactorType(StrEnum):
-    """denotes the transciever form-factor type"""
-
-    AOC = enum.auto()
-    SFP = enum.auto()
-    SFPP = enum.auto()  # SFP+
-    SFP28 = enum.auto()
-    QSFP = enum.auto()
-    QSFPP = enum.auto()  # QSFP+
-    QSFP28 = enum.auto()
-    RJ45 = enum.auto()
-
-
-class PhyPortReachType(StrEnum):
-    short = enum.auto()
-    long = enum.auto()
-
-
-@dataclass
-class PortCable:
+class PortCable(BaseModel):
     media: CableMediaType
     termination: CableTerminationType
 
@@ -86,8 +45,7 @@ class PortCable:
     length: Optional[PositiveInt] = None
 
 
-@dataclass
-class PortTransceiver:
+class PortTransceiver(BaseModel):
 
     # `form_factor` denotes the physical format of the transciver
 
@@ -111,8 +69,7 @@ class PortTransceiver:
     model: Optional[str] = None
 
 
-@dataclass
-class PhyPortProfile:
+class PhyPortProfile(BaseModel):
     """
     A PortProfile is used to identify the physical port criterial if-and-only-if
     a change from the default port is required.  Common usages of a PortProfile:
@@ -140,16 +97,16 @@ class PhyPortProfile:
 
     # `poe` - when used, denotes if POE is enabled/disabled
 
-    poe: Optional[bool] = Field(None)
+    poe: Optional[bool] = Field(default=None)
 
     # `speed` - when used, changes the port default speed (megabits/sec)
     # 1_000 == 1Gbps, for example
 
-    speed: Optional[PositiveInt] = Field(None)
+    speed: Optional[PositiveInt] = Field(default=None)
 
     # `autoneg` - when used, enabled/disables auto-negotiation
 
-    autoneg: Optional[bool] = Field(None)
+    autoneg: Optional[bool] = Field(default=None)
 
     # `breakout` - when used, indicates the break port number [1-4]
 
