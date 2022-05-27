@@ -9,6 +9,7 @@ https://www.arista.com/assets/data/pdf/Datasheets/Transceiver-Data-Sheet.pdf
 #  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from netcad.helpers import StrEnum
+import enum
 
 
 class PhyPortTypes(StrEnum):
@@ -87,3 +88,46 @@ class PhyPortTypes(StrEnum):
     type_100GBASE_DR = "100GBASE-DR"
     type_100GBASE_FR = "100GBASE-FR"
     type_100GBASE_LR = "100GBASE-LR"
+
+
+class CableMediaType(StrEnum):
+    """Denotes the physical cable type"""
+
+    SMF = enum.auto()
+    MMF = enum.auto()
+    CAT5 = enum.auto()
+    CAT6 = enum.auto()
+    CAT7 = enum.auto()
+    AOC = enum.auto()
+    TWX = enum.auto()  # twinaxial
+    virtual = enum.auto()  # for virtual networking
+
+
+class CableTerminationType(StrEnum):
+    """denotes the physical connector termitnating the cable"""
+
+    LC = enum.auto()
+    SC = enum.auto()
+    ST = enum.auto()
+    RJ45 = enum.auto()
+    AOC = enum.auto()
+    TWX = enum.auto()
+    virtual = enum.auto()  # for virtual networking
+
+
+class TranscieverFormFactorType(StrEnum):
+    """denotes the transciever form-factor type"""
+
+    AOC = enum.auto()
+    SFP = enum.auto()
+    SFPP = enum.auto()  # SFP+
+    SFP28 = enum.auto()
+    QSFP = enum.auto()
+    QSFPP = enum.auto()  # QSFP+
+    QSFP28 = enum.auto()
+    RJ45 = enum.auto()
+
+
+class PhyPortReachType(StrEnum):
+    short = enum.auto()
+    long = enum.auto()

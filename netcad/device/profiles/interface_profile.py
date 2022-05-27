@@ -19,7 +19,7 @@ import jinja2
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.phy_port.port_profile import PhyPortProfile
+from netcad.phy_port.phy_port_profile import PhyPortProfile
 from netcad.device.device_interface import DeviceInterface
 from netcad.helpers import SafeIsAttribute
 
@@ -49,7 +49,7 @@ class InterfaceProfile(SafeIsAttribute):
     # `port_profile` stores the physical layer information that is associated to
     # this interface.
 
-    port_profile: Optional[PhyPortProfile] = None
+    phy_profile: Optional[PhyPortProfile] = None
 
     # `desc` stores the interface description.  Set as a class value when all
     # instances share the same interface description value.
