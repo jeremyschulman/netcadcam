@@ -5,3 +5,5 @@ from .device import Device, DeviceInterface, DeviceCatalog
 from .device_group import PseudoDevice, DeviceGroup, DeviceGroupMember
 from .device_group_mlag import DeviceMLagPairGroup, DeviceMLagPairMember
 from .peer_interface_id import PeerInterfaceId
+from .device_type import DeviceType
+from .device_type_factory import DeviceTypeFactory

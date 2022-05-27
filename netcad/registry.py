@@ -5,7 +5,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional, Any, Set, Dict
+from typing import Optional, Any, Set, Dict, Tuple
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -50,7 +50,9 @@ class _RegistryFactory(object):
         cls._registry[name] = obj
 
     @classmethod
-    def registry_get(cls, name: str, with_registry=False) -> Optional[Any]:
+    def registry_get(
+        cls, name: str, with_registry=False
+    ) -> Any | Tuple[Any, Any] | None:
         """
         Return the registered item designative by 'name', or None if not found.
         This search will start with the class used in by the Caller, and if not
@@ -68,17 +70,6 @@ class _RegistryFactory(object):
             When True the return value will be Tuple that includes the specific
             registry class that "ownes" the item. When False (default) only
             the item is returned.
-
-        Returns
-        -------
-        None:
-            When the item is not found
-
-         Any:
-            When the item is found and `with_registry` is False (default)
-
-        Tuple: [Any, Registry]
-            When the item is found and `with_registry` is True
         """
         owner, item = next(
             (
