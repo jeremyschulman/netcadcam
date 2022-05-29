@@ -264,8 +264,8 @@ class Device(Registry, registry_name="devices"):
         # initialize the interfaces in the device so that those defined in the
         # spec exist; initializing the profile value to None.
 
-        for iface in cls.device_type_spec.interfaces:
-            cls.interfaces[iface.name].profile = None
+        for if_name in cls.device_type_spec.interfaces:
+            cls.interfaces[if_name].profile = None
 
     # -------------------------------------------------------------------------
     #
