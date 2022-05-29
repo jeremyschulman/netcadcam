@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Optional
 
 from pydantic import BaseModel
 
@@ -20,7 +20,7 @@ class DeviceType(BaseModel):
     model: str
     product_model: str
     interfaces: Dict[str, DeviceInterfaceType]
-    consoles: Dict[str, DeviceConsoleType]
+    consoles: Optional[Dict[str, DeviceConsoleType]] = None
 
     def get_interface(self, if_name: str) -> DeviceInterfaceType:
         return self.interfaces.get(if_name)

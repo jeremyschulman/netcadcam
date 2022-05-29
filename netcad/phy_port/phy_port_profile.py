@@ -24,6 +24,8 @@ from .phy_port_typedefs import (
     PhyPortFormFactorType,
 )
 
+from .phy_port_speeds import PhyPortSpeeds
+
 # -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
@@ -102,7 +104,7 @@ class PhyPortProfile(BaseModel):
     # `speed` - when used, changes the port default speed (megabits/sec)
     # 1_000 == 1Gbps, for example
 
-    speed: Optional[PositiveInt] = Field(default=None)
+    speed: Optional[PhyPortSpeeds] = Field(default=None)
 
     # `autoneg` - when used, enabled/disables auto-negotiation
 

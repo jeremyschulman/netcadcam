@@ -101,9 +101,9 @@ def show_network_devices(design: Design, **flags):
 
     table = Table(
         "Device",
+        "Profile",
         "OS",
         "Product Model",
-        "Profile",
         show_header=True,
         header_style="bold magenta",
         title=f"Design '{design.name}', {design_desc}",
@@ -121,6 +121,6 @@ def show_network_devices(design: Design, **flags):
                 continue
             dev_type = f"[blue]{dev_type}[/blue]"
 
-        table.add_row(dev.name, dev.os_name, dev.product_model, dev_type)
+        table.add_row(dev.name, dev_type, dev.os_name, dev.product_model)
 
     console.print("\n", table)
