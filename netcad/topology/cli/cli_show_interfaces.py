@@ -129,7 +129,7 @@ def show_device_interfaces(device: Device, **options):
             continue
 
         if_prof_name = if_prof.name
-        if not (port_prof := if_prof.port_profile):
+        if not (port_prof := if_prof.phy_profile):
             pp_name = keywords.MISSING
         else:
             pp_name = port_prof.name
