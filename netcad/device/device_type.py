@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, Optional
 
 from pydantic import BaseModel
 
@@ -19,8 +19,11 @@ class DeviceConsoleType(BaseModel):
 class DeviceType(BaseModel):
     model: str
     product_model: str
-    interfaces: List[DeviceInterfaceType]
-    consoles: List[DeviceConsoleType]
+    interfaces: Dict[str, DeviceInterfaceType]
+    consoles: Optional[Dict[str, DeviceConsoleType]] = None
+
+    def get_interface(self, if_name: str) -> DeviceInterfaceType:
+        return self.interfaces.get(if_name)
 
 
 class DeviceTypeRegistry(Registry, registry_name="device-type"):

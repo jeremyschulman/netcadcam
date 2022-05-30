@@ -121,7 +121,7 @@ def show_device_interfaces(device: Device, **options):
         if not iface.used:
             if options["show_all"]:
                 if_spec = device.device_type_spec.get_interface(if_name=iface.name)
-                add_row(iface.name, None, keywords.NOT_USED, if_spec.if_type_label)
+                add_row(iface.name, None, keywords.NOT_USED, if_spec.formfactor)
             continue
 
         if not (if_prof := getattr(iface, "profile", None)):
@@ -129,7 +129,7 @@ def show_device_interfaces(device: Device, **options):
             continue
 
         if_prof_name = if_prof.name
-        if not (port_prof := if_prof.port_profile):
+        if not (port_prof := if_prof.phy_profile):
             pp_name = keywords.MISSING
         else:
             pp_name = port_prof.name

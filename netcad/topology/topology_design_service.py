@@ -76,7 +76,7 @@ class TopologyDesignService(DesignService, registry_name="topology"):
 
         self.cabling = CableByCableId(name=topology_name)
 
-        # setup the design service with the User provided service name
+        # set up the design service with the User provided service name
 
         super(TopologyDesignService, self).__init__(service_name=service_name, **kwargs)
         self.registry_add(name=topology_name, obj=self)

@@ -39,9 +39,9 @@ class CablePlanner(Registry):
 
     def validate_endpoints(self):
         """
-        This routine validates that, for each cable, all of the endpoints
-        associated with that cable have a matching interface enabled
-        setting, and a matching interface speed setting.
+        This routine validates that, for each cable, all the endpoints
+        associated with that cable has a matching interface enabled setting,
+        and a matching interface speed setting.
 
         Returns
         -------
@@ -132,7 +132,7 @@ class CablePlanner(Registry):
         should call the `validate()` method after the apply ... at some point,
         to ensure the plan is valid.  Some "cable planners" may implement a
         "multiple stage apply" algoritm.  In these cases the Caller would invoke
-        `validate()` after all of the apply functions are completed.
+        `validate()` after all the apply functions are completed.
 
         Returns
         -------
@@ -141,7 +141,7 @@ class CablePlanner(Registry):
         Raises
         ------
         RuntimeError:
-            The subclass method should raise this exception in the even there is
-            any issue in the apply execution.
+            The subclass method should raise this exception in the even there
+            is any issue in build execution.
         """
         raise NotImplementedError()
