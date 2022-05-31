@@ -80,19 +80,25 @@ def show_device_vlan_table(device: Device):
     # Typically, it will be one, but perhaps a Designer comes up with a usage
     # that does have more than one.  So handle that, just in case ;-)
 
+    console = Console()
+
     vlans = list(
         chain.from_iterable(
             svc.all_vlans() for svc in device.services_of(DeviceVlanDesignService)
         )
     )
 
-    console = Console()
+    title = f"Device: {device.name}, VLANS ({len(vlans)})"
+
+    if not vlans:
+        console.print("\n", title)
+        return
 
     table = Table(
         "VLAN-ID",
         "VLAN Name",
         "Interfaces",
-        title=f"Device: {device.name}, VLANS ({len(vlans)})",
+        title=title,
         title_justify="left",
         show_header=True,
         header_style="bold magenta",

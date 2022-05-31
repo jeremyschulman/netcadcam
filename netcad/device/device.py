@@ -167,8 +167,11 @@ class Device(Registry, registry_name="devices"):
         return [svc for svc in self.services.values() if isinstance(svc, svc_cls)]
 
     def init_template_env(self, templates_dir: Optional[Path] = None):
-        template_dirs = list()
-        template_dirs.append(templates_dir or netcad_globals.g_netcad_templates_dir)
+        template_dirs = []
+        top_tdir = templates_dir or netcad_globals.g_netcad_templates_dir
+        top_os_tdir = top_tdir.joinpath(self.os_name)
+        template_dirs.append(top_os_tdir)
+        template_dirs.append(top_tdir)
         template_dirs.append("/")
         self.template_env = get_env(template_dirs)
 

@@ -22,7 +22,7 @@ class IPAMNetwork(UserDict):
     def gateway_interface(self, name) -> AnyIPInterface:
         return self.interface(name=name, offset_octet=self._gateway_host_octet)
 
-    def interface(self, name, offset_octet) -> AnyIPInterface:
+    def interface(self, name: str, offset_octet: int) -> AnyIPInterface:
         """record an IP interface address for the given name"""
 
         self[name] = ipaddress.ip_interface(
