@@ -85,7 +85,6 @@ def show_device_switchports_table(device: Device):
         "Switchport\nMode",
         "Access/Native VLAN",
         "Trunk Allowed VLANs",
-        title=f"Device: {device.name}, Switchports",
         title_justify="left",
         show_header=True,
         show_lines=True,
@@ -127,4 +126,5 @@ def show_device_switchports_table(device: Device):
             )
             continue
 
-    console.print("\n", table)
+    table.title = f"Device: {device.name}, Switchports ({len(table.rows)})"
+    console.print("\n", table if table.rows else table.title)
