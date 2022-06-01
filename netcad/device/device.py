@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 import os
 from copy import deepcopy
 from pathlib import Path
+from itertools import chain
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -28,7 +29,7 @@ from netcad.device.device_interface import (
 from netcad.registry import Registry
 from netcad.config import Environment
 from netcad.config import netcad_globals
-from netcad.jinja2.env import get_env
+from netcad.jinja2.j2_env import get_env, expand_templates_dirs
 
 from .device_type import DeviceType, DeviceTypeRegistry
 
@@ -168,10 +169,16 @@ class Device(Registry, registry_name="devices"):
 
     def init_template_env(self, templates_dir: Optional[Path] = None):
         template_dirs = []
-        top_tdir = templates_dir or netcad_globals.g_netcad_templates_dir
-        top_os_tdir = top_tdir.joinpath(self.os_name)
-        template_dirs.append(top_os_tdir)
-        template_dirs.append(top_tdir)
+        if not (template_decls := netcad_globals.g_config.get("templates")):
+            top_tdir = templates_dir or netcad_globals.g_netcad_templates_dir
+            top_os_tdir = top_tdir.joinpath(self.os_name)
+            template_dirs.append(top_os_tdir)
+            template_dirs.append(top_tdir)
+        else:
+            paths = chain.from_iterable(d["paths"] for d in template_decls)
+            paths = expand_templates_dirs(paths=paths, obj=self)
+            template_dirs.extend(paths)
+
         template_dirs.append("/")
         self.template_env = get_env(template_dirs)
 
@@ -214,6 +221,44 @@ class Device(Registry, registry_name="devices"):
             )
 
         return self.template_env.get_template(str(as_path))
+
+    def render_interface_unused(
+        self, env: jinja2.Environment, interface: DeviceInterface
+    ) -> str:
+        """
+        The default implementation for an unused interface is to render a
+        template called "interface_unused.jinja2".
+
+        Parameters
+        ----------
+        env
+        interface
+
+        Returns
+        -------
+        str - the rendered configuration text
+        """
+        template = env.get_template("interface_unused.jinja2")
+        return template.render(device=self, interface=interface)
+
+    def render_interface_used(
+        self, env: jinja2.Environment, interface: DeviceInterface
+    ) -> str:
+        """
+        The default implementation for creating the configuraiton for a used
+        interface is to render the template bound to the interface profile.
+
+        Parameters
+        ----------
+        env
+        interface
+
+        Returns
+        -------
+        str - the rendered configuration text
+        """
+        template = interface.profile.get_template(env)
+        return template.render(device=self, interface=interface)
 
     # -------------------------------------------------------------------------
     #

@@ -5,10 +5,17 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
+from typing import List, Iterable
+import re
+from itertools import chain
+from os.path import expandvars
+
+
 # -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
 
+from first import first
 import jinja2
 
 # -----------------------------------------------------------------------------
@@ -24,7 +31,7 @@ from netcad.helpers import range_string
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["get_env"]
+__all__ = ["get_env", "expand_templates_dirs"]
 
 # -----------------------------------------------------------------------------
 #
@@ -60,3 +67,38 @@ def get_env(template_dirs):
     env.globals.update(_env_globals)
 
     return env
+
+
+_attr_re = re.compile(
+    r"@{(?P<bname>[a-z\d_]+)}" r"|" r"@(?P<name>[^{][a-z_\d]+)", flags=re.IGNORECASE
+)
+
+
+def expand_templates_dirs(paths: Iterable[str], obj: object) -> List[str]:
+
+    # expand enviornment variables in the path strings, if any.
+    paths = [expandvars(path) for path in paths]
+
+    # if the path strings do not contain any attribute (@) markers, then return
+    # the list of paths now.
+
+    if not any(path for path in paths if "@" in path):
+        return paths
+
+    # otherwise, find the set of attributes referenced in all the paths
+    attr_list = set()
+    for path in paths:
+        this = filter(len, chain.from_iterable(_attr_re.findall(path)))
+        attr_list.update(this)
+
+    # extract the attribute-values from the passed object, presumed to be a
+    # Device instance.
+
+    attr_name: str
+    attr_sub = {attr_name: str(getattr(obj, attr_name)) for attr_name in attr_list}
+
+    # replace each instance of the attribute name with the attribute value.
+    def repl_fun(_mo):
+        return attr_sub[first(_mo.groups())]
+
+    return [_attr_re.sub(repl_fun, path) for path in paths]
