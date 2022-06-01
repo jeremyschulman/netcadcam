@@ -43,12 +43,15 @@ class StrEnum(str, Enum):
             this = auto()
             that = auto()
 
-        Then Foo.this will serialize to the string "this".  Likewise a call to
-        Foo("this") will deserialize to Foo.this.
+    Then `Foo.this` will serialize to the string "this".  Likewise a call to
+    Foo("this") will deserialize to `Foo.this`.
     """
 
     def _generate_next_value_(name, start, count, last_values):  # noqa
         return name
+
+    def __str__(self):
+        return self.value
 
 
 def range_string(numbers: List[int]) -> str:
