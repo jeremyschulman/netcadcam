@@ -122,12 +122,15 @@ def cabling_table(table: Table, cables) -> Table:
         if lcl_phy is None and rmt_phy is None:
             return False
 
-        return not all(
-            (
-                lcl_phy.speed == rmt_phy.speed,
-                lcl_phy.cabling.media == rmt_phy.cabling.media,
+        try:
+            return not all(
+                (
+                    lcl_phy.speed == rmt_phy.speed,
+                    lcl_phy.cabling.media == rmt_phy.cabling.media,
+                )
             )
-        )
+        except TypeError:
+            return True
 
     # -------------------------------------------------------------------------
     # create each cabling row

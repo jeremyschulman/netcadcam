@@ -6,5 +6,5 @@ from .host import HostDevice
 from .device_group import PseudoDevice, DeviceGroup, DeviceGroupMember
 from .device_group_mlag import DeviceMLagPairGroup, DeviceMLagPairMember
 from .peer_interface_id import PeerInterfaceId
-from .device_type import DeviceType
+from .device_type import DeviceType, DeviceTypeRegistry
 from .device_type_factory import DeviceTypeFactory

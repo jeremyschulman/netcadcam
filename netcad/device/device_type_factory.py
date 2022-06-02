@@ -24,7 +24,7 @@ class DeviceTypeFactory:
 
         return self
 
-    def console(self, namespec: str, **kwargs):
+    def console(self, namespec: Optional[str] = "console", **kwargs):
         for name in expand(namespec):
             self._items["consoles"][name] = dict(name=name, **kwargs)
         return self

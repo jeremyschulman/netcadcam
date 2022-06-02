@@ -15,4 +15,4 @@ class HostDevice(Device):
     """
 
     is_host = True
-    is_not_managed = True
+    is_pseudo = True
