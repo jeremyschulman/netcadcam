@@ -34,6 +34,7 @@ __all__ = ["DeviceInterface", "DeviceInterfaces"]
 
 
 _re_find_numbers = re.compile(r"\d+")
+_re_find_words = re.compile(r"\b([a-z]+)\b", re.IGNORECASE)
 
 # short-name is the first two characters of the name, followed by the remaining
 # interface numbers.  For example, "Ethernet49/1" turns into "Et49/1"
@@ -119,12 +120,22 @@ class DeviceInterface(object):
         # sorting purposes.
 
         elif mo_has_numbers := _re_find_numbers.findall(name):
+            mo_has_words = _re_find_words.findall(name)
             self.port_numbers = tuple(map(int, mo_has_numbers))
-            self.short_name = "".join(_re_short_name.match(name).groups())
-            self.sort_key = (self.name[0:2].lower(), *self.port_numbers)
+
+            # try the standard networking format with short names
+            if mo_short_name := _re_short_name.match(name):
+                self.short_name = "".join(mo_short_name.groups())
+                self.sort_key = (self.name[0:2].lower(), *self.port_numbers)
+
+            # otherwise this is an odd-format, and we will use the name as-is
+            else:
+                self.short_name = name
+                self.sort_key = (*mo_has_words, *self.port_numbers)
 
         # the name is not a number nor does it contain numbers, for example "mgmt",
         # then set the number value to 0 for default purposes.
+
         else:
             self.short_name = name
             self.sort_key = (name, 0)
@@ -307,7 +318,14 @@ class DeviceInterface(object):
         return f"{name} Unassigned-Profile"
 
     def __lt__(self, other: "DeviceInterface"):
-        return self.sort_key < other.sort_key
+        # TODO: this is a bit of a hack that covers the case where
+        #       a device (not a typical network device) has different formatted
+        #       interface names resulting int different typed sort keys.  In
+        #       this case, just return True and work on this later.
+        try:
+            return self.sort_key < other.sort_key
+        except TypeError:
+            return True
 
     def __enter__(self) -> "DeviceInterface":
         return self

@@ -9,7 +9,7 @@ from netcad.phy_port import PhyPortSpeeds, PhyPortFormFactorType
 class DeviceInterfaceType(BaseModel):
     name: str
     speed: PhyPortSpeeds
-    formfactor: PhyPortFormFactorType
+    formfactor: Optional[PhyPortFormFactorType] = None
 
 
 class DeviceConsoleType(BaseModel):
