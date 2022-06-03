@@ -129,7 +129,7 @@ def cabling_table(table: Table, cables) -> Table:
                     lcl_phy.cabling.media == rmt_phy.cabling.media,
                 )
             )
-        except TypeError:
+        except (AttributeError, TypeError):
             return True
 
     # -------------------------------------------------------------------------
