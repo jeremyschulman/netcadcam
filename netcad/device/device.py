@@ -22,16 +22,14 @@ import jinja2
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.device.device_interface import (
-    DeviceInterfaces,
-    DeviceInterface,
-)
 from netcad.registry import Registry
 from netcad.config import Environment
 from netcad.config import netcad_globals
 from netcad.jinja2.j2_env import get_env, expand_templates_dirs
 
 from .device_type import DeviceType, DeviceTypeRegistry
+from .device_interfaces import DeviceInterfaces
+from .device_interface import DeviceInterface
 
 if TYPE_CHECKING:
     from netcad.design import Design, DesignServiceCatalog, DesignServiceLike
