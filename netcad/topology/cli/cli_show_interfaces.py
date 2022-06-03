@@ -108,7 +108,7 @@ def show_device_interfaces(device: Device, **options):
         for iface in sorted(device.interfaces.values()):
             if not iface.used:
                 if_spec = device.device_type_spec.get_interface(if_name=iface.name)
-                add_row(iface.name, None, keywords.NOT_USED, if_spec.if_type_label)
+                add_row(iface.name, None, keywords.NOT_USED, if_spec.formfactor)
 
         console.print(table)
         return
