@@ -292,8 +292,13 @@ class DeviceInterface(object):
 
     @jinja2.pass_context
     def render(self, ctx: jinja2.runtime.Context) -> str:
-        template = self.profile.get_template(ctx.environment)
-        return template.render(device=self.device, interface=self).rstrip()
+        return (
+            self.device.render_interface_unused(env=ctx.environment, interface=self)
+            if not self.profile
+            else self.profile.get_template(ctx.environment).render(
+                device=self.device, interface=self
+            )
+        ).rstrip()
 
     # -------------------------------------------------------------------------
     #
@@ -423,6 +428,19 @@ class DeviceInterfaces(defaultdict, DefaultDict[str, DeviceInterface]):
         return dict(
             (if_name, if_obj) for if_name, if_obj in self.items() if not if_obj.used
         )
+
+    def startswith(self, prefix, used=None):
+        for if_name, iface in self.items():
+            if not if_name.startswith(prefix):
+                continue
+
+            # if used is "don't care" then yield
+            if used is None:
+                yield iface
+
+            # if both used and iface.used are the same
+            elif used == iface.used:
+                yield iface
 
     def render(self, ctx: jinja2.runtime.Context, prefix: Optional[str] = None):
         env = ctx.environment

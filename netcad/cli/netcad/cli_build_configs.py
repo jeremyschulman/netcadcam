@@ -52,21 +52,19 @@ __all__ = []
 @click.option(
     "--templates-dir",
     help="path to root of template files",
-    type=click.Path(path_type=Path, resolve_path=True, exists=True),
     envvar=Environment.NETCAD_TEMPLATESDIR,
 )
 @click.option(
     "--template",
     "template_file",
     help="path to specific template file",
-    type=click.Path(path_type=Path, resolve_path=True, exists=True),
 )
 def cli_render(
     devices: Tuple[str],
     designs: Tuple[str],
     configs_dir: Path,
-    template_file: Path,
-    templates_dir: Path,
+    template_file: str,
+    templates_dir: str,
 ):
     """Build device configuration files"""
 
@@ -112,7 +110,7 @@ def cli_render(
         log.debug(f"BUILD config for device {dev_obj.name}")
 
         try:
-            dev_obj.init_template_env(templates_dir=templates_dir)
+            dev_obj.init_template_env(templates_dir=Path(templates_dir))
             config_text = dev_obj.render_config(template_file=template_file)
 
         except jinja2.exceptions.TemplateNotFound as exc:

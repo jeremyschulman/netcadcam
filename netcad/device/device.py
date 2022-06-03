@@ -182,11 +182,13 @@ class Device(Registry, registry_name="devices"):
         template_dirs.append("/")
         self.template_env = get_env(template_dirs)
 
-    def render_config(self, template_file: Optional[Path] = None):
+    def render_config(self, template_file: Optional[Path | str] = None):
         template = self.get_template(template_file)
         return template.render(device=self)
 
-    def get_template(self, template_file: Optional[Path] = None) -> jinja2.Template:
+    def get_template(
+        self, template_file: Optional[Path | str] = None
+    ) -> jinja2.Template:
         """
         Return the absolute file-path to the device Jinja2 file.
 

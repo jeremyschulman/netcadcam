@@ -9,9 +9,14 @@ __all__ = ["DeviceTypeFactory"]
 
 
 class DeviceTypeFactory:
-    def __init__(self, model: str, suffix: Optional[str] = None):
+    def __init__(
+        self,
+        model: str,
+        suffix: Optional[str] = None,
+        product_model: Optional[str] = None,
+    ):
         self.model = model
-        self.product_model = model if not suffix else model + suffix
+        self.product_model = product_model or (model if not suffix else model + suffix)
 
         # various device items, arranged by the type of item, such as
         # 'interfaces', each of which is a dict key=name and value=fields.
