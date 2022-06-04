@@ -10,7 +10,6 @@ from typing import List, Iterable
 import re
 from itertools import chain
 from os.path import expandvars
-from os import environ
 
 # -----------------------------------------------------------------------------
 # Public Imports

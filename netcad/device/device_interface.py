@@ -165,8 +165,18 @@ class DeviceInterface(object):
 
     @property
     def cable_port_id(self) -> str:
+        """
+        This property returns the cable ID string value for this interface. By
+        default, the cable ID will be the device name + "_" + the short
+        interface name.  A Caller can explicitly set the cable ID via the
+        property-setter method.
+
+        Returns
+        -------
+        str as described
+        """
         if self._cable_port_id is None:
-            return self.name
+            return f"{self.device.name}_{self.self.short_name.lower()}"
 
         return (
             self._cable_port_id(self)
@@ -239,7 +249,7 @@ class DeviceInterface(object):
     def profile(self) -> "InterfaceProfile":
         """
         The `profile` property is used so that the interface instance can get
-        assigned back into the profile so that there is a bi-directional
+        assigned back into the profile so that there is a bidirectional
         relationship between the two objects.  This is necessary so references
         can be such that from a given profile -> interface -> device.
 
@@ -295,13 +305,30 @@ class DeviceInterface(object):
 
     @jinja2.pass_context
     def render(self, ctx: jinja2.runtime.Context) -> str:
+        """
+        Used to create the interface specific configuration text based on the
+        associated interface profile.  If the interface is "not used", then the
+        parent device will provide a profile via the "unused_interface_profile"
+        Attribute
+
+        Parameters
+        ----------
+        ctx: Jinja2 context
+            This provides the running Jinja2 environment since this method is
+            executed during the course of creating the device configuration.
+
+        Returns
+        -------
+        str as described
+        """
+
+        profile = self.profile or self.device.unused_interface_profile
+
         return (
-            self.device.render_interface_unused(env=ctx.environment, interface=self)
-            if not self.profile
-            else self.profile.get_template(ctx.environment).render(
-                device=self.device, interface=self
-            )
-        ).rstrip()
+            profile.get_template(ctx.environment)
+            .render(device=self.device, interface=self)
+            .rstrip()
+        )
 
     # -------------------------------------------------------------------------
     #
@@ -334,6 +361,16 @@ class DeviceInterface(object):
             return self.sort_key < other.sort_key
         except TypeError:
             return True
+
+    # -------------------------------------------------------------------------
+    # Context manager to "self" to allow for multiple attribute assignments so
+    # that Caller can do something like:
+    #
+    #    with device.interfaces['Ethernet1'] as iface:
+    #       iface.profile = ...
+    #       iface.cable_id = ...
+    #
+    # -------------------------------------------------------------------------
 
     def __enter__(self) -> "DeviceInterface":
         return self
