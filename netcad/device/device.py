@@ -31,6 +31,10 @@ from .device_type import DeviceType, DeviceTypeRegistry
 from .device_interfaces import DeviceInterfaces
 from .device_interface import DeviceInterface
 from .profiles import InterfaceL3
+from .device_interface_parse_name import (
+    DeviceInterfaceNameParsed,
+    default_interface_parse_name,
+)
 
 if TYPE_CHECKING:
     from netcad.design import Design, DesignServiceCatalog, DesignServiceLike
@@ -129,7 +133,13 @@ class Device(Registry, registry_name="devices"):
         # make any specific changes; i.e. handle the various "one-off" cases
         # that happen in real-world networks.
 
-        self.interfaces: DeviceInterfaces = deepcopy(self.__class__.interfaces)  # noqa
+        self.interfaces: DeviceInterfaces = deepcopy(self.__class__.interfaces)
+
+        # TODO: not sure why the device_cls attribute was not copied as part of
+        #       the deepcopy above; need to investigate.  But for now, put the
+        #       value back into the interfaces
+
+        self.interfaces.device_cls = self.__class__
 
         # create the back-references from the interfaces instance to this
         # device.
@@ -159,6 +169,10 @@ class Device(Registry, registry_name="devices"):
             setattr(self, attr, value)
 
         self.template_env: Optional[jinja2.Environment] = None
+
+    @classmethod
+    def parse_interface_name(cls, name: str) -> DeviceInterfaceNameParsed:
+        return default_interface_parse_name(name)
 
     def set_primary_ip(self, interface: DeviceInterface) -> "Device":
         """
@@ -268,45 +282,6 @@ class Device(Registry, registry_name="devices"):
 
         return self.template_env.get_template(str(as_path))
 
-    def render_interface_unused(
-        self, env: jinja2.Environment, interface: DeviceInterface
-    ) -> str:
-        """
-        The default implementation for an unused interface is to render a
-        template called "interface_unused.jinja2".
-
-        Parameters
-        ----------
-        env
-        interface
-
-        Returns
-        -------
-        str - the rendered configuration text
-        """
-        template = env.get_template("interface_unused.jinja2")
-        return template.render(device=self, interface=interface)
-
-    # TODO: remove
-    # def render_interface_used(
-    #     self, env: jinja2.Environment, interface: DeviceInterface
-    # ) -> str:
-    #     """
-    #     The default implementation for creating the configuraiton for a used
-    #     interface is to render the template bound to the interface profile.
-    #
-    #     Parameters
-    #     ----------
-    #     env
-    #     interface
-    #
-    #     Returns
-    #     -------
-    #     str - the rendered configuration text
-    #     """
-    #     template = interface.profile.get_template(env)
-    #     return template.render(device=self, interface=interface)
-
     # -------------------------------------------------------------------------
     #
     #                            Class Methods
@@ -326,10 +301,7 @@ class Device(Registry, registry_name="devices"):
         cls.interfaces = DeviceInterfaces(DeviceInterface)
         cls.interfaces.device_cls = cls
 
-        # configure the state of the interfaces by default to unused. this
-        # settings will be determined by the `init_interfaces()` class method.
-        # By default, will set interfaces to unused. This behavior could be
-        # changed by the sublcass.
+        # configure the state of the interfaces
 
         if getattr(cls, "product_model", None) and not os.getenv(
             Environment.NETCAD_NOVALIDATE
@@ -357,8 +329,8 @@ class Device(Registry, registry_name="devices"):
                 f"Device class {cls.__name__} missing spec for device-type: {device_type}.  "
             )
 
-        # initialize the interfaces in the device so that those defined in the
-        # spec exist; initializing the profile value to None.
+        # # initialize the interfaces in the device so that those defined in the
+        # # spec exist; initializing the profile value to None.
 
         for if_name in cls.device_type_spec.interfaces:
             cls.interfaces[if_name].profile = None

@@ -19,11 +19,6 @@ if TYPE_CHECKING:
 import jinja2
 
 # -----------------------------------------------------------------------------
-# Private Imports
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
 
@@ -109,40 +104,14 @@ class DeviceInterface(object):
     ):
         self.name = name
 
-        # some device ports are just numbers.  In these instances set the
-        # interface attributes accordinly.
+        # need the device class, so we know how to parse the interface names.
 
-        if name.isdigit():
-            port_id = int(name)
-            self.port_numbers = (port_id,)
-            # need the first item in the tuple to be any string value for sorting purposes
-            self.sort_key = ("port", port_id)
-            self.short_name = name
+        device_cls = interfaces.device_cls
+        ifn_parsed = device_cls.parse_interface_name(name)
 
-        # if the name contains numbers then break these numbers out for
-        # sorting purposes.
-
-        elif mo_has_numbers := _re_find_numbers.findall(name):
-            mo_has_words = _re_find_words.findall(name)
-            self.port_numbers = tuple(map(int, mo_has_numbers))
-
-            # try the standard networking format with short names
-            if mo_short_name := _re_short_name.match(name):
-                self.short_name = "".join(mo_short_name.groups())
-                self.sort_key = (self.name[0:2].lower(), *self.port_numbers)
-
-            # otherwise this is an odd-format, and we will use the name as-is
-            else:
-                self.short_name = name
-                self.sort_key = (*mo_has_words, *self.port_numbers)
-
-        # the name is not a number nor does it contain numbers, for example "mgmt",
-        # then set the number value to 0 for default purposes.
-
-        else:
-            self.short_name = name
-            self.sort_key = (name, 0)
-            self.port_numbers = None
+        self.short_name = ifn_parsed.short_name
+        self.sort_key = ifn_parsed.sort_key
+        self.port_numbers = ifn_parsed.numbers
 
         self._profile = None
         self._desc = desc
@@ -164,6 +133,19 @@ class DeviceInterface(object):
     # -------------------------------------------------------------------------
 
     @property
+    def device(self):
+        """
+        The `device` allows the Caller to back reference the associated Device
+        instance.  The device instance is bound to the device interfaces
+        collection, such that: interface -> interfaces -> device.
+
+        Returns
+        -------
+        Device
+        """
+        return self.interfaces.device
+
+    @property
     def cable_port_id(self) -> str:
         """
         This property returns the cable ID string value for this interface. By
@@ -176,7 +158,7 @@ class DeviceInterface(object):
         str as described
         """
         if self._cable_port_id is None:
-            return f"{self.device.name}_{self.self.short_name.lower()}"
+            return f"{self.device.name}_{self.short_name.lower()}"
 
         return (
             self._cable_port_id(self)
@@ -192,19 +174,6 @@ class DeviceInterface(object):
     def used(self):
         """An interface is used by the design if it has an assigned profile."""
         return bool(self.profile)
-
-    @property
-    def device(self):
-        """
-        The `device` allows the Caller to back reference the associated Device
-        instance.  The device instance is bound to the device interfaces
-        collection, such that: interface -> interfaces -> device.
-
-        Returns
-        -------
-        Device
-        """
-        return self.interfaces.device
 
     @property
     def device_ifname(self) -> str:
@@ -303,6 +272,12 @@ class DeviceInterface(object):
         """
         return [iface.name for iface in sorted(map(DeviceInterface, if_names))]
 
+    # -------------------------------------------------------------------------
+    #
+    #                     Supporting Jinja2 Config Building
+    #
+    # -------------------------------------------------------------------------
+
     @jinja2.pass_context
     def render(self, ctx: jinja2.runtime.Context) -> str:
         """
@@ -353,14 +328,7 @@ class DeviceInterface(object):
         return f"{name} Unassigned-Profile"
 
     def __lt__(self, other: "DeviceInterface"):
-        # TODO: this is a bit of a hack that covers the case where
-        #       a device (not a typical network device) has different formatted
-        #       interface names resulting int different typed sort keys.  In
-        #       this case, just return True and work on this later.
-        try:
-            return self.sort_key < other.sort_key
-        except TypeError:
-            return True
+        return self.sort_key < other.sort_key
 
     # -------------------------------------------------------------------------
     # Context manager to "self" to allow for multiple attribute assignments so

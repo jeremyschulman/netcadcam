@@ -5,7 +5,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional, Dict, DefaultDict, Set
+from typing import Dict, DefaultDict, Set, Optional, Sequence
 from collections import defaultdict
 
 # -----------------------------------------------------------------------------
@@ -28,19 +28,18 @@ __all__ = ["DeviceInterfaces"]
 # -----------------------------------------------------------------------------
 
 
-class DeviceInterfaces(defaultdict, DefaultDict[str, "DeviceInterface"]):
+class DeviceInterfaces(defaultdict, DefaultDict[str, DeviceInterface]):
     """
     The collection of interfaces bound to a Device.  Subclasses a defaultdict so
     that the Caller can create ad-hoc interfaces that are not originally part of
     the device-type specification.
 
-    Ad-hoc, for example, could be Port-Channel interfaces or Vlan interfaces
-    (SVI).
+    Ad-hoc, for example, could be Port-Channel interfaces or Vlan interfaces (SVI).
     """
 
     def __init__(self, default_factory, **kwargs):
         super(DeviceInterfaces, self).__init__(default_factory, **kwargs)
-        self.device_cls: Optional[DeviceInterface] = None
+        self.device_cls = None
         self.device = None
 
     def __missing__(self, key):
@@ -49,8 +48,8 @@ class DeviceInterfaces(defaultdict, DefaultDict[str, "DeviceInterface"]):
         # specific interface instance, the Caller can reach back to find the
         # associated device object.
 
-        self[key] = DeviceInterface(name=key, interfaces=self)
-        return self[key]
+        self[key] = item = DeviceInterface(name=key, interfaces=self)
+        return item
 
     def used(
         self, include_disabled=True, include_unused=False
@@ -127,11 +126,35 @@ class DeviceInterfaces(defaultdict, DefaultDict[str, "DeviceInterface"]):
             if if_obj.profile and isinstance(if_obj.profile, InterfaceIsInVRF)
         }
 
-    def startswith(self, prefix, used=None):
-        for if_name, iface in self.items():
-            if not if_name.startswith(prefix):
-                continue
+    def startswith(self, prefix: str | Sequence[str], used: Optional[bool] = None):
+        """
+        This helper generator yields the device interface object that matches
+        the name starting with the give prefix.  For example:
 
+            for if_obj in self.startswith("Eth"):
+                ...
+
+        The 'used' parameter is an additional filter that selected the
+        interfaces if they are used (True) or not used (False).  By default,
+        the used parameter is None, meaning "do not filter on the used
+        attribute value".
+
+        Parameters
+        ----------
+        prefix: str | Sequence[str]
+            The interface name prefix value to use, which is passed as-is to
+            the str.startswith function.
+
+        used: bool
+            As described
+
+        Yields
+        -------
+        DeviceInterface matching the filtering criteria
+        """
+        prefix_matching = filter(lambda i: i[0].startswith(prefix), self.items())
+
+        for if_name, iface in prefix_matching:
             # if used is "don't care" then yield
             if used is None:
                 yield iface
