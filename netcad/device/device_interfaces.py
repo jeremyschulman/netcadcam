@@ -5,13 +5,14 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional, Dict, DefaultDict
+from typing import Optional, Dict, DefaultDict, Set
 from collections import defaultdict
 
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
+from .profiles import InterfaceIsInVRF
 from .device_interface import DeviceInterface
 
 # -----------------------------------------------------------------------------
@@ -109,6 +110,22 @@ class DeviceInterfaces(defaultdict, DefaultDict[str, "DeviceInterface"]):
         return dict(
             (if_name, if_obj) for if_name, if_obj in self.items() if not if_obj.used
         )
+
+    def vrfs_used(self) -> Set[str]:
+        """
+        This function examines the interfaces to see if any of they are using
+        VRFs, and returns the unique set of VRF names.
+
+        Returns
+        -------
+        The set of VRF names, or empty-set if none found
+        """
+
+        return {
+            if_obj.profile.vrf
+            for if_obj in self.values()
+            if if_obj.profile and isinstance(if_obj.profile, InterfaceIsInVRF)
+        }
 
     def startswith(self, prefix, used=None):
         for if_name, iface in self.items():

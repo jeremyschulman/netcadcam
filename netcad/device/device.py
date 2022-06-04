@@ -30,6 +30,7 @@ from netcad.jinja2.j2_env import get_env, expand_templates_dirs
 from .device_type import DeviceType, DeviceTypeRegistry
 from .device_interfaces import DeviceInterfaces
 from .device_interface import DeviceInterface
+from .profiles import InterfaceL3
 
 if TYPE_CHECKING:
     from netcad.design import Design, DesignServiceCatalog, DesignServiceLike
@@ -159,11 +160,56 @@ class Device(Registry, registry_name="devices"):
 
         self.template_env: Optional[jinja2.Environment] = None
 
+    def set_primary_ip(self, interface: DeviceInterface) -> "Device":
+        """
+        This function is used to assign the device primary IP address using the
+        provided device interface.  The device interface is then associated as
+        an attribute to the IP instance so that the "back-reference" exists
+        when needed.  This use is common for example, in Jinja2 templating that
+        looks like this:
+
+        ip tacacs source-interface {{ device.primary_ip.interface.name }}
+
+        Parameters
+        ----------
+        interface: DeviceInterface
+            Must have an InterfaceL3 based profile assigned, and that must have
+            an if_ipaddr value assigned.
+
+        Returns
+        -------
+        Device self instance for use with method-chanining.
+        """
+        if not interface.profile:
+            raise ValueError(
+                f"Device {self.name} interface {interface.name} does not have profile assigned."
+            )
+
+        if not isinstance(interface.profile, InterfaceL3):
+            raise ValueError(
+                f"Device {self.name} interface {interface.name} is not a L3 profile"
+            )
+
+        if not (if_ipaddr := interface.profile.if_ipaddr):
+            raise ValueError(
+                f"Device {self.name} interface {interface.name} does not have profile assigned."
+            )
+
+        self.primary_ip = if_ipaddr
+        self.primary_ip.interface = interface
+        return self
+
     def services_of(
         self, svc_cls: Type["DesignServiceLike"]
     ) -> List["DesignServiceLike"]:
         """Return the device services that are of the given service type"""
         return [svc for svc in self.services.values() if isinstance(svc, svc_cls)]
+
+    # -------------------------------------------------------------------------
+    #
+    #                  Config Template Building Related
+    #
+    # -------------------------------------------------------------------------
 
     def init_template_env(self, templates_dir: Optional[Path] = None):
         template_dirs = []
@@ -241,24 +287,25 @@ class Device(Registry, registry_name="devices"):
         template = env.get_template("interface_unused.jinja2")
         return template.render(device=self, interface=interface)
 
-    def render_interface_used(
-        self, env: jinja2.Environment, interface: DeviceInterface
-    ) -> str:
-        """
-        The default implementation for creating the configuraiton for a used
-        interface is to render the template bound to the interface profile.
-
-        Parameters
-        ----------
-        env
-        interface
-
-        Returns
-        -------
-        str - the rendered configuration text
-        """
-        template = interface.profile.get_template(env)
-        return template.render(device=self, interface=interface)
+    # TODO: remove
+    # def render_interface_used(
+    #     self, env: jinja2.Environment, interface: DeviceInterface
+    # ) -> str:
+    #     """
+    #     The default implementation for creating the configuraiton for a used
+    #     interface is to render the template bound to the interface profile.
+    #
+    #     Parameters
+    #     ----------
+    #     env
+    #     interface
+    #
+    #     Returns
+    #     -------
+    #     str - the rendered configuration text
+    #     """
+    #     template = interface.profile.get_template(env)
+    #     return template.render(device=self, interface=interface)
 
     # -------------------------------------------------------------------------
     #
@@ -304,6 +351,7 @@ class Device(Registry, registry_name="devices"):
         cls.device_type_spec: DeviceType = DeviceTypeRegistry.registry_get(
             name=device_type
         )
+
         if not cls.device_type_spec:
             raise RuntimeError(
                 f"Device class {cls.__name__} missing spec for device-type: {device_type}.  "
