@@ -10,7 +10,7 @@ from typing import List, Iterable
 import re
 from itertools import chain
 from os.path import expandvars
-
+from os import environ
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -49,6 +49,11 @@ _env_filters = {
 }
 
 
+def now(strfmt: str = None) -> datetime.datetime | str:
+    dt = datetime.datetime.now()
+    return dt if not strfmt else dt.strftime(strfmt)
+
+
 def get_env(template_dirs):
 
     env = jinja2.Environment(
@@ -60,7 +65,7 @@ def get_env(template_dirs):
     )
 
     env.filters.update(_env_filters)
-    env.globals["now"] = datetime.datetime.now
+    env.globals["now"] = now
 
     return env
 
