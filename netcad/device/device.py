@@ -11,7 +11,7 @@ import os
 from copy import deepcopy
 from pathlib import Path
 from itertools import chain
-from ipaddress import IPv4Interface, IPv6Interface
+from ipaddress import IPv4Interface, IPv6Interface, IPv4Address, IPv6Address
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -55,6 +55,17 @@ __all__ = ["Device", "DeviceInterface", "DeviceCatalog"]
 
 
 PathLike = TypeVar("PathLike", str, Path)
+
+
+class PrimaryIPv4(IPv4Address):
+    __slots__ = "interface"
+
+
+class PrimaryIPv6(IPv6Address):
+    __slots__ = "interface"
+
+
+PrimaryIP = PrimaryIPv4 | PrimaryIPv6
 
 
 class Device(Registry, registry_name="devices"):
@@ -216,19 +227,11 @@ class Device(Registry, registry_name="devices"):
         return self
 
     @property
-    def primary_ip(self):
+    def primary_ip(self) -> PrimaryIP:
 
-        # we want to "extend" the IP address with an `interface` attribute -
-        # which is the DeviceInterface assocaited to the primary IP address.
-        # Since we do not know if the primary IP is v4 or v6 we need to
-        # dnyamically do this bit of slotting since the ipaddress instances are
-        # slot based, and we cannot simply attach ad-hoc attributes like we
-        # could with __dict__ based instances.
+        ip = self._primary_ip.ip
 
-        class PrimaryIP(self._primary_ip.ip.__class__):
-            __slots__ = "interface"
-
-        primary_ip = PrimaryIP(self._primary_ip.ip)
+        primary_ip = (PrimaryIPv4 if isinstance(ip, IPv4Address) else PrimaryIPv6)(ip)
         primary_ip.interface = self._primary_ip_interface
 
         return primary_ip

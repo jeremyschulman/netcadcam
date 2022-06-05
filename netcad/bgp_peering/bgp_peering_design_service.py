@@ -45,6 +45,10 @@ class BgpPeeringDesignService(DesignService, registry_name="bgp_peering"):
         )
         self.peering = PeeringPlanner(name=service_name)
 
+    @property
+    def peers(self):
+        return self.peering.peers
+
     def add_neighbors(self, *neighbors: BGPPeerNeighbors):
         for nei in neighbors:
             for nei_peer in nei.speakers:
@@ -57,7 +61,7 @@ class BgpPeeringDesignService(DesignService, registry_name="bgp_peering"):
         pass
 
     def build(self):
-        pass
+        self.peering.build()
 
 
 BgpPeeringDesignServiceLike = TypeVar(

@@ -15,6 +15,7 @@ class BGPSpeaker(Peer):
         self.router_id = router_id
 
     def __repr__(self):
-        return repr(
+        attribs = repr(
             {"device": self.device.name, "asn": self.asn, "router_id": self.router_id}
         )
+        return f"{self.__class__.__name__}({attribs})"
