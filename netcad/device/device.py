@@ -224,11 +224,22 @@ class Device(Registry, registry_name="devices"):
 
         self._primary_ip = if_ipaddr
         self._primary_ip_interface = interface
+
+        # for method-chaining
         return self
 
     @property
     def primary_ip(self) -> PrimaryIP:
+        """
+        Returns a PrimaryIP instance that is the ip_address instance for the
+        device primary IP address, augmented with an 'interface' attribute. The
+        interface attribute is the DeviceInterface instance hosting the primary
+        IP address.
 
+        Notes
+        -----
+        Supports both IPv4 and IPv6 use-cases
+        """
         ip = self._primary_ip.ip
 
         primary_ip = (PrimaryIPv4 if isinstance(ip, IPv4Address) else PrimaryIPv6)(ip)
