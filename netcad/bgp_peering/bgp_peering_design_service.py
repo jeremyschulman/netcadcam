@@ -12,9 +12,7 @@ from typing import Optional, TypeVar
 # -----------------------------------------------------------------------------
 
 from netcad.design.design_service import DesignService
-from ..peering import PeeringPlanner, PeeringEndpoint
-
-from .bgp_neighbors import BGPPeerNeighbors
+from ..peering import PeeringPlanner
 
 
 # -----------------------------------------------------------------------------
@@ -49,13 +47,9 @@ class BgpPeeringDesignService(DesignService, registry_name="bgp_peering"):
     def peers(self):
         return self.peering.peers
 
-    def add_neighbors(self, *neighbors: BGPPeerNeighbors):
-        for nei in neighbors:
-            for nei_peer in nei.speakers:
-                self.peering.add_endpoint(
-                    peering_id=nei.peer_id,
-                    peer_endpoint=PeeringEndpoint(enabled=nei.enabled, peer=nei_peer),
-                )
+    def add_speakers(self, *speakers):
+        self.peering.add_peers(speakers)
+        return self
 
     def validate(self):
         pass

@@ -11,7 +11,7 @@ import os
 from copy import deepcopy
 from pathlib import Path
 from itertools import chain
-from ipaddress import IPv4Interface, IPv6Interface, IPv4Address, IPv6Address
+from ipaddress import IPv4Interface, IPv6Interface
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -36,6 +36,7 @@ from .device_interface_parse_name import (
     DeviceInterfaceNameParsed,
     default_interface_parse_name,
 )
+from .interface_ip import InterfaceIP, to_interface_ip
 
 if TYPE_CHECKING:
     from netcad.design import Design, DesignServiceCatalog, DesignServiceLike
@@ -55,17 +56,6 @@ __all__ = ["Device", "DeviceInterface", "DeviceCatalog"]
 
 
 PathLike = TypeVar("PathLike", str, Path)
-
-
-class PrimaryIPv4(IPv4Address):
-    __slots__ = "interface"
-
-
-class PrimaryIPv6(IPv6Address):
-    __slots__ = "interface"
-
-
-PrimaryIP = PrimaryIPv4 | PrimaryIPv6
 
 
 class Device(Registry, registry_name="devices"):
@@ -229,9 +219,9 @@ class Device(Registry, registry_name="devices"):
         return self
 
     @property
-    def primary_ip(self) -> PrimaryIP:
+    def primary_ip(self) -> InterfaceIP:
         """
-        Returns a PrimaryIP instance that is the ip_address instance for the
+        Returns an InterfaceIP instance that is the ip_address instance for the
         device primary IP address, augmented with an 'interface' attribute. The
         interface attribute is the DeviceInterface instance hosting the primary
         IP address.
@@ -240,12 +230,9 @@ class Device(Registry, registry_name="devices"):
         -----
         Supports both IPv4 and IPv6 use-cases
         """
-        ip = self._primary_ip.ip
-
-        primary_ip = (PrimaryIPv4 if isinstance(ip, IPv4Address) else PrimaryIPv6)(ip)
-        primary_ip.interface = self._primary_ip_interface
-
-        return primary_ip
+        return to_interface_ip(
+            ip=self._primary_ip.ip, interface=self._primary_ip_interface
+        )
 
     def services_of(
         self, svc_cls: Type["DesignServiceLike"]

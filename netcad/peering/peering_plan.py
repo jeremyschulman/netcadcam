@@ -5,33 +5,20 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-import dataclasses
-from typing import Dict, Hashable, Set, Any
+from typing import Dict, Set
 from collections import defaultdict
 
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
+from .peering_types import Peer, PeeringID, PeeringEndpoint
+
 # -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["PeeringPlanner", "Peer", "PeeringEndpoint", "PeeringID"]
-
-
-class Peer:
-    def __init__(self, name: Any):
-        self.name = name
-
-
-@dataclasses.dataclass(frozen=True)
-class PeeringEndpoint:
-    peer: Peer
-    enabled: bool
-
-
-PeeringID = Hashable
+__all__ = ["PeeringPlanner"]
 
 
 class PeeringPlanner:
@@ -94,7 +81,7 @@ class PeeringPlanner:
                     f"to the same enabled value: {edge_list_info()}"
                 )
 
-    def build(self):
+    def validate(self):
         """
         Validates the peering plan by ensureing that each peer contains exactly
         two peer endpoint instances.  If the plan is valid, then the
@@ -145,3 +132,6 @@ class PeeringPlanner:
         # if here, then everying is AOK from a validation point of view.
 
         self.validated = True
+
+    def build(self):
+        self.validate()

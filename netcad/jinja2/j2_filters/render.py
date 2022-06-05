@@ -22,7 +22,7 @@ import jinja2
 @jinja2.pass_context
 def j2_render(ctx, obj: Any, render_target="render", **kwargs):
     from netcad.device import Device, DeviceInterface
-    from netcad.device.device_interface import DeviceInterfaces
+    from netcad.device.device_interfaces import DeviceInterfaces
 
     if isinstance(obj, Device):
         ref_obj = obj

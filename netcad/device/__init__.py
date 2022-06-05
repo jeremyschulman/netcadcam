@@ -8,3 +8,4 @@ from .device_group_mlag import DeviceMLagPairGroup, DeviceMLagPairMember
 from .peer_interface_id import PeerInterfaceId
 from .device_type import DeviceType, DeviceTypeRegistry
 from .device_type_factory import DeviceTypeFactory
+from .interface_ip import InterfaceIP, to_interface_ip
