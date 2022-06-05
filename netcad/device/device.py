@@ -11,6 +11,7 @@ import os
 from copy import deepcopy
 from pathlib import Path
 from itertools import chain
+from ipaddress import IPv4Interface, IPv6Interface
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -127,7 +128,8 @@ class Device(Registry, registry_name="devices"):
 
         self.name = name
 
-        self.primary_ip = None
+        self._primary_ip: Optional[IPv4Interface | IPv6Interface] = None
+        self._primary_ip_interface: Optional[DeviceInterface] = None
 
         # make a copy of the device class interfaces so that the instance can
         # make any specific changes; i.e. handle the various "one-off" cases
@@ -174,7 +176,7 @@ class Device(Registry, registry_name="devices"):
     def parse_interface_name(cls, name: str) -> DeviceInterfaceNameParsed:
         return default_interface_parse_name(name)
 
-    def set_primary_ip(self, interface: DeviceInterface) -> "Device":
+    def set_primary_ip_interface(self, interface: DeviceInterface) -> "Device":
         """
         This function is used to assign the device primary IP address using the
         provided device interface.  The device interface is then associated as
@@ -209,9 +211,27 @@ class Device(Registry, registry_name="devices"):
                 f"Device {self.name} interface {interface.name} does not have profile assigned."
             )
 
-        self.primary_ip = if_ipaddr
-        self.primary_ip.interface = interface
+        self._primary_ip = if_ipaddr
+        self._primary_ip_interface = interface
         return self
+
+    @property
+    def primary_ip(self):
+
+        # we want to "extend" the IP address with an `interface` attribute -
+        # which is the DeviceInterface assocaited to the primary IP address.
+        # Since we do not know if the primary IP is v4 or v6 we need to
+        # dnyamically do this bit of slotting since the ipaddress instances are
+        # slot based, and we cannot simply attach ad-hoc attributes like we
+        # could with __dict__ based instances.
+
+        class PrimaryIP(self._primary_ip.ip.__class__):
+            __slots__ = "interface"
+
+        primary_ip = PrimaryIP(self._primary_ip.ip)
+        primary_ip.interface = self._primary_ip_interface
+
+        return primary_ip
 
     def services_of(
         self, svc_cls: Type["DesignServiceLike"]

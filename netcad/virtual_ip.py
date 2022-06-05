@@ -1,7 +1,5 @@
 from ipaddress import IPv4Interface
 
-from netcad.device.profiles import InterfaceL3
-
 
 class VirtualIPv4Interface(IPv4Interface):
     def __init__(self, interface: IPv4Interface, hostoct: int):

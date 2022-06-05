@@ -6,12 +6,11 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from netcad.device import DeviceInterface
 
-# from .vlan_all import SENTIAL_ALL_VLANS
-
-# declare a mechanism to indicate that that the profile is using the same value
-# as the peer interface.  We will use a technique called a Python descriptor to
-# make this associative reference.  A good primer/article on Python descriptors
-# can be found here:
+# declare a mechanism to indicate that the profile is using the same value as
+# the peer interface.  We will use a technique called a Python descriptor to
+# make this associative reference.
+#
+# A good primer/article on Python descriptors can be found here:
 # # https://adamj.eu/tech/2021/10/13/how-to-create-a-transparent-attribute-alias-in-python/
 
 
