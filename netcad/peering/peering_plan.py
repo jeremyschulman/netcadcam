@@ -5,7 +5,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Dict, Set
+from typing import Dict, Set, DefaultDict
 from collections import defaultdict
 
 # -----------------------------------------------------------------------------
@@ -23,6 +23,9 @@ __all__ = ["PeeringPlanner"]
 
 class PeeringPlanner:
     """
+    Corresponds to a Graph that maintains the relationship of Peer and
+    PeeringEndpoints instances.
+
     Attributes
     ----------
     peers: Set[Peer]
@@ -39,7 +42,7 @@ class PeeringPlanner:
     def __init__(self, name: str):
         self.name = name
         self.peers: Set[Peer] = set()
-        self.edges: Dict[PeeringID, Set[PeeringEndpoint]] = defaultdict(set)
+        self.edges: DefaultDict[PeeringID, Set[PeeringEndpoint]] = defaultdict(set)
         self.validated = False
 
     def add_peers(self, *peers):
@@ -47,7 +50,6 @@ class PeeringPlanner:
 
     def add_endpoint(self, peering_id: PeeringID, peer_endpoint: PeeringEndpoint):
         self.edges[peering_id].add(peer_endpoint)
-        self.peers.add(peer_endpoint.peer)
         self.validated = False
 
     def check_endpoints_enabled(self):
@@ -100,8 +102,10 @@ class PeeringPlanner:
 
         edges_by_counts = defaultdict(list)
 
-        for peering_id, peering_edges in self.edges.items():
-            edges_by_counts[len(peering_edges)].append({peering_id: peering_edges})
+        for peering_id, peering_endpoints in self.edges.items():
+            edges_by_counts[len(peering_endpoints)].append(
+                {peering_id: peering_endpoints}
+            )
 
         # in a valid scenario, ok_edges is all the edges, and the
         # edges_by_count variable should be empty.
@@ -134,4 +138,10 @@ class PeeringPlanner:
         self.validated = True
 
     def build(self):
+        """
+        The build function is used to connect the peering_endpoints to each
+        other via the PeerEndpoint.peer_endpoint attribute
+        """
         self.validate()
+        breakpoint()
+        x = 1
