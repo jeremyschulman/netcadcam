@@ -5,11 +5,9 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional, Union, Dict, DefaultDict, Iterable, List, Callable
+from typing import Optional, Union, Iterable, List, Callable
 from typing import TYPE_CHECKING
-from io import StringIO
 import re
-from collections import defaultdict
 
 if TYPE_CHECKING:
     from netcad.device.profiles import InterfaceProfile
@@ -24,7 +22,7 @@ import jinja2
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["DeviceInterface", "DeviceInterfaces"]
+__all__ = ["DeviceInterface"]
 
 # -----------------------------------------------------------------------------
 #
@@ -106,40 +104,14 @@ class DeviceInterface(object):
     ):
         self.name = name
 
-        # some device ports are just numbers.  In these instances set the
-        # interface attributes accordinly.
+        # need the device class, so we know how to parse the interface names.
 
-        if name.isdigit():
-            port_id = int(name)
-            self.port_numbers = (port_id,)
-            # need the first item in the tuple to be any string value for sorting purposes
-            self.sort_key = ("port", port_id)
-            self.short_name = name
+        device_cls = interfaces.device_cls
+        ifn_parsed = device_cls.parse_interface_name(name)
 
-        # if the name contains numbers then break these numbers out for
-        # sorting purposes.
-
-        elif mo_has_numbers := _re_find_numbers.findall(name):
-            mo_has_words = _re_find_words.findall(name)
-            self.port_numbers = tuple(map(int, mo_has_numbers))
-
-            # try the standard networking format with short names
-            if mo_short_name := _re_short_name.match(name):
-                self.short_name = "".join(mo_short_name.groups())
-                self.sort_key = (self.name[0:2].lower(), *self.port_numbers)
-
-            # otherwise this is an odd-format, and we will use the name as-is
-            else:
-                self.short_name = name
-                self.sort_key = (*mo_has_words, *self.port_numbers)
-
-        # the name is not a number nor does it contain numbers, for example "mgmt",
-        # then set the number value to 0 for default purposes.
-
-        else:
-            self.short_name = name
-            self.sort_key = (name, 0)
-            self.port_numbers = None
+        self.short_name = ifn_parsed.short_name
+        self.sort_key = ifn_parsed.sort_key
+        self.port_numbers = ifn_parsed.numbers
 
         self._profile = None
         self._desc = desc
@@ -161,9 +133,32 @@ class DeviceInterface(object):
     # -------------------------------------------------------------------------
 
     @property
+    def device(self):
+        """
+        The `device` allows the Caller to back reference the associated Device
+        instance.  The device instance is bound to the device interfaces
+        collection, such that: interface -> interfaces -> device.
+
+        Returns
+        -------
+        Device
+        """
+        return self.interfaces.device
+
+    @property
     def cable_port_id(self) -> str:
+        """
+        This property returns the cable ID string value for this interface. By
+        default, the cable ID will be the device name + "_" + the short
+        interface name.  A Caller can explicitly set the cable ID via the
+        property-setter method.
+
+        Returns
+        -------
+        str as described
+        """
         if self._cable_port_id is None:
-            return self.name
+            return f"{self.device.name}_{self.short_name.lower()}"
 
         return (
             self._cable_port_id(self)
@@ -181,19 +176,6 @@ class DeviceInterface(object):
         return bool(self.profile)
 
     @property
-    def device(self):
-        """
-        The `device` allows the Caller to back reference the associated Device
-        instance.  The device instance is bound to the device interfaces
-        collection, such that: interface -> interfaces -> device.
-
-        Returns
-        -------
-        Device
-        """
-        return self.interfaces.device
-
-    @property
     def device_ifname(self) -> str:
         """
         Returns the short-form device interface name.  The format is the
@@ -207,7 +189,7 @@ class DeviceInterface(object):
         -------
         RuntimeError
             When no device is assigned to the interface.  This is an unusual
-            case since a device will automatically assigned during the
+            case since a device will automatically be assigned during the
             defaultdict process of the Device object.  Added this raise for
             dev-testing purposes.
         """
@@ -236,7 +218,7 @@ class DeviceInterface(object):
     def profile(self) -> "InterfaceProfile":
         """
         The `profile` property is used so that the interface instance can get
-        assigned back into the profile so that there is a bi-directional
+        assigned back into the profile so that there is a bidirectional
         relationship between the two objects.  This is necessary so references
         can be such that from a given profile -> interface -> device.
 
@@ -290,15 +272,38 @@ class DeviceInterface(object):
         """
         return [iface.name for iface in sorted(map(DeviceInterface, if_names))]
 
+    # -------------------------------------------------------------------------
+    #
+    #                     Supporting Jinja2 Config Building
+    #
+    # -------------------------------------------------------------------------
+
     @jinja2.pass_context
     def render(self, ctx: jinja2.runtime.Context) -> str:
+        """
+        Used to create the interface specific configuration text based on the
+        associated interface profile.  If the interface is "not used", then the
+        parent device will provide a profile via the "unused_interface_profile"
+        Attribute
+
+        Parameters
+        ----------
+        ctx: Jinja2 context
+            This provides the running Jinja2 environment since this method is
+            executed during the course of creating the device configuration.
+
+        Returns
+        -------
+        str as described
+        """
+
+        profile = self.profile or self.device.unused_interface_profile
+
         return (
-            self.device.render_interface_unused(env=ctx.environment, interface=self)
-            if not self.profile
-            else self.profile.get_template(ctx.environment).render(
-                device=self.device, interface=self
-            )
-        ).rstrip()
+            profile.get_template(ctx.environment)
+            .render(device=self.device, interface=self)
+            .rstrip()
+        )
 
     # -------------------------------------------------------------------------
     #
@@ -323,171 +328,20 @@ class DeviceInterface(object):
         return f"{name} Unassigned-Profile"
 
     def __lt__(self, other: "DeviceInterface"):
-        # TODO: this is a bit of a hack that covers the case where
-        #       a device (not a typical network device) has different formatted
-        #       interface names resulting int different typed sort keys.  In
-        #       this case, just return True and work on this later.
-        try:
-            return self.sort_key < other.sort_key
-        except TypeError:
-            return True
+        return self.sort_key < other.sort_key
+
+    # -------------------------------------------------------------------------
+    # Context manager to "self" to allow for multiple attribute assignments so
+    # that Caller can do something like:
+    #
+    #    with device.interfaces['Ethernet1'] as iface:
+    #       iface.profile = ...
+    #       iface.cable_id = ...
+    #
+    # -------------------------------------------------------------------------
 
     def __enter__(self) -> "DeviceInterface":
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
-
-
-# -----------------------------------------------------------------------------
-#
-#                    DeviceInterfaces Collection
-#
-# -----------------------------------------------------------------------------
-
-
-class DeviceInterfaces(defaultdict, DefaultDict[str, DeviceInterface]):
-    """
-    The collection of interfaces bound to a Device.  Subclasses a defaultdict so
-    that the Caller can create ad-hoc interfaces that are not originally part of
-    the device-type specification.
-
-    Ad-hoc, for example, could be Port-Channel interfaces or Vlan interfaces
-    (SVI).
-    """
-
-    def __init__(self, default_factory, **kwargs):
-        super(DeviceInterfaces, self).__init__(default_factory, **kwargs)
-        self.device_cls: Optional[DeviceInterface] = None
-        self.device = None
-
-    def __missing__(self, key):
-        # create a new instance of the device interface. add the back-reference
-        # from the specific interface to this collection so that given any
-        # specific interface instance, the Caller can reach back to find the
-        # associated device object.
-
-        self[key] = DeviceInterface(name=key, interfaces=self)
-        return self[key]
-
-    def used(
-        self, include_disabled=True, include_unused=False
-    ) -> Dict[str, DeviceInterface]:
-        """
-        Return dictionary that allows the Caller to iterate over each of the
-        device interfaces for those that are in use.  The term "used" means that
-        the interface is used in the design, but does not necessarily mean that
-        the interface is designed to be up.  By default the "disabled"
-        interfaces WILL be included in the returned dictionary.  If the Caller
-        does not want the disabled interfaces, then set the `include_disabled`
-        param to False.
-
-        Parameters
-        ----------
-        include_disabled: bool, optional(default=True)
-            When False the function will not include any interfaces that are
-            disabled, even though used, in the design.
-
-        include_unused: bool, optional(default=False)
-            When True the function will include an interface even though it is
-            not used in a design.  For example, if a management port is not used
-            in the design, but the Caller does want to include it for some
-            reason, then they would set this parameter to True.
-
-        Returns
-        -------
-        dict
-        """
-        used_interfaces = dict()
-
-        interface: DeviceInterface
-        for if_name, interface in self.items():
-
-            # if there is no profile bound to the interface, then it is not part
-            # of the design; so skip it unless the caller wants to include disabled
-
-            if not interface.profile and include_unused is False:
-                continue
-
-            # if the interface is in the design, but the design indicates to
-            # disable ("shutdown") the interface, then by default include it in
-            # the return.  If the Caller set `include_disabled` to False then
-            # skip it.
-
-            if interface.enabled is False and include_disabled is False:
-                continue
-
-            used_interfaces[if_name] = interface
-
-        return used_interfaces
-
-    def unused(self) -> Dict[str, DeviceInterface]:
-        """
-        Returns a dictiionary of the unused interfaces.
-        """
-        return dict(
-            (if_name, if_obj) for if_name, if_obj in self.items() if not if_obj.used
-        )
-
-    def startswith(self, prefix, used=None):
-        for if_name, iface in self.items():
-            if not if_name.startswith(prefix):
-                continue
-
-            # if used is "don't care" then yield
-            if used is None:
-                yield iface
-
-            # if both used and iface.used are the same
-            elif used == iface.used:
-                yield iface
-
-    def render(self, ctx: jinja2.runtime.Context, prefix: Optional[str] = None):
-        env = ctx.environment
-        content = StringIO()
-
-        device = self.device
-
-        # we want the interfaces output in numerical order, so sort the
-        # collection using the designated interface port numbers (tuple). we
-        # also want the sort to be based on the prefix of the first two
-        # characters of the interface name, so that "Ethernet1" comes before
-        # "Management1", for exmaple.
-
-        interfaces = sorted(self.values())
-        if prefix:
-            interfaces = sorted(
-                iface for iface in interfaces if iface.name.startswith(prefix)
-            )
-
-        for interface in interfaces:
-
-            # if the interface is not used at all, then use the "unused
-            # interface" template, and then done processing this interface into
-            # the config build process.
-
-            if not interface.used:
-                if_content = device.render_interface_unused(
-                    env=env, interface=interface
-                )
-
-            # if the interface is used, then it MUST have an assigned profile.
-            # If it does not, then raise an exception.
-
-            elif not interface.profile:
-                raise RuntimeError(
-                    f"Unexpected missing interface profile on: {interface.name}"
-                )
-
-            else:
-                if_content = device.render_interface_used(env=env, interface=interface)
-
-            content.write(if_content)
-
-        # rewind the IO buffer and return back everything except the final
-        # newline since that will be added by the in template including this
-        # render.
-
-        content.seek(0)
-        as_str = content.read()
-        return as_str[:-1]

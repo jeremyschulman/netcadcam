@@ -7,9 +7,9 @@ from .cable_plan import CablePlanner
 class CableByCableId(CablePlanner):
     def build(self):
         """
-        The `apply` function will create the cable associations between
-        the devices.  The Caller is assumed to have called the `validate`
-        prior to calling `plan`.
+        The build function will create the cable associations between the
+        devices.  The Caller is assumed to have called the `validate` prior to
+        calling `plan`.
 
         Raises
         ------
@@ -31,8 +31,8 @@ class CableByCableId(CablePlanner):
                     continue
                 self.add_endpoint(cable_id=iface.cable_id, interface=iface)
 
-        # now invoke the validate() method directly before associating the cable
-        # peering relationships.
+        # now invoke the `validate()` method directly before associating the
+        # cable peering relationships.
 
         self.validate()
 

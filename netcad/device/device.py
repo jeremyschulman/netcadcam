@@ -11,6 +11,7 @@ import os
 from copy import deepcopy
 from pathlib import Path
 from itertools import chain
+from ipaddress import IPv4Interface, IPv6Interface
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -22,16 +23,20 @@ import jinja2
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.device.device_interface import (
-    DeviceInterfaces,
-    DeviceInterface,
-)
 from netcad.registry import Registry
 from netcad.config import Environment
 from netcad.config import netcad_globals
 from netcad.jinja2.j2_env import get_env, expand_templates_dirs
 
 from .device_type import DeviceType, DeviceTypeRegistry
+from .device_interfaces import DeviceInterfaces
+from .device_interface import DeviceInterface
+from .profiles import InterfaceL3
+from .device_interface_parse_name import (
+    DeviceInterfaceNameParsed,
+    default_interface_parse_name,
+)
+from .interface_ip import InterfaceIP, to_interface_ip
 
 if TYPE_CHECKING:
     from netcad.design import Design, DesignServiceCatalog, DesignServiceLike
@@ -124,13 +129,20 @@ class Device(Registry, registry_name="devices"):
 
         self.name = name
 
-        self.primary_ip = None
+        self._primary_ip: Optional[IPv4Interface | IPv6Interface] = None
+        self._primary_ip_interface: Optional[DeviceInterface] = None
 
         # make a copy of the device class interfaces so that the instance can
         # make any specific changes; i.e. handle the various "one-off" cases
         # that happen in real-world networks.
 
-        self.interfaces: DeviceInterfaces = deepcopy(self.__class__.interfaces)  # noqa
+        self.interfaces: DeviceInterfaces = deepcopy(self.__class__.interfaces)
+
+        # TODO: not sure why the device_cls attribute was not copied as part of
+        #       the deepcopy above; need to investigate.  But for now, put the
+        #       value back into the interfaces
+
+        self.interfaces.device_cls = self.__class__
 
         # create the back-references from the interfaces instance to this
         # device.
@@ -161,11 +173,78 @@ class Device(Registry, registry_name="devices"):
 
         self.template_env: Optional[jinja2.Environment] = None
 
+    @classmethod
+    def parse_interface_name(cls, name: str) -> DeviceInterfaceNameParsed:
+        return default_interface_parse_name(name)
+
+    def set_primary_ip_interface(self, interface: DeviceInterface) -> "Device":
+        """
+        This function is used to assign the device primary IP address using the
+        provided device interface.  The device interface is then associated as
+        an attribute to the IP instance so that the "back-reference" exists
+        when needed.  This use is common for example, in Jinja2 templating that
+        looks like this:
+
+        ip tacacs source-interface {{ device.primary_ip.interface.name }}
+
+        Parameters
+        ----------
+        interface: DeviceInterface
+            Must have an InterfaceL3 based profile assigned, and that must have
+            an if_ipaddr value assigned.
+
+        Returns
+        -------
+        Device self instance for use with method-chanining.
+        """
+        if not interface.profile:
+            raise ValueError(
+                f"Device {self.name} interface {interface.name} does not have profile assigned."
+            )
+
+        if not isinstance(interface.profile, InterfaceL3):
+            raise ValueError(
+                f"Device {self.name} interface {interface.name} is not a L3 profile"
+            )
+
+        if not (if_ipaddr := interface.profile.if_ipaddr):
+            raise ValueError(
+                f"Device {self.name} interface {interface.name} does not have profile assigned."
+            )
+
+        self._primary_ip = if_ipaddr
+        self._primary_ip_interface = interface
+
+        # for method-chaining
+        return self
+
+    @property
+    def primary_ip(self) -> InterfaceIP:
+        """
+        Returns an InterfaceIP instance that is the ip_address instance for the
+        device primary IP address, augmented with an 'interface' attribute. The
+        interface attribute is the DeviceInterface instance hosting the primary
+        IP address.
+
+        Notes
+        -----
+        Supports both IPv4 and IPv6 use-cases
+        """
+        return to_interface_ip(
+            ip=self._primary_ip.ip, interface=self._primary_ip_interface
+        )
+
     def services_of(
         self, svc_cls: Type["DesignServiceLike"]
     ) -> List["DesignServiceLike"]:
         """Return the device services that are of the given service type"""
         return [svc for svc in self.services.values() if isinstance(svc, svc_cls)]
+
+    # -------------------------------------------------------------------------
+    #
+    #                  Config Template Building Related
+    #
+    # -------------------------------------------------------------------------
 
     def init_template_env(self, templates_dir: Optional[Path] = None):
         template_dirs = []
@@ -224,44 +303,6 @@ class Device(Registry, registry_name="devices"):
 
         return self.template_env.get_template(str(as_path))
 
-    def render_interface_unused(
-        self, env: jinja2.Environment, interface: DeviceInterface
-    ) -> str:
-        """
-        The default implementation for an unused interface is to render a
-        template called "interface_unused.jinja2".
-
-        Parameters
-        ----------
-        env
-        interface
-
-        Returns
-        -------
-        str - the rendered configuration text
-        """
-        template = env.get_template("interface_unused.jinja2")
-        return template.render(device=self, interface=interface)
-
-    def render_interface_used(
-        self, env: jinja2.Environment, interface: DeviceInterface
-    ) -> str:
-        """
-        The default implementation for creating the configuraiton for a used
-        interface is to render the template bound to the interface profile.
-
-        Parameters
-        ----------
-        env
-        interface
-
-        Returns
-        -------
-        str - the rendered configuration text
-        """
-        template = interface.profile.get_template(env)
-        return template.render(device=self, interface=interface)
-
     # -------------------------------------------------------------------------
     #
     #                            Class Methods
@@ -281,10 +322,7 @@ class Device(Registry, registry_name="devices"):
         cls.interfaces = DeviceInterfaces(DeviceInterface)
         cls.interfaces.device_cls = cls
 
-        # configure the state of the interfaces by default to unused. this
-        # settings will be determined by the `init_interfaces()` class method.
-        # By default, will set interfaces to unused. This behavior could be
-        # changed by the sublcass.
+        # configure the state of the interfaces
 
         if getattr(cls, "product_model", None) and not os.getenv(
             Environment.NETCAD_NOVALIDATE
@@ -306,13 +344,14 @@ class Device(Registry, registry_name="devices"):
         cls.device_type_spec: DeviceType = DeviceTypeRegistry.registry_get(
             name=device_type
         )
+
         if not cls.device_type_spec:
             raise RuntimeError(
                 f"Device class {cls.__name__} missing spec for device-type: {device_type}.  "
             )
 
-        # initialize the interfaces in the device so that those defined in the
-        # spec exist; initializing the profile value to None.
+        # # initialize the interfaces in the device so that those defined in the
+        # # spec exist; initializing the profile value to None.
 
         for if_name in cls.device_type_spec.interfaces:
             cls.interfaces[if_name].profile = None

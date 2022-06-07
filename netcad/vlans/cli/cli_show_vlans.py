@@ -74,7 +74,7 @@ def cli_report_vlans(devices: Tuple[str], designs: Tuple[str]):
 # -----------------------------------------------------------------------------
 
 
-def show_device_vlan_table(device: Device):
+def show_device_vlan_table(device: Device, quiet=True):
 
     # each device instance may have one or more device-vlan design services.
     # Typically, it will be one, but perhaps a Designer comes up with a usage
@@ -91,7 +91,8 @@ def show_device_vlan_table(device: Device):
     title = f"Device: {device.name}, VLANS ({len(vlans)})"
 
     if not vlans:
-        console.print("\n", title)
+        if not quiet:
+            console.print("\n", title)
         return
 
     table = Table(

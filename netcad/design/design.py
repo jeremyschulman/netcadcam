@@ -5,7 +5,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Any
 from copy import deepcopy
 from types import ModuleType
 
@@ -16,6 +16,7 @@ from types import ModuleType
 from netcad.registry import Registry
 from netcad.device import Device
 from netcad.notes import DesignNotes
+from netcad.ipam import IPAM
 
 # -----------------------------------------------------------------------------
 # Private Module Imports
@@ -89,7 +90,7 @@ class Design(Registry, registry_name="designs"):
 
         self.devices: Dict[str, Device] = dict()
 
-        self.ipams = dict()
+        self.ipams: Dict[Any, IPAM] = dict()
 
     def add_devices(self, *devices: Device) -> "Design":
         """

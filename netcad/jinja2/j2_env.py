@@ -1,5 +1,6 @@
 #  Copyright (c) 2021 Jeremy Schulman
-#  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+#  GNU General Public License v3.0+
+#  see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt
 
 # -----------------------------------------------------------------------------
 # System Imports
@@ -10,19 +11,18 @@ import re
 from itertools import chain
 from os.path import expandvars
 
-
 # -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
 
 from first import first
 import jinja2
+import datetime
 
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from . import j2_funcs
 from . import j2_filters
 
 from netcad.helpers import range_string
@@ -47,11 +47,10 @@ _env_filters = {
     "range_string": range_string,
 }
 
-_env_globals = {
-    "lookup": j2_funcs.j2_func_lookup,
-    "global_import": j2_funcs.j2_func_import,
-    "ipam_get": j2_funcs.j2_func_ipam_get,
-}
+
+def now(strfmt: str = None) -> datetime.datetime | str:
+    dt = datetime.datetime.now()
+    return dt if not strfmt else dt.strftime(strfmt)
 
 
 def get_env(template_dirs):
@@ -65,7 +64,7 @@ def get_env(template_dirs):
     )
 
     env.filters.update(_env_filters)
-    env.globals.update(_env_globals)
+    env.globals["now"] = now
 
     return env
 

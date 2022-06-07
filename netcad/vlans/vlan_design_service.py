@@ -143,7 +143,7 @@ class VlansDesignService(
 
         super().__init__(service_name=service_name, **kwargs)
 
-    def add_devices(self, *devices: Device):
+    def add_devices(self, *devices: Device) -> "VlansDesignService":
         """
         Add the list of Device instances to the VlanDesignService.  As a result
         each device will also be associated with the `device_vlan_service` class
@@ -153,6 +153,10 @@ class VlansDesignService(
         ----------
         devices:
             List of Device instances
+
+        Returns
+        -------
+        self instance for method-chaning
         """
         super().add_devices(*devices)
 
@@ -161,9 +165,21 @@ class VlansDesignService(
                 service_name=self._device_service_name, device=each_dev
             )
 
-    def build(self):
+        return self
+
+    def build(self) -> "VlansDesignService":
+        """
+        Runs the vlan service build process on each associated device.
+
+        Returns
+        -------
+        self for method-chaning
+        """
+
         for each_dev in self.data.values():
             each_dev.build()
+
+        return self
 
     def validate(self):
         """No validation action performed"""

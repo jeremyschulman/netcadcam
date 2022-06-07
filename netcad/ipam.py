@@ -20,13 +20,13 @@ class IPAMNetwork(UserDict):
         self._gateway_host_octet: int = gateway
 
     def gateway_interface(self, name) -> AnyIPInterface:
-        return self.interface(name=name, offset_octet=self._gateway_host_octet)
+        return self.interface(name=name, host_octet=self._gateway_host_octet)
 
-    def interface(self, name: str, offset_octet: int) -> AnyIPInterface:
+    def interface(self, name: str, host_octet: int) -> AnyIPInterface:
         """record an IP interface address for the given name"""
 
         self[name] = ipaddress.ip_interface(
-            f"{self.ip_network.network_address + offset_octet}/{self.ip_network.netmask}"
+            f"{self.ip_network.network_address + host_octet}/{self.ip_network.netmask}"
         )
 
         return self[name]
@@ -92,6 +92,9 @@ class IPAMNetwork(UserDict):
         """
         ip_net = self[name] = IPAMNetwork(self.ipam, name, prefix)
         return ip_net
+
+    def __str__(self):
+        return self.ip_network.__str__()
 
 
 class IPAM(Registry, UserDict, t.MutableMapping[t.Hashable, IPAMNetwork]):
