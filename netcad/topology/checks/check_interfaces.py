@@ -132,6 +132,8 @@ class InterfaceCheckCollection(CheckCollection):
 
         # return the checks sorted by the lag interface name
         collection.checks.sort(
-            key=lambda tc: DeviceInterface(tc.check_params.interface)
+            key=lambda tc: DeviceInterface(
+                tc.check_params.interface, interfaces=device.interfaces
+            )
         )
         return collection
