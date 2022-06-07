@@ -53,6 +53,24 @@ def now(strfmt: str = None) -> datetime.datetime | str:
     return dt if not strfmt else dt.strftime(strfmt)
 
 
+# class RelativeEnviornment(jinja2.Environment):
+#     def get_template(self, name: str, parent=None, globals_=None) -> jinja2.Template:
+#         if name.endswith("lawo_macros.jinja2"):
+#             breakpoint()
+#             x = 1
+#
+#         return super().get_template(name, parent, globals_)
+#
+#
+# class RelativeFilesystemLoader(jinja2.FileSystemLoader):
+#     def get_source(self, environment: jinja2.Environment, template: str):
+#         if template.endswith("lawo_macros.jinja2"):
+#             breakpoint()
+#             x = 1
+#
+#         return super().get_source(environment, template)
+
+
 def get_env(template_dirs):
 
     env = jinja2.Environment(
