@@ -7,9 +7,9 @@ from .cable_plan import CablePlanner
 class CableByCableId(CablePlanner):
     def build(self):
         """
-        The `apply` function will create the cable associations between
-        the devices.  The Caller is assumed to have called the `validate`
-        prior to calling `plan`.
+        The build function will create the cable associations between the
+        devices.  The Caller is assumed to have called the `validate` prior to
+        calling `plan`.
 
         Raises
         ------
