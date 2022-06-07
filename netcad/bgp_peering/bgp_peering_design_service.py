@@ -8,12 +8,17 @@
 from typing import Optional, TypeVar
 
 # -----------------------------------------------------------------------------
-# Private Imports
+# Public Imports
 # -----------------------------------------------------------------------------
 
 from netcad.design.design_service import DesignService
-from ..peering import PeeringPlanner
+from netcad.peering import PeeringPlanner
 
+# -----------------------------------------------------------------------------
+# Private Imports
+# -----------------------------------------------------------------------------
+
+from .bgp_speaker import BGPSpeaker, BGPPeeringEndpoint
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -26,6 +31,10 @@ __all__ = ["BgpPeeringDesignService", "BgpPeeringDesignServiceLike"]
 #                                 CODE BEGINS
 #
 # -----------------------------------------------------------------------------
+
+
+class BgpPeeringPlanner(PeeringPlanner[BGPSpeaker, BGPPeeringEndpoint]):
+    pass
 
 
 class BgpPeeringDesignService(DesignService, registry_name="bgp_peering"):
@@ -41,14 +50,17 @@ class BgpPeeringDesignService(DesignService, registry_name="bgp_peering"):
         super(BgpPeeringDesignService, self).__init__(
             service_name=service_name or self.DEFAULT_SERVICE_NAME, **kwargs
         )
-        self.peering = PeeringPlanner(name=service_name)
+        self.peering = BgpPeeringPlanner(name=service_name)
 
     @property
-    def peers(self):
+    def speakers(self):
         return self.peering.peers
 
-    def add_speakers(self, *speakers):
-        self.peering.add_peers(speakers)
+    def get_speaker(self, hostname: str) -> BGPSpeaker:
+        return self.peering.get_peer(hostname)
+
+    def add_speakers(self, *speakers: BGPSpeaker):
+        self.peering.add_peers(*speakers)
         return self
 
     def validate(self):

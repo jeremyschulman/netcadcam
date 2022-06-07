@@ -5,8 +5,8 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Hashable, TypeVar, Generic, Dict
-from dataclasses import dataclass
+from typing import Hashable, TypeVar, Generic, Set
+
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -39,21 +39,27 @@ class PeeringEndpoint(Generic[P, E]):
     enabled: bool
 
     # assigned during the 'build' process
-    peer_endpoint: E
+    peered_endpoint: E
+
+    def __repr__(self):
+        return self.__dict__.__repr__()
 
 
 class Peer(Generic[P, E]):
-    """Corresponds to a Graph Vertex"""
+    """
+    A Peer class represents the owner of many endpoint instances.  Each
+    endpoint instance is maintained in the Peer collection (set).
+    """
 
     def __init__(self, name: P):
         self.name = name
-        self._endpoints: Dict[PeeringID, E] = dict()
+        self._endpoints: Set[E] = set()
 
     @property
-    def endpoints(self) -> Dict[PeeringID, E]:
+    def endpoints(self) -> Set[E]:
         return self._endpoints
 
-    def add_endpoint(self, peer_id: PeeringID, endpoint: PeeringEndpoint):
+    def add_endpoint(self, peer_id: PeeringID, endpoint: E):
         endpoint.peer = self
         endpoint.peer_id = peer_id
-        self._endpoints[peer_id] = endpoint
+        self._endpoints.add(endpoint)

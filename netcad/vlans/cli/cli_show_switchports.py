@@ -70,7 +70,7 @@ def cli_report_vlans(devices: Tuple[str], designs: Tuple[str]):
 # -----------------------------------------------------------------------------
 
 
-def show_device_switchports_table(device: Device):
+def show_device_switchports_table(device: Device, quiet=True):
 
     # each device instance may have one or more device-vlan design services.
     # Typically, it will be one, but perhaps a Designer comes up with a usage
@@ -127,4 +127,11 @@ def show_device_switchports_table(device: Device):
             continue
 
     table.title = f"Device: {device.name}, Switchports ({len(table.rows)})"
-    console.print("\n", table if table.rows else table.title)
+    if table.rows:
+        console.print("\n", table)
+        return
+
+    if quiet:
+        return
+
+    console.print("\n", table.title)

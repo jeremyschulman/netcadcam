@@ -1,4 +1,6 @@
 from typing import Optional
+from operator import attrgetter
+
 from netcad.peering import Peer, PeeringID, PeeringEndpoint
 from netcad.device import Device, to_interface_ip
 from netcad.device import InterfaceIP
@@ -7,19 +9,41 @@ RouterID = InterfaceIP
 
 
 class BGPPeeringEndpoint(PeeringEndpoint):
+    desc: str
     via_ip: InterfaceIP
 
-    def __init__(self, via_ip: InterfaceIP, enabled: Optional[bool] = True):
+    def __init__(
+        self,
+        via_ip: InterfaceIP,
+        enabled: Optional[bool] = True,
+        desc: Optional[str] = None,
+    ):
         self.enabled = enabled
         self.via_ip = via_ip
+        self._desc = desc
+
+    @property
+    def default_desc(self):
+        rmt_end: BGPPeeringEndpoint = self.peered_endpoint
+        rmt_peer: BGPSpeaker = rmt_end.peer
+        bgp_type = "iBGP" if self.peer.asn == rmt_peer.asn else "eBGP"
+        return f"{bgp_type} to {rmt_peer.name} via {self.via_ip.interface.short_name} {self.via_ip}"
+
+    @property
+    def desc(self):
+        return self._desc or self.default_desc
 
 
 class BGPSpeaker(Peer[Device, BGPPeeringEndpoint]):
     def __init__(self, device: Device, asn: int, router_id: RouterID):
-        super().__init__(name=(asn, router_id))
+        super().__init__(name=device.name)
         self.device = device
         self.asn = asn
         self.router_id = router_id
+
+    @property
+    def neighbors(self) -> list[BGPPeeringEndpoint]:
+        return sorted(self.endpoints, key=attrgetter("via_ip"))
 
     def add_neighbor(self, peer_id: PeeringID, via: str):
         """

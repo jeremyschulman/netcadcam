@@ -5,7 +5,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Dict, Set, DefaultDict
+from typing import Set, DefaultDict, TypeVar, Generic, Dict, Hashable
 from collections import defaultdict
 
 # -----------------------------------------------------------------------------
@@ -20,18 +20,23 @@ from .peering_types import Peer, PeeringID, PeeringEndpoint
 
 __all__ = ["PeeringPlanner"]
 
+PP = TypeVar("PP", bound=Peer)
+PE = TypeVar("PE", bound=PeeringEndpoint)
 
-class PeeringPlanner:
+
+class PeeringPlanner(Generic[PP, PE]):
     """
     Corresponds to a Graph that maintains the relationship of Peer and
     PeeringEndpoints instances.
 
     Attributes
     ----------
-    peers: Set[Peer]
-        The unique set of peers managed by a PeeringPlanner instance.
+    peers: dict
+        The unique set of peers managed by a PeeringPlanner instance. The key
+        is the peer name, as defined by the concrete type of the planning peer
+        (PP)
 
-    edges: Dict[Hashable, set]
+    edges: DefaultDict[Hashable, set[E]]
         A dictionary whose key=peering-ID and value is the set of endpoings
         associated with that peering-ID
 
@@ -41,18 +46,22 @@ class PeeringPlanner:
 
     def __init__(self, name: str):
         self.name = name
-        self.peers: Set[Peer] = set()
-        self.edges: DefaultDict[PeeringID, Set[PeeringEndpoint]] = defaultdict(set)
+        self.peers: Dict[Hashable, PP] = dict()
+        self.edges: DefaultDict[PeeringID, Set[PE]] = defaultdict(set)
         self.validated = False
 
-    def add_peers(self, *peers):
-        self.peers.update(*peers)
+    def get_peer(self, name: Hashable) -> PP:
+        return self.peers.get(name)
 
-    def add_endpoint(self, peering_id: PeeringID, peer_endpoint: PeeringEndpoint):
+    def add_peers(self, *peers: PP):
+        for peer in peers:
+            self.peers[peer.name] = peer
+
+    def _add_endpoint(self, peering_id: PeeringID, peer_endpoint: PE):
         self.edges[peering_id].add(peer_endpoint)
         self.validated = False
 
-    def check_endpoints_enabled(self):
+    def _check_endpoints_enabled(self):
         """
         This routine validates that, for each cable, all the endpoints
         associated with a peering-ID has a matching enabled setting, and a
@@ -131,7 +140,7 @@ class PeeringPlanner:
         # ennable or both dsiabled.  If an error exists, the call to check
         # below will raise an exception.
 
-        self.check_endpoints_enabled()
+        self._check_endpoints_enabled()
 
         # if here, then everying is AOK from a validation point of view.
 
@@ -142,6 +151,19 @@ class PeeringPlanner:
         The build function is used to connect the peering_endpoints to each
         other via the PeerEndpoint.peer_endpoint attribute
         """
+
+        endpoint: PE
+        for peer in self.peers.values():
+            for endpoint in peer.endpoints:
+                self.edges[endpoint.peer_id].add(endpoint)
+
         self.validate()
-        breakpoint()
-        x = 1
+
+        # link each endpoint to each other
+        # TODO: figure out why PyCharm cannot typehint the return of
+        #       edges.values()
+        end_a: PE
+        end_b: PE
+        for end_a, end_b in self.edges.values():
+            end_a.peered_endpoint = end_b
+            end_b.peered_endpoint = end_a
