@@ -148,23 +148,11 @@ class DeviceInterface(object):
     @property
     def cable_port_id(self) -> str:
         """
-        This property returns the cable ID string value for this interface. By
-        default, the cable ID will be the device name + "_" + the short
-        interface name.  A Caller can explicitly set the cable ID via the
-        property-setter method.
-
-        Returns
-        -------
-        str as described
+        Returns the value of this interface "port-id" as it would be seen from
+        the LLDP neighbor data.  Typically, this is the same as the inteface
+        name. There are circumstances, however, where this is not the case.
         """
-        if self._cable_port_id is None:
-            return f"{self.device.name}_{self.short_name.lower()}"
-
-        return (
-            self._cable_port_id(self)
-            if callable(self._cable_port_id)
-            else self._cable_port_id
-        )
+        return self._cable_port_id(self) if callable(self._cable_port_id) else self.name
 
     @cable_port_id.setter
     def cable_port_id(self, value: Union[Callable, str]):
