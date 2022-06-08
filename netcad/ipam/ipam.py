@@ -56,7 +56,7 @@ class IPAMNetwork(UserDict):
         return self[name]
 
     @property
-    def gateway(self):
+    def gateway(self) -> "AnyIPInterface":
         """
         Returns the IP address instance (not interface) of the network gateway
         address.  Registers this instance under the name "gateway".
@@ -65,14 +65,15 @@ class IPAMNetwork(UserDict):
         -------
         IP address instance.
         """
+        ip = self.ip_network.network_address + self._gateway_host_octet
         return self.setdefault(
-            "gateway", self.ip_network.network_address + self._gateway_host_octet
+            "gateway", ipaddress.ip_interface((ip, self.ip_network.prefixlen))
         )
 
     def network(self, name: t.Hashable, prefix: str) -> "IPAMNetwork":
         """
-        This function creates an new network instance within the IPAM,
-        designated by the name value.  This network can then be retrieve using
+        This function creates a new network instance within the IPAM,
+        designated by the name value.  This network can then be retrieved using
         "getitem" via the designated name.
 
         Parameters
@@ -122,8 +123,8 @@ class IPAM(Registry, UserDict, t.MutableMapping[t.Hashable, IPAMNetwork]):
 
     def network(self, name: t.Hashable, prefix: str) -> IPAMNetwork:
         """
-        This function creates an new network instance within the IPAM,
-        designated by the name value.  This network can then be retrieve using
+        This function creates a new network instance within the IPAM,
+        designated by the name value.  This network can then be retrieved using
         "getitem" via the designated name.
 
         Parameters
