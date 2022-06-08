@@ -9,6 +9,7 @@
 from typing import List, Iterable
 import re
 from itertools import chain
+import os
 from os.path import expandvars
 
 # -----------------------------------------------------------------------------
@@ -53,27 +54,36 @@ def now(strfmt: str = None) -> datetime.datetime | str:
     return dt if not strfmt else dt.strftime(strfmt)
 
 
-# class RelativeEnviornment(jinja2.Environment):
-#     def get_template(self, name: str, parent=None, globals_=None) -> jinja2.Template:
-#         if name.endswith("lawo_macros.jinja2"):
-#             breakpoint()
-#             x = 1
-#
-#         return super().get_template(name, parent, globals_)
-#
-#
-# class RelativeFilesystemLoader(jinja2.FileSystemLoader):
-#     def get_source(self, environment: jinja2.Environment, template: str):
-#         if template.endswith("lawo_macros.jinja2"):
-#             breakpoint()
-#             x = 1
-#
-#         return super().get_source(environment, template)
+class RelativeEnvironment(jinja2.Environment):
+    def join_path(self, template, parent):
+        """
+        If the file-name begins with a dot (".") then the Caller is attempting
+        to include/import a Jinja2 file relative to the path of the parent
+        template.
+
+        Parameters
+        ----------
+        template: str
+            Target file-name
+
+        parent: str
+            file-name performing the import/include action.
+
+        Returns
+        -------
+        str -
+            The path to the template file that will be passed to the
+            Environment loader.
+        """
+        if template.startswith('.'):
+            return os.path.join(os.path.dirname(parent), template)
+
+        return super().join_path(template, parent)
 
 
 def get_env(template_dirs):
 
-    env = jinja2.Environment(
+    env = RelativeEnvironment(
         trim_blocks=True,
         lstrip_blocks=True,
         keep_trailing_newline=True,
