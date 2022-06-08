@@ -50,26 +50,20 @@ class P2PInterfaces(UserDict):
 
     def __missing__(self, key: int) -> List[IPv4Interface]:
         """
-        Returns a list of two IPv4 Interface instances with /31 prefixlen.  The
-        first starts at the network address with last-octet = key, and the
-        second is key+1.
+        Returns a list of two IPv4 Interface instances with /31 prefixlen. The
+        first is the "even" numbered interface and the second is the "odd".
 
         Parameters
         ----------
         key: int
-            The last-octet value, must be even.
+            Identifies which /31 pair of interfaces to retrieve, as described.
 
         Returns
         -------
         list as described
         """
 
-        if self.octet_mode:
-            index, rem = divmod(key, 2)
-            if rem:
-                raise ValueError(f"key {key} is not even")
-        else:
-            index = key
+        index, rem = divmod(key, 2) if self.octet_mode else (key, 0)
 
         search = islice(self.network.subnets(new_prefix=31), index, index + 1)
 
