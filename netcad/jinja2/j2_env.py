@@ -75,7 +75,7 @@ class RelativeEnvironment(jinja2.Environment):
             The path to the template file that will be passed to the
             Environment loader.
         """
-        if template.startswith('.'):
+        if template.startswith("."):
             return os.path.join(os.path.dirname(parent), template)
 
         return super().join_path(template, parent)
