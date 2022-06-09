@@ -19,11 +19,11 @@ class IPAMNetworkKeeper(UserDict):
         self.ip_network: AnyIPNetwork = ipaddress.ip_network(address=prefx)
         self._gateway_host_octet: int = gateway
 
-    def interface(self, name: str, host_octet: int) -> AnyIPInterface:
+    def interface(self, name: str, host_octet: int, new_prefix=None) -> AnyIPInterface:
         """record an IP interface address for the given name"""
 
         self[name] = ipaddress.ip_interface(
-            f"{self.ip_network.network_address + host_octet}/{self.ip_network.netmask}"
+            f"{self.ip_network.network_address + host_octet}/{new_prefix or self.ip_network.netmask}"
         )
 
         return self[name]
