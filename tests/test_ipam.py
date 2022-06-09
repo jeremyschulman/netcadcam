@@ -29,3 +29,4 @@ def test_ipam_ip_network_catalog():
     assert Catalog.that.parent.address == "3.3.3.0/24"
     assert Catalog.that.parent == Parent.root
     assert Catalog.sibling.parent == Catalog.that
+    assert Catalog.sibling.parent.parent == Parent.root

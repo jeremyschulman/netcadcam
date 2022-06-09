@@ -5,7 +5,7 @@ from dataclasses import dataclass
 P = TypeVar("P")
 
 
-@dataclass
+@dataclass(frozen=True)
 class IPNetworkProfile:
     """
     The IPNetworkItem is a "record" that designates the IP network name,
@@ -28,7 +28,7 @@ class IPNetworkEnumCatalog(IPNetworkProfile, Enum):
     """
 
     def __init__(self, given):
-        self._value_ = given
+        self._value_ = given  # noqa
 
     @property
     def name(self):

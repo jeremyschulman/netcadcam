@@ -20,3 +20,7 @@ clean:
 
 precheck:
 	invoke precheck
+
+.PHONY: tests
+tests:
+	cd tests && pytest -vvv
