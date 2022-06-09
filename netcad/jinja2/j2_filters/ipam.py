@@ -1,20 +1,7 @@
 #  Copyright (c) 2021 Jeremy Schulman
 #  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from typing import TYPE_CHECKING
+# from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from netcad.device import DeviceInterface
-
-
-def j2_ipam_interface(interface: "DeviceInterface"):
-    ipaddress = getattr(interface, "ipaddress", None) or getattr(
-        interface.profile, "ipaddress", None
-    )
-
-    if not ipaddress:
-        raise RuntimeError(
-            f"ipam_interface: {interface.device.name} {interface.name}: no ipaddress assigned."
-        )
-
-    return str(ipaddress)
+# if TYPE_CHECKING:
+#     from netcad.device import DeviceInterface

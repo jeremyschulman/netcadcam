@@ -41,9 +41,7 @@ __all__ = ["get_env", "expand_templates_dirs"]
 # -----------------------------------------------------------------------------
 
 _env_filters = {
-    "ipam_interface": j2_filters.j2_ipam_interface,
     "vlan_ranges": j2_filters.j2_vlans_id_list,
-    "render": j2_filters.j2_render,
     "startswith": lambda obj, pf: obj.startswith(pf),
     "range_string": range_string,
 }
