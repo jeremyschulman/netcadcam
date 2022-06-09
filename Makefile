@@ -17,6 +17,11 @@ clean:
 	rm -rf dist *.egg-info .pytest_cache
 	rm -f requirements.txt setup.py
 	rm -f poetry.lock
+	find . -name '__pycache__' | xargs rm -rf
 
 precheck:
 	invoke precheck
+
+.PHONY: tests
+tests:
+	cd tests && pytest -vvv

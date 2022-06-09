@@ -11,22 +11,19 @@ AnyIPAddress = t.Union[ipaddress.IPv4Address, ipaddress.IPv6Address]
 AnyIPInterface = t.Union[ipaddress.IPv4Interface, ipaddress.IPv6Interface]
 
 
-class IPAMNetwork(UserDict):
+class IPAMNetworkKeeper(UserDict):
     def __init__(self, ipam: "IPAM", name: t.Hashable, prefx: str, gateway=1):
-        super(IPAMNetwork, self).__init__()
+        super(IPAMNetworkKeeper, self).__init__()
         self.ipam = ipam
         self.name = name
         self.ip_network: AnyIPNetwork = ipaddress.ip_network(address=prefx)
         self._gateway_host_octet: int = gateway
 
-    def gateway_interface(self, name) -> AnyIPInterface:
-        return self.interface(name=name, host_octet=self._gateway_host_octet)
-
-    def interface(self, name: str, host_octet: int) -> AnyIPInterface:
+    def interface(self, name: str, host_octet: int, new_prefix=None) -> AnyIPInterface:
         """record an IP interface address for the given name"""
 
         self[name] = ipaddress.ip_interface(
-            f"{self.ip_network.network_address + host_octet}/{self.ip_network.netmask}"
+            f"{self.ip_network.network_address + host_octet}/{new_prefix or self.ip_network.netmask}"
         )
 
         return self[name]
@@ -70,7 +67,7 @@ class IPAMNetwork(UserDict):
             "gateway", ipaddress.ip_interface((ip, self.ip_network.prefixlen))
         )
 
-    def network(self, name: t.Hashable, prefix: str) -> "IPAMNetwork":
+    def network(self, name: t.Hashable, prefix: str) -> "IPAMNetworkKeeper":
         """
         This function creates a new network instance within the IPAM,
         designated by the name value.  This network can then be retrieved using
@@ -91,14 +88,14 @@ class IPAMNetwork(UserDict):
         -------
         IPAMNetwork instance for the given prefix.
         """
-        ip_net = self[name] = IPAMNetwork(self.ipam, name, prefix)
+        ip_net = self[name] = IPAMNetworkKeeper(self.ipam, name, prefix)
         return ip_net
 
     def __str__(self):
         return self.ip_network.__str__()
 
 
-class IPAM(Registry, UserDict, t.MutableMapping[t.Hashable, IPAMNetwork]):
+class IPAM(Registry, UserDict[t.Hashable, IPAMNetworkKeeper]):
     """
     The IPAM class is used to store instances of dictionary like object that
     whose keys can be any hashable item, such as a string-name, or VlanProfile,
@@ -121,7 +118,7 @@ class IPAM(Registry, UserDict, t.MutableMapping[t.Hashable, IPAMNetwork]):
         self.name = name
         self.registry_add(name, self)
 
-    def network(self, name: t.Hashable, prefix: str) -> IPAMNetwork:
+    def network(self, name: t.Hashable, address: str) -> IPAMNetworkKeeper:
         """
         This function creates a new network instance within the IPAM,
         designated by the name value.  This network can then be retrieved using
@@ -133,7 +130,7 @@ class IPAM(Registry, UserDict, t.MutableMapping[t.Hashable, IPAMNetwork]):
             Any hashable value that can be used as a key in the UserDict
             dictionary that underpins the IPAM instance.
 
-        prefix:
+        address:
             The IP address network with prefix, for example "192.168.12.0/24".
             The netmask could alternatively be provided, for example:
             "192.168.12.0/255.255.255.0"
@@ -142,5 +139,5 @@ class IPAM(Registry, UserDict, t.MutableMapping[t.Hashable, IPAMNetwork]):
         -------
         IPAMNetwork instance for the given prefix.
         """
-        self[name] = ip_net = IPAMNetwork(self, name, prefix)
+        self[name] = ip_net = IPAMNetworkKeeper(self, name, address)
         return ip_net
