@@ -23,6 +23,10 @@ class BGPPeeringEndpoint(PeeringEndpoint):
         self._desc = desc
 
     @property
+    def speaker(self):
+        return self.peer
+
+    @property
     def default_desc(self):
         rmt_end: BGPPeeringEndpoint = self.peered_endpoint
         rmt_peer: BGPSpeaker = rmt_end.peer

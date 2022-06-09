@@ -28,7 +28,7 @@ class IPNetworkEnumCatalog(IPNetworkProfile, Enum):
     """
 
     def __init__(self, given):
-        self._value_ = given  # noqa
+        self._value_ = given  # noqa - because of Enum metaclass magic
 
     @property
     def name(self):
