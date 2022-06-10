@@ -8,10 +8,10 @@ P = TypeVar("P")
 @dataclass(frozen=True)
 class IPNetworkProfile:
     """
-    The IPNetworkItem is a "record" that designates the IP network name,
-    address (with prefix), and optionally a link to a parent IPNetworkItem.
-    The parent is used for chaining the "child" record up through the heirarcy
-    of the IP address management.
+    The IPNetworkProfile is a "record" that designates the IP network name,
+    address (with prefix), and optionally a link to a parent IPNetworkItem. The
+    parent is used for chaining the "child" record up through the heirarcy of
+    the IP address management.
     """
 
     name: str
@@ -43,6 +43,8 @@ class IPNetworkEnumCatalog(IPNetworkProfile, Enum):
         """
         Return the enumerated parent value.
 
+        Notes
+        -----
         The parent attribute could be a callable.  This occurs when a given
         IPNetworkEnumCatalog needs to backreference a member as a parent.
 
@@ -53,7 +55,11 @@ class IPNetworkEnumCatalog(IPNetworkProfile, Enum):
 
             class Catalog(IPNetworkEnumCatalog):
                 this = IPNetworkProfile(name='foo', address='1.1.1.0/24')
+
+                # parent in declared Enum
                 that = IPNetworkProfile(name='bozo', address='2.2.2.0/24', parent=Parent.root)
+
+                # in same Enum as being declared
                 sibling = IPNetworkProfile(name='sib', address='91.92.93.0/24', parent=lambda : Catalog.that)
 
         In the case of Catalog.sibling, the parent is a backreference to
