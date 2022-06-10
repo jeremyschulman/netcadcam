@@ -1,4 +1,4 @@
-from netcad.ipam import IPNetworkProfile, IPNetworkEnumCatalog
+from netcad.ipam import IPNetworkProfile, IPNetworkEnumIndex
 
 
 def test_ipam_ip_network():
@@ -7,10 +7,10 @@ def test_ipam_ip_network():
 
 
 def test_ipam_ip_network_catalog():
-    class Parent(IPNetworkEnumCatalog):
+    class Parent(IPNetworkEnumIndex):
         root = IPNetworkProfile(name="root", address="3.3.3.0/24")
 
-    class Catalog(IPNetworkEnumCatalog):
+    class Catalog(IPNetworkEnumIndex):
         this = IPNetworkProfile(name="foo", address="1.1.1.0/24")
         that = IPNetworkProfile(name="bozo", address="2.2.2.0/24", parent=Parent.root)
 
@@ -18,7 +18,7 @@ def test_ipam_ip_network_catalog():
         # the same enum.  Otherwise, the parent would be referring in the
         # IPNetworkProfile instance and not the enumerated symbolic of the
         # IPNetworkProfile.  ick.  Generally speaking, one should not need to
-        # reference a symbolic in the same IPNetworkEnumCatalog, but it could
+        # reference a symbolic in the same IPNetworkEnumIndex, but it could
         # happen.
 
         sibling = IPNetworkProfile(
