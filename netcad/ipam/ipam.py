@@ -1,105 +1,33 @@
 #  Copyright (c) 2021 Jeremy Schulman
 #  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+# -----------------------------------------------------------------------------
+# System Imports
+# -----------------------------------------------------------------------------
+
 import typing as t
-import ipaddress
 from collections import UserDict
+
+# -----------------------------------------------------------------------------
+# Private Imports
+# -----------------------------------------------------------------------------
+
 from netcad.registry import Registry
 
-AnyIPNetwork = t.Union[ipaddress.IPv4Network, ipaddress.IPv6Network]
-AnyIPAddress = t.Union[ipaddress.IPv4Address, ipaddress.IPv6Address]
-AnyIPInterface = t.Union[ipaddress.IPv4Interface, ipaddress.IPv6Interface]
+from .ipam_network import IPAMNetwork
+
+# -----------------------------------------------------------------------------
+# Exports
+# -----------------------------------------------------------------------------
+
+__all__ = ["IPAM", "IPAMNetwork"]
 
 
-class IPAMNetworkKeeper(UserDict):
-    def __init__(self, ipam: "IPAM", name: t.Hashable, prefx: str, gateway=1):
-        super(IPAMNetworkKeeper, self).__init__()
-        self.ipam = ipam
-        self.name = name
-        self.ip_network: AnyIPNetwork = ipaddress.ip_network(address=prefx)
-        self._gateway_host_octet: int = gateway
-
-    def interface(self, name: str, host_octet: int, new_prefix=None) -> AnyIPInterface:
-        """record an IP interface address for the given name"""
-
-        self[name] = ipaddress.ip_interface(
-            f"{self.ip_network.network_address + host_octet}/{new_prefix or self.ip_network.netmask}"
-        )
-
-        return self[name]
-
-    def host(self, name: t.Hashable, offset_octet: int) -> AnyIPAddress:
-        """
-        Create a host IP address for the given name usig the `last_octet`
-        combined with the subnet address.
-
-        Parameters
-        ----------
-        name: Any
-            Used to uniquely identify the name of the host; does not need to be a string but
-            must be a hashable value.
-
-        offset_octet: int
-            The last octet of the IP address
-
-        Returns
-        -------
-        The ipaddress instance for the IP address.
-        """
-        self[name] = ipaddress.ip_address(
-            f"{self.ip_network.network_address + offset_octet}"
-        )
-
-        return self[name]
-
-    @property
-    def gateway(self) -> "AnyIPInterface":
-        """
-        Returns the IP address instance (not interface) of the network gateway
-        address.  Registers this instance under the name "gateway".
-
-        Returns
-        -------
-        IP address instance.
-        """
-        ip = self.ip_network.network_address + self._gateway_host_octet
-        return self.setdefault(
-            "gateway", ipaddress.ip_interface((ip, self.ip_network.prefixlen))
-        )
-
-    def network(self, name: t.Hashable, prefix: str) -> "IPAMNetworkKeeper":
-        """
-        This function creates a new network instance within the IPAM,
-        designated by the name value.  This network can then be retrieved using
-        "getitem" via the designated name.
-
-        Parameters
-        ----------
-        name:
-            Any hashable value that can be used as a key in the UserDict
-            dictionary that underpins the IPAM instance.
-
-        prefix:
-            The IP address network with prefix, for example "192.168.12.0/24".
-            The netmask could alternatively be provided, for example:
-            "192.168.12.0/255.255.255.0"
-
-        Returns
-        -------
-        IPAMNetwork instance for the given prefix.
-        """
-        ip_net = self[name] = IPAMNetworkKeeper(self.ipam, name, prefix)
-        return ip_net
-
-    def __str__(self):
-        return self.ip_network.__str__()
-
-
-class IPAM(Registry, UserDict[t.Hashable, IPAMNetworkKeeper]):
+class IPAM(Registry, UserDict[t.Hashable, IPAMNetwork]):
     """
-    The IPAM class is used to store instances of dictionary like object that
-    whose keys can be any hashable item, such as a string-name, or VlanProfile,
-    and whose values are instance of the IPAMNetwork class.
+    An IPAM instance is a collection of IPNetworkKeeper instances that are
+    indexed by the network-keeper "name".  The name is a hashable, typically a
+    string value or enum-string.
     """
 
     def __init__(self, name: t.Hashable):
@@ -118,11 +46,16 @@ class IPAM(Registry, UserDict[t.Hashable, IPAMNetworkKeeper]):
         self.name = name
         self.registry_add(name, self)
 
-    def network(self, name: t.Hashable, address: str) -> IPAMNetworkKeeper:
+    def network(self, name: t.Hashable, address: str) -> IPAMNetwork:
         """
-        This function creates a new network instance within the IPAM,
-        designated by the name value.  This network can then be retrieved using
-        "getitem" via the designated name.
+        This function creates a new network-keeper instance within the IPAM,
+        designated by the name value.  A Caller can retrieve that instance
+        using the dict getitem method, for example:
+
+            ipam.network("foo", "10.115.1.0/24")
+
+            ... later ...
+            nwk_keeper = ipam["foo"]
 
         Parameters
         ----------
@@ -139,5 +72,5 @@ class IPAM(Registry, UserDict[t.Hashable, IPAMNetworkKeeper]):
         -------
         IPAMNetwork instance for the given prefix.
         """
-        self[name] = ip_net = IPAMNetworkKeeper(self, name, address)
+        self[name] = ip_net = IPAMNetwork(self, name, address)
         return ip_net

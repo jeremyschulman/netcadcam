@@ -38,8 +38,8 @@ class PeeringEndpoint(Generic[P, E]):
     # the design (think BGP negibhor session).
     enabled: bool
 
-    # assigned during the 'build' process
-    peered_endpoint: E
+    # remote peering endpoint assigned during the 'build' process
+    remote: E
 
     def __repr__(self):
         return self.__dict__.__repr__()
