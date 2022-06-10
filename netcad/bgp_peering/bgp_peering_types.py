@@ -8,7 +8,7 @@ from netcad.device import InterfaceIP
 RouterID = InterfaceIP
 
 
-class BGPPeeringEndpoint(PeeringEndpoint):
+class BGPPeeringEndpoint(PeeringEndpoint["BGPSpeaker", "BGPPeeringEndpoint"]):
     desc: str
     via_ip: InterfaceIP
 
@@ -28,7 +28,7 @@ class BGPPeeringEndpoint(PeeringEndpoint):
 
     @property
     def default_desc(self):
-        rmt_end: BGPPeeringEndpoint = self.peered_endpoint
+        rmt_end: BGPPeeringEndpoint = self.remote
         rmt_peer: BGPSpeaker = rmt_end.peer
         bgp_type = "iBGP" if self.peer.asn == rmt_peer.asn else "eBGP"
         return f"{bgp_type} to {rmt_peer.name} via {self.via_ip.interface.short_name} {self.via_ip}"

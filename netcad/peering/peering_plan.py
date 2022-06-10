@@ -165,5 +165,5 @@ class PeeringPlanner(Generic[PP, PE]):
         end_a: PE
         end_b: PE
         for end_a, end_b in self.edges.values():
-            end_a.peered_endpoint = end_b
-            end_b.peered_endpoint = end_a
+            end_a.remote = end_b
+            end_b.remote = end_a

@@ -6,6 +6,7 @@
 # -----------------------------------------------------------------------------
 
 from typing import Optional, TypeVar
+from copy import copy
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -18,7 +19,8 @@ from netcad.peering import PeeringPlanner
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from .bgp_speaker import BGPSpeaker, BGPPeeringEndpoint
+from .bgp_peering_types import BGPSpeaker, BGPPeeringEndpoint
+from .checks import BgpNeighborsCheckCollection
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -43,13 +45,13 @@ class BgpPeeringDesignService(DesignService, registry_name="bgp_peering"):
     """
 
     DEFAULT_SERVICE_NAME = "bgp_peering"
-
-    CHECK_COLLECTIONS = []
+    CHECK_COLLECTIONS = [BgpNeighborsCheckCollection]
 
     def __init__(self, service_name: Optional[str] = None, **kwargs):
         super(BgpPeeringDesignService, self).__init__(
             service_name=service_name or self.DEFAULT_SERVICE_NAME, **kwargs
         )
+        self.check_collections = copy(self.__class__.CHECK_COLLECTIONS)
         self.peering = BgpPeeringPlanner(name=service_name)
 
     @property

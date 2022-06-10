@@ -43,7 +43,7 @@ class CheckCollection(BaseModel):
         specific use of the test cases.
 
     exclusive: bool, optional
-        When True (default) indicates that the list of tests are the exclude set
+        When True (default) indicates that the list of tests are to exclude set
         of items that should be present on the device/dut.  For example if the
         "interfaces" test-cases is exclusive, and the device has an interface
         not in the tests list, then an exception will be raised by the testing

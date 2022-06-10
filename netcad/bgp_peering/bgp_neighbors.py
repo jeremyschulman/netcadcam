@@ -2,7 +2,7 @@ from typing import Set, Optional
 
 from netcad.peering import PeeringID
 
-from .bgp_speaker import BGPSpeaker
+from .bgp_peering_types import BGPSpeaker
 
 BGPPeerID = PeeringID
 
