@@ -114,6 +114,10 @@ class BgpNeighborCollectionChecks(BaseModel):
     device: BgpDeviceCheck
     neighbors: List[BgpNeighborCheck]
 
+    def __len__(self):
+        """define length for composite checks class"""
+        return len(self.neighbors) + 1
+
 
 @register_collection
 class BgpNeighborsCheckCollection(CheckCollection):

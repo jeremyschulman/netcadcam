@@ -83,7 +83,9 @@ class Plugin:
 
     def load(self):
         self.import_plugin()
-        self.module.plugin_init(self.config.get("config"))
+
+        # pass the entire plugin definition to the plugin init function.
+        self.module.plugin_init(self.config)
 
     def _validate_config(self):
         self.name = self.config.get("name")

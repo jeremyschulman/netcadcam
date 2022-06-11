@@ -143,7 +143,7 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
             tc_name = testing_service.get_name()
             tc_file = testing_service.filepath(testcase_dir=dev_tc_dir, service=tc_name)
             if not tc_file.exists():
-                # if there are no test cases for this test-service, this
+                # if there are no test cases for this test-service, then
                 # continue to the next one.  Deactivated the log message as not
                 # sure if this is adding any value or potential confusion.  So
                 # leaving it out for now.
