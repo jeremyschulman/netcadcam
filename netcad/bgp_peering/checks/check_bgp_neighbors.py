@@ -33,38 +33,13 @@ if TYPE_CHECKING:
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["BgpNeighborsCheckCollection", "BgpRouterCheck", "BgpNeighborCheck"]
-
+__all__ = ["BgpNeighborsCheckCollection", "BgpNeighborCheck"]
 
 # -----------------------------------------------------------------------------
 #
 #                                 CODE BEGINS
 #
 # -----------------------------------------------------------------------------
-
-# -----------------------------------------------------------------------------
-# Check Device for router-ID, ASN
-# -----------------------------------------------------------------------------
-
-
-class BgpRouterCheckParams(BaseModel):
-    name: str = Field(..., description="The device hostname")
-    vrf: Optional[str] = Field(None, description="VRF used if not default")
-
-
-class BgpRouterCheckExpectations(BaseModel):
-    asn: int = Field(..., description="The device ASN value")
-    router_id: str = Field(..., description="The device router-ID value")
-
-
-class BgpRouterCheck(Check):
-    check_type = "bgp-router"
-    check_params: BgpRouterCheckParams
-    expected_results: BgpRouterCheckExpectations
-
-    def check_id(self) -> str:
-        cp = self.check_params
-        return cp.name if not cp.vrf else f"{cp.name}:{cp.vrf}"
 
 
 # -----------------------------------------------------------------------------
@@ -113,19 +88,10 @@ class BgpNeighborExclusiveListCheck(Check):
 # -----------------------------------------------------------------------------
 
 
-class BgpNeighborCollectionChecks(BaseModel):
-    routers: List[BgpRouterCheck]
-    neighbors: List[BgpNeighborCheck]
-
-    def __len__(self):
-        """define length for composite checks class"""
-        return len(self.neighbors) + 1
-
-
 @register_collection
 class BgpNeighborsCheckCollection(CheckCollection):
     name = "bgp-peering"
-    checks: BgpNeighborCollectionChecks
+    checks: List[BgpNeighborCheck]
 
     @classmethod
     def build(
@@ -140,7 +106,6 @@ class BgpNeighborsCheckCollection(CheckCollection):
         )
 
         nei_checks = list()
-        rtr_checks = list()
 
         # find matching to device hostname
 
@@ -156,18 +121,6 @@ class BgpNeighborsCheckCollection(CheckCollection):
             raise RuntimeError()
 
         for bgp_spkr in routers:
-
-            rtr_checks.append(
-                BgpRouterCheck(
-                    check_params=BgpRouterCheckParams(
-                        name=device.name, vrf=bgp_spkr.vrf
-                    ),
-                    expected_results=BgpRouterCheckExpectations(
-                        asn=bgp_spkr.asn, router_id=str(bgp_spkr.router_id)
-                    ),
-                )
-            )
-
             for bgp_nei_rec in bgp_spkr.neighbors:
                 remote = bgp_nei_rec.remote
                 nei_checks.append(
@@ -185,16 +138,11 @@ class BgpNeighborsCheckCollection(CheckCollection):
                 )
 
         collection = BgpNeighborsCheckCollection(
-            device=device.name,
-            exclusive=True,
-            checks=BgpNeighborCollectionChecks(
-                routers=rtr_checks,
-                neighbors=nei_checks,
-            ),
+            device=device.name, exclusive=True, checks=nei_checks
         )
 
         # return the test-cases sorted by Neighbor IP address
-        collection.checks.neighbors.sort(
-            key=lambda c: ip_address(c.check_params.nei_ip)
-        )
+
+        collection.checks.sort(key=lambda c: ip_address(c.check_params.nei_ip))
+
         return collection
