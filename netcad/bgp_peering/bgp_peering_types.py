@@ -39,11 +39,18 @@ class BGPPeeringEndpoint(PeeringEndpoint["BGPSpeaker", "BGPPeeringEndpoint"]):
 
 
 class BGPSpeaker(Peer[Device, BGPPeeringEndpoint]):
-    def __init__(self, device: Device, asn: int, router_id: RouterID):
-        super().__init__(name=device.name)
+    def __init__(
+        self, device: Device, asn: int, router_id: RouterID, vrf: Optional[str] = None
+    ):
+        # Use the tuple of the device name and VRF name as the peering-name.
+        # This allows for a device/router to have multiple configurations based
+        # n VRF.
+
+        super().__init__(name=(device.name, vrf))
         self.device = device
         self.asn = asn
         self.router_id = router_id
+        self.vrf = vrf
 
     @property
     def neighbors(self) -> list[BGPPeeringEndpoint]:

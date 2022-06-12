@@ -58,8 +58,8 @@ class BgpPeeringDesignService(DesignService, registry_name="bgp_peering"):
     def speakers(self):
         return self.peering.peers
 
-    def get_speaker(self, hostname: str) -> BGPSpeaker:
-        return self.peering.get_peer(hostname)
+    def get_speaker(self, hostname: str, vrf: Optional[str] = None) -> BGPSpeaker:
+        return self.peering.get_peer((hostname, vrf))
 
     def add_speakers(self, *speakers: BGPSpeaker):
         self.peering.add_peers(*speakers)
