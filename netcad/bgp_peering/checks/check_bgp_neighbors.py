@@ -148,7 +148,7 @@ class BgpNeighborsCheckCollection(CheckCollection):
             spkr
             for bgp_svc in services
             for spkr_name, spkr in bgp_svc.speakers.items()
-            if spkr_name[0] == device.name
+            if spkr_name.hostname == device.name
         ]
 
         if not routers:
@@ -173,7 +173,7 @@ class BgpNeighborsCheckCollection(CheckCollection):
                 nei_checks.append(
                     BgpNeighborCheck(
                         check_params=BgpNeighborCheckParams(
-                            nei_name=remote.speaker.name[0],
+                            nei_name=remote.speaker.device.name,
                             nei_ip=str(remote.via_ip),
                             vrf=bgp_spkr.vrf,
                         ),
