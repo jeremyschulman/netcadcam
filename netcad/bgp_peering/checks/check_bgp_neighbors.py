@@ -32,7 +32,7 @@ if TYPE_CHECKING:
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["BgpNeighborsCheckCollection"]
+__all__ = ["BgpNeighborsCheckCollection", "BgpDeviceCheck", "BgpNeighborCheck"]
 
 
 # -----------------------------------------------------------------------------
@@ -59,6 +59,7 @@ class BgpDeviceCheckExpectations(BaseModel):
 class BgpDeviceCheck(Check):
     check_type = "bgp_router"
     check_params: BgpDeviceCheckParams
+    expected_results: BgpDeviceCheckExpectations
 
     def check_id(self) -> str:
         cp = self.check_params
@@ -73,6 +74,7 @@ class BgpDeviceCheck(Check):
 class BgpNeighborCheckParams(BaseModel):
     nei_name: str = Field(..., description="The BGP speaker (device) name")
     nei_ip: str = Field(..., description="The BGP neighbor IP address")
+    vrf: Optional[str] = Field(None, description="VRF used if not default")
 
 
 class BgpNeighborCheckExpectations(BaseModel):

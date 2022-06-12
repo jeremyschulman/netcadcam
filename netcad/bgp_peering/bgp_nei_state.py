@@ -1,10 +1,13 @@
-from enum import IntEnum
+from enum import auto
+from netcad.helpers import StrEnum
 
 
-class BgpNeighborState(IntEnum):
-    IDLE = 1
-    CONNECT = 2
-    ACTIVE = 3
-    OPEN_SEND = 4
-    OPEN_CONFIRM = 5
-    ESTABLISHED = 6
+# due to bug in PyCharm, ...
+# noinspection PyArgumentList
+class BgpNeighborState(StrEnum):
+    IDLE = auto()
+    CONNECT = auto()
+    ACTIVE = auto()
+    OPEN_SENT = auto()
+    OPEN_CONFIRM = auto()
+    ESTABLISHED = auto()
