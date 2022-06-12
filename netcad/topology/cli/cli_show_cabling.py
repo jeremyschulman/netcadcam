@@ -209,7 +209,7 @@ def report_cabling_per_network(cabling: CablePlanner, network: str):
 
     # then sort the table based on the device-name, and interface sort-key
 
-    cables.sort(key=lambda c: (c[1].device.name, c[1], c[2].device.name, c[2]))
+    cables.sort(key=lambda c: (c[1].device, c[1], c[2].device, c[2]))
 
     table = cabling_table(
         table=Table(
