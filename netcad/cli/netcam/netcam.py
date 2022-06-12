@@ -13,7 +13,7 @@ import sys
 
 from netcad.logger import get_logger
 from netcad.debug import format_exc_message
-from netcad.init import init, init_netcam_plugings, init_netcad_origin_plugins
+from netcad.init import init, init_netcam_plugins, init_netcad_origin_plugins
 
 # -----------------------------------------------------------------------------
 # Private Module Imports
@@ -43,7 +43,7 @@ def script():
     try:
         init()
         init_netcad_origin_plugins.init_netcad_origin_plugins()
-        init_netcam_plugings.import_netcam_plugins()
+        init_netcam_plugins.import_netcam_plugins()
         cli()
 
     except Exception as exc:

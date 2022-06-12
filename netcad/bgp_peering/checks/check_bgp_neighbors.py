@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field
 from netcad.device import Device
 from netcad.checks import CheckCollection, Check
 from netcad.checks.check_registry import register_collection
+from netcad.logger import get_logger
 
 from ..bgp_nei_state import BgpNeighborState
 
@@ -32,7 +33,7 @@ if TYPE_CHECKING:
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["BgpNeighborsCheckCollection"]
+__all__ = ["BgpNeighborsCheckCollection", "BgpRouterCheck", "BgpNeighborCheck"]
 
 
 # -----------------------------------------------------------------------------
@@ -46,19 +47,20 @@ __all__ = ["BgpNeighborsCheckCollection"]
 # -----------------------------------------------------------------------------
 
 
-class BgpDeviceCheckParams(BaseModel):
+class BgpRouterCheckParams(BaseModel):
     name: str = Field(..., description="The device hostname")
     vrf: Optional[str] = Field(None, description="VRF used if not default")
 
 
-class BgpDeviceCheckExpectations(BaseModel):
+class BgpRouterCheckExpectations(BaseModel):
     asn: int = Field(..., description="The device ASN value")
     router_id: str = Field(..., description="The device router-ID value")
 
 
-class BgpDeviceCheck(Check):
-    check_type = "bgp_router"
-    check_params: BgpDeviceCheckParams
+class BgpRouterCheck(Check):
+    check_type = "bgp-router"
+    check_params: BgpRouterCheckParams
+    expected_results: BgpRouterCheckExpectations
 
     def check_id(self) -> str:
         cp = self.check_params
@@ -73,6 +75,7 @@ class BgpDeviceCheck(Check):
 class BgpNeighborCheckParams(BaseModel):
     nei_name: str = Field(..., description="The BGP speaker (device) name")
     nei_ip: str = Field(..., description="The BGP neighbor IP address")
+    vrf: Optional[str] = Field(None, description="VRF used if not default")
 
 
 class BgpNeighborCheckExpectations(BaseModel):
@@ -111,13 +114,17 @@ class BgpNeighborExclusiveListCheck(Check):
 
 
 class BgpNeighborCollectionChecks(BaseModel):
-    device: BgpDeviceCheck
+    routers: List[BgpRouterCheck]
     neighbors: List[BgpNeighborCheck]
+
+    def __len__(self):
+        """define length for composite checks class"""
+        return len(self.neighbors) + 1
 
 
 @register_collection
 class BgpNeighborsCheckCollection(CheckCollection):
-    name = "bgp_neighbors"
+    name = "bgp-peering"
     checks: BgpNeighborCollectionChecks
 
     @classmethod
@@ -133,20 +140,42 @@ class BgpNeighborsCheckCollection(CheckCollection):
         )
 
         nei_checks = list()
+        rtr_checks = list()
 
-        dev_bgp_spkr = None
+        # find matching to device hostname
 
-        for bgp_svc in services:
-            if not (dev_bgp_spkr := bgp_svc.get_speaker(hostname=device.name)):
-                # TODO: log.error, raise excewption
-                raise RuntimeError()
+        routers = [
+            spkr
+            for bgp_svc in services
+            for spkr_name, spkr in bgp_svc.speakers.items()
+            if spkr_name[0] == device.name
+        ]
 
-            for bgp_nei_rec in dev_bgp_spkr.neighbors:
+        if not routers:
+            get_logger().error(f"Device {device.name} does not have any BGP routers")
+            raise RuntimeError()
+
+        for bgp_spkr in routers:
+
+            rtr_checks.append(
+                BgpRouterCheck(
+                    check_params=BgpRouterCheckParams(
+                        name=device.name, vrf=bgp_spkr.vrf
+                    ),
+                    expected_results=BgpRouterCheckExpectations(
+                        asn=bgp_spkr.asn, router_id=str(bgp_spkr.router_id)
+                    ),
+                )
+            )
+
+            for bgp_nei_rec in bgp_spkr.neighbors:
                 remote = bgp_nei_rec.remote
                 nei_checks.append(
                     BgpNeighborCheck(
                         check_params=BgpNeighborCheckParams(
-                            nei_name=remote.speaker.name, nei_ip=str(remote.via_ip)
+                            nei_name=remote.speaker.name[0],
+                            nei_ip=str(remote.via_ip),
+                            vrf=bgp_spkr.vrf,
                         ),
                         expected_results=BgpNeighborCheckExpectations(
                             remote_asn=remote.speaker.asn,
@@ -155,20 +184,11 @@ class BgpNeighborsCheckCollection(CheckCollection):
                     )
                 )
 
-        if not dev_bgp_spkr:
-            # TODO: log error, raise exc
-            raise RuntimeError()
-
         collection = BgpNeighborsCheckCollection(
             device=device.name,
             exclusive=True,
             checks=BgpNeighborCollectionChecks(
-                device=BgpDeviceCheck(
-                    check_params=BgpDeviceCheckParams(name=device.name),
-                    expected_results=BgpDeviceCheckExpectations(
-                        asn=dev_bgp_spkr.asn, router_id=str(dev_bgp_spkr.router_id)
-                    ),
-                ),
+                routers=rtr_checks,
                 neighbors=nei_checks,
             ),
         )

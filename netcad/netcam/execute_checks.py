@@ -143,7 +143,7 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
             tc_name = testing_service.get_name()
             tc_file = testing_service.filepath(testcase_dir=dev_tc_dir, service=tc_name)
             if not tc_file.exists():
-                # if there are no test cases for this test-service, this
+                # if there are no test cases for this test-service, then
                 # continue to the next one.  Deactivated the log message as not
                 # sure if this is adding any value or potential confusion.  So
                 # leaving it out for now.
@@ -171,6 +171,19 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
                             f"Checks: {tc_name}",
                         )
                     ]
+
+            except IndexError as exc:
+                tc_registry = dut.__class__.__dict__[
+                    "execute_checks"
+                ].dispatcher.registry
+                tc_type = type(testcases)
+                if not tc_registry.get(tc_type):
+                    log.error(
+                        f"{dut_name}: No DUT check processor for {tc_type.__name__}, skipping."
+                    )
+                    continue
+
+                raise exc
 
             except Exception as exc:
                 import traceback

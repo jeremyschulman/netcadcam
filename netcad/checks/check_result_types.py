@@ -142,7 +142,12 @@ class CheckFailNoExists(CheckFailResult):
     def __init__(self, device, check, **kwargs):
         kwargs.setdefault("field", "exists")
         kwargs.setdefault(
-            "error", dict(error="missing", expected=check.expected_results.dict())
+            "error",
+            dict(
+                error="missing",
+                params=check.check_params.dict(),
+                expected=check.expected_results.dict(),
+            ),
         )
 
         super().__init__(device=device, check=check, **kwargs)

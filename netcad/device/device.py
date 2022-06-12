@@ -128,6 +128,7 @@ class Device(Registry, registry_name="devices"):
         """
 
         self.name = name
+        self.sort_key = name
 
         self._primary_ip: Optional[IPv4Interface | IPv6Interface] = None
         self._primary_ip_interface: Optional[DeviceInterface] = None
@@ -389,7 +390,7 @@ class Device(Registry, registry_name="devices"):
 
         raise AttributeError(item)
 
-    def __lt__(self, other):
+    def __lt__(self, other: "Device"):
         """
         For Device sortability purposes implement the less-than comparitor.  Subclasses
         can change this behavior for their own specific strategies.  A common one could
@@ -397,7 +398,14 @@ class Device(Registry, registry_name="devices"):
 
         The default comparison will be based on the device name.
         """
-        return self.name < other.name
+        try:
+            return self.sort_key < other.sort_key
+        except TypeError as exc:
+            raise RuntimeError(
+                "Device sort-key type mismatch between "
+                f"{self.name}:{type(self)} and {other.name}:{type(other)}\n"
+                f"{str(exc)}"
+            )
 
 
 # A device catalog is a dictionary of devices key=dev.name, value=device-obj
