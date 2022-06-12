@@ -172,6 +172,19 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
                         )
                     ]
 
+            except IndexError as exc:
+                tc_registry = dut.__class__.__dict__[
+                    "execute_checks"
+                ].dispatcher.registry
+                tc_type = type(testcases)
+                if not tc_registry.get(tc_type):
+                    log.error(
+                        f"{dut_name}: No DUT check processor for {tc_type.__name__}, skipping."
+                    )
+                    continue
+
+                raise exc
+
             except Exception as exc:
                 import traceback
 
