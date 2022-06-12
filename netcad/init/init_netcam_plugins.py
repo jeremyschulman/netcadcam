@@ -5,6 +5,7 @@ from typing import Optional
 
 from netcad.config import netcad_globals
 from netcad.plugins import NetcamPlugin, PluginCatalog
+from .loader import netcad_import_package
 
 
 def import_netcam_plugins() -> Optional[PluginCatalog]:
@@ -33,7 +34,26 @@ def import_netcam_plugins() -> Optional[PluginCatalog]:
         pg_obj.load()
 
         netcad_globals.g_netcam_plugins.append(pg_obj)
-        for os_name in pg_obj.config["supports"]:
+
+        if not (supported_os := pg_obj.config.get("supports")):
+            raise RuntimeError(
+                f"netcam plugin {pg_obj.name} missing 'supports' OS name list definition"
+            )
+
+        for os_name in supported_os:
             netcad_globals.g_netcam_plugins_os_catalog[os_name] = pg_obj
+
+        if not (svcs := pg_obj.config.get("services")):
+            raise RuntimeError(
+                f"netcam plugin {pg_obj.name} missing 'services' package list definition"
+            )
+
+        for svc_pkg in svcs:
+            try:
+                netcad_import_package(svc_pkg)
+            except ImportError as exc:
+                raise RuntimeError(
+                    f"Unable to import DUT {pg_obj.name} module {svc_pkg}: {str(exc)}"
+                )
 
     return netcad_globals.g_netcam_plugins_os_catalog
