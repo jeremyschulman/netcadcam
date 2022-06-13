@@ -21,10 +21,11 @@ from .peering_types import Peer, PeeringID, PeeringEndpoint
 __all__ = ["PeeringPlanner"]
 
 PP = TypeVar("PP", bound=Peer)
+PN = TypeVar("PN", bound=Hashable)
 PE = TypeVar("PE", bound=PeeringEndpoint)
 
 
-class PeeringPlanner(Generic[PP, PE]):
+class PeeringPlanner(Generic[PP, PN, PE]):
     """
     Corresponds to a Graph that maintains the relationship of Peer and
     PeeringEndpoints instances.
@@ -46,7 +47,7 @@ class PeeringPlanner(Generic[PP, PE]):
 
     def __init__(self, name: str):
         self.name = name
-        self.peers: Dict[Hashable, PP] = dict()
+        self.peers: Dict[PN, PP] = dict()
         self.edges: DefaultDict[PeeringID, Set[PE]] = defaultdict(set)
         self.validated = False
 

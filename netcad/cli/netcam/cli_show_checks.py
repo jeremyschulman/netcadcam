@@ -94,6 +94,9 @@ __all__ = []
     "--pass", "include_pass", is_flag=True, default=False, help="include PASS reports"
 )
 @click.option(
+    "--passing", "pass_only", is_flag=True, default=False, help="Only show PASS reports"
+)
+@click.option(
     "--brief", "brief_mode", is_flag=True, help="Show summary counts of device(s)"
 )
 @click.option(
@@ -336,7 +339,10 @@ def filter_results(results: dict, optionals: dict) -> List[Dict]:
     """
     inc_all = optionals["include_all"]
 
-    status_allows = {trt.CheckStatus.FAIL}
+    if optionals["pass_only"]:
+        status_allows = {trt.CheckStatus.PASS}
+    else:
+        status_allows = {trt.CheckStatus.FAIL}
 
     inc_fields = optionals["include_fields"]
     exc_fields = optionals["exclude_fields"]

@@ -5,7 +5,7 @@
 # Systeme Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional, TypeVar
+from typing import Optional, TypeVar, Dict
 from copy import copy
 
 # -----------------------------------------------------------------------------
@@ -19,8 +19,8 @@ from netcad.peering import PeeringPlanner
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from .bgp_peering_types import BGPSpeaker, BGPPeeringEndpoint
-from .checks import BgpNeighborsCheckCollection
+from .bgp_peering_types import BGPSpeaker, BGPPeeringEndpoint, BGPSpeakerName
+from .checks import BgpNeighborsCheckCollection, BgpRoutersCheckCollection
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -35,7 +35,7 @@ __all__ = ["BgpPeeringDesignService", "BgpPeeringDesignServiceLike"]
 # -----------------------------------------------------------------------------
 
 
-class BgpPeeringPlanner(PeeringPlanner[BGPSpeaker, BGPPeeringEndpoint]):
+class BgpPeeringPlanner(PeeringPlanner[BGPSpeaker, BGPSpeakerName, BGPPeeringEndpoint]):
     pass
 
 
@@ -45,7 +45,8 @@ class BgpPeeringDesignService(DesignService, registry_name="bgp_peering"):
     """
 
     DEFAULT_SERVICE_NAME = "bgp_peering"
-    CHECK_COLLECTIONS = [BgpNeighborsCheckCollection]
+
+    CHECK_COLLECTIONS = [BgpRoutersCheckCollection, BgpNeighborsCheckCollection]
 
     def __init__(self, service_name: Optional[str] = None, **kwargs):
         super(BgpPeeringDesignService, self).__init__(
@@ -54,12 +55,31 @@ class BgpPeeringDesignService(DesignService, registry_name="bgp_peering"):
         self.check_collections = copy(self.__class__.CHECK_COLLECTIONS)
         self.peering = BgpPeeringPlanner(name=service_name)
 
-    @property
-    def speakers(self):
-        return self.peering.peers
+    def get_speaker(self, hostname: str, vrf: Optional[str] = None):
+        """
+        This function is used to retrieve the BGPSpeaker defined by the device
+        hostname and VRF optional.
 
-    def get_speaker(self, hostname: str, vrf: Optional[str] = None) -> BGPSpeaker:
-        return self.peering.get_peer((hostname, vrf))
+        The use of this function can be found in Jinja2 templates that need to
+        obtain a BGP speaker in using these input types.
+
+        Parameters
+        ----------
+        hostname: str
+            The device hostname
+
+        vrf: str, optonal
+            The VRF name, or None.
+
+        Returns
+        -------
+        BGPSpeaker as described
+        """
+        return self.speakers[BGPSpeakerName(hostname, vrf)]
+
+    @property
+    def speakers(self) -> Dict[BGPSpeakerName, BGPSpeaker]:
+        return self.peering.peers
 
     def add_speakers(self, *speakers: BGPSpeaker):
         self.peering.add_peers(*speakers)
