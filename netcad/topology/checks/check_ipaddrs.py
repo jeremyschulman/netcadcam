@@ -27,9 +27,10 @@ from netcad.checks import register_collection
 # -----------------------------------------------------------------------------
 
 __all__ = [
-    "IpInterfacesCheckCollection",
-    "IpInterfaceCheck",
-    "IpInterfaceCheckExclusiveList",
+    "IPInterfacesCheckCollection",
+    "IPInterfaceCheck",
+    "IPInterfaceCheckExclusiveList",
+    "IPInterfaceList",
 ]
 
 
@@ -40,42 +41,41 @@ __all__ = [
 # -----------------------------------------------------------------------------
 
 
-class IpInterfaceCheckParams(BaseModel):
+class IPInterfaceCheckParams(BaseModel):
     if_name: str
 
 
-class IpInterfaceCheckExpectations(BaseModel):
+class IPInterfaceCheckExpectations(BaseModel):
     if_ipaddr: str
+    # TODO: add enabled state, for when the IP is not expected to be "up"
 
 
-class IpInterfaceCheck(Check):
-    check_params: IpInterfaceCheckParams
-    expected_results: IpInterfaceCheckExpectations
+class IPInterfaceCheck(Check):
+    check_params: IPInterfaceCheckParams
+    expected_results: IPInterfaceCheckExpectations
 
     def check_id(self) -> str:
         return str(self.check_params.if_name)
 
 
-class IpInterfaceCheckExclusiveList(Check):
-    def __init__(self, **kwargs):
-        super().__init__(
-            check_type="ipaddrs-list",
-            check_params=BaseModel(),
-            expected_results=BaseModel(),
-            **kwargs
-        )
+class IPInterfaceList(BaseModel):
+    if_names: List[str]
+
+
+class IPInterfaceCheckExclusiveList(Check):
+    expected_results: IPInterfaceList
 
     def check_id(self) -> str:
         return "exclusive_list"
 
 
 @register_collection
-class IpInterfacesCheckCollection(CheckCollection):
+class IPInterfacesCheckCollection(CheckCollection):
     name = "ipaddrs"
-    checks: Optional[List[IpInterfaceCheck]]
+    checks: Optional[List[IPInterfaceCheck]]
 
     @classmethod
-    def build(cls, device: Device, **kwargs) -> Optional["IpInterfacesCheckCollection"]:
+    def build(cls, device: Device, **kwargs) -> Optional["IPInterfacesCheckCollection"]:
         if_l3_list = [
             iface
             for iface in device.interfaces.used().values()
@@ -83,12 +83,13 @@ class IpInterfacesCheckCollection(CheckCollection):
             and (iface.profile.if_ipaddr or iface.profile.is_reserved)
         ]
 
-        return IpInterfacesCheckCollection(
+        return IPInterfacesCheckCollection(
             device=device.name,
+            exclusive=not device.is_not_exclusive,
             checks=[
-                IpInterfaceCheck(
-                    check_params=IpInterfaceCheckParams(if_name=iface.name),
-                    expected_results=IpInterfaceCheckExpectations(
+                IPInterfaceCheck(
+                    check_params=IPInterfaceCheckParams(if_name=iface.name),
+                    expected_results=IPInterfaceCheckExpectations(
                         if_ipaddr=str(iface.profile.if_ipaddr or "is_reserved")
                     ),
                 )

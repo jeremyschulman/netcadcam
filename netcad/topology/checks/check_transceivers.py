@@ -100,5 +100,6 @@ class TransceiverCheckCollection(CheckCollection):
 
         return TransceiverCheckCollection(
             device=device.name,
+            exclusive=not device.is_not_exclusive,
             checks=[_build_one_tc(iface) for iface in sorted(interfaces)],
         )

@@ -25,7 +25,7 @@ from .checks.check_device_info import DeviceInformationCheckCollection
 from .checks.check_cabling_nei import InterfaceCablingCheckCollection
 from .checks.check_interfaces import InterfaceCheckCollection
 from .checks.check_lags import LagCheckCollection
-from .checks.check_ipaddrs import IpInterfacesCheckCollection
+from .checks.check_ipaddrs import IPInterfacesCheckCollection
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -64,7 +64,7 @@ class TopologyDesignService(DesignService, registry_name="topology"):
         TransceiverCheckCollection,
         InterfaceCablingCheckCollection,
         LagCheckCollection,
-        IpInterfacesCheckCollection,
+        IPInterfacesCheckCollection,
     ]
 
     def __init__(

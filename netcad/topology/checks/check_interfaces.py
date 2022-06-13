@@ -32,6 +32,7 @@ __all__ = [
     "InterfaceCheckUsedExpectations",
     "InterfaceCheckNotUsedExpectations",
     "InterfaceCheckExclusiveList",
+    "InterfacesListExpected",
 ]
 
 # -----------------------------------------------------------------------------
@@ -67,14 +68,12 @@ class InterfaceCheck(Check):
         return str(self.check_params.interface)
 
 
+class InterfacesListExpected(BaseModel):
+    if_name_list: List[str]
+
+
 class InterfaceCheckExclusiveList(Check):
-    def __init__(self, **kwargs):
-        super().__init__(
-            check_type="interface-list",
-            check_params=BaseModel(),
-            expected_results=BaseModel(),
-            **kwargs
-        )
+    expected_results: InterfacesListExpected
 
     def check_id(self) -> str:
         return "exclusive_list"
@@ -124,11 +123,23 @@ class InterfaceCheckCollection(CheckCollection):
 
         collection = InterfaceCheckCollection(
             device=device.name,
+            exclusive=not device.is_not_exclusive,
             checks=[
                 build_check(iface=interface)
                 for if_name, interface in device.interfaces.items()
             ],
         )
+
+        # if in non-exclusive mode, then only check the interfaces that are
+        # defined as USED in the design.  Otherwise, the checks will include to
+        # validate the UNUSED interfaces.
+
+        if not collection.exclusive:
+            collection.checks = [
+                check
+                for check in collection.checks
+                if check.expected_results.used is True
+            ]
 
         # return the checks sorted by the lag interface name
         collection.checks.sort(
