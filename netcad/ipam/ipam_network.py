@@ -114,6 +114,11 @@ class IPAMNetwork(UserDict):
 
         return self[name]
 
+    def loopback(self, name: t.Hashable, host_octet: int) -> AnyIPInterface:
+        return self.interface(
+            name, host_octet, new_prefix=self.ip_network.max_prefixlen
+        )
+
     def host(self, name: t.Hashable, offset_octet: int) -> AnyIPAddress:
         """
         Create a host IP address for the given name usig the `last_octet`

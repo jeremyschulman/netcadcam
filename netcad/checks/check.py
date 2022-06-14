@@ -69,7 +69,7 @@ class Check(BaseModel):
     # -------------------------------------------------------------------------
 
     def dict(self, **kwargs):
-        """By default exclude any optional/None fields from serialization"""
+        """By default, exclude any optional/None fields from serialization"""
         # TODO: may rethink this default.
         # kwargs["exclude_none"] = True
         return super(Check, self).dict(**kwargs)
