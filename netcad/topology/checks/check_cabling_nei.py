@@ -17,7 +17,7 @@ from pydantic import BaseModel
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.device import Device, DeviceInterface
+from netcad.device import Device, DeviceInterface, HostDevice
 from netcad.checks import CheckCollection, Check
 from netcad.checks import register_collection
 
@@ -92,6 +92,7 @@ class InterfaceCablingCheckCollection(CheckCollection):
             return (
                 _iface.cable_peer
                 and not _iface.profile.is_virtual
+                and not isinstance(_iface.cable_peer.device, HostDevice)
                 and _iface.cable_peer.cable_port_id is not NoValidateCabling
             )
 

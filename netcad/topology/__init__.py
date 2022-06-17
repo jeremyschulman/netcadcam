@@ -16,6 +16,9 @@ from .topology_design_service import TopologyDesignService, TopologyServiceLike
 # sential object to mark an interface.cable_port_id  as do-not-check
 from .checks.check_cabling_nei import NoValidateCabling
 
+
+from .xcvr_matching import transceiver_model_matches, transceiver_type_matches
+
 from . import cli
 
 
