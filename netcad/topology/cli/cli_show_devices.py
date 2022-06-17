@@ -104,8 +104,10 @@ def show_network_devices(design: Design, **flags):
         "Profile",
         "OS",
         "Product Model",
+        "Primary IP",
         show_header=True,
         header_style="bold magenta",
+        title_justify="left",
         title=f"Design '{design.name}', {design_desc}",
     )
 
@@ -121,6 +123,9 @@ def show_network_devices(design: Design, **flags):
                 continue
             dev_type = f"[blue]{dev_type}[/blue]"
 
-        table.add_row(dev.name, dev_type, dev.os_name, dev.product_model)
+        primary_ip = getattr(dev, "primary_ip", "[red]unassigned[/red]")
+        table.add_row(
+            dev.name, dev_type, dev.os_name, dev.product_model, str(primary_ip)
+        )
 
     console.print("\n", table)

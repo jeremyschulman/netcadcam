@@ -165,7 +165,13 @@ def load_design_singleton(design_name: str, pkg_name: str, design_config: dict):
     if not design_mod:
         raise RuntimeError(f'Failed to import design "{design_name}"')
 
-    design_inst = Design(name=design_name, config=design_config.get("config"))
+    # ensure there is a design.config dictionary, that is initialized
+    # with the description value from the config file.from
+
+    design_config.setdefault("config", {})
+    design_config["config"]["description"] = design_config.get("description", "")
+
+    design_inst = Design(name=design_name, config=design_config)
 
     # Execute the design function in the module if present.  If one is not
     # found, then this is a Designer error, and raise a Runtime exception.
