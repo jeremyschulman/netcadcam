@@ -123,7 +123,8 @@ def show_network_devices(design: Design, **flags):
                 continue
             dev_type = f"[blue]{dev_type}[/blue]"
 
-        primary_ip = getattr(dev, "primary_ip", "[red]unassigned[/red]")
+        primary_ip = dev.primary_ip or "[red]unassigned[/red]"
+
         table.add_row(
             dev.name, dev_type, dev.os_name, dev.product_model, str(primary_ip)
         )
