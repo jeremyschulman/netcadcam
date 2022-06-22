@@ -110,6 +110,7 @@ class PhyPortTypes(StrEnum):
     type_100GBASE_DR = "100GBASE-DR"
     type_100GBASE_FR = "100GBASE-FR"
     type_100GBASE_LR = "100GBASE-LR"
+    type_100GBASE_SRBD = "100GBASE-SRBD"
 
 
 class CableMediaType(StrEnum):
