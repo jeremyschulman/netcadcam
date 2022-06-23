@@ -220,7 +220,7 @@ class Device(Registry, registry_name="devices"):
         return self
 
     @property
-    def primary_ip(self) -> InterfaceIP:
+    def primary_ip(self) -> InterfaceIP | None:
         """
         Returns an InterfaceIP instance that is the ip_address instance for the
         device primary IP address, augmented with an 'interface' attribute. The
@@ -230,10 +230,18 @@ class Device(Registry, registry_name="devices"):
         Notes
         -----
         Supports both IPv4 and IPv6 use-cases
+
+        Returns
+        -------
+        The InterfaceIP instance for the primary IP, if assigned.  None
+        otherwise.
         """
-        return to_interface_ip(
-            ip=self._primary_ip.ip, interface=self._primary_ip_interface
-        )
+        try:
+            return to_interface_ip(
+                ip=self._primary_ip.ip, interface=self._primary_ip_interface
+            )
+        except AttributeError:
+            return None
 
     def services_of(
         self, svc_cls: Type["DesignServiceLike"]
