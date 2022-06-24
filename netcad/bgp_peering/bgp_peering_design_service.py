@@ -55,7 +55,7 @@ class BgpPeeringDesignService(DesignService, registry_name="bgp_peering"):
         self.check_collections = copy(self.__class__.CHECK_COLLECTIONS)
         self.peering = BgpPeeringPlanner(name=service_name)
 
-    def get_speaker(self, hostname: str, vrf: Optional[str] = None):
+    def get_speaker(self, hostname: str, vrf: Optional[str] = None) -> "BGPSpeaker":
         """
         This function is used to retrieve the BGPSpeaker defined by the device
         hostname and VRF optional.
@@ -82,6 +82,7 @@ class BgpPeeringDesignService(DesignService, registry_name="bgp_peering"):
         return self.peering.peers
 
     def add_speakers(self, *speakers: BGPSpeaker):
+        self.add_devices(*(spkr.device for spkr in speakers))
         self.peering.add_peers(*speakers)
         return self
 
