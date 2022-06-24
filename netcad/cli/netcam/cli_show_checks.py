@@ -187,6 +187,14 @@ def cli_report_tests(
 #
 # -----------------------------------------------------------------------------
 
+pass_style = Style(color="green")
+fail_style = Style(color="red")
+info_style = Style(color="blue")
+skip_sytle = Style(color="magenta")
+
+
+status_to_style = {"ERROR": fail_style, "INFO": info_style, "OK": pass_style}
+
 
 def show_design_brief_summary_table(
     console: Console, design: Design, optionals: dict, devices: Tuple[str]
@@ -203,11 +211,6 @@ def show_design_brief_summary_table(
         header_style="bold magenta",
         show_lines=True,
     )
-
-    pass_style = Style(color="green")
-    fail_style = Style(color="red")
-    info_style = Style(color="blue")
-    skip_sytle = Style(color="magenta")
 
     design_tc_counts = 0
     dev_cntrs = Counter()
@@ -278,11 +281,6 @@ def show_device_brief_summary_table(console: Console, device: Device, optionals:
         header_style="bold magenta",
         show_lines=True,
     )
-
-    pass_style = Style(color="green")
-    fail_style = Style(color="red")
-    info_style = Style(color="blue")
-    skip_sytle = Style(color="magenta")
 
     dev_tc_count = 0
     for tc_name in find_test_cases_names(device, optionals):
@@ -431,12 +429,19 @@ def show_log_table(
 
 def _pretty_dict_table(obj):
 
-    if not isinstance(obj, dict):
+    if not isinstance(obj, (list, dict)):
         return Pretty(obj)
 
     table = Table(show_header=False, box=None)
-    for key, value in obj.items():
-        table.add_row(key, Pretty(value))
+
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            table.add_row(key, Pretty(value))
+
+        return table
+
+    for (status, field, log) in obj:
+        table.add_row(Text(status, style=status_to_style[status]), field, Pretty(log))
 
     return table
 

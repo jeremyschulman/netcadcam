@@ -5,14 +5,15 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Union, List, Dict, Optional
+from typing import Union, List, Dict, Optional, Any
 import enum
 
 # -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
 
-from pydantic import validator, BaseModel, Field
+import pydantic
+from pydantic import validator, BaseModel, Field, Extra
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -51,19 +52,49 @@ __all__ = [
 AnyMeasurementType = Union[bool, int, float, List, Dict, None, str]
 
 
+# noinspection PyArgumentList
 class CheckStatus(StrEnum):
     PASS = enum.auto()
     FAIL = enum.auto()
     INFO = enum.auto()
     SKIP = enum.auto()
+    WARN = enum.auto()
+
+
+class AllDeafultNone(pydantic.main.ModelMetaclass):
+    def __new__(mcs, name, bases, namespaces, **kwargs):
+        annotations = namespaces.get("__annotations__", {})
+        for base in bases:
+            annotations.update(base.__annotations__)
+
+        for field in annotations:
+            if not field.startswith("__"):
+                annotations[field] = Optional[annotations[field]]
+
+        namespaces["__annotations__"] = annotations
+        return super().__new__(mcs, name, bases, namespaces, **kwargs)
+
+
+class Measurement(BaseModel, extra=Extra.allow, metaclass=AllDeafultNone):
+    pass
 
 
 class CheckResult(BaseModel):
-    status: CheckStatus
+    status: CheckStatus = Field(CheckStatus.PASS)
     device: Device
     check: Check
     check_id: Optional[str]
-    measurement: AnyMeasurementType
+    field: Optional[str]
+
+    # The mesurement attribute is expected to be a BaseModel subclassed from
+    # the Check expected_results BaseModel.  If there are no measurements it
+    # means that the "thing" being checked by the DUT does not exist.
+
+    measurement: Optional[Any] = Field(
+        default_factory=str, description="The measurement from the DUT"
+    )
+
+    logs: List = Field(default_factory=list, description="Any logged by the DUT")
 
     # noinspection PyUnusedLocal
     @validator("check_id", always=True)
@@ -77,6 +108,61 @@ class CheckResult(BaseModel):
     def log_result(result: dict):
         raise NotImplementedError()
 
+    def finalize(self):
+        return _finalize_result(self)
+
+
+def _finalize_result(result: CheckResult) -> CheckResult:
+
+    check = result.check
+    expd = check.expected_results
+    msrd = result.measurement
+
+    if not msrd:
+        params = check.check_params
+        result.status = CheckStatus.FAIL
+        setattr(result, "field", "no-exists")
+        result.logs.append(
+            [
+                "ERROR",
+                "missing",
+                dict(
+                    params=params.dict() if params else None,
+                    expected=check.expected_results.dict(),
+                ),
+            ]
+        )
+        return result
+
+    # check to see if there are any field-mismatches
+    mismatches = []
+
+    for field in msrd.__fields__:
+
+        m_field = getattr(msrd, field)
+
+        if (e_field := getattr(expd, field, None)) is None:
+            # extra data supplied by DUT
+            result.logs.append(["INFO", field, m_field])
+            continue
+
+        if not (matched := (e_field == m_field)):
+            mismatches.append(field)
+
+        result.logs.append(
+            [
+                ["ERROR", "OK"][matched],
+                field,
+                {"expected": e_field, "measured": m_field},
+            ]
+        )
+
+    if mismatches:
+        setattr(result, "field", ", ".join(mismatches))
+        result.status = CheckStatus.FAIL
+
+    return result
+
 
 # -----------------------------------------------------------------------------
 #
@@ -87,7 +173,7 @@ class CheckResult(BaseModel):
 
 class CheckPassResult(CheckResult):
     status = CheckStatus.PASS
-    field: Optional[str]
+    field: Optional[str] = None
 
     @staticmethod
     def log_result(result: dict):
@@ -133,7 +219,7 @@ class CheckFailResult(CheckResult):
 
     @staticmethod
     def log_result(result: dict):
-        return result["error"]
+        return result.get("error") or result.get("logs")
 
 
 class CheckFailNoExists(CheckFailResult):
