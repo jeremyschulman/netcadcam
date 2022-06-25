@@ -55,12 +55,12 @@ class Check(BaseModel):
 
     def check_id(self) -> str:
         """
-        Returns a humaized string form to identify a specific check.  This value
-        will be used in reports and validator engines that may need an ID like
-        value.  pytest comest to mind.  For example, when checking "interfaces"
-        the `check_id` would be the interface name.
+        Returns a humaized string form to identify a specific check.  This
+        value will be used in reports and validator engines that may need an ID
+        like value.  pytest comest to mind.  For example, when checking
+        "interfaces" the `check_id` would be the interface name.
         """
-        raise NotImplementedError()
+        return self.check_type
 
     # -------------------------------------------------------------------------
     #
