@@ -18,7 +18,7 @@ from pydantic import BaseModel
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device, DeviceInterface
-from netcad.checks import CheckCollection, Check
+from netcad.checks import CheckCollection, Check, CheckExclusiveResult, Measurement
 from netcad.checks import register_collection
 
 # -----------------------------------------------------------------------------
@@ -30,7 +30,8 @@ __all__ = [
     "TransceiverCheck",
     "TransceiverCheckParams",
     "TransceiverCheckExpectations",
-    "TransceiverCheckExclusiveList",
+    "TransceiverExclusiveListCheck",
+    "TransceiverExclusiveListCheckResult",
 ]
 
 # -----------------------------------------------------------------------------
@@ -57,17 +58,26 @@ class TransceiverCheck(Check):
         return str(self.check_params.interface)
 
 
-class TransceiverCheckExclusiveList(Check):
-    def __init__(self, **kwargs):
-        super().__init__(
-            check_type="transceiver-list",
-            check_params=BaseModel(),
-            expected_results=BaseModel(),
-            **kwargs
-        )
+# -----------------------------------------------------------------------------#
+# Exclusive list of interface transceivers
+# -----------------------------------------------------------------------------#
 
-    def check_id(self) -> str:
-        return "exclusive_list"
+
+class TransceiverListExpected(BaseModel):
+    __root__: List[int]
+
+
+class TransceiverExclusiveListCheck(Check):
+    check_type = "exclusive"
+    expected_results: TransceiverListExpected
+
+
+class TransceiverListMeasurement(TransceiverListExpected, Measurement):
+    pass
+
+
+class TransceiverExclusiveListCheckResult(CheckExclusiveResult):
+    measurement: TransceiverListMeasurement
 
 
 @register_collection

@@ -18,7 +18,13 @@ from pydantic import BaseModel, PositiveInt
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device, DeviceInterface
-from netcad.checks import CheckCollection, Check
+from netcad.checks import (
+    CheckCollection,
+    Check,
+    CheckResult,
+    CheckExclusiveResult,
+    Measurement,
+)
 from netcad.checks import register_collection
 
 # -----------------------------------------------------------------------------
@@ -28,11 +34,14 @@ from netcad.checks import register_collection
 __all__ = [
     "InterfaceCheckCollection",
     "InterfaceCheck",
+    "InterfaceCheckResult",
+    "InterfaceCheckMeasurement",
     "InterfaceCheckParams",
     "InterfaceCheckUsedExpectations",
     "InterfaceCheckNotUsedExpectations",
-    "InterfaceCheckExclusiveList",
+    "InterfaceExclusiveListCheck",
     "InterfacesListExpected",
+    "InterfaceExclusiveListCheckResult",
 ]
 
 # -----------------------------------------------------------------------------
@@ -49,8 +58,8 @@ class InterfaceCheckParams(BaseModel):
 
 class InterfaceCheckUsedExpectations(BaseModel):
     used: Literal[True]
-    oper_up: Optional[bool]
     desc: str
+    oper_up: Optional[bool]
     speed: Optional[PositiveInt]
 
 
@@ -59,6 +68,8 @@ class InterfaceCheckNotUsedExpectations(BaseModel):
 
 
 class InterfaceCheck(Check):
+    check_type = "interface"
+
     check_params: InterfaceCheckParams
     expected_results: Union[
         InterfaceCheckUsedExpectations, InterfaceCheckNotUsedExpectations
@@ -68,15 +79,44 @@ class InterfaceCheck(Check):
         return str(self.check_params.interface)
 
 
+class InterfaceCheckMeasurement(Measurement):
+    used: bool
+    desc: str
+    oper_up: bool
+    speed: PositiveInt
+
+
+class InterfaceCheckResult(CheckResult):
+    measurement: InterfaceCheckMeasurement = None
+
+
+# -----------------------------------------------------------------------------
+# Check for exclusive list of interfaces on the device
+# -----------------------------------------------------------------------------
+
+
 class InterfacesListExpected(BaseModel):
-    if_name_list: List[str]
+    __root__: List[str]
 
 
-class InterfaceCheckExclusiveList(Check):
+class InterfacesListExpectedMesurement(InterfacesListExpected, Measurement):
+    pass
+
+
+class InterfaceExclusiveListCheckResult(CheckExclusiveResult):
+    measurement: InterfacesListExpectedMesurement = None
+
+
+class InterfaceExclusiveListCheck(Check):
+    check_type = "exclusive"
     expected_results: InterfacesListExpected
 
-    def check_id(self) -> str:
-        return "exclusive_list"
+
+# -----------------------------------------------------------------------------
+#
+#                         Interface Checks Collection
+#
+# -----------------------------------------------------------------------------
 
 
 @register_collection

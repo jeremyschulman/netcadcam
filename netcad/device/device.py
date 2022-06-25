@@ -415,6 +415,9 @@ class Device(Registry, registry_name="devices"):
                 f"{str(exc)}"
             )
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.name})"
+
 
 # A device catalog is a dictionary of devices key=dev.name, value=device-obj
 DeviceCatalog = Dict[str, Device]
