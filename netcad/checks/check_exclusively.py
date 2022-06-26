@@ -28,11 +28,11 @@ class CheckExclusiveResult(CheckResult):
 
         if missing_set := expd_set - msrd_set:
             items = sorted(missing_set, key=sort_key)
-            self.logs.append(["ERROR", "missing", items])
+            self.logs.FAIL("missing", items)
 
         if extra_set := (msrd_set - expd_set):
             items = sorted(extra_set, key=sort_key)
-            self.logs.append(["ERROR", "extra", items])
+            self.logs.FAIL("extra", items)
 
         if missing_set or extra_set:
             self.status = CheckStatus.FAIL

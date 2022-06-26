@@ -50,6 +50,10 @@ __all__ = [
 #
 # -----------------------------------------------------------------------------
 
+# -----------------------------------------------------------------------------
+# Single interface check
+# -----------------------------------------------------------------------------
+
 
 class InterfaceCheckParams(BaseModel):
     interface: str
@@ -57,6 +61,8 @@ class InterfaceCheckParams(BaseModel):
 
 
 class InterfaceCheckUsedExpectations(BaseModel):
+    """For when an interface IS used"""
+
     used: Literal[True]
     desc: str
     oper_up: Optional[bool]
@@ -64,6 +70,8 @@ class InterfaceCheckUsedExpectations(BaseModel):
 
 
 class InterfaceCheckNotUsedExpectations(BaseModel):
+    """For when an interface is NOT used"""
+
     used: Literal[False]
 
 
@@ -80,6 +88,11 @@ class InterfaceCheck(Check):
 
 
 class InterfaceCheckMeasurement(Measurement):
+    """
+    The measurement fields are a copy-paste since we cannot subclass both used
+    and unused classes together given the use of the Literal marker.
+    """
+
     used: bool
     desc: str
     oper_up: bool

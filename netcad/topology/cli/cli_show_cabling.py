@@ -132,6 +132,14 @@ def cabling_table(table: Table, cables) -> Table:
         except (AttributeError, TypeError):
             return True
 
+    def phy_is_not_exactly_same(
+        lcl_phy: PhyPortProfile, rmt_phy: PhyPortProfile
+    ) -> bool:
+        if lcl_phy is None and rmt_phy is None:
+            return False
+
+        return lcl_phy != rmt_phy
+
     # -------------------------------------------------------------------------
     # create each cabling row
     # -------------------------------------------------------------------------
@@ -152,6 +160,12 @@ def cabling_table(table: Table, cables) -> Table:
         ):
             dev_phy_prof.style = Style(color="red")
             rmt_phy_prof.style = Style(color="red")
+
+        elif all((dev_if.profile, rmt_if.profile)) and phy_is_not_exactly_same(
+            dev_if.profile.phy_profile, rmt_if.profile.phy_profile
+        ):
+            dev_phy_prof.style = Style(color="yellow")
+            rmt_phy_prof.style = Style(color="yellow")
 
         table.add_row(
             dev_if.device.name,
