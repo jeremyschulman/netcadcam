@@ -7,6 +7,7 @@
 
 from collections import Counter
 from logging import Logger
+from contextvars import ContextVar
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -25,13 +26,15 @@ from .dut import AsyncDeviceUnderTest
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["execute_device_checks"]
+__all__ = ["execute_device_checks", "cv_device_check_list"]
 
 # -----------------------------------------------------------------------------
 #
 #                                 CODE BEGINS
 #
 # -----------------------------------------------------------------------------
+
+cv_device_check_list = ContextVar("device_check_list")
 
 
 PASS_CLRD = markup_color("PASS", "green")
@@ -126,9 +129,7 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
     dev_tc_dir = dut.testcases_dir
     dut_name = f"{device.name:<16}"
 
-    # -------------------------------------------------------------------------
-    # Testing all Design Services and related Testing Services
-    # -------------------------------------------------------------------------
+    check_service_list = cv_device_check_list.get()
 
     for ds_name, design_service in device.services.items():
 
@@ -139,8 +140,16 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
             continue
 
         for testing_service in design_service.check_collections:
-
             tc_name = testing_service.get_name()
+
+            # -----------------------------------------------------------------
+            # Run the device service checks.  If the User filtered this list
+            # then only run the checks they want.
+            # -----------------------------------------------------------------
+
+            if check_service_list and tc_name not in check_service_list:
+                continue
+
             tc_file = testing_service.filepath(testcase_dir=dev_tc_dir, service=tc_name)
             if not tc_file.exists():
                 # if there are no test cases for this test-service, then

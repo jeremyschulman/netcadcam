@@ -414,15 +414,21 @@ def show_log_table(
     )
 
     for result in results:
-        r_tcr = _TCS_2_TRT.get(result["status"], CheckInfoLog)
-        log_msg = r_tcr.log_result(result)
+        # r_tcr = _TCS_2_TRT.get(result["status"], CheckInfoLog)
+        # log_msg = r_tcr.log_result(result)
+
+        if not (log_data := result["logs"]):
+            lgr = get_logger()
+            lgr.warning("Device: %s, checks %s - convert to logs", device, filename)
+            r_tcr = _TCS_2_TRT.get(result["status"], CheckInfoLog)
+            log_data = r_tcr.log_result(result)
 
         table.add_row(
             _colorize_status(result["status"]),
             device.name,
             result["check_id"],
             result.get("field"),
-            _pretty_dict_table(log_msg),
+            _pretty_dict_table(log_data),
         )
 
     console.print("\n", table, "\n")
