@@ -26,7 +26,7 @@ from .dut import AsyncDeviceUnderTest
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["execute_device_checks", "cv_device_check_list"]
+__all__ = ["execute_device_checks", "cv_check_list", "cv_service_list"]
 
 # -----------------------------------------------------------------------------
 #
@@ -34,7 +34,8 @@ __all__ = ["execute_device_checks", "cv_device_check_list"]
 #
 # -----------------------------------------------------------------------------
 
-cv_device_check_list = ContextVar("device_check_list")
+cv_check_list = ContextVar("check_list")
+cv_service_list = ContextVar("service_list")
 
 
 PASS_CLRD = markup_color("PASS", "green")
@@ -129,9 +130,16 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
     dev_tc_dir = dut.testcases_dir
     dut_name = f"{device.name:<16}"
 
-    check_service_list = cv_device_check_list.get()
+    check_service_list = cv_check_list.get()
+    service_list = cv_service_list.get()
 
     for ds_name, design_service in device.services.items():
+
+        # Handle User provided service list, if provided; only execute the
+        # services the User requested explicitly.
+
+        if service_list and ds_name not in service_list:
+            continue
 
         # there could be design services without defined testing services, so
         # skip if that is the case.

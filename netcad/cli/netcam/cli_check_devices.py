@@ -33,7 +33,11 @@ from netcad.cli.device_inventory import get_devices_from_designs
 # from netcad.netcam.loader import import_netcam_plugins
 
 from netcad.cli.netcam.cli_netcam_main import cli
-from netcad.netcam.execute_checks import execute_device_checks, cv_device_check_list
+from netcad.netcam.execute_checks import (
+    execute_device_checks,
+    cv_check_list,
+    cv_service_list,
+)
 from netcad.cli.keywords import color_pass_fail
 
 
@@ -61,13 +65,23 @@ __all__ = []
     help="execute only these design checks",
 )
 @click.option(
+    "--service",
+    "service_list",
+    multiple=True,
+    help="execute only these design checks",
+)
+@click.option(
     "--checks-dir",
     help="location to read device checks",
     type=click.Path(path_type=Path, resolve_path=True, exists=True, writable=True),
     envvar=Environment.NETCAD_CHECKSDIR,
 )
 def cli_test_device(
-    devices: Tuple[str], designs: Tuple[str], check_list: Tuple[str], checks_dir: Path
+    devices: Tuple[str],
+    designs: Tuple[str],
+    check_list: Tuple[str],
+    checks_dir: Path,
+    service_list: Tuple[str],
 ):
     """
     Execute checks to validate the operational state of devices.
@@ -88,8 +102,12 @@ def cli_test_device(
         The list of deice hostnames that should be processed by this command.
 
     check_list: optional
-        The list of design checks to execute, if provided.  Otherwise, all
-        checks are run.
+        The list of design checks to execute, if provided.  For example
+        "interfaces".  Otherwise, all checks are run.
+
+    service_list: optional,
+        Similar to check_list, but higher level design service names, like
+        "topology".
 
     checks_dir:
         The Path instance to the parent directory of checks.  Subdirectories
@@ -115,7 +133,8 @@ def cli_test_device(
 
     async def run_tests():
 
-        cv_device_check_list.set(check_list)
+        cv_check_list.set(check_list)
+        cv_service_list.set(service_list)
 
         for dev_obj in device_objs:
             if not (pg_obj := netcam_plugins.get(dev_obj.os_name)):
