@@ -16,7 +16,7 @@ from itertools import groupby
 # -----------------------------------------------------------------------------
 
 import click
-from rich.table import Table, Text, Style
+from rich.table import Table, Text
 from rich.console import Console
 from rich.pretty import Pretty
 
@@ -33,7 +33,16 @@ from netcad.design import Design
 from netcad.cli.common_opts import opt_devices, opt_designs
 from netcad.cli.device_inventory import get_devices_from_designs
 
-from ...checks import check_result_types as trt
+from netcad.checks import (
+    CheckStatus,
+    CheckInfoLog,
+    CheckSkipResult,
+    CheckPassResult,
+    CheckFailResult,
+)
+
+from netcad.checks.check_result_log import CheckResultLogs
+
 from netcad.cli.keywords import color_pass_fail
 
 # -----------------------------------------------------------------------------
@@ -81,7 +90,7 @@ __all__ = []
     help="include only field from report",
 )
 @click.option(
-    "--checks",
+    "--check",
     "testing_service_names",
     multiple=True,
     help="display only logs from <test>",
@@ -187,14 +196,6 @@ def cli_report_tests(
 #
 # -----------------------------------------------------------------------------
 
-pass_style = Style(color="green")
-fail_style = Style(color="red")
-info_style = Style(color="blue")
-skip_sytle = Style(color="magenta")
-
-
-status_to_style = {"ERROR": fail_style, "INFO": info_style, "OK": pass_style}
-
 
 def show_design_brief_summary_table(
     console: Console, design: Design, optionals: dict, devices: Tuple[str]
@@ -250,10 +251,10 @@ def show_design_brief_summary_table(
             device.name,
             color_pass_fail(dev_cntrs),
             Text(str(dev_tc_counts)),
-            Text(str(dev_cntrs[trt.CheckStatus.PASS]), style=pass_style),
-            Text(str(dev_cntrs[trt.CheckStatus.FAIL]), style=fail_style),
-            Text(str(dev_cntrs[trt.CheckStatus.INFO]), style=info_style),
-            Text(str(dev_cntrs[trt.CheckStatus.SKIP]), style=skip_sytle),
+            Text(str(dev_cntrs[CheckStatus.PASS]), style=CheckStatus.PASS.to_style()),
+            Text(str(dev_cntrs[CheckStatus.FAIL]), style=CheckStatus.FAIL.to_style()),
+            Text(str(dev_cntrs[CheckStatus.INFO]), style=CheckStatus.INFO.to_style()),
+            Text(str(dev_cntrs[CheckStatus.SKIP]), style=CheckStatus.SKIP.to_style()),
         )
 
     table.title = Text(
@@ -305,10 +306,10 @@ def show_device_brief_summary_table(console: Console, device: Device, optionals:
             tc_name,
             color_pass_fail(tcr_cntrs),
             Text(str(tcr_total)),
-            Text(str(tcr_cntrs[trt.CheckStatus.PASS]), style=pass_style),
-            Text(str(tcr_cntrs[trt.CheckStatus.FAIL]), style=fail_style),
-            Text(str(tcr_cntrs[trt.CheckStatus.INFO]), style=info_style),
-            Text(str(tcr_cntrs[trt.CheckStatus.SKIP]), style=skip_sytle),
+            Text(str(tcr_cntrs[CheckStatus.PASS]), style=CheckStatus.PASS.to_style()),
+            Text(str(tcr_cntrs[CheckStatus.FAIL]), style=CheckStatus.FAIL.to_style()),
+            Text(str(tcr_cntrs[CheckStatus.INFO]), style=CheckStatus.INFO.to_style()),
+            Text(str(tcr_cntrs[CheckStatus.SKIP]), style=CheckStatus.SKIP.to_style()),
         )
 
     table.title = Text(
@@ -338,19 +339,19 @@ def filter_results(results: dict, optionals: dict) -> List[Dict]:
     inc_all = optionals["include_all"]
 
     if optionals["pass_only"]:
-        status_allows = {trt.CheckStatus.PASS}
+        status_allows = {CheckStatus.PASS}
     else:
-        status_allows = {trt.CheckStatus.FAIL}
+        status_allows = {CheckStatus.FAIL}
 
     inc_fields = optionals["include_fields"]
     exc_fields = optionals["exclude_fields"]
 
     if optionals["include_info"] or inc_all:
-        status_allows.add(trt.CheckStatus.INFO)
-        status_allows.add(trt.CheckStatus.SKIP)
+        status_allows.add(CheckStatus.INFO)
+        status_allows.add(CheckStatus.SKIP)
 
     if optionals["include_pass"] or inc_all:
-        status_allows.add(trt.CheckStatus.PASS)
+        status_allows.add(CheckStatus.PASS)
 
     filter_flds_in = lambda i: i.get("field") in inc_fields
     filter_flds_out = lambda i: i.get("field") not in exc_fields
@@ -389,10 +390,10 @@ def show_device_test_logs(console: Console, device: Device, optionals: dict):
 
 
 _TCS_2_TRT = {
-    trt.CheckStatus.PASS: trt.CheckPassResult,
-    trt.CheckStatus.FAIL: trt.CheckFailResult,
-    trt.CheckStatus.INFO: trt.CheckInfoLog,
-    trt.CheckStatus.SKIP: trt.CheckSkipResult,
+    CheckStatus.PASS: CheckPassResult,
+    CheckStatus.FAIL: CheckFailResult,
+    CheckStatus.INFO: CheckInfoLog,
+    CheckStatus.SKIP: CheckSkipResult,
 }
 
 
@@ -413,15 +414,21 @@ def show_log_table(
     )
 
     for result in results:
-        r_tcr = _TCS_2_TRT.get(result["status"], trt.CheckInfoLog)
-        log_msg = r_tcr.log_result(result)
+        # r_tcr = _TCS_2_TRT.get(result["status"], CheckInfoLog)
+        # log_msg = r_tcr.log_result(result)
+
+        if not (log_data := result["logs"]):
+            lgr = get_logger()
+            lgr.warning("Device: %s, checks %s - convert to logs", device, filename)
+            r_tcr = _TCS_2_TRT.get(result["status"], CheckInfoLog)
+            log_data = r_tcr.log_result(result)
 
         table.add_row(
             _colorize_status(result["status"]),
             device.name,
             result["check_id"],
             result.get("field"),
-            _pretty_dict_table(log_msg),
+            _pretty_dict_table(log_data),
         )
 
     console.print("\n", table, "\n")
@@ -429,10 +436,16 @@ def show_log_table(
 
 def _pretty_dict_table(obj):
 
-    if not isinstance(obj, (list, dict)):
-        return Pretty(obj)
+    # if given a string, just return the string.
+    if isinstance(obj, str):
+        return obj
+
+    # otherwise, we will make a Table out of the object, depending on its
+    # shape; list or dict
 
     table = Table(show_header=False, box=None)
+
+    # if the obj is a dictionary, then make a pretty-table of key-value pairs.
 
     if isinstance(obj, dict):
         for key, value in obj.items():
@@ -440,14 +453,12 @@ def _pretty_dict_table(obj):
 
         return table
 
-    for (status, field, log) in obj:
-        table.add_row(Text(status, style=status_to_style[status]), field, Pretty(log))
-
-    return table
+    log_table = CheckResultLogs(obj)
+    return log_table.pretty_table(table)
 
 
 def _colorize_status(status):
-    options = trt.CheckStatus
+    options = CheckStatus
 
     color = {
         options.PASS: "green",

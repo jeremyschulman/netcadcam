@@ -5,7 +5,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import List, Type, Optional, Hashable, Dict, TypeVar, Iterable
+from typing import List, Type, Optional, Hashable, Dict, TypeVar, Iterable, Set
 from netcad.device import Device
 
 # -----------------------------------------------------------------------------
@@ -36,22 +36,33 @@ class DesignService(Registry, registry_name="design_services"):
     ----------
     name: str
         The User defined name of the Design service instance.  In many cases a
-        sub-class of DesignService may default this value.  For example, the
+        subclass of DesignService may default this value.  For example, the
         TopologyDesignService uses a name of "topology".
 
     devices: Set[Device]
         The collection of devices that are "using" this service.  Some
         DesignServices may be very specific to only a few devices in a Design.
-        Other DesignServices may use all of the devices in a Design.  For
-        example, the MLagDesginService would only include devices that are part
-        of an MLAG arrangement.
+        Other DesignServices may use all the devices in a Design.  For example,
+        the MLagDesginService would only include devices that are part of an
+        MLAG arrangement.
+
+    exclusive: bool, optional
+        When True it indicates that the design service checks should generate
+        in exclusive mode.  When False indicates that the checks should not
+        generate in exclusive mode.  When None the checks should defer to the
+        device exclusivity mode.
 
     check_collections:
         The list of CheckCollection classes that will be used to validate this
         design service against the operatiional state of the network.
     """
 
-    def __init__(self, service_name: str, devices: Optional[Iterable[Device]] = None):
+    def __init__(
+        self,
+        service_name: str,
+        devices: Optional[Iterable[Device]] = None,
+        exclusive: Optional[bool] = None,
+    ):
         """
         Superclass for create a new instance of a design service.  A Designer
         should not be calling this class directly, but rather a specific
@@ -72,7 +83,8 @@ class DesignService(Registry, registry_name="design_services"):
         super().__init__()
 
         self.name = service_name
-        self.devices = set()
+        self.devices: Set[Device] = set()
+        self.exclusive = exclusive
 
         if devices:
             self.add_devices(*devices)
