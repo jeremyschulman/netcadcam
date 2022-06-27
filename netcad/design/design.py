@@ -5,7 +5,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Dict, Optional, List, Any
+from typing import Dict, Optional, List, Any, Type
 from copy import deepcopy
 from types import ModuleType
 
@@ -145,3 +145,7 @@ class Design(Registry, registry_name="designs"):
         """
         self.build()
         self.validate()
+
+    def services_of(self, svc_cls: Type[DesignService]) -> List[DesignService]:
+        """Return the services that are of the given service type"""
+        return [svc for svc in self.services.values() if isinstance(svc, svc_cls)]
