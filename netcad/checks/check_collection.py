@@ -10,8 +10,6 @@ from typing import List, Optional, Any
 from typing import TYPE_CHECKING
 from pathlib import Path
 import json
-from contextlib import suppress
-from itertools import filterfalse
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -84,14 +82,22 @@ class CheckCollection(BaseModel):
         raise NotImplementedError()
 
     # -------------------------------------------------------------------------
+    # Time for some introspection ...
+    #
+    # When a Developer creates a python module with a CheckCollection, this
+    # bit of code will introspect that module to learn about what Check
+    # and CheckResult classes are defined.  This code will then keep an
+    # internal mapping of the check-type (str-name) to the class definitions
+    # so that we can parse these JSON payloads into objects later.
+    # -------------------------------------------------------------------------
 
     _map_check_types = dict()
 
     @classmethod
     def parse_check_result(cls, result: dict) -> CheckResult:
         """
-        Given the result in the form of a dictionary object, cover to
-        the associated CheckResult instance
+        Given the result in the form of a dictionary object, cover it to the
+        associated CheckResult instance
         """
 
         # if the body contains a 'check' field, then this is a CheckResult

@@ -20,7 +20,7 @@ import aiofiles
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.checks import CheckResult, CheckResultList
+from netcad.checks import CheckResult
 from .dut import AsyncDeviceUnderTest
 
 # -----------------------------------------------------------------------------
