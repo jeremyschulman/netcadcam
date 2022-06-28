@@ -64,10 +64,8 @@ class IPInterfaceList(BaseModel):
 
 
 class IPInterfaceCheckExclusiveList(Check):
+    check_type = "ipaddrs-exclusive"
     expected_results: IPInterfaceList
-
-    def check_id(self) -> str:
-        return "exclusive_list"
 
 
 @register_collection

@@ -32,25 +32,15 @@ from netcad.checks import (
 from netcad.checks.check_result_log import CheckResultLogs
 
 
+# TODO: remove this only when all of the DUT checkers are migrated over to the
+#       new CheckResult mechanism.
+
 _TCS_2_TRT = {
     CheckStatus.PASS: CheckPassResult,
     CheckStatus.FAIL: CheckFailResult,
     CheckStatus.INFO: CheckInfoLog,
     CheckStatus.SKIP: CheckSkipResult,
 }
-
-
-def _colorize_status(status):
-    options = CheckStatus
-
-    color = {
-        options.PASS: "green",
-        options.FAIL: "red",
-        options.INFO: "blue",
-        options.SKIP: "magenta",
-    }.get(status)
-
-    return f"[{color}]{status}[/{color}]"
 
 
 def show_log_table(
@@ -70,17 +60,16 @@ def show_log_table(
     )
 
     for result in results:
-        # r_tcr = _TCS_2_TRT.get(result["status"], CheckInfoLog)
-        # log_msg = r_tcr.log_result(result)
-
         if not (log_data := result["logs"]):
             lgr = get_logger()
             lgr.warning("Device: %s, checks %s - convert to logs", device, filename)
             r_tcr = _TCS_2_TRT.get(result["status"], CheckInfoLog)
             log_data = r_tcr.log_result(result)
 
+        status = CheckStatus(result["status"])
+
         table.add_row(
-            _colorize_status(result["status"]),
+            Text(status, style=status.to_style()),
             device.name,
             result["check_id"],
             result.get("field"),
