@@ -20,7 +20,7 @@ import aiofiles
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from ..checks import check_result_types as trt
+from netcad.checks import CheckResult, CheckResultList
 from .dut import AsyncDeviceUnderTest
 
 # -----------------------------------------------------------------------------
@@ -33,7 +33,7 @@ __all__ = ["device_checks_save_results"]
 async def device_checks_save_results(
     dut: AsyncDeviceUnderTest,
     filename: str,
-    results: List[trt.CheckResult],
+    results: List[CheckResult],
     results_dir: Path,
 ):
     """

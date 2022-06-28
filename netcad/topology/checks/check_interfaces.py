@@ -100,6 +100,7 @@ class InterfaceCheckMeasurement(Measurement):
 
 
 class InterfaceCheckResult(CheckResult):
+    check: InterfaceCheck
     measurement: InterfaceCheckMeasurement = None
 
 
@@ -116,13 +117,14 @@ class InterfacesListExpectedMesurement(InterfacesListExpected, Measurement):
     pass
 
 
-class InterfaceExclusiveListCheckResult(CheckExclusiveResult):
-    measurement: InterfacesListExpectedMesurement = None
-
-
 class InterfaceExclusiveListCheck(Check):
-    check_type = "exclusive"
+    check_type = "interfaces-exclusive"
     expected_results: InterfacesListExpected
+
+
+class InterfaceExclusiveListCheckResult(CheckExclusiveResult):
+    check: InterfaceExclusiveListCheck
+    measurement: InterfacesListExpectedMesurement = None
 
 
 # -----------------------------------------------------------------------------

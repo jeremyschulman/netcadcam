@@ -5,10 +5,13 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
+import sys
 from typing import List, Optional, Any
 from typing import TYPE_CHECKING
 from pathlib import Path
 import json
+from contextlib import suppress
+from itertools import filterfalse
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -21,7 +24,7 @@ import aiofiles
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from . import Check
+from . import Check, CheckResult
 
 if TYPE_CHECKING:
     from netcad.design import DesignService
@@ -79,3 +82,55 @@ class CheckCollection(BaseModel):
     @classmethod
     def build(cls, obj: Any, design_service: "DesignService") -> "CheckCollection":
         raise NotImplementedError()
+
+    # -------------------------------------------------------------------------
+
+    _map_check_types = dict()
+
+    @classmethod
+    def parse_check_result(cls, result: dict) -> CheckResult:
+        """
+        Given the result in the form of a dictionary object, cover to
+        the associated CheckResult instance
+        """
+
+        # if the body contains a 'check' field, then this is a CheckResult
+        # payload.  We need to look at the inner payload to find the check-type
+        # value.
+
+        if (check := result.get("check")) is None:
+            raise ValueError('Required "check" missing in result')
+
+        if (check_type := check.get("check_type")) is None:
+            raise ValueError('Required "check_type" missing in result')
+
+        if (cls_type := cls._map_check_types.get(check_type)) is None:
+            raise ValueError(
+                f"This check collection does not have bound check-type: {check_type}"
+            )
+
+        return cls_type.parse_obj(result)
+
+    def __init_subclass__(cls, **kwargs):
+        mod = sys.modules.get(cls.__module__)
+
+        if not (mod_all := getattr(mod, "__all__", None)):
+            raise RuntimeError(f"Required __all__ missing from module {cls.__module__}")
+
+        def is_result_type(_t):
+            try:
+                return issubclass(_t, CheckResult)
+            except TypeError:
+                return False
+
+        exports = filter(is_result_type, map(mod.__dict__.get, mod_all))
+        for each in exports:
+
+            if (check_field := each.__fields__.get("check")) is None:
+                raise RuntimeError(f'Required "check" missing from {str(each)}')
+
+            check_type_value = check_field.type_.__fields__["check_type"].default
+            if not check_type_value:
+                raise RuntimeError(f'Required "check_type" missing from: {str(each)}')
+
+            cls._map_check_types[check_type_value] = each

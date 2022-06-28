@@ -5,7 +5,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional, Any
+from typing import Optional, Any, List
 import typing
 import types
 
@@ -14,7 +14,7 @@ import types
 # -----------------------------------------------------------------------------
 
 import pydantic
-from pydantic import validator, BaseModel, Field
+from pydantic import BaseModel, Field, validator
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -22,10 +22,14 @@ from pydantic import validator, BaseModel, Field
 
 from netcad.device import Device
 from netcad.checks.check import Check
-
 from .check_status import CheckStatus, CheckStatusFlag
 from .check_result_log import CheckResultLogs
 
+# -----------------------------------------------------------------------------
+# Exports
+# -----------------------------------------------------------------------------
+
+__all__ = ["CheckResult", "CheckResultList"]
 
 # -----------------------------------------------------------------------------
 #
@@ -64,9 +68,10 @@ class CheckResult(BaseModel, metaclass=MetaCheckResult):
     """
 
     status: CheckStatus = Field(CheckStatus.PASS)
-    device: Device
+    device: Device | str
     check: Check
     check_id: Optional[str]
+
     field: Optional[str]
 
     # even though the default-factory here is provided as dict, the use of the
@@ -208,3 +213,7 @@ def _finalize_result(result: CheckResult, **kwargs) -> CheckResult:
         result.status = CheckStatus.FAIL
 
     return result
+
+
+class CheckResultList(BaseModel):
+    __root__: Optional[List[CheckResult]] = Field(default_factory=list)

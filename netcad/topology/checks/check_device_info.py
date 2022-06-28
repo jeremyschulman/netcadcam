@@ -22,6 +22,15 @@ from netcad.checks import CheckCollection, Check, register_collection
 
 
 # -----------------------------------------------------------------------------
+# Exports
+# -----------------------------------------------------------------------------
+
+__all__ = [
+    "DeviceInformationCheckCollection",
+    "DeviceInformationCheck",
+]
+
+# -----------------------------------------------------------------------------
 #
 #                                 CODE BEGINS
 #
@@ -38,6 +47,7 @@ class DeviceInformationCheckExpectations(BaseModel):
 
 
 class DeviceInformationCheck(Check):
+    check_type = "device-info"
     check_params: DeviceInformationCheckParams
     expected_results: DeviceInformationCheckExpectations
 

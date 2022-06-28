@@ -67,6 +67,7 @@ class InterfaceCablingdExpectations(BaseModel):
 
 
 class InterfaceCablingCheck(Check):
+    check_type = "cabling"
     check_params: InterfaceCablingCheckParams
     expected_results: InterfaceCablingdExpectations
 

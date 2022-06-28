@@ -2,13 +2,11 @@
 #  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from .check import Check
-from .check_collection import CheckCollection
-from .check_registry import register_collection
+from .check_result import CheckResult, CheckResultList
 
 from .check_result_types import (
     CheckResultsCollection,
     CheckStatus,
-    CheckResult,
     CheckExclusiveResult,
     Measurement,
     CheckPassResult,
@@ -20,3 +18,6 @@ from .check_result_types import (
     CheckFailFieldMismatch,
     CheckFailNoExists,
 )
+
+from .check_collection import CheckCollection
+from .check_registry import register_collection

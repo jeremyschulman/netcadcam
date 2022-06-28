@@ -63,6 +63,7 @@ class BgpRouterCheckMeasurement(BgpRouterCheckExpectations, Measurement):
 
 
 class BgpRouterCheckResult(CheckResult):
+    check: BgpRouterCheck
     measurement: BgpRouterCheckMeasurement = None
 
 

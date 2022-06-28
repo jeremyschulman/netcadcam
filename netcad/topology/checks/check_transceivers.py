@@ -51,6 +51,7 @@ class TransceiverCheckExpectations(BaseModel):
 
 
 class TransceiverCheck(Check):
+    check_type = "transceiver"
     check_params: TransceiverCheckParams
     expected_results: TransceiverCheckExpectations
 
@@ -68,7 +69,7 @@ class TransceiverListExpected(BaseModel):
 
 
 class TransceiverExclusiveListCheck(Check):
-    check_type = "exclusive"
+    check_type = "transceivers-exclusive"
     expected_results: TransceiverListExpected
 
 
@@ -77,7 +78,15 @@ class TransceiverListMeasurement(TransceiverListExpected, Measurement):
 
 
 class TransceiverExclusiveListCheckResult(CheckExclusiveResult):
+    check: TransceiverExclusiveListCheck
     measurement: TransceiverListMeasurement
+
+
+# -----------------------------------------------------------------------------#
+#
+#                       The collection model
+#
+# -----------------------------------------------------------------------------#
 
 
 @register_collection

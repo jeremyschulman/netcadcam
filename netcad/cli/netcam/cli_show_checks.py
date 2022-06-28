@@ -20,7 +20,6 @@ from rich.table import Table, Text
 from rich.console import Console
 from rich.pretty import Pretty
 
-
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
@@ -34,7 +33,10 @@ from netcad.cli.common_opts import opt_devices, opt_designs
 from netcad.cli.device_inventory import get_devices_from_designs
 
 from netcad.checks import (
+    Check,
     CheckStatus,
+    CheckResult,
+    CheckResultList,
     CheckInfoLog,
     CheckSkipResult,
     CheckPassResult,
@@ -227,7 +229,7 @@ def show_design_brief_summary_table(
     for device in dev_objs:
         dev_cntrs.clear()
 
-        for tc_name in find_test_cases_names(device, optionals):
+        for tc_name in find_check_services(device, optionals):
 
             # if the test results file does not exist, it means that the tests were
             # not executed.  For now, silently skip.  TODO: may show User warning?
@@ -284,7 +286,7 @@ def show_device_brief_summary_table(console: Console, device: Device, optionals:
     )
 
     dev_tc_count = 0
-    for tc_name in find_test_cases_names(device, optionals):
+    for tc_name in find_check_services(device, optionals):
 
         # if the test results file does not exist, it means that the tests were
         # not executed.  For now, silently skip.  TODO: may show User warning?
@@ -371,12 +373,14 @@ def filter_results(results: dict, optionals: dict) -> List[Dict]:
 def show_device_test_logs(console: Console, device: Device, optionals: dict):
     tcr_dir: Path = device.tcr_dir
 
-    for rc_result_file in find_test_cases_names(device, optionals):
+    for check_svc in find_check_services(device, optionals):
 
         # if the test results file does not exist, it means that the tests were
         # not executed.  For now, silently skip.  TODO: may show User warning?
 
-        results_file = tcr_dir.joinpath(f"{rc_result_file}.json")
+        check_svc_name = check_svc.get_name()
+
+        results_file = tcr_dir.joinpath(f"{check_svc_name}.json")
         if not results_file.exists():
             continue
 
@@ -453,7 +457,7 @@ def _pretty_dict_table(obj):
 
         return table
 
-    log_table = CheckResultLogs(obj)
+    log_table = CheckResultLogs.parse_obj(obj)
     return log_table.pretty_table(table)
 
 
@@ -470,17 +474,18 @@ def _colorize_status(status):
     return f"[{color}]{status}[/{color}]"
 
 
-def find_test_cases_names(device, optionals: dict):
-    inc_ts_names = optionals["testing_service_names"]
+def find_check_services(device, optionals: dict):
+
+    inc_check_names = optionals["testing_service_names"]
 
     for design_service in device.services.values():
-        for testing_service in design_service.check_collections:
-            ts_name = testing_service.get_name()
+        for check_service in design_service.check_collections:
+            check_name = check_service.get_name()
 
-            if inc_ts_names:
-                if ts_name in inc_ts_names:
-                    yield ts_name
+            if inc_check_names:
+                if check_name in inc_check_names:
+                    yield check_service
 
                 continue
 
-            yield ts_name
+            yield check_service

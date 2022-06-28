@@ -74,6 +74,7 @@ class BgpNeighborCheckMeasurement(BgpNeighborCheckExpectations, Measurement):
 
 
 class BgpNeighborCheckResult(CheckResult):
+    check: BgpNeighborCheck
     measurement: BgpNeighborCheckMeasurement = None
 
 

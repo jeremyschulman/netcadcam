@@ -51,6 +51,7 @@ class IPInterfaceCheckExpectations(BaseModel):
 
 
 class IPInterfaceCheck(Check):
+    check_type = "ipaddr"
     check_params: IPInterfaceCheckParams
     expected_results: IPInterfaceCheckExpectations
 
