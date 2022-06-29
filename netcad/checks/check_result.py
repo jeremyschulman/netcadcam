@@ -29,7 +29,7 @@ from .check_result_log import CheckResultLogs
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["CheckResult", "CheckResultList"]
+__all__ = ["CheckResult", "CheckResultList", "CheckResultsCollection"]
 
 # -----------------------------------------------------------------------------
 #
@@ -50,9 +50,17 @@ class MetaCheckResult(pydantic.main.ModelMetaclass):
         _field = "measurement"
         annots = namespaces.get("__annotations__", {})
 
-        if (msrd_cls := annots.get(_field)) and (not namespaces.get(_field)):
+        if (msrd_cls := annots.get(_field)) is None:
+            if Generic not in bases:
+                raise RuntimeError(
+                    f"Missing {name}, required annotation for measurement field"
+                )
+
+        if msrd_cls and not namespaces.get(_field):
             if isinstance(msrd_cls, types.UnionType):
                 msrd_cls, _ = typing.get_args(msrd_cls)
+
+            annots[_field] = Optional[annots[_field]]
             namespaces[_field] = Field(default_factory=msrd_cls)
 
         return super().__new__(mcs, name, bases, namespaces, **kwargs)
@@ -216,6 +224,9 @@ def _finalize_result(result: CheckResult, **kwargs) -> CheckResult:
         result.status = CheckStatus.FAIL
 
     return result
+
+
+CheckResultsCollection = List[CheckResult]
 
 
 class CheckResultList(BaseModel):

@@ -20,27 +20,12 @@ from rich.pretty import Pretty
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device
-from netcad.logger import get_logger
-
-from netcad.checks import (
-    CheckInfoLog,
-    CheckStatus,
-    CheckPassResult,
-    CheckFailResult,
-    CheckSkipResult,
-)
+from netcad.checks import CheckStatus
 from netcad.checks.check_result_log import CheckResultLogs
 
 
 # TODO: remove this only when all of the DUT checkers are migrated over to the
 #       new CheckResult mechanism.
-
-_TCS_2_TRT = {
-    CheckStatus.PASS: CheckPassResult,
-    CheckStatus.FAIL: CheckFailResult,
-    CheckStatus.INFO: CheckInfoLog,
-    CheckStatus.SKIP: CheckSkipResult,
-}
 
 
 def show_log_table(
@@ -61,10 +46,7 @@ def show_log_table(
 
     for result in results:
         if not (log_data := result["logs"]):
-            lgr = get_logger()
-            lgr.warning("Device: %s, checks %s - convert to logs", device, filename)
-            r_tcr = _TCS_2_TRT.get(result["status"], CheckInfoLog)
-            log_data = r_tcr.log_result(result)
+            log_data = result["measurement"]
 
         status = CheckStatus(result["status"])
 
@@ -98,5 +80,8 @@ def _pretty_dict_table(obj):
 
         return table
 
-    log_table = CheckResultLogs.parse_obj(obj)
-    return log_table.pretty_table(table)
+    if isinstance(obj[0], list):
+        log_table = CheckResultLogs.parse_obj(obj)
+        return log_table.pretty_table(table)
+
+    return Pretty(obj)
