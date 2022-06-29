@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Jeremy Schulman
+#  Copyright (c) 20222 Jeremy Schulman
 #  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 # -----------------------------------------------------------------------------
@@ -38,33 +38,39 @@ __all__ = ["BgpRoutersCheckCollection", "BgpRouterCheck", "BgpRouterCheckResult"
 # -----------------------------------------------------------------------------
 
 
-class BgpRouterCheckParams(BaseModel):
-    name: str = Field(..., description="The device hostname")
-    vrf: Optional[str] = Field(None, description="VRF used if not default")
-
-
-class BgpRouterCheckExpectations(BaseModel):
-    asn: int = Field(..., description="The device ASN value")
-    router_id: str = Field(..., description="The device router-ID value")
-
-
 class BgpRouterCheck(Check):
+    """
+    Validate that the device has a BGP speaker operating, i.e. configured for
+    running BGP and showing that it is operationally present.
+    """
+
     check_type = "bgp-router"
-    check_params: BgpRouterCheckParams
-    expected_results: BgpRouterCheckExpectations
+
+    class Params(BaseModel):
+        name: str = Field(..., description="The device hostname")
+        vrf: Optional[str] = Field(None, description="VRF used if not default")
+
+    class Expect(BaseModel):
+        asn: int = Field(..., description="The speaker ASN value")
+        router_id: str = Field(..., description="The speaker router-ID value (IP addr)")
+
+    check_params: Params
+    expected_results: Expect
 
     def check_id(self) -> str:
+        """
+        The check ID value is the device hostname, and optionally the VRF name
+        if this BGP speaker is using a VRF.
+        """
         cp = self.check_params
         return cp.name if not cp.vrf else f"{cp.name}:{cp.vrf}"
 
 
-class BgpRouterCheckMeasurement(BgpRouterCheckExpectations, CheckMeasurement):
-    pass
+class BgpRouterCheckResult(CheckResult[BgpRouterCheck]):
+    class Measurement(BgpRouterCheck.Expect, CheckMeasurement):
+        pass
 
-
-class BgpRouterCheckResult(CheckResult):
-    check: BgpRouterCheck
-    measurement: BgpRouterCheckMeasurement = None
+    measurement: Measurement = None
 
 
 # -----------------------------------------------------------------------------
@@ -109,10 +115,10 @@ class BgpRoutersCheckCollection(CheckCollection):
 
             rtr_checks.append(
                 BgpRouterCheck(
-                    check_params=BgpRouterCheckParams(
+                    check_params=BgpRouterCheck.Params(
                         name=device.name, vrf=bgp_spkr.vrf
                     ),
-                    expected_results=BgpRouterCheckExpectations(
+                    expected_results=BgpRouterCheck.Expect(
                         asn=bgp_spkr.asn, router_id=str(bgp_spkr.router_id)
                     ),
                 )

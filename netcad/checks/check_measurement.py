@@ -6,6 +6,7 @@
 # -----------------------------------------------------------------------------
 
 from typing import Union, List, Dict, Optional
+from itertools import filterfalse
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -50,12 +51,18 @@ class MetaMeasurement(pydantic.main.ModelMetaclass):
         for base in bases:
             annotations.update(base.__annotations__)
 
-        for field in annotations:
-            if not field.startswith("__"):
-                annotations[field] = Optional[annotations[field]]
+        for field in filterfalse(lambda _f: _f.startswith("__"), annotations):
+            annotations[field] = Optional[annotations[field]]
+
+            # if the field has a Field() designated, it will show in the
+            # namespace dictionary.  Need to set the default to None so that it
+            # is not required.
+            if field_ns := namespaces.get(field):
+                field_ns.default = None
 
         namespaces["__annotations__"] = annotations
-        return super().__new__(mcs, name, bases, namespaces, **kwargs)
+        new_cls = super().__new__(mcs, name, bases, namespaces, **kwargs)
+        return new_cls
 
 
 class CheckMeasurement(BaseModel, extra=Extra.allow, metaclass=MetaMeasurement):
