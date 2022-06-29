@@ -18,7 +18,7 @@ from pydantic import BaseModel
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device, DeviceInterface
-from netcad.checks import CheckCollection, Check, CheckExclusiveResult, Measurement
+from netcad.checks import CheckCollection, Check, CheckExclusiveResult, CheckMeasurement
 from netcad.checks import register_collection
 
 # -----------------------------------------------------------------------------
@@ -73,7 +73,7 @@ class TransceiverExclusiveListCheck(Check):
     expected_results: TransceiverListExpected
 
 
-class TransceiverListMeasurement(TransceiverListExpected, Measurement):
+class TransceiverListMeasurement(TransceiverListExpected, CheckMeasurement):
     pass
 
 

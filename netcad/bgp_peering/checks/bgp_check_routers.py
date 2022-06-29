@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device
-from netcad.checks import CheckCollection, Check, CheckResult, Measurement
+from netcad.checks import CheckCollection, Check, CheckResult, CheckMeasurement
 from netcad.checks.check_registry import register_collection
 from netcad.logger import get_logger
 
@@ -58,7 +58,7 @@ class BgpRouterCheck(Check):
         return cp.name if not cp.vrf else f"{cp.name}:{cp.vrf}"
 
 
-class BgpRouterCheckMeasurement(BgpRouterCheckExpectations, Measurement):
+class BgpRouterCheckMeasurement(BgpRouterCheckExpectations, CheckMeasurement):
     pass
 
 

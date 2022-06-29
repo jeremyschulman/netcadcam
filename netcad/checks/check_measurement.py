@@ -58,5 +58,5 @@ class MetaMeasurement(pydantic.main.ModelMetaclass):
         return super().__new__(mcs, name, bases, namespaces, **kwargs)
 
 
-class Measurement(BaseModel, extra=Extra.allow, metaclass=MetaMeasurement):
+class CheckMeasurement(BaseModel, extra=Extra.allow, metaclass=MetaMeasurement):
     pass

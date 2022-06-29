@@ -20,7 +20,7 @@ from pydantic import BaseModel, Field
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device
-from netcad.checks import CheckCollection, Check, CheckResult, Measurement
+from netcad.checks import CheckCollection, Check, CheckResult, CheckMeasurement
 from netcad.checks.check_registry import register_collection
 from netcad.logger import get_logger
 
@@ -69,7 +69,7 @@ class BgpNeighborCheck(Check):
         return str(self.check_params.nei_ip)
 
 
-class BgpNeighborCheckMeasurement(BgpNeighborCheckExpectations, Measurement):
+class BgpNeighborCheckMeasurement(BgpNeighborCheckExpectations, CheckMeasurement):
     pass
 
 

@@ -5,20 +5,57 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional
+from typing import Optional, List, TypeVar, Generic
 from typing import Callable
+
+# -----------------------------------------------------------------------------
+# Public Imports
+# -----------------------------------------------------------------------------
+
+from pydantic.generics import GenericModel
 
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
-
 from .check_status import CheckStatus
 from .check_result import CheckResult
 
+# -----------------------------------------------------------------------------
+# Exports
+# -----------------------------------------------------------------------------
 
-class CheckExclusiveResult(CheckResult):
-    def finalize(self, sort_key: Optional[Callable] = None):
+__all__ = ["CheckExclusiveResult", "CheckExclusiveList", "CheckExclusiveListGeneric"]
+
+
+DataT = TypeVar("DataT")
+CheckT = TypeVar("CheckT")
+
+
+class CheckExclusiveListGeneric(GenericModel, Generic[DataT]):
+    __root__: List[DataT]
+
+
+class CheckExclusiveList(CheckExclusiveListGeneric[str]):
+    pass
+
+
+class CheckExclusiveResult(CheckResult[CheckT], Generic[CheckT]):
+    """
+    This generic sublcass of CheckResult is used for the purposes of
+    exclusively checking "lists of things", which are generally list of
+    strings.  But could be list of ints, which is why the DataT is a generic,
+    and the CheckT represents the generic check-type this result is bound to.
+
+    Notes
+    -----
+    The use of Generic[CheckT] in the class declaration is required, at least
+    at this time, as an artifact of the pydantic library implementation, and
+    discussed on this GitHub issue:
+    https://github.com/samuelcolvin/pydantic/issues/2380#issuecomment-782330241
+    """
+
+    def measure(self, sort_key: Optional[Callable] = None):
         check = self.check
         msrd = self.measurement
         expd = check.expected_results

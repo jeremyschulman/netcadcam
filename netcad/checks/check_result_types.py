@@ -22,7 +22,7 @@ from netcad.checks.check import Check
 from .check_status import CheckStatus
 from .check_result import CheckResult
 from .check_exclusively import CheckExclusiveResult
-from .check_measurement import Measurement, AnyMeasurementType
+from .check_measurement import CheckMeasurement, AnyMeasurementType
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -40,7 +40,7 @@ __all__ = [
     "CheckFailExtraMembers",
     "CheckFailFieldMismatch",
     "CheckFailNoExists",
-    "Measurement",
+    "CheckMeasurement",
     "CheckExclusiveResult",
 ]
 

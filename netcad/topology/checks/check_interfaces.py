@@ -23,7 +23,7 @@ from netcad.checks import (
     Check,
     CheckResult,
     CheckExclusiveResult,
-    Measurement,
+    CheckMeasurement,
 )
 from netcad.checks import register_collection
 
@@ -87,7 +87,7 @@ class InterfaceCheck(Check):
         return str(self.check_params.interface)
 
 
-class InterfaceCheckMeasurement(Measurement):
+class InterfaceCheckMeasurement(CheckMeasurement):
     """
     The measurement fields are a copy-paste since we cannot subclass both used
     and unused classes together given the use of the Literal marker.
@@ -113,7 +113,7 @@ class InterfacesListExpected(BaseModel):
     __root__: List[str]
 
 
-class InterfacesListExpectedMesurement(InterfacesListExpected, Measurement):
+class InterfacesListExpectedMesurement(InterfacesListExpected, CheckMeasurement):
     pass
 
 
