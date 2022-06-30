@@ -14,7 +14,7 @@ from operator import itemgetter
 # Public Imports
 # -----------------------------------------------------------------------------
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -22,33 +22,36 @@ from pydantic import BaseModel
 
 from netcad.logger import get_logger
 from netcad.device import Device
-from netcad.checks import CheckCollection, Check
-from netcad.checks.check_registry import register_collection
+from netcad.checks import (
+    CheckCollection,
+    Check,
+    CheckResult,
+    CheckMeasurement,
+    CheckExclusiveList,
+    CheckExclusiveResult,
+    register_collection,
+)
 
 # -----------------------------------------------------------------------------
 # Module Private Imports
 # -----------------------------------------------------------------------------
 
-from ..vlan_profile import VlanProfile
 from ..profiles import InterfaceL2Access, InterfaceL2Trunk, InterfaceVlan
 
 if TYPE_CHECKING:
     from ..vlan_design_service import VlansDesignService
-
 
 # -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
 
 __all__ = [
-    "VlanCheck",
-    "VlanCheckParams",
-    "VlanCheckExpectations",
     "VlanCheckCollection",
-    "VlanCheckExclusiveList",
-    "VlanExclusiveListExpectations",
+    "VlanCheck",
+    "VlanCheckResult",
+    "VlanExclusiveListCheck",
+    "VlanExclusiveListCheckResult",
 ]
-
 
 # -----------------------------------------------------------------------------
 #
@@ -56,23 +59,34 @@ __all__ = [
 #
 # -----------------------------------------------------------------------------
 
-
-class VlanCheckParams(BaseModel):
-    vlan_id: int
-
-
-class VlanCheckExpectations(BaseModel):
-    vlan: VlanProfile
-    interfaces: List[str]
+# -----------------------------------------------------------------------------
+# Check VLAN exists with expected set of interfaces
+# -----------------------------------------------------------------------------
 
 
 class VlanCheck(Check):
-    check_type = "interface"
-    check_params: VlanCheckParams
-    expected_results: VlanCheckExpectations
+    check_type = "vlan"
+
+    class Params(BaseModel):
+        vlan_id: int
+
+    class Expect(BaseModel):
+        name: str = Field(..., description="The configured VLAN name")
+        oper_up: bool = Field(True, description="The operational state of the VLAN")
+        interfaces: List[str]
+
+    check_params: Params
+    expected_results: Expect
 
     def check_id(self) -> str:
         return str(self.check_params.vlan_id)
+
+
+class VlanCheckResult(CheckResult[VlanCheck]):
+    class Measurement(VlanCheck.Expect, CheckMeasurement):
+        pass
+
+    measurement: Measurement = None
 
 
 # -----------------------------------------------------------------------------
@@ -80,16 +94,13 @@ class VlanCheck(Check):
 # -----------------------------------------------------------------------------
 
 
-class VlanExclusiveListExpectations(BaseModel):
-    vlans: List["VlanProfile"]
+class VlanExclusiveListCheck(Check):
+    check_type = "vlans-exclusive"
+    expected_results: CheckExclusiveList
 
 
-class VlanCheckExclusiveList(Check):
-    check_type = "exclusive_list"
-    expected_results: VlanExclusiveListExpectations
-
-    def check_id(self) -> str:
-        return self.check_type
+class VlanExclusiveListCheckResult(CheckExclusiveResult[VlanExclusiveListCheck]):
+    measurement: CheckExclusiveList = None
 
 
 # -----------------------------------------------------------------------------
@@ -102,7 +113,6 @@ class VlanCheckExclusiveList(Check):
 class VlanCheckCollection(CheckCollection):
     name = "vlans"
     checks: Optional[List[VlanCheck]]
-    exclusive: Optional[VlanCheckExclusiveList]
 
     @classmethod
     def build(
@@ -124,6 +134,7 @@ class VlanCheckCollection(CheckCollection):
         # the association between VLANs used and the interface.
 
         for if_name, interface in device.interfaces.used().items():
+
             if_prof = interface.profile
 
             if isinstance(if_prof, (InterfaceL2Access, InterfaceVlan)):
@@ -132,6 +143,8 @@ class VlanCheckCollection(CheckCollection):
                 vlans = if_prof.trunk_allowed_vlans()
             else:
                 continue
+
+            # iterate across the VlanProfiles for this interface ...
 
             for vlan in vlans:
 
@@ -156,22 +169,14 @@ class VlanCheckCollection(CheckCollection):
         # Create the instance of the Vlans check collections so that it can be
         # stored and used by the 'netcam' tooling.
 
-        # create the check for exclusive list of Vlans, by default
-        # TODO: make this control configurable in the DesignService.
-
-        exl_check = VlanCheckExclusiveList(
-            expected_results=VlanExclusiveListExpectations(vlans=list(map_vlan_ifaces))
-        )
-
         collection = VlanCheckCollection(
             device=device.name,
-            exclusive=exl_check,
+            exclusive=design_service.should_check_exclusively(device),
             checks=[
                 VlanCheck(
-                    check_type="interfaces",
-                    check_params=VlanCheckParams(vlan_id=vlan_p.vlan_id),
-                    expected_results=VlanCheckExpectations(
-                        vlan=vlan_p, interfaces=if_names
+                    check_params=VlanCheck.Params(vlan_id=vlan_p.vlan_id),
+                    expected_results=VlanCheck.Expect(
+                        name=vlan_p.name, interfaces=if_names
                     ),
                 )
                 for vlan_p, if_names in sorted(

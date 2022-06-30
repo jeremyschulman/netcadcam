@@ -6,16 +6,12 @@
 # -----------------------------------------------------------------------------
 
 from typing import List, Type, Optional, Hashable, Dict, TypeVar, Iterable, Set
-from netcad.device import Device
-
-# -----------------------------------------------------------------------------
-# Pubic Imports
-# -----------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
+from netcad.device import Device, DeviceNonExclusive
 from netcad.registry import Registry
 from netcad.checks import CheckCollection
 
@@ -111,6 +107,22 @@ class DesignService(Registry, registry_name="design_services"):
 
     def validate(self):
         raise NotImplementedError()
+
+    def should_check_exclusively(self, device: Device) -> bool:
+        """
+        Returns True if the design check to build in "exclusive". If the
+        service is explicitly configured, then that value will be used.
+        Otherwise, the return value depends on if the device is declared as
+        non-exclusive.
+        """
+
+        # if the service is not explicity configured, then use
+        # the design of the device instance.
+
+        if (exclusive := self.exclusive) is None:
+            exclusive = not isinstance(device, DeviceNonExclusive)
+
+        return exclusive
 
 
 DesignServiceCatalog = Dict[Hashable, DesignService]
