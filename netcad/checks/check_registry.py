@@ -7,10 +7,10 @@ from .check_collection import CheckCollection
 __all__ = ["CheckRegistry", "register_collection"]
 
 
-class CheckRegistry(Registry, registry_name="test_services"):
+class CheckRegistry(Registry, registry_name="check_services"):
     """
-    TestingServices registry used to register TestCases class so that they can
-    be looked up by name for the purposes of building tests, ...
+    Registry used to register design service "check collections" class so that
+    they can be looked up by name for the purposes of building checks, ...
     """
 
     def __call__(self, cls):

@@ -115,7 +115,7 @@ class VlansDesignService(
     instance and the value is the per-device Vlan design service.
     """
 
-    # The per-device VLAN service class.  By default will be the class defined
+    # The per-device VLAN service class.  By default, will be the class defined
     # above.  A Designer may wish to subclass something different.
 
     device_vlan_service = DeviceVlanDesignService

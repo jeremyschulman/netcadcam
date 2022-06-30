@@ -18,7 +18,7 @@ from pydantic import BaseModel
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device, DeviceInterface, HostDevice
-from netcad.checks import CheckCollection, Check
+from netcad.checks import CheckCollection, Check, CheckResult, CheckMeasurement
 from netcad.checks import register_collection
 
 # -----------------------------------------------------------------------------
@@ -28,9 +28,7 @@ from netcad.checks import register_collection
 __all__ = [
     "InterfaceCablingCheckCollection",
     "InterfaceCablingCheck",
-    "InterfaceCablingdExpectations",
-    "InterfaceCablingCheckParams",
-    "NoValidateCabling",
+    "InterfaceCablingCheckResult",
 ]
 
 # -----------------------------------------------------------------------------
@@ -57,21 +55,29 @@ NoValidateCabling = NoValidateCablingSential()
 # -----------------------------------------------------------------------------
 
 
-class InterfaceCablingCheckParams(BaseModel):
-    interface: str
-
-
-class InterfaceCablingdExpectations(BaseModel):
-    device: str
-    port_id: str
-
-
 class InterfaceCablingCheck(Check):
-    check_params: InterfaceCablingCheckParams
-    expected_results: InterfaceCablingdExpectations
+
+    check_type = "cabling"
+
+    class Params(BaseModel):
+        interface: str
+
+    class Expect(BaseModel):
+        device: str
+        port_id: str
+
+    check_params: Params
+    expected_results: Expect
 
     def check_id(self) -> str:
         return str(self.check_params.interface)
+
+
+class InterfaceCablingCheckResult(CheckResult[InterfaceCablingCheck]):
+    class Measurement(InterfaceCablingCheck.Expect, CheckMeasurement):
+        pass
+
+    measurement: Measurement = None
 
 
 @register_collection
@@ -108,8 +114,8 @@ class InterfaceCablingCheckCollection(CheckCollection):
             device=device.name,
             checks=[
                 InterfaceCablingCheck(
-                    check_params=InterfaceCablingCheckParams(interface=interface.name),
-                    expected_results=InterfaceCablingdExpectations(
+                    check_params=InterfaceCablingCheck.Params(interface=interface.name),
+                    expected_results=InterfaceCablingCheck.Expect(
                         device=interface.cable_peer.device.name,
                         port_id=interface.cable_peer.cable_port_id,
                     ),

@@ -18,8 +18,24 @@ from pydantic import BaseModel, Field
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device
-from netcad.checks import CheckCollection, Check, register_collection
+from netcad.checks import (
+    CheckCollection,
+    register_collection,
+    Check,
+    CheckResult,
+    CheckMeasurement,
+)
 
+
+# -----------------------------------------------------------------------------
+# Exports
+# -----------------------------------------------------------------------------
+
+__all__ = [
+    "DeviceInformationCheckCollection",
+    "DeviceInformationCheck",
+    "DeviceInformationCheckResult",
+]
 
 # -----------------------------------------------------------------------------
 #
@@ -28,21 +44,28 @@ from netcad.checks import CheckCollection, Check, register_collection
 # -----------------------------------------------------------------------------
 
 
-class DeviceInformationCheckParams(BaseModel):
-    device: str
-    os_name: str
-
-
-class DeviceInformationCheckExpectations(BaseModel):
-    product_model: str
-
-
 class DeviceInformationCheck(Check):
-    check_params: DeviceInformationCheckParams
-    expected_results: DeviceInformationCheckExpectations
+    check_type = "device-info"
+
+    class Params(BaseModel):
+        device: str
+        os_name: str
+
+    class Expect(BaseModel):
+        product_model: str
+
+    check_params: Params
+    expected_results: Expect
 
     def check_id(self) -> str:
         return self.check_params.device
+
+
+class DeviceInformationCheckResult(CheckResult[DeviceInformationCheck]):
+    class Measurement(DeviceInformationCheck.Expect, CheckMeasurement):
+        pass
+
+    measurement: Measurement = None
 
 
 class DeviceInterfaceInfo(BaseModel):
@@ -101,10 +124,10 @@ class DeviceInformationCheckCollection(CheckCollection):
             interfaces=_interfaces_as_dict(device),
             checks=[
                 DeviceInformationCheck(
-                    check_params=DeviceInformationCheckParams(
+                    check_params=DeviceInformationCheck.Params(
                         device=device.name, os_name=device.os_name
                     ),
-                    expected_results=DeviceInformationCheckExpectations(
+                    expected_results=DeviceInformationCheck.Expect(
                         product_model=device.product_model
                     ),
                 )

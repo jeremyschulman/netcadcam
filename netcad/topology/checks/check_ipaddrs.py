@@ -19,7 +19,8 @@ from pydantic import BaseModel
 
 from netcad.device import Device
 from netcad.device.profiles.l3_interfaces import InterfaceL3
-from netcad.checks import CheckCollection, Check
+from netcad.checks import CheckCollection, Check, CheckResult, CheckMeasurement
+from netcad.checks import CheckExclusiveList, CheckExclusiveResult
 from netcad.checks import register_collection
 
 # -----------------------------------------------------------------------------
@@ -29,8 +30,9 @@ from netcad.checks import register_collection
 __all__ = [
     "IPInterfacesCheckCollection",
     "IPInterfaceCheck",
-    "IPInterfaceCheckExclusiveList",
-    "IPInterfaceList",
+    "IPInterfaceCheckResult",
+    "IPInterfaceExclusiveListCheck",
+    "IPInterfaceExclusiveListCheckResult",
 ]
 
 
@@ -41,32 +43,54 @@ __all__ = [
 # -----------------------------------------------------------------------------
 
 
-class IPInterfaceCheckParams(BaseModel):
-    if_name: str
-
-
-class IPInterfaceCheckExpectations(BaseModel):
-    if_ipaddr: str
-    # TODO: add enabled state, for when the IP is not expected to be "up"
-
-
 class IPInterfaceCheck(Check):
-    check_params: IPInterfaceCheckParams
-    expected_results: IPInterfaceCheckExpectations
+    check_type = "ipaddr"
+
+    class Params(BaseModel):
+        if_name: str
+
+    class Expect(BaseModel):
+        if_ipaddr: str
+        # TODO: for now this check hardcoded the expectation that the interface
+        #       bound to this IP address is in the "up" condition.  In the
+        #       future we could make this configurable based on the design.
+        oper_up: bool = True
+
+    check_params: Params
+    expected_results: Expect
 
     def check_id(self) -> str:
         return str(self.check_params.if_name)
 
 
-class IPInterfaceList(BaseModel):
-    if_names: List[str]
+class IPInterfaceCheckResult(CheckResult[IPInterfaceCheck]):
+    class Measurement(IPInterfaceCheck.Expect, CheckMeasurement):
+        pass
+
+    measurement: Measurement = None
 
 
-class IPInterfaceCheckExclusiveList(Check):
-    expected_results: IPInterfaceList
+# -----------------------------------------------------------------------------
+# Check for exclusive list of IP interfaces
+# -----------------------------------------------------------------------------
 
-    def check_id(self) -> str:
-        return "exclusive_list"
+
+class IPInterfaceExclusiveListCheck(Check):
+    check_type = "ipaddrs-exclusive"
+
+    expected_results: CheckExclusiveList
+
+
+class IPInterfaceExclusiveListCheckResult(
+    CheckExclusiveResult[IPInterfaceExclusiveListCheck]
+):
+    class Measurement(CheckExclusiveList, CheckMeasurement):
+        pass
+
+    measurement: Measurement = None
+
+
+# -----------------------------------------------------------------------------
 
 
 @register_collection
@@ -88,8 +112,8 @@ class IPInterfacesCheckCollection(CheckCollection):
             exclusive=not device.is_not_exclusive,
             checks=[
                 IPInterfaceCheck(
-                    check_params=IPInterfaceCheckParams(if_name=iface.name),
-                    expected_results=IPInterfaceCheckExpectations(
+                    check_params=IPInterfaceCheck.Params(if_name=iface.name),
+                    expected_results=IPInterfaceCheck.Expect(
                         if_ipaddr=str(iface.profile.if_ipaddr or "is_reserved")
                     ),
                 )

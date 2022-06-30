@@ -5,7 +5,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional, Any
+from typing import Optional, Any, List, TypeVar, Generic
 import typing
 import types
 
@@ -14,18 +14,22 @@ import types
 # -----------------------------------------------------------------------------
 
 import pydantic
-from pydantic import validator, BaseModel, Field
+from pydantic import BaseModel, Field, validator
+from pydantic.generics import GenericModel
 
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device
-from netcad.checks.check import Check
-
 from .check_status import CheckStatus, CheckStatusFlag
 from .check_result_log import CheckResultLogs
 
+# -----------------------------------------------------------------------------
+# Exports
+# -----------------------------------------------------------------------------
+
+__all__ = ["CheckResult", "CheckResultList", "CheckResultsCollection"]
 
 # -----------------------------------------------------------------------------
 #
@@ -46,15 +50,26 @@ class MetaCheckResult(pydantic.main.ModelMetaclass):
         _field = "measurement"
         annots = namespaces.get("__annotations__", {})
 
-        if (msrd_cls := annots.get(_field)) and (not namespaces.get(_field)):
+        if (msrd_cls := annots.get(_field)) is None:
+            if Generic not in bases:
+                raise RuntimeError(
+                    f"Missing {name}, required annotation for measurement field"
+                )
+
+        if msrd_cls and not namespaces.get(_field):
             if isinstance(msrd_cls, types.UnionType):
                 msrd_cls, _ = typing.get_args(msrd_cls)
+
+            annots[_field] = Optional[annots[_field]]
             namespaces[_field] = Field(default_factory=msrd_cls)
 
         return super().__new__(mcs, name, bases, namespaces, **kwargs)
 
 
-class CheckResult(BaseModel, metaclass=MetaCheckResult):
+CheckT = TypeVar("CheckT")
+
+
+class CheckResult(GenericModel, Generic[CheckT], metaclass=MetaCheckResult):
     """
     The CheckResult is the base class for all Design service specific
     check-result definitions.  Each design service *SHOULD* define check
@@ -64,9 +79,10 @@ class CheckResult(BaseModel, metaclass=MetaCheckResult):
     """
 
     status: CheckStatus = Field(CheckStatus.PASS)
-    device: Device
-    check: Check
+    device: Device | str
+    check: CheckT
     check_id: Optional[str]
+
     field: Optional[str]
 
     # even though the default-factory here is provided as dict, the use of the
@@ -85,7 +101,7 @@ class CheckResult(BaseModel, metaclass=MetaCheckResult):
     #                       Public Methods
     # -------------------------------------------------------------------------
 
-    def finalize(self, **kwargs):
+    def measure(self, **kwargs):
         """
         The developer must call finalize once they have completed filling in
         the check result measurement.  Finalize "post-processes" the
@@ -208,3 +224,10 @@ def _finalize_result(result: CheckResult, **kwargs) -> CheckResult:
         result.status = CheckStatus.FAIL
 
     return result
+
+
+CheckResultsCollection = List[CheckResult]
+
+
+class CheckResultList(BaseModel):
+    __root__: Optional[List[CheckResult]] = Field(default_factory=list)

@@ -27,7 +27,6 @@ __all__ = ["Check"]
 
 
 # disabling pycharm inspections because: https://youtrack.jetbrains.com/issue/PY-16760)
-
 # noinspection PyUnresolvedReferences
 class Check(BaseModel):
     """
@@ -49,7 +48,7 @@ class Check(BaseModel):
         testing system knows the "correct answer".
     """
 
-    check_type: Optional[str]
+    check_type: str
     check_params: Optional[BaseModel]
     expected_results: BaseModel
 

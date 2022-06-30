@@ -20,7 +20,7 @@ from pydantic import BaseModel, Field
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device
-from netcad.checks import CheckCollection, Check, CheckResult, Measurement
+from netcad.checks import CheckCollection, Check, CheckResult, CheckMeasurement
 from netcad.checks.check_registry import register_collection
 from netcad.logger import get_logger
 
@@ -47,34 +47,37 @@ __all__ = ["BgpNeighborsCheckCollection", "BgpNeighborCheck", "BgpNeighborCheckR
 # -----------------------------------------------------------------------------
 
 
-class BgpNeighborCheckParams(BaseModel):
-    nei_name: str = Field(..., description="The BGP speaker (device) name")
-    nei_ip: str = Field(..., description="The BGP neighbor IP address")
-    vrf: Optional[str] = Field(None, description="VRF used if not default")
-
-
-class BgpNeighborCheckExpectations(BaseModel):
-    remote_asn: int = Field(..., description="The remote BGP speaker ASN")
-    state: BgpNeighborState = Field(
-        ..., description="The BGP neighbor state, enum(int)"
-    )
-
-
 class BgpNeighborCheck(Check):
+
     check_type = "bgp-neighbor"
-    check_params: BgpNeighborCheckParams
-    expected_results: BgpNeighborCheckExpectations
 
     def check_id(self) -> str:
+        """
+        The check ID is the neighbor IP address
+        """
         return str(self.check_params.nei_ip)
 
+    class Params(BaseModel):
+        nei_name: str = Field(..., description="The BGP speaker (device) name")
+        nei_ip: str = Field(..., description="The BGP neighbor IP address")
+        vrf: Optional[str] = Field(None, description="VRF used if not default")
 
-class BgpNeighborCheckMeasurement(BgpNeighborCheckExpectations, Measurement):
-    pass
+    class Expect(BaseModel):
+        remote_asn: int = Field(..., description="The remote BGP speaker ASN")
+        state: BgpNeighborState = Field(
+            ..., description="The BGP neighbor state, enum(int)"
+        )
+
+    check_params: Params
+    expected_results: Expect
 
 
-class BgpNeighborCheckResult(CheckResult):
-    measurement: BgpNeighborCheckMeasurement = None
+class BgpNeighborCheckResult(CheckResult[BgpNeighborCheck]):
+    class Measurement(BgpNeighborCheck.Expect, CheckMeasurement):
+        pass
+
+    check: BgpNeighborCheck
+    measurement: Measurement = None
 
 
 # -----------------------------------------------------------------------------
@@ -84,7 +87,7 @@ class BgpNeighborCheckResult(CheckResult):
 
 class BgpNeighborExclusiveListCheck(Check):
     check_type = "exclusive_list"
-    expected_results: List[BgpNeighborCheckExpectations]
+    expected_results: List[BgpNeighborCheck.Expect]
 
     def check_id(self) -> str:
         return self.check_type
@@ -133,12 +136,12 @@ class BgpNeighborsCheckCollection(CheckCollection):
                 remote = bgp_nei_rec.remote
                 nei_checks.append(
                     BgpNeighborCheck(
-                        check_params=BgpNeighborCheckParams(
+                        check_params=BgpNeighborCheck.Params(
                             nei_name=remote.speaker.device.name,
                             nei_ip=str(remote.via_ip),
                             vrf=bgp_spkr.vrf,
                         ),
-                        expected_results=BgpNeighborCheckExpectations(
+                        expected_results=BgpNeighborCheck.Expect(
                             remote_asn=remote.speaker.asn,
                             state=BgpNeighborState.ESTABLISHED,
                         ),

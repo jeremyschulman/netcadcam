@@ -5,7 +5,7 @@ import click
 
 from netcad.config import netcad_globals
 
-opt_devices = lambda **params: click.option(
+opt_devices = lambda **params: click.option(  # noqa
     "-d",
     "--device",
     "devices",
@@ -49,7 +49,7 @@ def unique_required_design_collection(ctx, param, value):
     return given_designs
 
 
-opt_designs = lambda **params: click.option(
+opt_designs = lambda **params: click.option(  # noqa
     "-D",
     "--design",
     "designs",
@@ -60,6 +60,6 @@ opt_designs = lambda **params: click.option(
     **params,
 )
 
-opt_design = lambda **params: click.option(
+opt_design = lambda **params: click.option(  # noqa
     "-D", "--design", "design", metavar="[DESIGN]", help="design", **params
 )

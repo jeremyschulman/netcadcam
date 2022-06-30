@@ -11,7 +11,7 @@ from typing import List, Optional, Union
 # Public Imports
 # -----------------------------------------------------------------------------
 
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -21,51 +21,83 @@ from netcad.device import Device
 from netcad.vlans import VlanProfile
 from netcad.vlans.profiles.l2_interfaces import InterfaceL2Access, InterfaceL2Trunk
 
-from netcad.checks import CheckCollection, Check
-from netcad.checks.check_registry import register_collection
+from netcad.checks import (
+    CheckCollection,
+    Check,
+    CheckResult,
+    CheckMeasurement,
+    register_collection,
+)
 
 
 # -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = [
-    "SwitchportCheckCollection",
-    "SwitchportCheck",
-    "SwitchportTrunkExpectation",
-    "SwitchportAccessExpectation",
-]
+__all__ = ["SwitchportCheckCollection", "SwitchportCheck", "SwitchportCheckResult"]
 
 
-class SwitchportCheckParams(BaseModel):
-    if_name: str
-
-
-class SwitchportAnyExpectations(BaseModel):
-    switchport_mode: str
-
-
-class SwitchportAccessExpectation(SwitchportAnyExpectations):
-    switchport_mode = "access"
-    vlan: VlanProfile
-
-
-class SwitchportTrunkExpectation(SwitchportAnyExpectations):
-    switchport_mode = "trunk"
-    native_vlan: Optional[VlanProfile]
-    trunk_allowed_vlans: List[VlanProfile]
-
-
-SwitchportExpectations = Union[SwitchportAccessExpectation, SwitchportTrunkExpectation]
+# -----------------------------------------------------------------------------
+# Check interface switchport status
+# -----------------------------------------------------------------------------
 
 
 class SwitchportCheck(Check):
     check_type = "switchport"
-    check_params: SwitchportCheckParams
-    expected_results: SwitchportExpectations
+
+    class Params(BaseModel):
+        if_name: str
+
+    class ExpectSwitchport(BaseModel):
+        switchport_mode: Optional[str]
+
+    class ExpectAccess(ExpectSwitchport):
+        switchport_mode = "access"
+        vlan: VlanProfile
+
+    class ExpectTrunk(ExpectSwitchport):
+        switchport_mode = "trunk"
+        native_vlan: Optional[VlanProfile]
+        trunk_allowed_vlans: List[VlanProfile]
+
+    check_params: Params
+    expected_results: Union[ExpectAccess, ExpectTrunk]
 
     def check_id(self) -> str:
         return str(self.check_params.if_name)
+
+
+class SwitchportCheckResult(CheckResult[SwitchportCheck]):
+    """
+    This one is a bit tricky due to the name of the access | trunk. We declare
+    the measuretype to be the generalized form first.  Then depending on the
+    value we will be more specific:
+
+    """
+
+    class Measurement(CheckMeasurement, SwitchportCheck.ExpectSwitchport):
+        pass
+
+    class MeasuredAccess(CheckMeasurement, SwitchportCheck.ExpectAccess):
+        pass
+
+    class MeasuredTrunk(CheckMeasurement, SwitchportCheck.ExpectTrunk):
+        pass
+
+    measurement: Measurement = None
+
+    @validator("measurement", pre=True, always=True)
+    def _on_measurement(cls, value, values):
+        check = values["check"]
+        msrd_type = (
+            SwitchportCheckResult.MeasuredAccess
+            if check.expected_results.switchport_mode == "access"
+            else SwitchportCheckResult.MeasuredTrunk
+        )
+        return msrd_type.parse_obj({})
+
+
+# -----------------------------------------------------------------------------
 
 
 @register_collection
@@ -80,13 +112,13 @@ class SwitchportCheckCollection(CheckCollection):
 
         for if_name, interface in device.interfaces.used().items():
             if_prof = interface.profile
-            tc_params = SwitchportCheckParams(if_name=if_name)
+            tc_params = SwitchportCheck.Params(if_name=if_name)
 
             if isinstance(if_prof, InterfaceL2Access):
-                tc_expd = SwitchportAccessExpectation(vlan=if_prof.vlan)
+                tc_expd = SwitchportCheck.ExpectAccess(vlan=if_prof.vlan)
 
             elif isinstance(if_prof, InterfaceL2Trunk):
-                tc_expd = SwitchportTrunkExpectation(
+                tc_expd = SwitchportCheck.ExpectTrunk(
                     native_vlan=if_prof.native_vlan,
                     trunk_allowed_vlans=sorted(if_prof.trunk_allowed_vlans()),
                 )

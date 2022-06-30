@@ -11,15 +11,22 @@ from typing import List, Optional
 # Public Imports
 # -----------------------------------------------------------------------------
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device, DeviceInterface
-from netcad.checks import CheckCollection, Check, CheckExclusiveResult, Measurement
-from netcad.checks import register_collection
+from netcad.checks import (
+    CheckCollection,
+    Check,
+    CheckMeasurement,
+    CheckResult,
+    CheckExclusiveList,
+    CheckExclusiveResult,
+    register_collection,
+)
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -28,8 +35,7 @@ from netcad.checks import register_collection
 __all__ = [
     "TransceiverCheckCollection",
     "TransceiverCheck",
-    "TransceiverCheckParams",
-    "TransceiverCheckExpectations",
+    "TransceiverCheckResult",
     "TransceiverExclusiveListCheck",
     "TransceiverExclusiveListCheckResult",
 ]
@@ -41,21 +47,34 @@ __all__ = [
 # -----------------------------------------------------------------------------
 
 
-class TransceiverCheckParams(BaseModel):
-    interface: str
-
-
-class TransceiverCheckExpectations(BaseModel):
-    model: str  # the transceiver product model name (vendor specific)
-    type: str  # the tranceiver physical type name (industry standard)
-
-
 class TransceiverCheck(Check):
-    check_params: TransceiverCheckParams
-    expected_results: TransceiverCheckExpectations
+    check_type = "transceiver"
+
+    class Params(BaseModel):
+        interface: str
+
+    class Expect(BaseModel):
+        model: str = (
+            Field(
+                ..., description="the transceiver product model name (vendor specific)"
+            ),
+        )
+        type: str = Field(
+            ..., description="the tranceiver physical type name (industry standard)"
+        )
+
+    check_params: Params
+    expected_results: Expect
 
     def check_id(self) -> str:
         return str(self.check_params.interface)
+
+
+class TransceiverCheckResult(CheckResult[TransceiverCheck]):
+    class Measure(TransceiverCheck.Expect, CheckMeasurement):
+        pass
+
+    measurement: Measure = None
 
 
 # -----------------------------------------------------------------------------#
@@ -63,21 +82,25 @@ class TransceiverCheck(Check):
 # -----------------------------------------------------------------------------#
 
 
-class TransceiverListExpected(BaseModel):
-    __root__: List[int]
-
-
 class TransceiverExclusiveListCheck(Check):
-    check_type = "exclusive"
-    expected_results: TransceiverListExpected
+    check_type = "transceivers-exclusive"
+    expected_results: CheckExclusiveList
 
 
-class TransceiverListMeasurement(TransceiverListExpected, Measurement):
-    pass
+class TransceiverExclusiveListCheckResult(
+    CheckExclusiveResult[TransceiverExclusiveListCheck]
+):
+    class Measurement(CheckExclusiveList, CheckMeasurement):
+        pass
+
+    measurement: Measurement
 
 
-class TransceiverExclusiveListCheckResult(CheckExclusiveResult):
-    measurement: TransceiverListMeasurement
+# -----------------------------------------------------------------------------#
+#
+#                       The collection model
+#
+# -----------------------------------------------------------------------------#
 
 
 @register_collection
@@ -102,8 +125,8 @@ class TransceiverCheckCollection(CheckCollection):
             xcvr = port_profile.transceiver
 
             return TransceiverCheck(
-                check_params=TransceiverCheckParams(interface=iface.name),
-                expected_results=TransceiverCheckExpectations(
+                check_params=TransceiverCheck.Params(interface=iface.name),
+                expected_results=TransceiverCheck.Expect(
                     model=iface.profile.phy_profile.name, type=xcvr.type
                 ),
             )

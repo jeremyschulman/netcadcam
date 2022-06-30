@@ -18,7 +18,7 @@ from netcad.cli.keywords import markup_color
 from netcad.debug import debug_enabled, format_exc_message
 from netcad.netcam.dut import SetupError
 
-from netcad.checks.check_result_types import CheckStatus, CheckSkipResult
+from netcad.checks import CheckStatus, CheckResult, Check
 from .save_check_results import device_checks_save_results
 from .dut import AsyncDeviceUnderTest
 
@@ -182,10 +182,14 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
 
                 if not results:
                     results = [
-                        CheckSkipResult(
+                        CheckResult[Check](
                             device=device,
-                            message=f"Missing: device {device.name} support for "
-                            f"Checks: {tc_name}",
+                            status=CheckStatus.SKIP,
+                            check=Check(check_type="skip", expected_results=None),
+                            measurement=(
+                                f"Missing: device {device.name} support for "
+                                f"Checks: {tc_name}",
+                            ),
                         )
                     ]
 
