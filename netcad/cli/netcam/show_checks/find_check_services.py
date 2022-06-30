@@ -4,7 +4,8 @@ def find_check_services(device, optionals: dict):
     inc_service_names = optionals["service_list"]
 
     for design_service in device.services.values():
-        if inc_check_names:
+
+        if inc_service_names:
             if design_service.name not in inc_service_names:
                 continue
 
