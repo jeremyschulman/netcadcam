@@ -76,6 +76,12 @@ __all__ = []
     help="display only logs from <test>",
 )
 @click.option(
+    "--service",
+    "service_list",
+    multiple=True,
+    help="execute only these design checks",
+)
+@click.option(
     "--all", "include_all", is_flag=True, help="display all results, not just FAIL"
 )
 @click.option("--info", "include_info", is_flag=True, help="include INFO reports")
