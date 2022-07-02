@@ -29,3 +29,6 @@ def clig_reports(designs: Tuple[str], services: Tuple[str]):
 
     for gr in svc_graphs:
         gr.build_graph_edges()
+
+    for gr in svc_graphs:
+        gr.graph.write_graphml(gr.service.name + ".graphml")
