@@ -6,7 +6,7 @@
 # -----------------------------------------------------------------------------
 
 import sys
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Type, Dict
 from typing import TYPE_CHECKING
 from pathlib import Path
 import json
@@ -91,10 +91,10 @@ class CheckCollection(BaseModel):
     # so that we can parse these JSON payloads into objects later.
     # -------------------------------------------------------------------------
 
-    _map_check_types = dict()
+    _check_results_type_map: Dict[str, Type[CheckResult]] = dict()
 
     @classmethod
-    def parse_check_result(cls, result: dict) -> CheckResult:
+    def parse_result(cls, result: dict) -> CheckResult:
         """
         Given the result in the form of a dictionary object, cover it to the
         associated CheckResult instance
@@ -110,7 +110,7 @@ class CheckCollection(BaseModel):
         if (check_type := check.get("check_type")) is None:
             raise ValueError('Required "check_type" missing in result')
 
-        if (cls_type := cls._map_check_types.get(check_type)) is None:
+        if (cls_type := cls._check_results_type_map.get(check_type)) is None:
             raise ValueError(
                 f"This check collection does not have bound check-type: {check_type}"
             )
@@ -139,4 +139,7 @@ class CheckCollection(BaseModel):
             if not check_type_value:
                 raise RuntimeError(f'Required "check_type" missing from: {str(each)}')
 
-            cls._map_check_types[check_type_value] = each
+            cls._check_results_type_map[check_type_value] = each
+
+
+CheckCollectionT = Type[CheckCollection]

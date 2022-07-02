@@ -63,3 +63,11 @@ opt_designs = lambda **params: click.option(  # noqa
 opt_design = lambda **params: click.option(  # noqa
     "-D", "--design", "design", metavar="[DESIGN]", help="design", **params
 )
+
+
+opt_design_services = lambda **params: click.option(  # noqa
+    "--service",
+    "services",
+    multiple=True,
+    help="execute only these design checks",
+)

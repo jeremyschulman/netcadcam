@@ -22,6 +22,7 @@ from pydantic.generics import GenericModel
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device
+from .check import Check
 from .check_status import CheckStatus, CheckStatusFlag
 from .check_result_log import CheckResultLogs
 
@@ -66,7 +67,7 @@ class MetaCheckResult(pydantic.main.ModelMetaclass):
         return super().__new__(mcs, name, bases, namespaces, **kwargs)
 
 
-CheckT = TypeVar("CheckT")
+CheckT = TypeVar("CheckT", bound=Check)
 
 
 class CheckResult(GenericModel, Generic[CheckT], metaclass=MetaCheckResult):
@@ -141,10 +142,13 @@ class CheckResult(GenericModel, Generic[CheckT], metaclass=MetaCheckResult):
     def _save_tc_id(cls, value, values: dict):
         return values["check"].check_id()
 
-    # TODO: remove
-    # @staticmethod
-    # def log_result(result: dict):
-    #     return result
+    # -------------------------------------------------------------------------
+    #                       Public Methods
+    # -------------------------------------------------------------------------
+
+    def __hash__(self):
+        """make hashable for dict key purposes"""
+        return id(self)
 
 
 # -----------------------------------------------------------------------------
