@@ -6,3 +6,4 @@ from .netcam import script
 from . import cli_check_devices
 from .show_checks import cli_show_checks
 from . import cli_plugins
+from . import cli_netcam_reports

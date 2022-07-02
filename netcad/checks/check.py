@@ -72,3 +72,8 @@ class Check(BaseModel):
         # TODO: may rethink this default.
         # kwargs["exclude_none"] = True
         return super(Check, self).dict(**kwargs)
+
+    @classmethod
+    def check_type_(cls):
+        """Used to get the check_type value from the class declaration"""
+        return cls.__fields__["check_type"].default

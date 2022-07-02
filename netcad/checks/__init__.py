@@ -11,18 +11,6 @@ from .check_exclusively import (
 )
 from .check_measurement import CheckMeasurement
 from .check_status import CheckStatus, CheckStatusFlag
-from .check_collection import CheckCollection
-
-# from .check_result_types import (
-#     CheckResultsCollection,
-#     CheckPassResult,
-#     CheckFailResult,
-#     CheckInfoLog,
-#     CheckSkipResult,
-#     CheckFailMissingMembers,
-#     CheckFailExtraMembers,
-#     CheckFailFieldMismatch,
-#     CheckFailNoExists,
-# )
+from .check_collection import CheckCollection, CheckCollectionT
 
 from .check_registry import register_collection
