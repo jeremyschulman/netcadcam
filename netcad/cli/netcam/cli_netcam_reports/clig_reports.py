@@ -1,7 +1,7 @@
 from typing import Tuple
 
 from netcad.design import load_design
-
+from netcad.design import DesignResultsGraph
 from netcad.cli.common_opts import opt_designs, opt_design_services
 from ..cli_netcam_main import cli
 
@@ -15,20 +15,6 @@ def clig_reports(designs: Tuple[str], services: Tuple[str]):
     design_name = designs[0]
     design = load_design(design_name=design_name)
 
-    svcs = design.services.values()
-    if services:
-        svcs = filter(lambda s: s.name in services, svcs)
+    drg = DesignResultsGraph(design=design)
 
-    svc_graphs = list()
-
-    for svc in svcs:
-        svc_graphs.append(svc.results_graph())
-
-    for gr in svc_graphs:
-        gr.build_graph_nodes()
-
-    for gr in svc_graphs:
-        gr.build_graph_edges()
-
-    for gr in svc_graphs:
-        gr.graph.write_graphml(gr.service.name + ".graphml")
+    drg.build(services=services)

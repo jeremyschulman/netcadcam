@@ -5,38 +5,39 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Iterator, TYPE_CHECKING, Optional
+from typing import Iterator, TYPE_CHECKING, Optional, Set, List
 import json
-from collections import defaultdict
 from pathlib import Path
+from itertools import filterfalse
 
 # -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
 
-from bidict import bidict
 import igraph
-
 
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
 from netcad.config import netcad_globals
-from netcad.device import Device
+from netcad.device import Device, PseudoDevice, HostDevice
 from netcad.checks import CheckCollectionT, CheckResult
-from .drg_typedefs import ResultMapT, NodeObjIDMapT
 
 if TYPE_CHECKING:
     from netcad.design import DesignService
 
+from .drg import DesignResultsGraph
+
 
 class DesignServiceResultsGraph:
-    def __init__(self, service: "DesignService"):
+    def __init__(self, drg: DesignResultsGraph, service: "DesignService"):
         self.service = service
-        self.graph = igraph.Graph(directed=True)
-        self.results_map: ResultMapT = defaultdict(lambda: defaultdict(dict))
-        self.nodes_map: NodeObjIDMapT = bidict()
+        self.graph = drg.graph
+        self.results_map = drg.results_map
+        self.nodes_map = drg.nodes_map
+        self.nodes: Set[CheckResult] = set()
+        self.devices: List[Device] | None = None
 
     def build_graph_nodes(self):
         """
@@ -45,14 +46,22 @@ class DesignServiceResultsGraph:
         into the `nodeobj_map` and `result_map` collections.
         """
 
+        self.devices = list(
+            filterfalse(
+                lambda d: isinstance(d, (HostDevice, PseudoDevice)),
+                self.service.devices,
+            )
+        )
+
         for check_type in self.service.check_collections:
-            for device in self.service.devices:
+            for device in self.devices:
+                print(f"{device.name}, {check_type.get_name()}")
                 result_objs = self.load_results_files(device, check_type)
                 self.add_result_nodes(device, result_objs)
 
     def build_graph_edges(self):
         """Required by subclass"""
-        raise NotImplementedError()
+        pass
 
     def add_result_nodes(self, device: Device, results: Iterator[CheckResult]):
         for res_obj in results:
@@ -61,6 +70,7 @@ class DesignServiceResultsGraph:
             node: igraph.Vertex = self.graph.add_vertex(
                 kind=check_type, status=res_obj.status, device=res_obj.device
             )
+            self.nodes.add(res_obj)
             self.nodes_map[res_obj] = node.index
             self.results_map[device][check_type][check.check_id()] = res_obj
 
@@ -89,7 +99,20 @@ class DesignServiceResultsGraph:
     def load_results_files(
         self, device: Device, check_type: CheckCollectionT
     ) -> Iterator[CheckResult]:
-        return map(
-            check_type.parse_result,
-            json.load(self.device_results_file(device, check_type).open()),
+
+        # if the check results file does not exist, then return an empty
+        # iterator so the calling scope is AOK.
+
+        results_file = self.device_results_file(device, check_type)
+        if not results_file.exists():
+            return ()
+
+        # TODO: for now only include the PASS/FAIL status results.  We should
+        #       add the INFO nodes to the graph as there could be meaningful
+        #       use of these nodes for report processing.
+
+        return (
+            check_type.parse_result(res_obj)
+            for res_obj in json.load(results_file.open())
+            if res_obj["status"] in ("PASS", "FAIL")
         )
