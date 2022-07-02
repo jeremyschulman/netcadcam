@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from netcad.design import Design
 
 
-class DesignResultsGraph:
+class DesignCheckResultsGraph:
     """
     DesignResultsGraph stores the graph of all check-results across all the
     design services.  There is one graph.  Each design-service-result graph
@@ -42,7 +42,6 @@ class DesignResultsGraph:
         self.nodes_map: NodeObjIDMapT = bidict()
 
     def build(self, services: Optional[Sequence[str]]):
-
         svcs = self.design.services.values()
         if services:
             svcs = filter(lambda s: s.name in services, svcs)

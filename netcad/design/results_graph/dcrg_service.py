@@ -27,11 +27,11 @@ from netcad.checks import CheckCollectionT, CheckResult
 if TYPE_CHECKING:
     from netcad.design import DesignService
 
-from .drg import DesignResultsGraph
+from .dcrg import DesignCheckResultsGraph
 
 
 class DesignServiceResultsGraph:
-    def __init__(self, drg: DesignResultsGraph, service: "DesignService"):
+    def __init__(self, drg: DesignCheckResultsGraph, service: "DesignService"):
         self.service = service
         self.graph = drg.graph
         self.results_map = drg.results_map
@@ -55,7 +55,6 @@ class DesignServiceResultsGraph:
 
         for check_type in self.service.check_collections:
             for device in self.devices:
-                print(f"{device.name}, {check_type.get_name()}")
                 result_objs = self.load_results_files(device, check_type)
                 self.add_result_nodes(device, result_objs)
 
