@@ -1,3 +1,6 @@
+#  Copyright (c) 2022 Jeremy Schulman
+#  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
 # -----------------------------------------------------------------------------
 # System Imports
 # -----------------------------------------------------------------------------
@@ -55,7 +58,9 @@ class DesignServiceResultsGraph:
         for res_obj in results:
             check = res_obj.check
             check_type = check.check_type
-            node: igraph.Vertex = self.graph.add_vertex(kind=check_type)
+            node: igraph.Vertex = self.graph.add_vertex(
+                kind=check_type, status=res_obj.status, device=res_obj.device
+            )
             self.nodes_map[res_obj] = node.index
             self.results_map[device][check_type][check.check_id()] = res_obj
 
