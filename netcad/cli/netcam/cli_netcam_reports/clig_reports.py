@@ -18,3 +18,4 @@ def clig_reports(designs: Tuple[str], services: Tuple[str]):
     drg = DesignCheckResultsGraph(design=design)
 
     drg.build(services=services)
+    drg.graph.write_graphml(f"{design.name}.graphml")

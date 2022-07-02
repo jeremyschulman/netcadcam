@@ -32,6 +32,7 @@ from .dcrg import DesignCheckResultsGraph
 
 class DesignServiceResultsGraph:
     def __init__(self, drg: DesignCheckResultsGraph, service: "DesignService"):
+        self.design = drg.design
         self.service = service
         self.graph = drg.graph
         self.results_map = drg.results_map
