@@ -14,6 +14,7 @@ from typing import List, Type, Optional, Hashable, Dict, TypeVar, Iterable, Set
 from netcad.device import Device, DeviceNonExclusive
 from netcad.registry import Registry
 from netcad.checks import CheckCollection
+from .results_graph import DesignServiceResultsGraph
 
 # -----------------------------------------------------------------------------
 # Exports`
@@ -123,6 +124,9 @@ class DesignService(Registry, registry_name="design_services"):
             exclusive = not isinstance(device, DeviceNonExclusive)
 
         return exclusive
+
+    def results_graph(self) -> Optional[DesignServiceResultsGraph]:
+        return None
 
 
 DesignServiceCatalog = Dict[Hashable, DesignService]
