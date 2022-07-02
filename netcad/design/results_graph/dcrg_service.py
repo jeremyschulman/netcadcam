@@ -82,11 +82,43 @@ class DesignServiceResultsGraph:
         t_ct = target.check.check_type
         return f"checked,{f_ct},{t_ct}"
 
-    def graph_edge(self, source, target, kind: Optional[str] = None, **attrs):
+    def graph_edge(
+        self,
+        source: CheckResult,
+        target: CheckResult,
+        kind: Optional[str] = None,
+        **attrs,
+    ):
+        """
+        Create a graph edge between the source and target nodes.
+
+        Parameters
+        ----------
+        source:
+            The source check-result instance
+
+        target:
+            The target check-result instance
+
+        kind: str, optional
+            The edge kind attribute,
+
+        Other Parameters
+        ----------------
+        Any other kwargs given are added as edge attributes in the graph.
+
+        The follow edge attributes are automatically defined:
+            kind: the "kind" of the edge, as given or default-value
+            status: the status of the source result-check (pass/fail)
+
+        """
         source_id = self.nodes_map[source]
         target_id = self.nodes_map[target]
         kind = kind or self.default_edge_kind(source, target)
-        self.graph.add_edge(source_id, target_id, kind=kind, **attrs)
+
+        self.graph.add_edge(
+            source_id, target_id, kind=kind, state=source.status, **attrs
+        )
 
     # ---------------------------------------------------------------------
 
