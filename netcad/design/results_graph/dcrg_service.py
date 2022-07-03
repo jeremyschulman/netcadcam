@@ -68,8 +68,10 @@ class DesignServiceResultsGraph:
             check = res_obj.check
             check_type = check.check_type
             node: igraph.Vertex = self.graph.add_vertex(
-                name=res_obj.check_id,
-                kind=check_type, status=res_obj.status, device=res_obj.device
+                check_id=res_obj.check_id,
+                kind=check_type,
+                status=res_obj.status,
+                device=res_obj.device,
             )
             self.nodes.add(res_obj)
             self.nodes_map[res_obj] = node.index
