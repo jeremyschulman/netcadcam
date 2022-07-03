@@ -21,13 +21,13 @@ import igraph
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from .drg_typedefs import ResultMapT, NodeObjIDMapT
+from .rg_typedefs import ResultMapT, NodeObjIDMapT
 
 if TYPE_CHECKING:
     from netcad.design import Design
 
 
-class DesignCheckResultsGraph:
+class ResultsGraph:
     """
     DesignResultsGraph stores the graph of all check-results across all the
     design services.  There is one graph.  Each design-service-result graph

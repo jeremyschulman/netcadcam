@@ -5,7 +5,8 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Iterator, TYPE_CHECKING, Optional, Set, List
+from typing import Iterator, TYPE_CHECKING, Optional, Set, List, Type, ValuesView
+
 import json
 from pathlib import Path
 from itertools import filterfalse
@@ -22,29 +23,43 @@ import igraph
 
 from netcad.config import netcad_globals
 from netcad.device import Device, PseudoDevice, HostDevice
-from netcad.checks import CheckCollectionT, CheckResult
+from netcad.checks import CheckCollectionT, CheckResult, Check
 
 if TYPE_CHECKING:
     from netcad.design import DesignService
 
-from .dcrg import DesignCheckResultsGraph
+from .results_graph import ResultsGraph
 
 
-class DesignServiceResultsGraph:
-    def __init__(self, drg: DesignCheckResultsGraph, service: "DesignService"):
+class ServiceResultsGrapher:
+    def __init__(self, drg: ResultsGraph, service: "DesignService"):
         self.design = drg.design
         self.service = service
         self.graph = drg.graph
         self.results_map = drg.results_map
         self.nodes_map = drg.nodes_map
-        self.nodes: Set[CheckResult] = set()
+
+        # The devices participating in the graph for this service.  These are
+        # only those that have results data.  So HostDevice devices, for
+        # example, will not be included in the results graph, even though they
+        # are included in the service.
         self.devices: List[Device] | None = None
+
+        # The set of results that were added to the graph for this specific
+        # service.  These present the results loaded from the `devices`.
+        self.nodes: Set[CheckResult] = set()
+
+    # ---------------------------------------------------------------------
+    #
+    #  Grapher _interfacing_ methods used during the "build" process.
+    #
+    # ---------------------------------------------------------------------
 
     def build_graph_nodes(self):
         """
         This function is used to ingest the check results file payloads (JSON)
         from the persisted files, create the graph node objects and store them
-        into the `nodeobj_map` and `result_map` collections.
+        into the `nodes_map` and `results_map` collections.
         """
 
         self.devices = list(
@@ -57,27 +72,27 @@ class DesignServiceResultsGraph:
         for check_type in self.service.check_collections:
             for device in self.devices:
                 result_objs = self.load_results_files(device, check_type)
-                self.add_result_nodes(device, result_objs)
+                self._add_result_nodes(device, result_objs)
 
     def build_graph_edges(self):
         """Required by subclass"""
         pass
 
-    def add_result_nodes(self, device: Device, results: Iterator[CheckResult]):
-        for res_obj in results:
-            check = res_obj.check
-            check_type = check.check_type
-            node: igraph.Vertex = self.graph.add_vertex(
-                check_id=res_obj.check_id,
-                kind=check_type,
-                status=res_obj.status,
-                device=res_obj.device,
-            )
-            self.nodes.add(res_obj)
-            self.nodes_map[res_obj] = node.index
-            self.results_map[device][check_type][check.check_id()] = res_obj
-
     # ---------------------------------------------------------------------
+    # Utility Methods
+    # ---------------------------------------------------------------------
+
+    def get_device_results(
+        self, device: Device, check_type: Type[Check]
+    ) -> ValuesView[CheckResult]:
+        res_map = self.results_map[device]
+        return res_map[check_type.check_type_()].values()
+
+    def get_device_result(
+        self, device: Device, check_type: Type[Check], check_id: str
+    ) -> CheckResult | None:
+        res_map = self.results_map[device]
+        return res_map[check_type.check_type_()].get(check_id)
 
     @staticmethod
     def default_edge_kind(source, target):
@@ -85,7 +100,7 @@ class DesignServiceResultsGraph:
         t_ct = target.check.check_type
         return f"checked,{f_ct},{t_ct}"
 
-    def graph_edge(
+    def add_graph_edge(
         self,
         source: CheckResult,
         target: CheckResult,
@@ -117,12 +132,16 @@ class DesignServiceResultsGraph:
         """
         source_id = self.nodes_map[source]
         target_id = self.nodes_map[target]
-        kind = kind or self.default_edge_kind(source, target)
 
-        self.graph.add_edge(
-            source_id, target_id, kind=kind, state=source.status, **attrs
-        )
+        attrs.setdefault("kind", kind or self.default_edge_kind(source, target))
+        attrs.setdefault("status", source.status)
 
+        self.graph.add_edge(source=source_id, target=target_id, **attrs)
+
+    # ---------------------------------------------------------------------
+    #
+    # Ingesting the CheckResults payloads from JSON files.
+    #
     # ---------------------------------------------------------------------
 
     @staticmethod
@@ -151,3 +170,25 @@ class DesignServiceResultsGraph:
             for res_obj in json.load(results_file.open())
             if res_obj["status"] in ("PASS", "FAIL")
         )
+
+    def _add_result_nodes(self, device: Device, results: Iterator[CheckResult]):
+        for res_obj in results:
+            check = res_obj.check
+            check_type = check.check_type
+
+            # add the node in the graph instance
+            node: igraph.Vertex = self.graph.add_vertex(
+                check_id=res_obj.check_id,
+                kind=check_type,
+                status=res_obj.status,
+                device=res_obj.device,
+                service=self.service.name,
+            )
+
+            # add the node to _this_service_ grapher
+            self.nodes.add(res_obj)
+
+            # add the node to the design results-graph so services can
+            # cross-functionally use them.
+            self.nodes_map[res_obj] = node.index
+            self.results_map[device][check_type][res_obj.check_id] = res_obj
