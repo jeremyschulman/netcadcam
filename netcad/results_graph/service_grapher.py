@@ -5,7 +5,17 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Iterator, TYPE_CHECKING, Optional, Set, List, Type, ValuesView
+from typing import (
+    Iterator,
+    TYPE_CHECKING,
+    Optional,
+    Set,
+    List,
+    ValuesView,
+    Sequence,
+    Type,
+)
+from itertools import chain
 
 import json
 from pathlib import Path
@@ -81,6 +91,27 @@ class ServiceResultsGrapher:
     # ---------------------------------------------------------------------
     # Utility Methods
     # ---------------------------------------------------------------------
+
+    def add_graph_edges_hubspkes(
+        self, hub_check_type: Type[Check], spoke_check_types: Sequence[Type[Check]]
+    ):
+        ct_hub = hub_check_type.check_type_()
+        ct_spokes = [check_type.check_type_() for check_type in spoke_check_types]
+
+        for dev in self.devices:
+            res_map = self.results_map[dev]
+
+            hub_r = res_map[ct_hub][dev.name]
+
+            # associate the port, single-slave, and exclusive checks to the
+            # ptp-system node
+
+            spokes_r = chain.from_iterable(
+                res_map[check_type].values() for check_type in ct_spokes
+            )
+
+            for spoke_r in spokes_r:
+                self.add_graph_edge(source=hub_r, target=spoke_r)
 
     def get_device_results(
         self, device: Device, check_type: Type[Check]
