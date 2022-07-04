@@ -21,6 +21,7 @@ from netcad.peering import PeeringPlanner
 
 from .bgp_peering_types import BGPSpeaker, BGPPeeringEndpoint, BGPSpeakerName
 from .checks import BgpNeighborsCheckCollection, BgpRoutersCheckCollection
+from .bgp_peering_results_graph import BgpPeeringResultsGrapher
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -47,6 +48,7 @@ class BgpPeeringDesignService(DesignService, registry_name="bgp_peering"):
     DEFAULT_SERVICE_NAME = "bgp_peering"
 
     CHECK_COLLECTIONS = [BgpRoutersCheckCollection, BgpNeighborsCheckCollection]
+    RESULTS_GRAPHER = BgpPeeringResultsGrapher
 
     def __init__(self, service_name: Optional[str] = None, **kwargs):
         super(BgpPeeringDesignService, self).__init__(
