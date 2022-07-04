@@ -23,7 +23,7 @@ import igraph
 
 from netcad.config import netcad_globals
 from netcad.device import Device, PseudoDevice, HostDevice
-from netcad.checks import CheckCollectionT, CheckResult, Check
+from netcad.checks import CheckCollectionT, CheckResult, Check, CheckStatus
 
 if TYPE_CHECKING:
     from netcad.design import DesignService
@@ -133,8 +133,14 @@ class ServiceResultsGrapher:
         source_id = self.nodes_map[source]
         target_id = self.nodes_map[target]
 
+        # set the status to pass iff both sides pass
+        status = (
+            CheckStatus.PASS
+            if source.status == target.status == CheckStatus.PASS
+            else CheckStatus.FAIL
+        )
         attrs.setdefault("kind", kind or self.default_edge_kind(source, target))
-        attrs.setdefault("status", source.status)
+        attrs.setdefault("status", status)
 
         self.graph.add_edge(source=source_id, target=target_id, **attrs)
 
@@ -179,7 +185,7 @@ class ServiceResultsGrapher:
             # add the node in the graph instance
             node: igraph.Vertex = self.graph.add_vertex(
                 check_id=res_obj.check_id,
-                kind=check_type,
+                check_type=check_type,
                 status=res_obj.status,
                 device=res_obj.device,
                 service=self.service.name,
