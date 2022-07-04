@@ -55,6 +55,8 @@ class DesignService(Registry, registry_name="design_services"):
         design service against the operatiional state of the network.
     """
 
+    RESULTS_GRAPHER = ServiceResultsGrapher
+
     def __init__(
         self,
         service_name: str,
@@ -127,7 +129,7 @@ class DesignService(Registry, registry_name="design_services"):
         return exclusive
 
     def results_graph(self, drg: ResultsGraph) -> ServiceResultsGrapher:
-        return ServiceResultsGrapher(drg=drg, service=self)
+        return self.RESULTS_GRAPHER(drg=drg, service=self)
 
 
 DesignServiceCatalog = Dict[Hashable, DesignService]

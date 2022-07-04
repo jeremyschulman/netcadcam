@@ -27,6 +27,8 @@ from .checks.check_interfaces import InterfaceCheckCollection
 from .checks.check_lags import LagCheckCollection
 from .checks.check_ipaddrs import IPInterfacesCheckCollection
 
+from .topology_results_graph import TopologyResultsGrapher
+
 # -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
@@ -66,6 +68,8 @@ class TopologyDesignService(DesignService, registry_name="topology"):
         LagCheckCollection,
         IPInterfacesCheckCollection,
     ]
+
+    RESULTS_GRAPHER = TopologyResultsGrapher
 
     def __init__(
         self, topology_name: str, service_name: Optional[str] = "topology", **kwargs

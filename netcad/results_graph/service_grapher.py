@@ -92,6 +92,14 @@ class ServiceResultsGrapher:
     # Utility Methods
     # ---------------------------------------------------------------------
 
+    @staticmethod
+    def edge_result_status(result_a: CheckResult, result_b: CheckResult) -> CheckStatus:
+        return (
+            CheckStatus.PASS
+            if (result_a.status == result_b.status == CheckStatus.PASS)
+            else CheckStatus.FAIL
+        )
+
     def add_graph_edges_hubspkes(
         self, hub_check_type: Type[Check], spoke_check_types: Sequence[Type[Check]]
     ):
