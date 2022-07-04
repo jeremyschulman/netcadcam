@@ -58,6 +58,9 @@ class BgpNeighborCheck(Check):
         return str(self.check_params.nei_ip)
 
     class Params(BaseModel):
+        via_ip: str = Field(
+            ..., description="The local device IP address used to reach the neighbor"
+        )
         nei_name: str = Field(..., description="The BGP speaker (device) name")
         nei_ip: str = Field(..., description="The BGP neighbor IP address")
         vrf: Optional[str] = Field(None, description="VRF used if not default")
@@ -138,6 +141,7 @@ class BgpNeighborsCheckCollection(CheckCollection):
                     BgpNeighborCheck(
                         check_params=BgpNeighborCheck.Params(
                             nei_name=remote.speaker.device.name,
+                            via_ip=str(bgp_nei_rec.via_ip),
                             nei_ip=str(remote.via_ip),
                             vrf=bgp_spkr.vrf,
                         ),

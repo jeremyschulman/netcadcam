@@ -5,7 +5,17 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Iterator, TYPE_CHECKING, Optional, Set, List, Type, ValuesView
+from typing import (
+    Iterator,
+    TYPE_CHECKING,
+    Optional,
+    Set,
+    List,
+    ValuesView,
+    Sequence,
+    Type,
+)
+from itertools import chain
 
 import json
 from pathlib import Path
@@ -23,7 +33,7 @@ import igraph
 
 from netcad.config import netcad_globals
 from netcad.device import Device, PseudoDevice, HostDevice
-from netcad.checks import CheckCollectionT, CheckResult, Check
+from netcad.checks import CheckCollectionT, CheckResult, Check, CheckStatus
 
 if TYPE_CHECKING:
     from netcad.design import DesignService
@@ -82,6 +92,35 @@ class ServiceResultsGrapher:
     # Utility Methods
     # ---------------------------------------------------------------------
 
+    @staticmethod
+    def edge_result_status(result_a: CheckResult, result_b: CheckResult) -> CheckStatus:
+        return (
+            CheckStatus.PASS
+            if (result_a.status == result_b.status == CheckStatus.PASS)
+            else CheckStatus.FAIL
+        )
+
+    def add_graph_edges_hubspkes(
+        self, hub_check_type: Type[Check], spoke_check_types: Sequence[Type[Check]]
+    ):
+        ct_hub = hub_check_type.check_type_()
+        ct_spokes = [check_type.check_type_() for check_type in spoke_check_types]
+
+        for dev in self.devices:
+            res_map = self.results_map[dev]
+
+            hub_r = res_map[ct_hub][dev.name]
+
+            # associate the port, single-slave, and exclusive checks to the
+            # ptp-system node
+
+            spokes_r = chain.from_iterable(
+                res_map[check_type].values() for check_type in ct_spokes
+            )
+
+            for spoke_r in spokes_r:
+                self.add_graph_edge(source=hub_r, target=spoke_r)
+
     def get_device_results(
         self, device: Device, check_type: Type[Check]
     ) -> ValuesView[CheckResult]:
@@ -133,8 +172,14 @@ class ServiceResultsGrapher:
         source_id = self.nodes_map[source]
         target_id = self.nodes_map[target]
 
+        # set the status to pass iff both sides pass
+        status = (
+            CheckStatus.PASS
+            if source.status == target.status == CheckStatus.PASS
+            else CheckStatus.FAIL
+        )
         attrs.setdefault("kind", kind or self.default_edge_kind(source, target))
-        attrs.setdefault("status", source.status)
+        attrs.setdefault("status", status)
 
         self.graph.add_edge(source=source_id, target=target_id, **attrs)
 
@@ -179,7 +224,7 @@ class ServiceResultsGrapher:
             # add the node in the graph instance
             node: igraph.Vertex = self.graph.add_vertex(
                 check_id=res_obj.check_id,
-                kind=check_type,
+                check_type=check_type,
                 status=res_obj.status,
                 device=res_obj.device,
                 service=self.service.name,
