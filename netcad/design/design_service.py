@@ -15,7 +15,7 @@ from netcad.device import Device, DeviceNonExclusive
 from netcad.registry import Registry
 from netcad.checks import CheckCollection
 
-from netcad.results_graph import ResultsGraph, ServiceResultsGrapher
+from netcad.reporting import DesginReporting, ServiceReporting
 
 # -----------------------------------------------------------------------------
 # Exports`
@@ -55,7 +55,7 @@ class DesignService(Registry, registry_name="design_services"):
         design service against the operatiional state of the network.
     """
 
-    RESULTS_GRAPHER = ServiceResultsGrapher
+    REPORTER = ServiceReporting
 
     def __init__(
         self,
@@ -128,8 +128,8 @@ class DesignService(Registry, registry_name="design_services"):
 
         return exclusive
 
-    def results_graph(self, drg: ResultsGraph) -> ServiceResultsGrapher:
-        return self.RESULTS_GRAPHER(drg=drg, service=self)
+    def reporter(self, drg: DesginReporting) -> ServiceReporting:
+        return self.REPORTER(drg=drg, service=self)
 
 
 DesignServiceCatalog = Dict[Hashable, DesignService]

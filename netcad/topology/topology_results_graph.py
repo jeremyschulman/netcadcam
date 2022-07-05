@@ -2,7 +2,7 @@
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.results_graph import ServiceResultsGrapher
+from netcad.reporting import ServiceReporting
 from netcad.checks import CheckStatus
 
 from .checks.check_device_info import DeviceInformationCheck
@@ -24,7 +24,7 @@ __all__ = ["TopologyResultsGrapher"]
 # -----------------------------------------------------------------------------
 
 
-class TopologyResultsGrapher(ServiceResultsGrapher):
+class TopologyResultsGrapher(ServiceReporting):
     def build_graph_edges(self):
         self.add_graph_edges_hubspkes(
             hub_check_type=DeviceInformationCheck,

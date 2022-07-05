@@ -5,7 +5,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional, Sequence
+from typing import List
 from typing import TYPE_CHECKING
 from collections import defaultdict
 
@@ -21,13 +21,14 @@ import igraph
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from .rg_typedefs import ResultMapT, NodeObjIDMapT
+from .reporting_typedefs import ResultMapT, NodeObjIDMapT
+from .service_reporting import ServiceReporting
 
 if TYPE_CHECKING:
     from netcad.design import Design
 
 
-class ResultsGraph:
+class DesginReporting:
     """
     DesignResultsGraph stores the graph of all check-results across all the
     design services.  There is one graph.  Each design-service-result graph
@@ -40,18 +41,17 @@ class ResultsGraph:
         self.design = design
         self.results_map: ResultMapT = defaultdict(lambda: defaultdict(dict))
         self.nodes_map: NodeObjIDMapT = bidict()
+        self.reporters: List[ServiceReporting] = list()
 
-    def build(self, services: Optional[Sequence[str]]):
-        svcs = self.design.services.values()
-        if services:
-            svcs = filter(lambda s: s.name in services, svcs)
+    def build(self):
+        for svc in self.design.services.values():
+            self.reporters.append(svc.reporter(drg=self))
 
-        svc_graphs = list()
-        for svc in svcs:
-            svc_graphs.append(svc.results_graph(drg=self))
-
-        for gr in svc_graphs:
+        for gr in self.reporters:
             gr.build_graph_nodes()
 
-        for gr in svc_graphs:
+        for gr in self.reporters:
             gr.build_graph_edges()
+
+    def run_reports(self):
+        pass

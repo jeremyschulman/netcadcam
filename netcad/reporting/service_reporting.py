@@ -37,12 +37,11 @@ from netcad.checks import CheckCollectionT, CheckResult, Check, CheckStatus
 
 if TYPE_CHECKING:
     from netcad.design import DesignService
+    from .design_reporting import DesginReporting
 
-from .results_graph import ResultsGraph
 
-
-class ServiceResultsGrapher:
-    def __init__(self, drg: ResultsGraph, service: "DesignService"):
+class ServiceReporting:
+    def __init__(self, drg: "DesginReporting", service: "DesignService"):
         self.design = drg.design
         self.service = service
         self.graph = drg.graph
@@ -58,6 +57,10 @@ class ServiceResultsGrapher:
         # The set of results that were added to the graph for this specific
         # service.  These present the results loaded from the `devices`.
         self.nodes: Set[CheckResult] = set()
+
+    def run_reports(self):
+        """Implmeneted by subclass to create report outputs"""
+        pass
 
     # ---------------------------------------------------------------------
     #

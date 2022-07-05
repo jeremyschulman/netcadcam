@@ -2,7 +2,7 @@
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.results_graph import ServiceResultsGrapher
+from netcad.reporting import ServiceReporting
 from .checks.bgp_check_routers import BgpRouterCheck
 from .checks.check_bgp_neighbors import BgpNeighborCheck, BgpNeighborCheckResult
 
@@ -19,7 +19,7 @@ __all__ = ["BgpPeeringResultsGrapher"]
 # -----------------------------------------------------------------------------
 
 
-class BgpPeeringResultsGrapher(ServiceResultsGrapher):
+class BgpPeeringResultsGrapher(ServiceReporting):
     def build_graph_edges(self):
         self.add_graph_edges_hubspkes(
             hub_check_type=BgpRouterCheck, spoke_check_types=[BgpNeighborCheck]
