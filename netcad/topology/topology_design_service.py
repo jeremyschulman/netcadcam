@@ -69,7 +69,7 @@ class TopologyDesignService(DesignService, registry_name="topology"):
         IPInterfacesCheckCollection,
     ]
 
-    RESULTS_GRAPHER = TopologyResultsGrapher
+    REPORTER = TopologyResultsGrapher
 
     def __init__(
         self, topology_name: str, service_name: Optional[str] = "topology", **kwargs
