@@ -16,4 +16,5 @@ def clig_reports(designs: Tuple[str]):
 
     reporter = DesginReporting(design=design)
     reporter.build()
+    reporter.run_reports()
     reporter.graph.write_graphml(f"{design.name}.graphml")

@@ -39,6 +39,8 @@ if TYPE_CHECKING:
     from netcad.design import DesignService
     from .design_reporting import DesginReporting
 
+from .reporter_logs import ReporterLogs
+
 
 class ServiceReporting:
     def __init__(self, drg: "DesginReporting", service: "DesignService"):
@@ -56,7 +58,8 @@ class ServiceReporting:
 
         # The set of results that were added to the graph for this specific
         # service.  These present the results loaded from the `devices`.
-        self.nodes: Set[CheckResult] = set()
+        self.results: Set[CheckResult] = set()
+        self.logs = ReporterLogs(name=self.service.name)
 
     def run_reports(self):
         """Implmeneted by subclass to create report outputs"""
@@ -234,7 +237,7 @@ class ServiceReporting:
             )
 
             # add the node to _this_service_ grapher
-            self.nodes.add(res_obj)
+            self.results.add(res_obj)
 
             # add the node to the design results-graph so services can
             # cross-functionally use them.

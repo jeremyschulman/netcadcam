@@ -15,7 +15,7 @@ from collections import defaultdict
 
 from bidict import bidict
 import igraph
-
+from rich.console import Console
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -54,4 +54,9 @@ class DesginReporting:
             gr.build_graph_edges()
 
     def run_reports(self):
-        pass
+        # TODO: probably move this printing of report tables to the CLI function.
+        console = Console()
+        for reporter in self.reporters:
+            reporter.run_reports()
+            if len(reporter.logs):
+                console.print(reporter.logs.pretty_table())
