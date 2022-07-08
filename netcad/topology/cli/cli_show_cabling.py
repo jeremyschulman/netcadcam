@@ -112,7 +112,7 @@ def cabling_table(table: Table, cables) -> Table:
         "Remote Profile",
         "Remote Interface",
         "Remote Device",
-        "Cable-ID",
+        # "Cable-ID",
     ]:
 
         table.add_column(column)
@@ -176,7 +176,7 @@ def cabling_table(table: Table, cables) -> Table:
             rmt_if_prof,
             rmt_if.name,
             rmt_if.device.name,
-            cable_id,
+            # cable_id,
         )
 
     return table
