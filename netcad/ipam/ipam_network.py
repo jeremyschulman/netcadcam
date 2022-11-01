@@ -42,7 +42,9 @@ class IPAMNetwork(UserDict):
         value and properties for the Caller to use.
     """
 
-    def __init__(self, ipam: "IPAM", name: t.Hashable, address: str | AnyIPNetwork, gateway=1):
+    def __init__(
+        self, ipam: "IPAM", name: t.Hashable, address: str | AnyIPNetwork, gateway=1
+    ):
         """
         Constructor for an IPAMNetwork instance.
 
@@ -66,7 +68,8 @@ class IPAMNetwork(UserDict):
         self.ipam = ipam
         self.name = name
         self.ip_network: AnyIPNetwork = (
-            ipaddress.ip_network(address=address) if isinstance(address, str)
+            ipaddress.ip_network(address=address)
+            if isinstance(address, str)
             else address
         )
         self._gateway_host_octet: int = gateway
@@ -161,7 +164,7 @@ class IPAMNetwork(UserDict):
             name, ipaddress.ip_interface((ip, self.ip_network.prefixlen))
         )
 
-    def network(self, name: t.Hashable, prefix: str) -> "IPAMNetwork":
+    def network(self, name: t.Hashable, prefix: str | AnyIPNetwork) -> "IPAMNetwork":
         """
         This function creates a new network instance within the IPAM,
         designated by the name value.  This network can then be retrieved using
