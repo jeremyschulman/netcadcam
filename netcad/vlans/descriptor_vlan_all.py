@@ -101,7 +101,7 @@ class VlansAll:
 
                     class UplinkSPtoTR(InterfaceL2Trunk):
                         desc = PeerInterfaceId()
-                        native_vlan = fsl_vlans.vlan_vpn_transit
+                        native_vlan = fsl_vlans.vlan_transit_vpn
                         vlans = VlansAll()
                         template = Path("interface_trunk.jinja2")
 

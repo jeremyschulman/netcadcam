@@ -14,7 +14,7 @@ from collections import UserDict
 
 from netcad.registry import Registry
 
-from .ipam_network import IPAMNetwork
+from .ipam_network import IPAMNetwork, AnyIPNetwork
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -46,7 +46,7 @@ class IPAM(Registry, UserDict[t.Hashable, IPAMNetwork]):
         self.name = name
         self.registry_add(name, self)
 
-    def network(self, name: t.Hashable, address: str) -> IPAMNetwork:
+    def network(self, name: t.Hashable, address: str | AnyIPNetwork) -> IPAMNetwork:
         """
         This function creates a new network-keeper instance within the IPAM,
         designated by the name value.  A Caller can retrieve that instance
@@ -66,7 +66,10 @@ class IPAM(Registry, UserDict[t.Hashable, IPAMNetwork]):
         address:
             The IP address network with prefix, for example "192.168.12.0/24".
             The netmask could alternatively be provided, for example:
-            "192.168.12.0/255.255.255.0"
+            "192.168.12.0/255.255.255.0".
+
+            Alternatively the address value could be provided
+            as the network instance
 
         Returns
         -------

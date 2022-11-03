@@ -118,8 +118,14 @@ class SwitchportCheckCollection(CheckCollection):
                 tc_expd = SwitchportCheck.ExpectAccess(vlan=if_prof.vlan)
 
             elif isinstance(if_prof, InterfaceL2Trunk):
+                # there are cases where a trunk port does not have a native
+                # VLAN defined.  In those cases the native_vlan attribute will
+                # not exist in the interface profile.
+
+                native_vlan = getattr(if_prof, 'native_vlan', None)
+
                 tc_expd = SwitchportCheck.ExpectTrunk(
-                    native_vlan=if_prof.native_vlan,
+                    native_vlan=native_vlan,
                     trunk_allowed_vlans=sorted(if_prof.trunk_allowed_vlans()),
                 )
             else:

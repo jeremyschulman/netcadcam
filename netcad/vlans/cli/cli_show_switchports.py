@@ -111,7 +111,7 @@ def show_device_switchports_table(device: Device, quiet=True):
 
         if isinstance(intf_obj.profile, InterfaceL2Trunk):
             swp_p = intf_obj.profile
-            nvlan = swp_p.native_vlan
+            nvlan = getattr(swp_p, 'native_vlan', None)
             allowed = "\n".join(
                 [fmt_vlan(vlan) for vlan in sorted(swp_p.trunk_allowed_vlans())]
             )
@@ -121,7 +121,7 @@ def show_device_switchports_table(device: Device, quiet=True):
                 intf_obj.desc,
                 intf_obj.profile.name,
                 "trunk",
-                fmt_vlan(nvlan),
+                fmt_vlan(nvlan) if nvlan else 'None',
                 allowed,
             )
             continue

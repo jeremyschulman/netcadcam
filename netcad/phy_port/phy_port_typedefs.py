@@ -60,6 +60,7 @@ class PhyPortTypes(StrEnum):
     type_10GBASE_ERBD = "10GBASE-ERBD"
     type_10GBASE_ZR = "10GBASE-ZR"
     type_10GBASE_DWDM = "10GBASE-DWDM"
+    type_10GBASE_DAC = "10GBASE-DAC"
 
     # -------------------------------------------------------------------------
     # 25 Gig
@@ -124,6 +125,7 @@ class CableMediaType(StrEnum):
     AOC = enum.auto()
     TWX = enum.auto()  # twinaxial
     virtual = enum.auto()  # for virtual networking
+    DAC = enum.auto()
 
 
 class CableTerminationType(StrEnum):
@@ -137,6 +139,7 @@ class CableTerminationType(StrEnum):
     TWX = enum.auto()
     MPO = enum.auto()  # multi-fiber push on (aka MPT)
     virtual = enum.auto()  # for virtual networking
+    DAC = enum.auto()
 
 
 class PhyPortFormFactorType(StrEnum):
@@ -150,6 +153,7 @@ class PhyPortFormFactorType(StrEnum):
     QSFPP = enum.auto()  # QSFP+
     QSFP28 = enum.auto()
     RJ45 = enum.auto()
+    DAC = enum.auto()
 
 
 class PhyPortReachType(StrEnum):

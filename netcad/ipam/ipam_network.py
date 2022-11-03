@@ -42,7 +42,9 @@ class IPAMNetwork(UserDict):
         value and properties for the Caller to use.
     """
 
-    def __init__(self, ipam: "IPAM", name: t.Hashable, address: str, gateway=1):
+    def __init__(
+        self, ipam: "IPAM", name: t.Hashable, address: str | AnyIPNetwork, gateway=1
+    ):
         """
         Constructor for an IPAMNetwork instance.
 
@@ -65,11 +67,15 @@ class IPAMNetwork(UserDict):
         super(IPAMNetwork, self).__init__()
         self.ipam = ipam
         self.name = name
-        self.ip_network: AnyIPNetwork = ipaddress.ip_network(address=address)
+        self.ip_network: AnyIPNetwork = (
+            ipaddress.ip_network(address=address)
+            if isinstance(address, str)
+            else address
+        )
         self._gateway_host_octet: int = gateway
 
     def interface(
-        self, name: t.Hashable, host_octet: int, new_prefix: t.Optional[int] = None
+        self, name: t.Hashable, host_offset: int, new_prefix: t.Optional[int] = None
     ) -> AnyIPInterface:
         """
         Adds an IP interface instance to the network.  If the given name
@@ -89,9 +95,9 @@ class IPAMNetwork(UserDict):
 
             iface = nwk["foo"]
 
-        host_octet: int
-            The host octet value that is added to the network address base to formulate
-            the IP interface value.
+        host_offset: int
+            Thsi value is added to the network base address to formulate the IP
+            interface value.
 
         new_prefix: int, optional
             When provided, this value is used as the interface prefixlen value.
@@ -109,7 +115,7 @@ class IPAMNetwork(UserDict):
         """
 
         self[name] = ipaddress.ip_interface(
-            f"{self.ip_network.network_address + host_octet}/{new_prefix or self.ip_network.netmask}"
+            f"{self.ip_network.network_address + host_offset}/{new_prefix or self.ip_network.netmask}"
         )
 
         return self[name]
@@ -121,7 +127,7 @@ class IPAMNetwork(UserDict):
 
     def host(self, name: t.Hashable, offset_octet: int) -> AnyIPAddress:
         """
-        Create a host IP address for the given name usig the `last_octet`
+        Create a host IP address for the given name usig the `host_offset`
         combined with the subnet address.
 
         Parameters
@@ -158,7 +164,7 @@ class IPAMNetwork(UserDict):
             name, ipaddress.ip_interface((ip, self.ip_network.prefixlen))
         )
 
-    def network(self, name: t.Hashable, prefix: str) -> "IPAMNetwork":
+    def network(self, name: t.Hashable, prefix: str | AnyIPNetwork) -> "IPAMNetwork":
         """
         This function creates a new network instance within the IPAM,
         designated by the name value.  This network can then be retrieved using
