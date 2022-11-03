@@ -96,8 +96,8 @@ class IPAMNetwork(UserDict):
             iface = nwk["foo"]
 
         host_offset: int
-            The 4th octet value that is added to the network address base to
-            formulate the IP interface value.
+            Thsi value is added to the network base address to formulate the IP
+            interface value.
 
         new_prefix: int, optional
             When provided, this value is used as the interface prefixlen value.
