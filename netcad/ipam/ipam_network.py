@@ -75,7 +75,7 @@ class IPAMNetwork(UserDict):
         self._gateway_host_octet: int = gateway
 
     def interface(
-        self, name: t.Hashable, last_octet: int, new_prefix: t.Optional[int] = None
+        self, name: t.Hashable, host_offset: int, new_prefix: t.Optional[int] = None
     ) -> AnyIPInterface:
         """
         Adds an IP interface instance to the network.  If the given name
@@ -95,7 +95,7 @@ class IPAMNetwork(UserDict):
 
             iface = nwk["foo"]
 
-        last_octet: int
+        host_offset: int
             The 4th octet value that is added to the network address base to
             formulate the IP interface value.
 
@@ -115,7 +115,7 @@ class IPAMNetwork(UserDict):
         """
 
         self[name] = ipaddress.ip_interface(
-            f"{self.ip_network.network_address + last_octet}/{new_prefix or self.ip_network.netmask}"
+            f"{self.ip_network.network_address + host_offset}/{new_prefix or self.ip_network.netmask}"
         )
 
         return self[name]
@@ -127,7 +127,7 @@ class IPAMNetwork(UserDict):
 
     def host(self, name: t.Hashable, offset_octet: int) -> AnyIPAddress:
         """
-        Create a host IP address for the given name usig the `last_octet`
+        Create a host IP address for the given name usig the `host_offset`
         combined with the subnet address.
 
         Parameters
