@@ -11,7 +11,7 @@ from typing import List, Optional, Union, Literal
 # Public Imports
 # -----------------------------------------------------------------------------
 
-from pydantic import BaseModel, PositiveInt
+from pydantic import BaseModel, NonNegativeInt
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -66,7 +66,7 @@ class InterfaceCheckUsedExpectations(BaseModel):
     used: Literal[True]
     desc: str
     oper_up: Optional[bool]
-    speed: Optional[PositiveInt]
+    speed: Optional[NonNegativeInt]
 
 
 class InterfaceCheckNotUsedExpectations(BaseModel):
@@ -96,7 +96,7 @@ class InterfaceCheckMeasurement(CheckMeasurement):
     used: bool
     desc: str
     oper_up: bool
-    speed: PositiveInt
+    speed: NonNegativeInt
 
 
 class InterfaceCheckResult(CheckResult):

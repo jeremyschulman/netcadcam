@@ -152,7 +152,8 @@ class DeviceInterface(object):
         the LLDP neighbor data.  Typically, this is the same as the inteface
         name. There are circumstances, however, where this is not the case.
         """
-        return self._cable_port_id(self) if callable(self._cable_port_id) else self.name
+        return self._cable_port_id(self) if callable(self._cable_port_id) else (
+                self._cable_port_id or self.name)
 
     @cable_port_id.setter
     def cable_port_id(self, value: Union[Callable, str]):
