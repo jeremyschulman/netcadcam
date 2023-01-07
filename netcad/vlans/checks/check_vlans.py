@@ -71,7 +71,9 @@ class VlanCheck(Check):
         vlan_id: int
 
     class Expect(BaseModel):
-        name: str = Field(..., description="The configured VLAN name")
+        name: Optional[str] = Field(
+            ..., description="The configured VLAN name; or unchecked if None"
+        )
         oper_up: bool = Field(True, description="The operational state of the VLAN")
         interfaces: List[str]
 
@@ -113,11 +115,24 @@ class VlanExclusiveListCheckResult(CheckExclusiveResult[VlanExclusiveListCheck])
 class VlanCheckCollection(CheckCollection):
     name = "vlans"
     checks: Optional[List[VlanCheck]]
+    config: Optional[dict]
 
     @classmethod
     def build(
         cls, device: Device, design_service: "VlansDesignService"
     ) -> "VlanCheckCollection":
+        """
+        Builds the VLAN checks for the given device.
+
+        Parameters
+        ----------
+        device:
+            The device instance
+
+        design_service: DeviceVlanDesignService
+            This is actually the _device_ vlan design service, and not
+            the top-level vlan design service.
+        """
         from netcad.vlans.vlan_design_service import DeviceVlanDesignService
 
         device_vlans = list(
@@ -172,6 +187,7 @@ class VlanCheckCollection(CheckCollection):
         collection = VlanCheckCollection(
             device=device.name,
             exclusive=design_service.should_check_exclusively(device),
+            config=design_service.config,
             checks=[
                 VlanCheck(
                     check_params=VlanCheck.Params(vlan_id=vlan_p.vlan_id),

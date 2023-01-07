@@ -16,6 +16,7 @@ from .descriptor_peer_vlan_info import VlansFromPeer
 from .descriptor_vlan_all import VlansAll
 from .profiles.l2_interfaces import InterfaceL2, InterfaceL2Access, InterfaceL2Trunk
 from .profiles.vlan_interface import InterfaceVlan
+from .vlan_ds_config import VlanDesignServiceConfig
 from .vlan_design_service import (
     VlansDesignService,
     DeviceVlanDesignService,

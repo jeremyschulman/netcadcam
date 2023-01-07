@@ -26,7 +26,7 @@ from netcad.design import DesignService
 from .checks.check_vlans import VlanCheckCollection
 from .checks.check_switchports import SwitchportCheckCollection
 from .vlan_profile import VlanProfile
-
+from .vlan_ds_config import VlanDesignServiceConfig
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -55,12 +55,18 @@ class DeviceVlanDesignService(DesignService):
 
     CHECKS = [VlanCheckCollection, SwitchportCheckCollection]
 
-    def __init__(self, device: Device, service_name: Optional[str] = "vlans"):
+    def __init__(
+        self,
+        device: Device,
+        config: VlanDesignServiceConfig,
+        service_name: Optional[str] = "vlans",
+    ):
         super().__init__(service_name=service_name)
         self.device = device
         self.check_collections = copy(self.__class__.CHECKS)
         self.add_devices(device)
         self.alias_names = dict()
+        self.config = config
 
     @lru_cache
     def all_vlans(self) -> List[VlanProfile]:
@@ -124,6 +130,7 @@ class VlansDesignService(
         self,
         service_name: Optional[str] = "vlans",
         device_service_name: Optional[str] = "vlans",
+        config: Optional[VlanDesignServiceConfig] = None,
         **kwargs,
     ):
         """
@@ -138,12 +145,19 @@ class VlansDesignService(
         device_service_name:
             The per-device specific vlan design service name.  By default, this
             value is "vlans".
+
+        config:
+            The Vlan design service configuration settings.  If None is
+            provided, then a configuration instance is created with the default
+            settings.
         """
         self._device_service_name = device_service_name
-
+        self.config = config or VlanDesignServiceConfig()
         super().__init__(service_name=service_name, **kwargs)
 
-    def add_devices(self, *devices: Device) -> "VlansDesignService":
+    def add_devices(
+        self, *devices: Device, config: Optional[VlanDesignServiceConfig] = None
+    ) -> "VlansDesignService":
         """
         Add the list of Device instances to the VlanDesignService.  As a result
         each device will also be associated with the `device_vlan_service` class
@@ -154,6 +168,11 @@ class VlansDesignService(
         devices:
             List of Device instances
 
+        config: optional
+            The Vlan design service config instance to use for this device;
+            could be different from the design service instance.  If not
+            provided, then the design service config instance is used.
+
         Returns
         -------
         self instance for method-chaning
@@ -162,7 +181,9 @@ class VlansDesignService(
 
         for each_dev in filterfalse(lambda d: d in self.data, devices):
             self[each_dev] = self.device_vlan_service(
-                service_name=self._device_service_name, device=each_dev
+                service_name=self._device_service_name,
+                device=each_dev,
+                config=config or self.config,
             )
 
         return self

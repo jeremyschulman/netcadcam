@@ -122,7 +122,7 @@ class SwitchportCheckCollection(CheckCollection):
                 # VLAN defined.  In those cases the native_vlan attribute will
                 # not exist in the interface profile.
 
-                native_vlan = getattr(if_prof, 'native_vlan', None)
+                native_vlan = getattr(if_prof, "native_vlan", None)
 
                 tc_expd = SwitchportCheck.ExpectTrunk(
                     native_vlan=native_vlan,

@@ -5,20 +5,20 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import List, Optional
+from typing import Optional, Sequence
 from copy import deepcopy
 
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from .device_group import DeviceGroup, DeviceGroupMember
+from netcad.device.device_group import DeviceGroup, DeviceGroupMember
 
 # -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["DeviceMLagPairGroup", "DeviceMLagPairMember"]
+__all__ = ["DeviceMLagPairGroup", "DeviceMLagGroupMember"]
 
 
 # -----------------------------------------------------------------------------
@@ -28,11 +28,17 @@ __all__ = ["DeviceMLagPairGroup", "DeviceMLagPairMember"]
 # -----------------------------------------------------------------------------
 
 
+class DeviceMLagGroupMember(DeviceGroupMember):
+    is_mlag_device = True
+
+
 class DeviceMLagPairGroup(DeviceGroup):
+    is_mlag_group = True
+
     def __init__(
         self,
         name: str,
-        devices: Optional[List["DeviceMLagPairMember"]] = None,
+        devices: Optional[Sequence["DeviceMLagGroupMember"]] = None,
         **kwargs,
     ):
 
@@ -40,41 +46,39 @@ class DeviceMLagPairGroup(DeviceGroup):
         for dev in devices:
             self.add_group_member(dev)
 
-    def plan(self):
+    def build(self):
         """
-        Apply the design plan for the MLAG pair to the associated devices.  The
-        primary function is to find all of the interfaces with profiles and copy
-        them to the actual devices in the group.
+        The build process is used to "copy" any interface profiles defined in
+        the MLag Device Group into each of the Device Members (2).  This
+        process needs to be called before the calbing process is called so that
+        the cabling process can create the cable_peer assignments.
         """
+
         if not (count := len(self.group_members)) == 2:
             raise RuntimeError(
                 f"Unexpected number of devices in device group: {self.name}: {count}"
             )
 
         # create the association between each of the interfaces defined in the
-        # rendudant pair and the associated concrete devices.from
+        # rendudant pair and the associated concrete device. This copies only
+        # the interface profile, and no other interface attributes.  The cable
+        # associations will be made by the cable planner.
 
-        for if_name, interface in self.interfaces.items():
+        for if_name, dg_iface_obj in self.interfaces.items():
             for device in self.group_members:
-                dev_if = device.interfaces[if_name]
-                if not (if_prof := getattr(interface, "profile", None)):
+
+                if not (dg_if_prof := getattr(dg_iface_obj, "profile", None)):
                     continue
 
-                copy_if_pro = deepcopy(if_prof)
+                copy_if_pro = deepcopy(dg_if_prof)
+
+                # remove the interface back-ref so that the interface profile
+                # can be assigned to the physical device interface; otherwise
+                # there is a RuntimeError that checks duplicate assignment.
+
                 copy_if_pro.interface = None
-                dev_if.profile = copy_if_pro
 
+                # now assign the interface profile to the concrete device
+                # interface object.
 
-class DeviceMLagPairMember(DeviceGroupMember):
-
-    # -------------------------------------------------------------------------
-    #
-    #                            Device Overrides
-    #
-    # -------------------------------------------------------------------------
-
-    def testing_services(self) -> List[str]:
-        """DeviceGroupMLagPair devices have 'mlags' test cases"""
-        tests = super(DeviceMLagPairMember, self).testing_services()
-        tests.append("mlags")
-        return tests
+                device.interfaces[if_name].profile = copy_if_pro
