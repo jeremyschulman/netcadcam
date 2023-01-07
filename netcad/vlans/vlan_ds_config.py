@@ -31,12 +31,12 @@ class VlanDesignServiceConfig(BaseModel, extra=Extra.forbid):
     is created then one will be automatically created with default values.
     """
 
-    allow_unused_vlan1: bool = Field(
-        default=True,
-        description="Allow VLAN1 on devices even if not explicitly used in design",
+    check_vlan1: bool = Field(
+        default=False,
+        description="Check design for VLAN1",
     )
 
     default_vlan1: VlanProfile = Field(
-        description="VLAN 1 profile if not provided by Caller",
+        description="VLAN1 profile if not provided by Caller",
         default_factory=lambda: VlanProfile(vlan_id=1),
     )
