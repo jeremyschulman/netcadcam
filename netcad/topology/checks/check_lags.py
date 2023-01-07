@@ -19,7 +19,7 @@ from pydantic import BaseModel
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device, DeviceInterface
-from netcad.checks import CheckCollection, Check
+from netcad.checks import CheckCollection, Check, CheckResult, CheckMeasurement
 from netcad.device.profiles import InterfaceLag
 
 from netcad.checks import register_collection
@@ -31,8 +31,7 @@ from netcad.checks import register_collection
 __all__ = [
     "LagCheckCollection",
     "LagCheck",
-    "LagCheckParams",
-    "LagCheckExpectations",
+    "LagCheckResult",
     "LagCheckExpectedInterfaceStatus",
 ]
 
@@ -43,26 +42,33 @@ __all__ = [
 # -----------------------------------------------------------------------------
 
 
-class LagCheckParams(BaseModel):
-    interface: str
-
-
 class LagCheckExpectedInterfaceStatus(BaseModel):
     interface: str
     enabled: bool
 
 
-class LagCheckExpectations(BaseModel):
-    enabled: bool
-    interfaces: List[LagCheckExpectedInterfaceStatus]
-
-
 class LagCheck(Check):
-    check_params: LagCheckParams
-    expected_results: LagCheckExpectations
+    check_type = "lag"
+
+    class Params(BaseModel):
+        interface: str
+
+    class Expect(BaseModel):
+        enabled: bool
+        interfaces: List[LagCheckExpectedInterfaceStatus]
+
+    check_params: Params
+    expected_results: Expect
 
     def check_id(self) -> str:
         return str(self.check_params.interface)
+
+
+class LagCheckResult(CheckResult[LagCheck]):
+    class Measurement(LagCheck.Expect, CheckMeasurement):
+        pass
+
+    measurement: Measurement = None
 
 
 @register_collection
@@ -106,8 +112,8 @@ class LagCheckCollection(CheckCollection):
             checks=[
                 LagCheck(
                     check_type="lag",
-                    check_params=LagCheckParams(interface=lag_name),
-                    expected_results=LagCheckExpectations(
+                    check_params=LagCheck.Params(interface=lag_name),
+                    expected_results=LagCheck.Expect(
                         enabled=device.interfaces[lag_name].enabled,
                         interfaces=[
                             LagCheckExpectedInterfaceStatus(
