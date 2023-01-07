@@ -53,7 +53,9 @@ class VlanProfile(HashableModel):
         that do not, (c) netcad reporting information, or (d) helpful code docs.
     """
 
-    name: str
+    name: Optional[str] = Field(
+        None, description="VLAN name.  If not set then name is not checked"
+    )
     vlan_id: int = Field(..., ge=1, le=4094)
     description: Optional[str]
 

@@ -27,8 +27,14 @@ class CableByCableId(CablePlanner):
 
         for device in self.devices:
             for if_name, iface in device.interfaces.items():
-                if not iface.cable_id:
+
+                # if the interface has already been assigned a peer, or the
+                # interface does not have an assigned cable ID, then skip this
+                # interface.
+
+                if iface.cable_peer or (not iface.cable_id):
                     continue
+
                 self.add_endpoint(cable_id=iface.cable_id, interface=iface)
 
         # now invoke the `validate()` method directly before associating the
