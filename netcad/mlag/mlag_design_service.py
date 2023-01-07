@@ -54,6 +54,18 @@ class MLagDesignService(DesignService, registry_name="mlags"):
         self.cabling.add_devices(*devices)
 
     def build(self):
+        # run the build process on each of the MLag device groups so that the
+        # concrete devices have their interface profiles created that match the
+        # MLag device-group.
+
+        for dev_group in filter(lambda _d: _d.is_mlag_group, self.devices):
+            dev_group.build()
+
+        # next run the cabling build so that the cable_peers are created so
+        # that each of the concrete device interfaces are assgined for the
+        # purposes of topology usage (such as peer interface descriptions,
+        # VLANs, etc.)
+
         self.cabling.build()
 
     def validate(self):
