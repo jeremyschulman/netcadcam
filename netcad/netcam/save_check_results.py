@@ -56,12 +56,6 @@ async def device_checks_save_results(
     results_file = results_dir / f"{filename}.json"
     json_payload = list()
 
-    # for res in results:
-    #     res_dict = res.dict()
-    #     res_dict["device"] = dut.device.name
-    #     res_dict["check"] = res_dict["check"]
-    #     json_payload.append(res_dict)
-
     # we need to double-pump the pydantic data check results so that we can
     # take advantage of the pydantic custom JSON serializers and encoder
     # features; for example for the check-result logs.

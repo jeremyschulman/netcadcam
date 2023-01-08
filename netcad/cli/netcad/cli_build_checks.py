@@ -126,9 +126,10 @@ async def _build_device_checks(device: Device, tc_dir: Path):
 
     log.info(f"Building checks for device: {device.name}")
 
-    # create a per-device directory to store the collection of test-case files.
+    # the checks directory for the device is a subdir under the design-name.
+    # ensure this directory path exists.
 
-    dev_tc_dir = tc_dir / device.name
+    dev_tc_dir = tc_dir / device.design.name / device.name
     dev_tc_dir.mkdir(parents=True, exist_ok=True)
 
     # for each service that is bound on the device, iterate over each of the
