@@ -43,18 +43,18 @@ __all__ = [
 
 
 class LagCheckExpectedInterfaceStatus(BaseModel):
-    interface: str
-    enabled: bool
+    interface: str      # interface name
+    enabled: bool       # if the interface is enabled in design
 
 
 class LagCheck(Check):
     check_type = "lag"
 
     class Params(BaseModel):
-        interface: str
+        interface: str      # interface name of LAG
 
     class Expect(BaseModel):
-        enabled: bool
+        enabled: bool       # if the LAG is enabled in design
         interfaces: List[LagCheckExpectedInterfaceStatus]
 
     check_params: Params
@@ -87,13 +87,6 @@ class LagCheckCollection(CheckCollection):
         for if_name, interface in device.interfaces.used().items():
             if not isinstance(interface.profile, InterfaceLag):
                 continue
-
-            # TODO: not sure why this is here now; should
-            #       just be using interface
-            # if_lag = interface.profile.lag_parent
-            # if not if_lag:
-            #     breakpoint()
-            #     x=1
 
             lag_interfaces[interface.name].extend(
                 iface for iface in interface.profile.if_lag_members
