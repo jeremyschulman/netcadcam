@@ -43,18 +43,18 @@ __all__ = [
 
 
 class LagCheckExpectedInterfaceStatus(BaseModel):
-    interface: str      # interface name
-    enabled: bool       # if the interface is enabled in design
+    interface: str  # interface name
+    enabled: bool  # if the interface is enabled in design
 
 
 class LagCheck(Check):
     check_type = "lag"
 
     class Params(BaseModel):
-        interface: str      # interface name of LAG
+        interface: str  # interface name of LAG
 
     class Expect(BaseModel):
-        enabled: bool       # if the LAG is enabled in design
+        enabled: bool  # if the LAG is enabled in design
         interfaces: List[LagCheckExpectedInterfaceStatus]
 
     check_params: Params
