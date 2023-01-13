@@ -331,9 +331,11 @@ class Device(Registry, registry_name="devices"):
         cls.interfaces = DeviceInterfaces(DeviceInterface)
         cls.interfaces.device_cls = cls
 
-        # configure the state of the interfaces
+        # when the Device class defines either product_model or device_type,
+        # configure the state of the interfaces; persuming the "no-validate"
+        # ENV is not set.
 
-        if getattr(cls, "product_model", None) and not os.getenv(
+        if (getattr(cls, "product_model", None) or getattr(cls, "device_type", None)) and not os.getenv(
             Environment.NETCAD_NOVALIDATE
         ):
             cls.init_device_spec()
@@ -353,6 +355,12 @@ class Device(Registry, registry_name="devices"):
         cls.device_type_spec: DeviceType = DeviceTypeRegistry.registry_get(
             name=device_type
         )
+
+        # if the device_type was specified, then autopopulate the
+        # product_model based on the device_type_spec.
+
+        if not cls.product_model:
+            cls.product_model = cls.device_type_spec.product_model
 
         if not cls.device_type_spec:
             raise RuntimeError(
