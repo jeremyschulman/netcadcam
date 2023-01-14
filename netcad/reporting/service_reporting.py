@@ -199,7 +199,13 @@ class ServiceReporting:
     def device_results_file(device: Device, check_type: CheckCollectionT) -> Path:
         check_name = check_type.get_name()
         base_dir = netcad_globals.g_netcad_checks_dir
-        return base_dir / device.name / "results" / f"{check_name}.json"
+        return (
+            base_dir
+            / device.design.name
+            / device.name
+            / "results"
+            / f"{check_name}.json"
+        )
 
     def load_results_files(
         self, device: Device, check_type: CheckCollectionT

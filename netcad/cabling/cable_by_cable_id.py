@@ -1,6 +1,7 @@
 #  Copyright (c) 2021 Jeremy Schulman
 #  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+from uuid import uuid4
 from .cable_plan import CablePlanner
 
 
@@ -28,11 +29,18 @@ class CableByCableId(CablePlanner):
         for device in self.devices:
             for if_name, iface in device.interfaces.items():
 
-                # if the interface has already been assigned a peer, or the
-                # interface does not have an assigned cable ID, then skip this
-                # interface.
+                # if the interface has been assigned a cable_peer without using
+                # the cable_id value, ***and*** the remote interface is the
+                # cable peer, then auto-gen a cable-id so that it shows up in
+                # the cabling report.
 
-                if iface.cable_peer or (not iface.cable_id):
+                if (rmt_iface := iface.cable_peer) and not iface.cable_id:
+                    if rmt_iface.cable_peer == iface:
+                        iface.cable_id = rmt_iface.cable_id = uuid4()
+
+                # if the interface is not assigned a cable_id, then skip it.
+
+                if not iface.cable_id:
                     continue
 
                 self.add_endpoint(cable_id=iface.cable_id, interface=iface)

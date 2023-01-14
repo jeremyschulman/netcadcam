@@ -118,7 +118,7 @@ def cli_report_tests(
     tc_dir = checks_dir or netcad_globals.g_netcad_checks_dir
 
     for device in device_objs:
-        dev_tcr_dir = tc_dir / device.name / "results"
+        dev_tcr_dir = tc_dir / device.design.name / device.name / "results"
 
         # 'stick' a new attribute onto the Device instance that will be
         # privately used within this CLI module.

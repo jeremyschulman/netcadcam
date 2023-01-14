@@ -1,17 +1,17 @@
 [tool.poetry]
 name = "netcad"
-version = "0.2.0"
+version = "0.3.0"
 description = "NetCAD - Network Automation by Design"
 authors = ["Jeremy Schulman"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-click = "^8.0.1"
+click = "^8.1.0"
+rich = "^13.1.0"
 pydantic = "^1.8.2"
 Jinja2 = "^3.0.2"
 toml = "^0.10.2"
-rich = "^12.6"
 aiofiles = "^0.7.0"
 maya = "^0.6.1"
 bracket-expansion = "^1.0.0"

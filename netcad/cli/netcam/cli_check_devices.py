@@ -143,7 +143,9 @@ def cli_test_device(
                 )
 
             duts[dev_obj] = dut_obj = pg_obj.module.plugin_get_dut(device=dev_obj)
-            dut_obj.testcases_dir = tc_dir.joinpath(dev_obj.name)
+
+            # the device checks directory is subdir under the design name.
+            dut_obj.testcases_dir = tc_dir / dev_obj.design.name / dev_obj.name
 
         remove_unsupported = [dev for dev, dut in duts.items() if not dut]
         for dev_obj in remove_unsupported:
