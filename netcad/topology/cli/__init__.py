@@ -5,3 +5,4 @@ from . import cli_show_cabling
 from . import cli_show_devices
 from . import cli_show_interfaces
 from . import cli_show_ipaddrs
+from . import cli_show_lags
