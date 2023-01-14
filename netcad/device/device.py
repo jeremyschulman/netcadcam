@@ -335,9 +335,9 @@ class Device(Registry, registry_name="devices"):
         # configure the state of the interfaces; persuming the "no-validate"
         # ENV is not set.
 
-        if (getattr(cls, "product_model", None) or getattr(cls, "device_type", None)) and not os.getenv(
-            Environment.NETCAD_NOVALIDATE
-        ):
+        if (
+            getattr(cls, "product_model", None) or getattr(cls, "device_type", None)
+        ) and not os.getenv(Environment.NETCAD_NOVALIDATE):
             cls.init_device_spec()
 
     @classmethod

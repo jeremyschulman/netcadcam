@@ -228,7 +228,7 @@ def report_cabling_per_network(cabling: CablePlanner, network: str):
     table = cabling_table(
         table=Table(
             title=f"Design Cabling '{network}', {design_desc}",
-            title_justify='left',
+            title_justify="left",
             show_header=True,
             header_style="bold magenta",
         ),

@@ -76,8 +76,8 @@ def show_device_lags(device: Device):
         "Member Interfaces",
         show_header=True,
         header_style="bold magenta",
-        title=f'{device.name} LAG interfaces',
-        title_justify='left'
+        title=f"{device.name} LAG interfaces",
+        title_justify="left",
     )
 
     def add_row(*columns):
@@ -91,10 +91,12 @@ def show_device_lags(device: Device):
         if_lag_members: list[DeviceInterface] = if_prof.if_lag_members
 
         if_desc = Text(iface.desc, "yellow") if if_prof.is_reserved else iface.desc
-        add_row(iface.name, if_desc, if_prof.name, Pretty([
-            if_lag_member.name
-            for if_lag_member in if_lag_members
-        ]))
+        add_row(
+            iface.name,
+            if_desc,
+            if_prof.name,
+            Pretty([if_lag_member.name for if_lag_member in if_lag_members]),
+        )
 
     if not table.rows:
         return
