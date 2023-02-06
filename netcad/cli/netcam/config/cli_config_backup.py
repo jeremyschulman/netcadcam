@@ -1,6 +1,7 @@
 from typing import Tuple
 from pathlib import Path
 import asyncio
+from logging import Logger
 
 from netcad.config import netcad_globals
 from netcad.logger import get_logger
@@ -40,6 +41,8 @@ async def fetch_configs(device_objs: list[Device], configs_dir: Path):
     dev_driver: dict[Device, AsyncDeviceConfigurable] = dict()
 
     dev_cfg: AsyncDeviceConfigurable
+    tasks = list()
+
     for dev_obj in device_objs:
         if not (pg_obj := netcam_plugins.get(dev_obj.os_name)):
             raise RuntimeError(
@@ -47,9 +50,15 @@ async def fetch_configs(device_objs: list[Device], configs_dir: Path):
             )
 
         dev_driver[dev_obj] = dev_cfg = pg_obj.module.plugin_get_dcfg(device=dev_obj)
-
         # the device config(s) are stored within the design-name folder
         dev_cfg.config_dir = configs_dir / dev_obj.design.name / "backup"
-        log.info(f"{dev_obj.name}: Retrieving running configuration ...")
-        filepath = await dev_cfg.backup()
-        log.info(f"{dev_obj.name}: Backup saved to: {filepath}")
+        tasks.append(asyncio.create_task(backup(dev_cfg, log)))
+
+    await asyncio.gather(*tasks)
+
+
+async def backup(dev_cfg: AsyncDeviceConfigurable, log: Logger):
+    name = dev_cfg.device.name
+    log.info(f"{name}: Retrieving running configuration ...")
+    filepath = await dev_cfg.backup()
+    log.info(f"{name}: Backup saved to: {filepath}")
