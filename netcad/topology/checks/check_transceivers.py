@@ -110,7 +110,6 @@ class TransceiverCheckCollection(CheckCollection):
 
     @classmethod
     def build(cls, device: Device, **kwargs) -> "TransceiverCheckCollection":
-
         # find all interfaces that have a designed transceiver assicated to the
         # interface profile -> port-profile.
 

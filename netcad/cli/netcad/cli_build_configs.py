@@ -20,7 +20,7 @@ import jinja2
 # -----------------------------------------------------------------------------
 
 from netcad.logger import get_logger
-from netcad.cli.common_opts import opt_devices, opt_designs
+from netcad.cli.common_opts import opt_devices, opt_designs, opt_configs_dir
 from netcad.config import Environment, netcad_globals
 
 from netcad.cli.device_inventory import get_devices_from_designs
@@ -42,13 +42,7 @@ __all__ = []
 @clig_build.command(name="configs")
 @opt_designs()
 @opt_devices()
-@click.option(
-    "--save-dir",
-    "configs_dir",
-    help="location to store configs",
-    type=click.Path(path_type=Path, resolve_path=True, exists=True, writable=True),
-    default="configs",
-)
+@opt_configs_dir()
 @click.option(
     "--templates-dir",
     help="path to root of template files",

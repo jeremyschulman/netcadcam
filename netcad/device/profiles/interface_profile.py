@@ -40,7 +40,6 @@ __all__ = [
 
 
 class InterfaceProfile(SafeIsAttribute):
-
     # `template` stores the Jinja2 template text that is used to render the
     # interface specicifc configuration text.
 

@@ -31,7 +31,6 @@ __all__ = ["get_devices_from_designs"]
 def get_devices_from_designs(
     designs: Sequence[str], include_devices: Optional[Sequence[str]] = None
 ) -> List[Device]:
-
     device_objs = set()
 
     for design_name in designs:

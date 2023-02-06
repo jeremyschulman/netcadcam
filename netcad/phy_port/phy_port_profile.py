@@ -48,7 +48,6 @@ class PortCable(BaseModel):
 
 
 class PortTransceiver(BaseModel):
-
     # `form_factor` denotes the physical format of the transciver
 
     form_factor: PhyPortFormFactorType

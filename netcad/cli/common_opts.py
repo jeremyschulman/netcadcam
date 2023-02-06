@@ -1,9 +1,30 @@
 #  Copyright (c) 2021 Jeremy Schulman
 #  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+# -----------------------------------------------------------------------------
+# System Imports
+# -----------------------------------------------------------------------------
+
+from pathlib import Path
+
+# -----------------------------------------------------------------------------
+# Public Imports
+# -----------------------------------------------------------------------------
+
 import click
 
+# -----------------------------------------------------------------------------
+# Private Imports
+# -----------------------------------------------------------------------------
+
 from netcad.config import netcad_globals
+from netcad.config import Environment
+
+# -----------------------------------------------------------------------------
+#
+#                                 CODE BEGINS
+#
+# -----------------------------------------------------------------------------
 
 opt_devices = lambda **params: click.option(  # noqa
     "-d",
@@ -70,4 +91,13 @@ opt_design_services = lambda **params: click.option(  # noqa
     "services",
     multiple=True,
     help="execute only these design checks",
+)
+
+opt_configs_dir = lambda **params: click.option(
+    "--configs-dir",
+    "configs_dir",
+    help="location to store configs",
+    type=click.Path(path_type=Path, resolve_path=True, exists=True, writable=True),
+    envvar=Environment.NETCAD_CONFIGSDIR,
+    default="configs",
 )

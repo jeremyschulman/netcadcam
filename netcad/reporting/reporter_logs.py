@@ -39,7 +39,6 @@ class ReporterLogItem(BaseModel):
 
 
 class ReporterLogs(BaseModel):
-
     name: str = Field(..., description="The design service name")
     logs: List[ReporterLogItem] = Field(default_factory=list)
 

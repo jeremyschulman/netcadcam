@@ -139,7 +139,6 @@ class VlansAll:
         instance._skip_me = True
 
         for if_name, iface in dev_interfaces.used().items():
-
             if getattr(iface.profile, "_skip_me", False) is True:
                 continue
 

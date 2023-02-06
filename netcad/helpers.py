@@ -55,7 +55,6 @@ class StrEnum(str, Enum):
 
 
 def range_string(numbers: List[int]) -> str:
-
     # if the list is empty, return an empty string
     if not len(numbers):
         return ""

@@ -102,7 +102,6 @@ def interface_profile_names(iface: DeviceInterface) -> Tuple[Text, Text]:
 
 
 def cabling_table(table: Table, cables) -> Table:
-
     for column in [
         "Device",
         "Interface",
@@ -114,7 +113,6 @@ def cabling_table(table: Table, cables) -> Table:
         "Remote Device",
         # "Cable-ID",
     ]:
-
         table.add_column(column)
 
     def phy_is_different(lcl_phy: PhyPortProfile, rmt_phy: PhyPortProfile) -> bool:
@@ -148,7 +146,6 @@ def cabling_table(table: Table, cables) -> Table:
     rmt_if: DeviceInterface
 
     for cable_id, dev_if, rmt_if in cables:
-
         dev_if_prof, dev_phy_prof = interface_profile_names(dev_if)
         rmt_if_prof, rmt_phy_prof = interface_profile_names(rmt_if)
 

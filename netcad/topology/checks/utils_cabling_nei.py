@@ -10,7 +10,6 @@ _re_short_ifname = re.compile(r"(\D+)(\d.*)")
 
 
 def nei_hostname_match(expected: str, measured: str) -> bool:
-
     if expected.lower() == measured.lower():
         return True
 
@@ -26,7 +25,6 @@ def nei_hostname_match(expected: str, measured: str) -> bool:
 
 
 def nei_interface_match(expected: str, measured: str) -> bool:
-
     # if match, then return True.
 
     if expected.lower() == measured.lower():

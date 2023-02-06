@@ -41,7 +41,6 @@ class DeviceMLagPairGroup(DeviceGroup):
         devices: Optional[Sequence["DeviceMLagGroupMember"]] = None,
         **kwargs,
     ):
-
         super(DeviceMLagPairGroup, self).__init__(name, **kwargs)
         for dev in devices:
             self.add_group_member(dev)
@@ -66,7 +65,6 @@ class DeviceMLagPairGroup(DeviceGroup):
 
         for if_name, dg_iface_obj in self.interfaces.items():
             for device in self.group_members:
-
                 if not (dg_if_prof := getattr(dg_iface_obj, "profile", None)):
                     continue
 

@@ -142,7 +142,6 @@ class InterfaceCheckCollection(CheckCollection):
     @classmethod
     def build(cls, device: Device, **kwargs) -> "InterfaceCheckCollection":
         def build_check(iface: DeviceInterface):
-
             # if the interface is not used, meaning it is not part of the
             # design, then there is no profile, and .enabled=False.  No other
             # interface valiation is required for operational state.

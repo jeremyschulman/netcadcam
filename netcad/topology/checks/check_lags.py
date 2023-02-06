@@ -78,7 +78,6 @@ class LagCheckCollection(CheckCollection):
 
     @classmethod
     def build(cls, device: Device, **kwargs) -> Optional["LagCheckCollection"]:
-
         # scan the device interfaces looking for LAGs.  Create a dictionary
         # key=lag-if-name, value=list of member interfaces.
 

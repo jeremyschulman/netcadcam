@@ -48,7 +48,6 @@ __all__ = ["BgpNeighborsCheckCollection", "BgpNeighborCheck", "BgpNeighborCheckR
 
 
 class BgpNeighborCheck(Check):
-
     check_type = "bgp-neighbor"
 
     def check_id(self) -> str:
@@ -111,7 +110,6 @@ class BgpNeighborsCheckCollection(CheckCollection):
     def build(
         cls, device: Device, design_service: "BgpPeeringDesignService"
     ) -> "BgpNeighborsCheckCollection":
-
         # import here to avoid circular imports
         from ..bgp_peering_design_service import BgpPeeringDesignService
 

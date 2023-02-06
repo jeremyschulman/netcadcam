@@ -222,7 +222,6 @@ class DeviceInterface(object):
 
     @profile.setter
     def profile(self, profile: "InterfaceProfile"):
-
         # when a profile is set to None, then the interface.enabled is set to
 
         if not profile:

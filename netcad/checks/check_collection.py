@@ -131,7 +131,6 @@ class CheckCollection(BaseModel):
 
         exports = filter(is_result_type, map(mod.__dict__.get, mod_all))
         for each in exports:
-
             if (check_field := each.__fields__.get("check")) is None:
                 raise RuntimeError(f'Required "check" missing from {str(each)}')
 

@@ -19,7 +19,6 @@ def clig_netcam_plugins():
 
 @clig_netcam_plugins.command("list")
 def cli_netcam_plugins_list():
-
     table = Table("Name", "Description", "Package", "Supports", show_header=True)
 
     for pg_obj in netcad_globals.g_netcam_plugins:

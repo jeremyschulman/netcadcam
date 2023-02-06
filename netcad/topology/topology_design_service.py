@@ -74,7 +74,6 @@ class TopologyDesignService(DesignService, registry_name="topology"):
     def __init__(
         self, topology_name: str, service_name: Optional[str] = "topology", **kwargs
     ):
-
         # The cabling must be created first becasue the add_devices, which is
         # called by the superclass constructor, uses cabling
 

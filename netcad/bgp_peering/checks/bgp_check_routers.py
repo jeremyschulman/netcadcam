@@ -88,7 +88,6 @@ class BgpRoutersCheckCollection(CheckCollection):
     def build(
         cls, device: Device, design_service: "BgpPeeringDesignService"
     ) -> "BgpRoutersCheckCollection":
-
         # import here to avoid circular imports
         from ..bgp_peering_design_service import BgpPeeringDesignService
 
@@ -112,7 +111,6 @@ class BgpRoutersCheckCollection(CheckCollection):
             raise RuntimeError()
 
         for bgp_spkr in routers:
-
             rtr_checks.append(
                 BgpRouterCheck(
                     check_params=BgpRouterCheck.Params(

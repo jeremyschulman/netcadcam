@@ -27,7 +27,6 @@ class BgpPeeringResultsGrapher(ServiceReporting):
         self._build_bgp_neighbor_peering()
 
     def _build_bgp_neighbor_peering(self):
-
         # the check-id for the bgp neighbor check is the IP address of the
         # local interface used to establish the BGP peering session.
 
@@ -43,7 +42,6 @@ class BgpPeeringResultsGrapher(ServiceReporting):
         nei_r: BgpNeighborCheckResult
         for dev, dev_neis_rmap in build.items():
             for if_ipaddr, nei_r in dev_neis_rmap.items():
-
                 # even if the check failed, create the edge because we want to
                 # represent the design expectation visually.  We will set the
                 # status of the edge so that the value can be filtered against

@@ -29,7 +29,6 @@ from .filter_results import filter_results
 
 
 def show_device_brief_table(console: Console, device: Device, optionals: dict):
-
     tcr_dir: Path = device.tcr_dir
 
     table = Table(
@@ -47,7 +46,6 @@ def show_device_brief_table(console: Console, device: Device, optionals: dict):
 
     dev_tc_count = 0
     for check_svc in find_check_services(device, optionals):
-
         # if the test results file does not exist, it means that the tests were
         # not executed.  For now, silently skip.  TODO: may show User warning?
         tc_name = check_svc.get_name()

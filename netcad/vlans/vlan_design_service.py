@@ -83,7 +83,6 @@ class DeviceVlanDesignService(DesignService):
         interfaces = self.device.interfaces
 
         for if_name, iface in interfaces.used().items():
-
             if not (vlans_used := getattr(iface.profile, "vlans_used", None)):
                 continue
 

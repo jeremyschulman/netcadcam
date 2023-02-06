@@ -59,7 +59,6 @@ def show_design_summary_table(
         dev_cntrs.clear()
 
         for check_svc in find_check_services(device, optionals):
-
             # if the test results file does not exist, it means that the tests were
             # not executed.  For now, silently skip.  TODO: may show User warning?
 

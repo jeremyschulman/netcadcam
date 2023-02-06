@@ -146,7 +146,6 @@ def load_design_singleton(design_name: str, pkg_name: str, design_config: dict):
     """
 
     try:
-
         design_mod = netcad_import_package(pkg_name)
 
     # If there is any exception during the importing of the module, that is a

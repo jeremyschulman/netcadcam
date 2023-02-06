@@ -82,7 +82,6 @@ class CableMLagsByCableId(CablePlanner):
         iface_b: DeviceInterface
 
         for cable_id, (iface_a, iface_b) in self.cables.items():
-
             # first assign the cable_peer to each other so that the
             iface_a.cable_peer = iface_b
             iface_b.cable_peer = iface_a

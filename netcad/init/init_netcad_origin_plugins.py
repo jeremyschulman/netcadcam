@@ -28,7 +28,6 @@ __all__ = ["init_netcad_origin_plugins", "NetcadOriginPluginCatalog"]
 
 
 def init_netcad_origin_plugins() -> Optional[NetcadOriginPluginCatalog]:
-
     # if there are no User defined plugins, then return.
     try:
         origins_list = netcad_globals.g_config["netcad"]["origin"]

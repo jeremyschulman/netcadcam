@@ -36,7 +36,6 @@ ParserFunction = Callable[[str], DeviceInterfaceNameParsed]
 
 
 def default_interface_parse_name(name: str):
-
     mo_has_numbers = _re_find_numbers.findall(name)
 
     # for interface names without any numbers like "mgmt"

@@ -54,7 +54,6 @@ class Cache:
 
     @lru_cache
     def cache_load(self, cache_item_name: str):
-
         payload_file = self.cache_subdir / f"{cache_item_name}.json"
         payload = json.load(payload_file.open())
 

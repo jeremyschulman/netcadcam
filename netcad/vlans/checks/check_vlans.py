@@ -149,7 +149,6 @@ class VlanCheckCollection(CheckCollection):
         # the association between VLANs used and the interface.
 
         for if_name, interface in device.interfaces.used().items():
-
             if_prof = interface.profile
 
             if isinstance(if_prof, (InterfaceL2Access, InterfaceVlan)):
@@ -162,7 +161,6 @@ class VlanCheckCollection(CheckCollection):
             # iterate across the VlanProfiles for this interface ...
 
             for vlan in vlans:
-
                 # put a guard-rail check on used interface vlans vs. device
                 # declared vlans by design. it is possible that the Designer
                 # invoked the "vlans build" method before all VLANs in the
