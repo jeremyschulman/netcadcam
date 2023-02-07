@@ -9,7 +9,9 @@ from netcad.device import Device
 from netcad.netcam.dev_config import AsyncDeviceConfigurable
 from netcad.cli.device_inventory import get_devices_from_designs
 from netcad.cli.common_opts import opt_devices, opt_designs, opt_configs_dir
+
 from .config_main import clig_config
+from .config_filter_devices import cli_config_filter_devices
 
 
 @clig_config.command("backup")
@@ -30,7 +32,7 @@ def cli_netcam_config_backup(
         log.error("No devices located in the given designs")
         return
 
-    device_objs = [dev for dev in device_objs if not dev.is_pseudo]
+    device_objs = cli_config_filter_devices(device_objs)
     asyncio.run(fetch_configs(configs_dir=configs_dir, device_objs=device_objs))
 
 
