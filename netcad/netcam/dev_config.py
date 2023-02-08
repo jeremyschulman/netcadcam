@@ -5,13 +5,14 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional, Dict
+from typing import Optional, Tuple
 from pathlib import Path
 
 # -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
 
+import asyncssh
 import aiofiles
 import aiofiles.os
 
@@ -49,12 +50,18 @@ class _BaseDeviceConfigurable:
         For non-transactional based systems the value could be used for
         purposes such as a remote-filename.  That said, this mode of
         device-configurable is not yet supported.
+
+    _scp_creds: optional (str, str)
+        Tuple that provides the (username, password) used for the SCP process.
+        If this value is None, then SCP is not provided by the underlying
+        device specific subclass.
     """
 
     def __init__(self, *, device: Device):
         self.device = device
         self.config_dir: Optional[Path] = None
         self._config_id: Optional[str] = None
+        self._scp_creds: Optional[Tuple[str, str]] = None
 
     @property
     def config_id(self):
@@ -137,6 +144,46 @@ class AsyncDeviceConfigurable(_BaseDeviceConfigurable):
 
         replace:
             When True the config_contents replace the entirety of the device configuration.
+        """
+        raise NotImplementedError()
+
+    async def scp_config(
+        self, source_filepath: Path, dst_filename: Optional[str | Path] = None
+    ):
+        """
+        This function copies the configuration file source_filepath from the
+        local fileserver to the target device.  If the dst_filename is not
+        given, then the basename of the source_filepath is used by default.
+        """
+        host = self.device.name
+
+        if not self._scp_creds:
+            raise RuntimeError(f"{host}: SCP credentials missing")
+
+        username, password = self._scp_creds
+        dst_fp = dst_filename or source_filepath.name
+        async with asyncssh.connect(host, username=username, password=password) as conn:
+            await asyncssh.scp(source_filepath, (conn, dst_fp))
+
+    async def load_scp_file(self, filename: str, replace: Optional[bool] = False):
+        """
+        This function is used to load the configuration from the devices local
+        filesystem, after the configuration file has been copied via the
+        scp_config method.
+
+        If the replace parameter is True then the file contents will replace
+        the existing session config (load-replace).
+
+        Parameters
+        ----------
+        filename:
+            The name of the configuration file without any device specific
+            filesys-prefix (e.g. "flash:").  The subclass will provide any
+            necessary filesys-prefix.
+
+        replace:
+            When True, the contents of the file will completely replace the
+            session config for a load-replace behavior.
         """
         raise NotImplementedError()
 

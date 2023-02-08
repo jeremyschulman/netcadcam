@@ -4,7 +4,9 @@ from pathlib import Path
 import asyncio
 from logging import Logger
 
+from asyncssh import SFTPError
 import aiofiles
+import aiofiles.os
 
 from netcad.config import netcad_globals
 from netcad.logger import get_logger
@@ -13,7 +15,7 @@ from netcad.netcam.dev_config import AsyncDeviceConfigurable
 from netcad.cli.device_inventory import get_devices_from_designs
 from netcad.cli.common_opts import opt_devices, opt_designs, opt_configs_dir
 from .config_main import clig_config
-from .config_filter_devices import cli_config_filter_devices
+from netcad.cli.netcam.netcam_filter_devices import netcam_filter_devices
 
 
 @clig_config.command("check")
@@ -34,9 +36,7 @@ def cli_netcam_config_backup(
         log.error("No devices located in the given designs")
         return
 
-    os.makedirs(configs_dir.joinpath("diffs"))
-
-    use_device_objs = cli_config_filter_devices(device_objs, exclude_non_exclusive=True)
+    use_device_objs = netcam_filter_devices(device_objs)
     asyncio.run(run_check_configs(configs_dir=configs_dir, device_objs=use_device_objs))
 
 
@@ -69,26 +69,59 @@ async def run_check_configs(device_objs: list[Device], configs_dir: Path):
 
 async def check_device_config(dev_cfg: AsyncDeviceConfigurable, log: Logger):
     name = dev_cfg.device.name
+    basecfg_name = name + ".cfg"
 
     # load the design config from the local filesystem so that we can load it
     # onto the device.
 
-    async with aiofiles.open(dev_cfg.config_dir.joinpath(name + ".cfg")) as ifile:
-        config_content = await ifile.read()
+    lcl_cfg = Path(dev_cfg.config_dir / basecfg_name)
 
     config_id = f"{name}-{os.getpid()}-check"
     log.info(f"{name}: Loading configuration for check puroses only: id={config_id}")
     dev_cfg.config_id = config_id
 
+    # if the device is not exclusively management by netcadcam, then
+    # load the config using a "merge".  If it is exclusively management
+    # by netcadcam the load the config using a "replace" opertation.
+
+    replace = not isinstance(dev_cfg.device, DeviceNonExclusive)
+
+    load_failed = False
     try:
-        await dev_cfg.load_config(config_content, replace=True)
+        await dev_cfg.scp_config(lcl_cfg, dst_filename=basecfg_name)
+
+    except OSError as exc:
+        log.error(f"{name}: local file access failed: {str(exc)}")
+        load_failed = True
+
+    except SFTPError as exc:
+        log.error(f"{name}: SCP failed: {str(exc)}")
+        load_failed = True
+
+    if load_failed:
+        log.warning(f"{name}: aborting config-check")
+        return
+
+    try:
+        await dev_cfg.load_scp_file(filename=basecfg_name, replace=replace)
     except Exception as exc:
-        breakpoint()
-        x = 1
+        log.error(f"{name}: config-load failed: {str(exc)}")
+        return
 
-    config_diff = await dev_cfg.diff_config()
-    async with aiofiles.open(dev_cfg.config_dir / "diffs" / (name + ".cfg")) as ofile:
+    try:
+        config_diff = await dev_cfg.diff_config()
+
+    except Exception as exc:
+        log.error(f"{name}: diff-config failed: {str(exc)}")
+        await dev_cfg.abort_config()
+        return
+
+    diffs_dir = dev_cfg.config_dir / "diffs"
+    await aiofiles.os.makedirs(diffs_dir, exist_ok=True)
+
+    async with aiofiles.open(diffs_dir / basecfg_name, "w+") as ofile:
         await ofile.write(config_diff)
+        log.info(f"{name}: config-diff saved to: {ofile.name}")
 
-    log.info(f"{name}: config-diff saved to: {ofile}")
+    # discard the config since this is only a check.
     await dev_cfg.abort_config()
