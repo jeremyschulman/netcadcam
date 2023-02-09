@@ -15,7 +15,7 @@ from netcad.cli.common_opts import opt_devices, opt_designs, opt_configs_dir
 from netcad.cli.netcam.netcam_filter_devices import netcam_filter_devices
 
 from .config_main import clig_config
-from .staged_config import SCPStagedConfig
+from .task_push_config import push_device_config
 
 
 @clig_config.command("push")
@@ -75,24 +75,4 @@ async def run_deploy_configs(
         dev_cfg.config_dir = configs_dir / dev_obj.design.name
         dev_cfg.config_id = f"{dev_cfg.device.name}-{os.getpid()}"
 
-        await deploy_device_config(dev_cfg, timeout=timeout)
-
-
-async def deploy_device_config(dev_cfg: AsyncDeviceConfigurable, timeout: timedelta):
-    log = get_logger()
-
-    name = dev_cfg.device.name
-
-    scp_cfg = SCPStagedConfig(
-        dev_cfg=dev_cfg, config_file=Path(dev_cfg.config_dir.joinpath(name + ".cfg"))
-    )
-
-    if await scp_cfg.stage():
-        log.info(f"{name}: OK: config-load passes")
-    else:
-        log.warning(f"{name}: FAIL: config-load failed")
-
-    if await scp_cfg.commit(timeout=timeout):
-        log.info(f"{name}: OK config active and saved to startup")
-    else:
-        log.warning(f"{name}: FAIL: config failed to commit due to reachability")
+        await push_device_config(dev_cfg, timeout=timeout)

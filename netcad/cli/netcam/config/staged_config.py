@@ -28,9 +28,7 @@ class SCPStagedConfig:
         # load the design config from the local filesystem so that we can load it
         # onto the device.
 
-        log.info(
-            f"{self.name}: Loading configuration for check puroses only: id={self.dev_cfg.config_id}"
-        )
+        log.info(f"{self.name}: Staging configuration: id={self.dev_cfg.config_id}")
 
         # if the device is not exclusively management by netcadcam, then
         # load the config using a "merge".  If it is exclusively management
@@ -78,9 +76,17 @@ class SCPStagedConfig:
 
         return True
 
-    async def commit(self, timeout: timedelta):
-        await self.dev_cfg.save_config(timeout=timeout)
+    async def commit(self, rollback_timeout: timedelta) -> bool:
+        try:
+            await self.dev_cfg.save_config(timeout=rollback_timeout)
+
+        except Exception as exc:
+            get_logger().error(f"{self.name}: save-config failed: {str(exc)}")
+            await self.abort()
+            return False
+
         await self.scp_cleanup()
+        return True
 
     async def abort(self):
         await self.dev_cfg.abort_config()
