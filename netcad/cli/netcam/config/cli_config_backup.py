@@ -1,7 +1,17 @@
+#  Copyright (c) 2023 Jeremy Schulman
+#  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+# -----------------------------------------------------------------------------
+# System Imports
+# -----------------------------------------------------------------------------
+
 from typing import Tuple
 from pathlib import Path
 import asyncio
-from logging import Logger
+
+# -----------------------------------------------------------------------------
+# Private Imports
+# -----------------------------------------------------------------------------
 
 from netcad.config import netcad_globals
 from netcad.logger import get_logger
@@ -10,8 +20,21 @@ from netcad.netcam.dev_config import AsyncDeviceConfigurable
 from netcad.cli.device_inventory import get_devices_from_designs
 from netcad.cli.common_opts import opt_devices, opt_designs, opt_configs_dir
 
-from .config_main import clig_config
 from netcad.cli.netcam.netcam_filter_devices import netcam_filter_devices
+from .config_main import clig_config
+from .task_backup_config import backup_device_config
+
+# -----------------------------------------------------------------------------
+# Exports (None)
+# -----------------------------------------------------------------------------
+
+__all__ = []
+
+# -----------------------------------------------------------------------------
+#
+#                                 CODE BEGINS
+#
+# -----------------------------------------------------------------------------
 
 
 @clig_config.command("backup")
@@ -54,13 +77,6 @@ async def run_fetch_configs(device_objs: list[Device], configs_dir: Path):
         dev_driver[dev_obj] = dev_cfg = pg_obj.module.plugin_get_dcfg(device=dev_obj)
         # the device config(s) are stored within the design-name folder
         dev_cfg.config_dir = configs_dir / dev_obj.design.name / "backup"
-        tasks.append(asyncio.create_task(backup(dev_cfg, log)))
+        tasks.append(asyncio.create_task(backup_device_config(dev_cfg, log)))
 
     await asyncio.gather(*tasks)
-
-
-async def backup(dev_cfg: AsyncDeviceConfigurable, log: Logger):
-    name = dev_cfg.device.name
-    log.info(f"{name}: Retrieving running configuration ...")
-    filepath = await dev_cfg.backup()
-    log.info(f"{name}: Backup saved to: {filepath}")

@@ -7,6 +7,7 @@
 
 from typing import Optional, Tuple
 from pathlib import Path
+from datetime import timedelta
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -187,6 +188,21 @@ class AsyncDeviceConfigurable(_BaseDeviceConfigurable):
         """
         raise NotImplementedError()
 
+    async def delete_scp_file(self, filename: str):
+        """
+        This function is used to remove the configuration file that was
+        previously copied to the remote device.  This function is expected to
+        be called during a "cleanup" process.
+
+        Parameters
+        ----------
+        filename:
+            The name of the configuration file without any device specific
+            filesys-prefix (e.g. "flash:").  The subclass will provide any
+            necessary filesys-prefix.
+        """
+        raise NotImplementedError()
+
     async def backup(self) -> Path:
         """
         Retrieve the running configuration of the device and save it to the
@@ -203,3 +219,27 @@ class AsyncDeviceConfigurable(_BaseDeviceConfigurable):
             await ofile.write(config_content)
 
         return path
+
+    async def save_config(self, timeout: timedelta):
+        """
+        This function is used to commit the staged configuration.
+
+        Once the config is activated, the next step is to check reachability to
+        the device to ensure the configuration did not result in loss of
+        reachability.  If that fails, then rollback the configuraiton to the
+        previous config.
+
+        Notes
+        ------
+        The presumption is that the underlying devlice can support a mechansim
+        to "rollback" the staged configuration using a timer mechanism.  This
+        is supported natively in some operating systems, such as Arista EOS and
+        Juniper JUNOS.  If this is not the case, for example IOS-XE, then a mechanism
+        to support this must be implemented in some manner.
+
+        Parameters
+        ----------
+        timeout:
+            Specifies the amount of time to set the timeout-rollback counter.
+        """
+        raise NotImplementedError()

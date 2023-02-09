@@ -2,7 +2,9 @@ import os
 from typing import Tuple
 from pathlib import Path
 import asyncio
-from logging import Logger
+from datetime import timedelta
+
+import click
 
 from netcad.config import netcad_globals
 from netcad.logger import get_logger
@@ -16,17 +18,21 @@ from .config_main import clig_config
 from .staged_config import SCPStagedConfig
 
 
-@clig_config.command("check")
+@clig_config.command("push")
 @opt_devices()
 @opt_designs()
 @opt_configs_dir()
+@click.option(
+    "--timeout-min",
+    help="reachability timeout (minutes)",
+    type=click.IntRange(min=1, max=5),
+    default=1,
+)
 def cli_netcam_config_backup(
-    devices: Tuple[str],
-    designs: Tuple[str],
-    configs_dir: Path,
+    devices: Tuple[str], designs: Tuple[str], configs_dir: Path, timeout_min: int
 ):
     """
-    Given the built configuration, check that it will load and save the diff.
+    Deploy the design build configurations to device(s)
     """
     log = get_logger()
 
@@ -35,16 +41,23 @@ def cli_netcam_config_backup(
         return
 
     use_device_objs = netcam_filter_devices(device_objs)
-    asyncio.run(run_check_configs(configs_dir=configs_dir, device_objs=use_device_objs))
+    asyncio.run(
+        run_deploy_configs(
+            configs_dir=configs_dir,
+            device_objs=use_device_objs,
+            timeout=timedelta(minutes=timeout_min),
+        )
+    )
 
 
-async def run_check_configs(device_objs: list[Device], configs_dir: Path):
+async def run_deploy_configs(
+    device_objs: list[Device], configs_dir: Path, timeout: timedelta
+):
     log = get_logger()
 
     netcam_plugins = netcad_globals.g_netcam_plugins_os_catalog
 
     dev_cfg: AsyncDeviceConfigurable
-    tasks = list()
 
     for dev_obj in device_objs:
         if not (pg_obj := netcam_plugins.get(dev_obj.os_name)):
@@ -60,25 +73,26 @@ async def run_check_configs(device_objs: list[Device], configs_dir: Path):
             continue
 
         dev_cfg.config_dir = configs_dir / dev_obj.design.name
-        dev_cfg.config_id = f"{dev_cfg.device.name}-{os.getpid()}-check"
+        dev_cfg.config_id = f"{dev_cfg.device.name}-{os.getpid()}"
 
-        tasks.append(asyncio.create_task(check_device_config(dev_cfg, log)))
-
-    await asyncio.gather(*tasks)
+        await deploy_device_config(dev_cfg, timeout=timeout)
 
 
-async def check_device_config(dev_cfg: AsyncDeviceConfigurable, log: Logger):
+async def deploy_device_config(dev_cfg: AsyncDeviceConfigurable, timeout: timedelta):
+    log = get_logger()
+
     name = dev_cfg.device.name
-    basecfg_name = name + ".cfg"
 
     scp_cfg = SCPStagedConfig(
-        dev_cfg=dev_cfg, config_file=Path(dev_cfg.config_dir / basecfg_name)
+        dev_cfg=dev_cfg, config_file=Path(dev_cfg.config_dir.joinpath(name + ".cfg"))
     )
 
     if await scp_cfg.stage():
-        log.info(f"{name}: [green]OK[/green]: config-check passes")
+        log.info(f"{name}: OK: config-load passes")
     else:
-        log.warning(f"{name}: [red]FAIL[/red]: config-check failed")
+        log.warning(f"{name}: FAIL: config-load failed")
 
-    # abort the staged config since this is a check action
-    await scp_cfg.abort()
+    if await scp_cfg.commit(timeout=timeout):
+        log.info(f"{name}: OK config active and saved to startup")
+    else:
+        log.warning(f"{name}: FAIL: config failed to commit due to reachability")
