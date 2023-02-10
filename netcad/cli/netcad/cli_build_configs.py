@@ -94,6 +94,8 @@ def cli_render(
         save_dir = configs_dir.joinpath(*save_folder)
         config_file = save_dir / f"{dev_obj.name}.cfg"
         save_dir.mkdir(parents=True, exist_ok=True)
+        save_dir.joinpath("backup").mkdir(parents=True, exist_ok=True)
+        save_dir.joinpath("diffs").mkdir(parents=True, exist_ok=True)
 
         if not dev_obj.template:
             log.warning(

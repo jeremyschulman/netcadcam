@@ -5,12 +5,13 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from logging import Logger
+from pathlib import Path
 
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
+from netcad.logger import get_logger
 from netcad.netcam.dev_config import AsyncDeviceConfigurable
 
 # -----------------------------------------------------------------------------
@@ -26,8 +27,16 @@ __all__ = ["backup_device_config"]
 # -----------------------------------------------------------------------------
 
 
-async def backup_device_config(dev_cfg: AsyncDeviceConfigurable, log: Logger):
+async def backup_device_config(dev_cfg: AsyncDeviceConfigurable, backup_dir: Path):
     name = dev_cfg.device.name
+    log = get_logger()
     log.info(f"{name}: Retrieving running configuration ...")
-    filepath = await dev_cfg.backup()
+
+    try:
+        filepath = await dev_cfg.config_backup(backup_dir)
+
+    except RuntimeError as exc:
+        log.error(str(exc))
+        return
+
     log.info(f"{name}: Backup saved to: {filepath}")

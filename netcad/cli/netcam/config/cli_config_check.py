@@ -2,18 +2,17 @@ import os
 from typing import Tuple
 from pathlib import Path
 import asyncio
-from logging import Logger
 
 from netcad.config import netcad_globals
 from netcad.logger import get_logger
-from netcad.device import Device
+from netcad.device import Device, DeviceNonExclusive
 from netcad.netcam.dev_config import AsyncDeviceConfigurable
 from netcad.cli.device_inventory import get_devices_from_designs
 from netcad.cli.common_opts import opt_devices, opt_designs, opt_configs_dir
 from netcad.cli.netcam.netcam_filter_devices import netcam_filter_devices
 
 from .config_main import clig_config
-from .staged_config import SCPStagedConfig
+from .task_config_check import check_device_config
 
 
 @clig_config.command("check")
@@ -59,26 +58,23 @@ async def run_check_configs(device_objs: list[Device], configs_dir: Path):
             )
             continue
 
-        dev_cfg.config_dir = configs_dir / dev_obj.design.name
+        if dev_cfg.capabilities == dev_cfg.Capabilities.none:
+            log.warning(
+                f"{dev_obj.name}: Does not support configuration management, skipping."
+            )
+            continue
+
+        dev_cfg.config_file = (
+            configs_dir / dev_obj.design.name / (dev_obj.name + ".cfg")
+        )
         dev_cfg.config_id = f"{dev_cfg.device.name}-{os.getpid()}-check"
 
-        tasks.append(asyncio.create_task(check_device_config(dev_cfg, log)))
+        # TODO: for now, we are usin the fact that the device in the design is
+        #       either exclusive or non-exclusive to determine whether or not
+        #       to check the config with replacing or merging the built config.
 
+        dev_cfg.replace = not isinstance(dev_obj, DeviceNonExclusive)
+        tasks.append(asyncio.create_task(check_device_config(dev_cfg)))
+
+    # TODO: need to check for excpeitons
     await asyncio.gather(*tasks)
-
-
-async def check_device_config(dev_cfg: AsyncDeviceConfigurable, log: Logger):
-    name = dev_cfg.device.name
-    basecfg_name = name + ".cfg"
-
-    scp_cfg = SCPStagedConfig(
-        dev_cfg=dev_cfg, config_file=Path(dev_cfg.config_dir / basecfg_name)
-    )
-
-    if await scp_cfg.stage():
-        log.info(f"{name}: [green]OK[/green]: config-check passes")
-    else:
-        log.warning(f"{name}: [red]FAIL[/red]: config-check failed")
-
-    # abort the staged config since this is a check action
-    await scp_cfg.abort()

@@ -60,8 +60,6 @@ def cli_netcam_config_backup(
 
 
 async def run_fetch_configs(device_objs: list[Device], configs_dir: Path):
-    log = get_logger()
-
     netcam_plugins = netcad_globals.g_netcam_plugins_os_catalog
     dev_driver: dict[Device, AsyncDeviceConfigurable] = dict()
 
@@ -75,8 +73,15 @@ async def run_fetch_configs(device_objs: list[Device], configs_dir: Path):
             )
 
         dev_driver[dev_obj] = dev_cfg = pg_obj.module.plugin_get_dcfg(device=dev_obj)
-        # the device config(s) are stored within the design-name folder
-        dev_cfg.config_dir = configs_dir / dev_obj.design.name / "backup"
-        tasks.append(asyncio.create_task(backup_device_config(dev_cfg, log)))
+
+        cfg_site_dir = configs_dir / dev_obj.design.name
+        cfg_backup_dir = cfg_site_dir / "backup"
+        dev_cfg.config_file = configs_dir.joinpath(dev_obj.name + ".cfg")
+
+        tasks.append(
+            asyncio.create_task(
+                backup_device_config(dev_cfg, backup_dir=cfg_backup_dir)
+            )
+        )
 
     await asyncio.gather(*tasks)

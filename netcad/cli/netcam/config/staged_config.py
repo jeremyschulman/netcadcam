@@ -11,11 +11,11 @@ from netcad.netcam.dev_config import AsyncDeviceConfigurable
 
 
 class SCPStagedConfig:
-    def __init__(self, dev_cfg: AsyncDeviceConfigurable, config_file: Path):
+    def __init__(self, dev_cfg: AsyncDeviceConfigurable):
         self.dev_cfg = dev_cfg
         self.device = dev_cfg.device
         self.name = self.device.name
-        self.config_file = config_file
+        self.config_file = dev_cfg.config_file
         self.diff_file: Path | None = None
         self.config_diff: str | None = None
         self.errmsg: str | None = None
@@ -38,7 +38,7 @@ class SCPStagedConfig:
 
         load_failed = False
         try:
-            await self.dev_cfg.scp_config(self.config_file, dst_filename=basecfg_name)
+            await self.dev_cfg.file_put(dst_filename=basecfg_name)
 
         except OSError as exc:
             log.error(f"{self.name}: local file access failed: {str(exc)}")

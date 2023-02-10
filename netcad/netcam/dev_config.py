@@ -7,7 +7,7 @@
 
 from typing import Optional, Tuple
 from pathlib import Path
-from datetime import timedelta
+from enum import IntFlag, auto
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -30,17 +30,19 @@ from netcad.device import Device
 __all__ = ["AsyncDeviceConfigurable"]
 
 
-class _BaseDeviceConfigurable:
+class DeviceConfigurable:
     """
     Attributes
     ----------
     device: Device
         The design device instance for which this configurable is bound
 
-    config_dir: Path
-        The local filesystem directory for which the device configuraiton will
-        be loaded from.  The backup configuration will be stored in
-        subdirectory called "backup".
+    config_file: Path
+        The local filesystem path to the device configuration file to be used.
+
+    config_diff: str
+        After the call to `config_diff` this attribute stores the device
+        point-of-view diff; typically a diff-patch string.
 
     _config_id: str
         This value uniquely identifies the configuration.
@@ -58,9 +60,24 @@ class _BaseDeviceConfigurable:
         device specific subclass.
     """
 
+    class Capabilities(IntFlag):
+        none = auto()
+        check = auto()
+        diff = auto()
+        replace = auto()
+        rollback = auto()
+
     def __init__(self, *, device: Device):
         self.device = device
-        self.config_dir: Optional[Path] = None
+        self.config_file: Optional[Path] = None
+        self.config_diff_contents: Optional[str] = None
+        self.file_on_device = False
+        self.replace = False
+
+        # subclass will set the capabilities on init
+        self.capabilities = self.Capabilities.none
+
+        # private attributes
         self._config_id: Optional[str] = None
         self._scp_creds: Optional[Tuple[str, str]] = None
 
@@ -87,16 +104,41 @@ class _BaseDeviceConfigurable:
         return self.device.name < other.device.name
 
 
-class AsyncDeviceConfigurable(_BaseDeviceConfigurable):
+class AsyncDeviceConfigurable(DeviceConfigurable):
     """
     Asynchronous based device-configurable supporting transaction based
     configuration changes.
     """
 
+    async def config_backup(self, backup_dir: Path) -> Path:
+        """
+        Retrieve the running configuration of the device and save it to the
+        local filesystem in the given `backup_dir`.
+
+        This method presumes that the `backup_dir` exists on the local
+        filesystem. Otherwise, this function will raise an OSError exception as
+        a result of attempting to saving the backup file.
+
+        Returns
+        -------
+        The Path isntance of the backup file.
+        """
+        config_content = await self.config_get()
+        backup_path = backup_dir / self.config_file.name
+
+        async with aiofiles.open(backup_path, "w+") as ofile:
+            await ofile.write(config_content)
+
+        return backup_path
+
+    # -------------------------------------------------------------------------
+    #                     Abstract Private Methods
+    # -------------------------------------------------------------------------
+
     def _set_config_id(self, name: str):
         raise NotImplementedError()
 
-    async def check_reachability(self) -> bool:
+    async def is_reachable(self) -> bool:
         """
         Determines that the device is reachable for the purposes of making
         configuration chagnes.
@@ -107,23 +149,31 @@ class AsyncDeviceConfigurable(_BaseDeviceConfigurable):
         """
         raise NotImplementedError()
 
-    async def fetch_running_config(self) -> str:
+    # -------------------------------------------------------------------------
+    # transactional config related methods
+    # -------------------------------------------------------------------------
+
+    async def config_get(self) -> str:
         """
         Retrieves the running configuration of a device as a text string.
         """
         raise NotImplementedError()
 
-    async def abort_config(self):
+    async def config_cancel(self):
         """
-        Aborts the staged configuration.
+        Cancel the configuration process for those devices that support
+        staged / candidate configurations.
         """
         raise NotImplementedError()
 
-    async def diff_config(self) -> str:
+    async def config_diff(self) -> str:
         """
         Retrieves the device point-of-view difference between the running
         configuraiton and the loaded configuration.  This assumes that the
         device can support this feature.
+
+        After this call the `config_diff` attribute is set with the diff
+        contents.
 
         Returns
         -------
@@ -132,25 +182,67 @@ class AsyncDeviceConfigurable(_BaseDeviceConfigurable):
         """
         raise NotImplementedError()
 
-    async def load_config(self, config_contents: str, replace: Optional[bool] = False):
+    async def config_replace(self, rollback_timeout: int):
         """
-        Loads the contents of the configuration onto the device.  If the
-        replace parameter is True, then the contents completely replace the
-        configuration. Otherwise, the changes are loaded in a "merge" style.
+        Replace the current running configuration with the candidate
+        configuration file.   Once the candidate configuration is loaded check
+        the device reachability.  If the reachability fails, then an exception
+        is raised (TODO: type of exception).
 
         Parameters
         ----------
-        config_contents:
-            The configuration to load into the device
-
-        replace:
-            When True the config_contents replace the entirety of the device configuration.
+        rollback_timeout:
+            The amount of time in minutes before the device automatically
+            reverts to the previous running configuraiton.  This is a fail-safe
+            mechanism in the even the loaded configuration breaks reachabilty
+            to the device.
         """
         raise NotImplementedError()
 
-    async def scp_config(
-        self, source_filepath: Path, dst_filename: Optional[str | Path] = None
+    async def config_merge(self, rollback_timeout: int):
+        """
+        This function merges the candidate configuration into the running
+        configuration.  If the device supports a rollback mechansim, the
+        rollback_timeout designates time in minutes before the merged
+        changes are reverted to the previous running config.
+
+        Parameters
+        ----------
+        rollback_timeout:
+            The amount of time in minutes before the device automatically
+            reverts to the previous running configuraiton.  This is a fail-safe
+            mechanism in the even the loaded configuration breaks reachabilty
+            to the device.
+        """
+        raise NotImplementedError()
+
+    async def config_push(
+        self, rollback_timeout: int, replace: Optional[bool | None] = None
     ):
+        """
+        Push the configuration using the mode based on the `replace` option if
+        set, or replace instance attribute.
+
+        Parameters
+        ----------
+        rollback_timeout
+        replace
+        """
+        replace = replace if replace is not None else self.replace
+
+        if replace:
+            await self.config_replace(rollback_timeout)
+        else:
+            await self.config_merge(rollback_timeout)
+
+    async def config_check(self, replace: Optional[bool | None] = None):
+        raise NotImplementedError()
+
+    # -------------------------------------------------------------------------
+    # file related methods
+    # -------------------------------------------------------------------------
+
+    async def file_put(self, dst_filename: Optional[str | Path] = None):
         """
         This function copies the configuration file source_filepath from the
         local fileserver to the target device.  If the dst_filename is not
@@ -162,84 +254,16 @@ class AsyncDeviceConfigurable(_BaseDeviceConfigurable):
             raise RuntimeError(f"{host}: SCP credentials missing")
 
         username, password = self._scp_creds
-        dst_fp = dst_filename or source_filepath.name
+        dst_fp = dst_filename or self.config_file.name
         async with asyncssh.connect(host, username=username, password=password) as conn:
-            await asyncssh.scp(source_filepath, (conn, dst_fp))
+            await asyncssh.scp(self.config_file, (conn, dst_fp))
 
-    async def load_scp_file(self, filename: str, replace: Optional[bool] = False):
-        """
-        This function is used to load the configuration from the devices local
-        filesystem, after the configuration file has been copied via the
-        scp_config method.
+        self.file_on_device = True
 
-        If the replace parameter is True then the file contents will replace
-        the existing session config (load-replace).
-
-        Parameters
-        ----------
-        filename:
-            The name of the configuration file without any device specific
-            filesys-prefix (e.g. "flash:").  The subclass will provide any
-            necessary filesys-prefix.
-
-        replace:
-            When True, the contents of the file will completely replace the
-            session config for a load-replace behavior.
-        """
-        raise NotImplementedError()
-
-    async def delete_scp_file(self, filename: str):
+    async def file_delete(self):
         """
         This function is used to remove the configuration file that was
         previously copied to the remote device.  This function is expected to
         be called during a "cleanup" process.
-
-        Parameters
-        ----------
-        filename:
-            The name of the configuration file without any device specific
-            filesys-prefix (e.g. "flash:").  The subclass will provide any
-            necessary filesys-prefix.
-        """
-        raise NotImplementedError()
-
-    async def backup(self) -> Path:
-        """
-        Retrieve the running configuration of the device and save it to the
-        local backup filesystem.
-
-        Returns
-        -------
-        The Path isntance of the backup file.
-        """
-        config_content = await self.fetch_running_config()
-        path = Path(self.config_dir).joinpath(self.device.name + ".cfg")
-        await aiofiles.os.makedirs(self.config_dir, exist_ok=True)
-        async with aiofiles.open(path, "w+") as ofile:
-            await ofile.write(config_content)
-
-        return path
-
-    async def save_config(self, timeout: timedelta):
-        """
-        This function is used to commit the staged configuration.
-
-        Once the config is activated, the next step is to check reachability to
-        the device to ensure the configuration did not result in loss of
-        reachability.  If that fails, then rollback the configuraiton to the
-        previous config.
-
-        Notes
-        ------
-        The presumption is that the underlying devlice can support a mechansim
-        to "rollback" the staged configuration using a timer mechanism.  This
-        is supported natively in some operating systems, such as Arista EOS and
-        Juniper JUNOS.  If this is not the case, for example IOS-XE, then a mechanism
-        to support this must be implemented in some manner.
-
-        Parameters
-        ----------
-        timeout:
-            Specifies the amount of time to set the timeout-rollback counter.
         """
         raise NotImplementedError()
