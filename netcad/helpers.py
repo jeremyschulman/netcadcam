@@ -54,7 +54,7 @@ class StrEnum(str, Enum):
         return self.value
 
 
-def range_string(numbers: List[int]) -> str:
+def range_string(numbers: List[int], adj_sep="-") -> str:
     # if the list is empty, return an empty string
     if not len(numbers):
         return ""
@@ -65,9 +65,7 @@ def range_string(numbers: List[int]) -> str:
         if not start:
             values.append(str(last))
         else:
-            # sep = "," if len(start) == 1 else "-"
-            # always uses dashes, even if two consecture numbers
-            sep = "-"
+            sep = adj_sep if len(start) == 1 else "-"
             values.append(f"{start[0][1]}{sep}{last}")
 
     return ",".join(values)
