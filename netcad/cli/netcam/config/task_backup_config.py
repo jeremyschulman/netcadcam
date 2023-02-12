@@ -33,7 +33,9 @@ async def backup_device_config(dev_cfg: AsyncDeviceConfigurable, backup_dir: Pat
     log.info(f"{name}: Retrieving running configuration ...")
 
     try:
+        await dev_cfg.setup()
         filepath = await dev_cfg.config_backup(backup_dir)
+        await dev_cfg.teardown()
 
     except RuntimeError as exc:
         log.error(str(exc))

@@ -38,9 +38,9 @@ class DeviceConfigurable:
         The design device instance for which this configurable is bound
 
     config_file: Path
-        The local filesystem path to the device configuration file to be used.
+        The local filesystem path to the proposed configuration file.
 
-    config_diff: str
+    config_diff_contents: str
         After the call to `config_diff` this attribute stores the device
         point-of-view diff; typically a diff-patch string.
 
@@ -62,9 +62,29 @@ class DeviceConfigurable:
 
     class Capabilities(IntFlag):
         none = auto()
+
+        # check implies that the OS supports a session or candidate configuration
+        # that can be loaded but not activated; thus checking the validity
+        # of the configuration syntax.
+
         check = auto()
+
+        # diff means that the OS supports the ability to create a textual
+        # difference between the proposed configuration and the current
+        # configuration; without activating the proposed configuration.
+
         diff = auto()
+
+        # replace means that the OS supports the ability to atomically replace
+        # the running configuration with the proposed configuration.
+
         replace = auto()
+
+        # rollback means that the OS supports the ability to automatically
+        # rever the applied proposed configuration (which would be "now
+        # active").  Rollback implies that the OS supports a timer-based
+        # mechanism as well as a confirmation mechansim to cancel the rollback.
+
         rollback = auto()
 
     def __init__(self, *, device: Device):
@@ -109,6 +129,12 @@ class AsyncDeviceConfigurable(DeviceConfigurable):
     Asynchronous based device-configurable supporting transaction based
     configuration changes.
     """
+
+    async def setup(self):
+        pass
+
+    async def teardown(self):
+        pass
 
     async def config_backup(self, backup_dir: Path) -> Path:
         """

@@ -13,6 +13,7 @@ def temp_file(func):
         raise_exc = None
 
         try:
+            await dev_cfg.setup()
             await dev_cfg.file_put()
         except Exception as exc:
             log.error(f"{name}: failed to copy file, aborting: {str(exc)}")
@@ -27,6 +28,7 @@ def temp_file(func):
         finally:
             log.info(f"{name}: remove copied config-file ...")
             await dev_cfg.file_delete()
+            await dev_cfg.teardown()
 
         if raise_exc:
             raise raise_exc

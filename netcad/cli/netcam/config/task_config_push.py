@@ -16,7 +16,13 @@ async def push_device_config(dev_cfg: AsyncDeviceConfigurable, rollback_timeout:
     name = dev_cfg.device.name
     log = get_logger()
     log.info(f"{name}: deploying config ...")
-    await dev_cfg.config_push(rollback_timeout=rollback_timeout)
+
+    try:
+        await dev_cfg.config_push(rollback_timeout=rollback_timeout)
+
+    except RuntimeError as exc:
+        log.error(str(exc))
+        return
 
     if not dev_cfg.config_diff_contents:
         log.info(f"{name}: no config differences, nothig changed.")
