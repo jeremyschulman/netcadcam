@@ -87,6 +87,13 @@ class DeviceConfigurable:
 
         rollback = auto()
 
+        # merge means tha the OS driver will support loading config changes
+        # that are not the complete configuration; also referred to as "merge
+        # changes".  All operating systems support merges; but it is up to the
+        # driver to deteremine whether to support it.
+
+        merge = auto()
+
     def __init__(self, *, device: Device):
         self.device = device
         self.config_file: Optional[Path] = None
@@ -261,7 +268,7 @@ class AsyncDeviceConfigurable(DeviceConfigurable):
         else:
             await self.config_merge(rollback_timeout)
 
-    async def config_check(self, replace: Optional[bool | None] = None):
+    async def config_check(self, replace: Optional[bool | None] = None) -> bool:
         raise NotImplementedError()
 
     # -------------------------------------------------------------------------

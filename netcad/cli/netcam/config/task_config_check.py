@@ -19,11 +19,18 @@ async def check_device_config(dev_cfg: AsyncDeviceConfigurable):
 
     if dev_cfg.Capabilities.check in dev_cfg.capabilities:
         log.info(f"{name}: config-check ...")
-        await dev_cfg.config_check()
+
+        if await dev_cfg.config_check() is True:
+            log.info(f"{name}: {_OK_} config-check passes.")
+        else:
+            log.warning(f"{name}: {_FAIL_} config-check failed.")
+
         config_diff = dev_cfg.config_diff_contents
+
     elif dev_cfg.Capabilities.diff in dev_cfg.capabilities:
         log.info(f"{name}: config-diff ...")
         config_diff = await dev_cfg.config_diff()
+
     else:
         log.error(f"{name}: Unexpected missing capabilities")
         return

@@ -5,7 +5,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import List, Set
+from typing import List, Set, Optional
 from itertools import groupby
 from enum import Enum
 
@@ -43,7 +43,7 @@ class StrEnum(str, Enum):
             this = auto()
             that = auto()
 
-    Then `Foo.this` will serialize to the string "this".  Likewise a call to
+    Then `Foo.this` will serialize to the string "this".  Likewise, a call to
     Foo("this") will deserialize to `Foo.this`.
     """
 
@@ -54,10 +54,12 @@ class StrEnum(str, Enum):
         return self.value
 
 
-def range_string(numbers: List[int], adj_sep="-") -> str:
+def range_string(numbers: List[int], adj_sep: Optional[str] = None) -> str:
     # if the list is empty, return an empty string
     if not len(numbers):
         return ""
+
+    adj_sep = adj_sep or "-"
 
     values = list()
     for _, members in groupby(enumerate(numbers), key=lambda ele: ele[0] - ele[1]):
