@@ -268,7 +268,16 @@ class AsyncDeviceConfigurable(DeviceConfigurable):
         else:
             await self.config_merge(rollback_timeout)
 
-    async def config_check(self, replace: Optional[bool | None] = None) -> bool:
+    async def config_check(self, replace: Optional[bool | None] = None) -> str | None:
+        """
+        If supported, the device will perform a configuration check.  If there
+        are any errors then these are returned as a string.  If there are no
+        errors, then this function returns None.
+
+        Returns
+        -------
+        Error string or None as described.
+        """
         raise NotImplementedError()
 
     # -------------------------------------------------------------------------
@@ -288,7 +297,10 @@ class AsyncDeviceConfigurable(DeviceConfigurable):
 
         username, password = self._scp_creds
         dst_fp = dst_filename or self.config_file.name
-        async with asyncssh.connect(host, username=username, password=password) as conn:
+
+        async with asyncssh.connect(
+            host, username=username, password=password, known_hosts=None
+        ) as conn:
             await asyncssh.scp(self.config_file, (conn, dst_fp))
 
         self.file_on_device = True

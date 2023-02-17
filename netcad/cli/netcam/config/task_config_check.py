@@ -20,10 +20,10 @@ async def check_device_config(dev_cfg: AsyncDeviceConfigurable):
     if dev_cfg.Capabilities.check in dev_cfg.capabilities:
         log.info(f"{name}: config-check ...")
 
-        if await dev_cfg.config_check() is True:
-            log.info(f"{name}: {_OK_} config-check passes.")
+        if errors := await dev_cfg.config_check():
+            log.warning(f"{name}: {_FAIL_} config-check failed: {errors}")
         else:
-            log.warning(f"{name}: {_FAIL_} config-check failed.")
+            log.info(f"{name}: {_OK_} config-check passes.")
 
         config_diff = dev_cfg.config_diff_contents
 
