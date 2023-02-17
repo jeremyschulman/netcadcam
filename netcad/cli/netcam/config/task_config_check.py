@@ -1,3 +1,6 @@
+#  Copyright (c) 2021 Jeremy Schulman
+#  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
 import aiofiles
 
 from netcad.logger import get_logger
@@ -17,6 +20,10 @@ async def check_device_config(dev_cfg: AsyncDeviceConfigurable):
     name = dev_cfg.device.name
     log = get_logger()
 
+    # -------------------------------------------------------------------------
+    # Run the config check based on the capabiltiies of the device driver
+    # -------------------------------------------------------------------------
+
     if dev_cfg.Capabilities.check in dev_cfg.capabilities:
         log.info(f"{name}: config-check ...")
 
@@ -34,6 +41,10 @@ async def check_device_config(dev_cfg: AsyncDeviceConfigurable):
     else:
         log.error(f"{name}: Unexpected missing capabilities")
         return
+
+    # -------------------------------------------------------------------------
+    # handle any diffs recorded by the config-check.
+    # -------------------------------------------------------------------------
 
     if not config_diff:
         log.info(f"{name}: no config differences")
