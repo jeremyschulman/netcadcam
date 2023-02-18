@@ -210,7 +210,6 @@ class ServiceReporting:
     def load_results_files(
         self, device: Device, check_type: CheckCollectionT
     ) -> Iterator[CheckResult]:
-
         # if the check results file does not exist, then return an empty
         # iterator so the calling scope is AOK.
 

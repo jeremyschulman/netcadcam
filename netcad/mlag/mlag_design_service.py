@@ -37,7 +37,6 @@ class MLagDesignService(DesignService, registry_name="mlags"):
     CHECK_COLLECTIONS = []  # none for now
 
     def __init__(self, service_name: str, **kwargs):
-
         # The cabling must be created first becasue the add_devices, which is
         # called by the superclass constructor, uses cabling
 

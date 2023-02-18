@@ -125,7 +125,6 @@ async def execute_device_checks(dut: AsyncDeviceUnderTest):
 
 
 async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
-
     device = dut.device
     dev_tc_dir = dut.testcases_dir
     dut_name = f"{device.name:<16}"
@@ -134,7 +133,6 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
     service_list = cv_service_list.get()
 
     for ds_name, design_service in device.services.items():
-
         # Handle User provided service list, if provided; only execute the
         # services the User requested explicitly.
 

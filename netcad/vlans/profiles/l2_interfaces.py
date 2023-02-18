@@ -40,7 +40,6 @@ class InterfaceL2Access(InterfaceL2):
 
 
 class InterfaceL2Trunk(InterfaceL2):
-
     native_vlan: Optional[VlanProfile]
     allowed_vlans: List[VlanProfile]
 

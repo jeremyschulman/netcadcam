@@ -7,7 +7,7 @@ from netcad.device import Device
 
 if TYPE_CHECKING:
     from netcad.netcam.dut import DeviceUnderTest
-
+    from netcad.netcam.dev_config import AsyncDeviceConfigurable
 
 from .plugins import Plugin, PluginProtocol
 
@@ -27,5 +27,8 @@ class NetcamPlugin(Plugin):
     class NetcamPluginModule(PluginProtocol):
         def plugin_get_dut(self, device: "Device") -> "DeviceUnderTest":
             """Obtain the DUT instance for a given Device instance"""
+
+        def plugin_get_dcfg(self, device: "Device") -> "AsyncDeviceConfigurable":
+            """Obtain the device configurable instance for a given Device intance"""
 
     _plugin_typeref = NetcamPluginModule

@@ -58,7 +58,6 @@ class MLagCheckCollection(CheckCollection):
     def build(
         cls, device: DeviceMLagPairMember, **kwargs
     ) -> Optional["MLagCheckCollection"]:
-
         # find all of the LAG interfaces defined on the psuedo MLAG devic
 
         if not hasattr(device, "device_group"):

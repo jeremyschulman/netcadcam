@@ -66,9 +66,7 @@ class CablePlanner(Registry):
             )
 
         for cable_id, if_endpoints in self.cables.items():
-
             if len(set(ep.enabled for ep in if_endpoints)) != 1:
-
                 raise RuntimeError(
                     f"Not all interfaces in cable id {cable_id} are set "
                     f"to the same enabled value: {if_list_info()}"

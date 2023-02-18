@@ -132,7 +132,6 @@ def cli_test_device(
     duts = {}
 
     async def run_tests():
-
         cv_check_list.set(check_list)
         cv_service_list.set(service_list)
 

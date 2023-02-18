@@ -29,7 +29,6 @@ def import_netcam_plugins() -> Optional[PluginCatalog]:
     netcad_globals.g_netcam_plugins_os_catalog = dict()
 
     for pg_id, pg_item in enumerate(plugins_cfglist, start=1):
-
         pg_obj = NetcamPlugin(config=pg_item)
         pg_obj.load()
 

@@ -1,25 +1,24 @@
-#  Copyright (c) 2021 Jeremy Schulman
+#  Copyright (c) 2023 Jeremy Schulman
 #  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 # -----------------------------------------------------------------------------
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Sequence, List, Optional
+from pathlib import Path
 
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.device import Device
-from netcad.design import load_design
+from netcad.logger import get_logger
+from netcad.netcam.dev_config import AsyncDeviceConfigurable
 
 # -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["get_devices_from_designs"]
-
+__all__ = ["backup_device_config"]
 
 # -----------------------------------------------------------------------------
 #
@@ -28,16 +27,18 @@ __all__ = ["get_devices_from_designs"]
 # -----------------------------------------------------------------------------
 
 
-def get_devices_from_designs(
-    designs: Sequence[str], include_devices: Optional[Sequence[str]] = None
-) -> List[Device]:
-    device_objs = set()
+async def backup_device_config(dev_cfg: AsyncDeviceConfigurable, backup_dir: Path):
+    name = dev_cfg.device.name
+    log = get_logger()
+    log.info(f"{name}: Retrieving running configuration ...")
 
-    for design_name in designs:
-        design_obj = load_design(design_name=design_name)
-        device_objs.update(design_obj.devices.values())
+    try:
+        await dev_cfg.setup()
+        filepath = await dev_cfg.config_backup(backup_dir)
+        await dev_cfg.teardown()
 
-    if not include_devices:
-        return sorted(device_objs)
+    except RuntimeError as exc:
+        log.error(str(exc))
+        return
 
-    return sorted([obj for obj in device_objs if obj.name in include_devices])
+    log.info(f"{name}: Backup saved to: {filepath}")

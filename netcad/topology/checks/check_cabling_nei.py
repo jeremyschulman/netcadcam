@@ -56,7 +56,6 @@ NoValidateCabling = NoValidateCablingSential()
 
 
 class InterfaceCablingCheck(Check):
-
     check_type = "cabling"
 
     class Params(BaseModel):
@@ -87,7 +86,6 @@ class InterfaceCablingCheckCollection(CheckCollection):
 
     @classmethod
     def build(cls, device: Device, **kwargs) -> "InterfaceCablingCheckCollection":
-
         # only used physical interfaces that have a cabling peer relationship.
         # exclude any interfaces that are disabled, since the cabling tests will
         # use a layer-2 protocol (LLDP or CDP) to validate the neighbor

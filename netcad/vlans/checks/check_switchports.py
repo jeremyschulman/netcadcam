@@ -107,7 +107,6 @@ class SwitchportCheckCollection(CheckCollection):
 
     @classmethod
     def build(cls, device: Device, **kwargs) -> "SwitchportCheckCollection":
-
         checks = list()
 
         for if_name, interface in device.interfaces.used().items():

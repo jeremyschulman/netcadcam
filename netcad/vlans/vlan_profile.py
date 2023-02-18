@@ -32,6 +32,7 @@ __all__ = ["VlanProfile", "VlanProfileLike"]
 #
 # -----------------------------------------------------------------------------
 
+
 # noinspection PyUnresolvedReferences
 class VlanProfile(HashableModel):
     """

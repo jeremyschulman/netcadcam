@@ -200,7 +200,6 @@ def _finalize_result(result: CheckResult, **kwargs) -> CheckResult:
     check_status_flags = CheckStatusFlag.PASS
 
     for field in msrd.__fields__:
-
         m_field = getattr(msrd, field)
 
         if (e_field := getattr(expd, field, None)) is None:

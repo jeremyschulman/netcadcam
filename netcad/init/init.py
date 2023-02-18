@@ -82,7 +82,6 @@ def _init_debug():
 
 
 def _init_design_configs():
-
     # Add the project directory to the Python system path so that packages can
     # be imported without the User installing them.
 
@@ -117,7 +116,6 @@ def _init_design_configs():
 
 
 def _init_config_contents():
-
     # -------------------------------------------------------------------------
     # NETCAD_CONFIGFILE, designates the location of the netcad configuration
     # file. by default this is "netcad.toml" in the $CWD.
@@ -142,7 +140,6 @@ def _init_config_contents():
 
 
 def _init_proj_dirs():
-
     # -------------------------------------------------------------------------
     # NETCAD_PROJECTDIR, by default is the parent of the config-file.
     # -------------------------------------------------------------------------
@@ -196,7 +193,6 @@ def _init_proj_dirs():
 
 
 def _init_user_environment():
-
     # if the User did not provision an entry point reference then nothing more
     # to do here; just log a debug for safekeeping.
 
@@ -223,7 +219,6 @@ def _init_user_environment():
 
 
 def ensure_directory(project_dir: Path, env_var: str, default_value: str):
-
     dir_path = Path(
         environ.setdefault(
             env_var,

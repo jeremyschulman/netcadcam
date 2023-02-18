@@ -83,7 +83,6 @@ class DeviceInterfaces(defaultdict, DefaultDict[str, DeviceInterface]):
 
         interface: DeviceInterface
         for if_name, interface in self.items():
-
             # if there is no profile bound to the interface, then it is not part
             # of the design; so skip it unless the caller wants to include unused
 

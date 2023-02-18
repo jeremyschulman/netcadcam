@@ -80,7 +80,6 @@ class RelativeEnvironment(jinja2.Environment):
 
 
 def get_env(template_dirs):
-
     env = RelativeEnvironment(
         trim_blocks=True,
         lstrip_blocks=True,
@@ -101,7 +100,6 @@ _attr_re = re.compile(
 
 
 def expand_templates_dirs(paths: Iterable[str], obj: object) -> List[str]:
-
     # expand enviornment variables in the path strings, if any.
     paths = [expandvars(path) for path in paths]
 

@@ -28,7 +28,6 @@ class CableByCableId(CablePlanner):
 
         for device in self.devices:
             for if_name, iface in device.interfaces.items():
-
                 # if the interface has been assigned a cable_peer without using
                 # the cable_id value, ***and*** the remote interface is the
                 # cable peer, then auto-gen a cable-id so that it shows up in

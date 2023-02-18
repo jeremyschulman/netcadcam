@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "netcad"
-version = "0.3.0"
-description = "NetCAD - Network Automation by Design"
+version = "0.4.0"
+description = "NetCAD/CAM - Network Automation by Design"
 authors = ["Jeremy Schulman"]
 readme = "README.md"
 
@@ -12,8 +12,8 @@ rich = "^13.1.0"
 pydantic = "^1.8.2"
 Jinja2 = "^3.0.2"
 toml = "^0.10.2"
-aiofiles = "^0.7.0"
-maya = "^0.6.1"
+aiofiles = "*"
+maya = "*"
 bracket-expansion = "^1.0.0"
 pydantic-env = "^0.2.0"
 igraph = "^0.9.11"

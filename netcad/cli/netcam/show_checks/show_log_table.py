@@ -31,7 +31,6 @@ from netcad.checks.check_result_log import CheckResultLogs
 def show_log_table(
     console: Console, device: Device, filename: str, results: List[Dict]
 ):
-
     table = Table(
         "Status",
         "Device",
@@ -62,7 +61,6 @@ def show_log_table(
 
 
 def _pretty_dict_table(obj):
-
     # if given a string, just return the string.
     if isinstance(obj, str):
         return obj

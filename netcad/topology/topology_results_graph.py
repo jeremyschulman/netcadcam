@@ -41,7 +41,6 @@ class TopologyResultsGrapher(ServiceReporting):
         self._build_cable_peering()
 
     def _build_cable_peering(self):
-
         # create a map of devies to their cabling check results dictionary. the
         # key of that dict (check-id) is the interface name, and the values are
         # the specific result instances.  This build map will be used to
@@ -56,7 +55,6 @@ class TopologyResultsGrapher(ServiceReporting):
 
         for dev, cables_rmap in build.items():
             for dev_ifname, cable_r in cables_rmap.items():
-
                 # if the cable check failed, then do not create the
                 # peering edge.
 

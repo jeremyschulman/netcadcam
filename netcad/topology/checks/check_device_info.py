@@ -81,7 +81,6 @@ def _interfaces_as_dict(device: Device) -> dict:
     as_dict = dict()
 
     for if_name, iface in device.interfaces.items():
-
         if not iface.used:
             as_dict[if_name] = DeviceInterfaceInfo(
                 used=False, name=if_name, enabled=iface.enabled, desc=iface.desc
@@ -118,7 +117,6 @@ class DeviceInformationCheckCollection(CheckCollection):
 
     @classmethod
     def build(cls, device: Device, **kwargs) -> "DeviceInformationCheckCollection":
-
         return DeviceInformationCheckCollection(
             device=device.name,
             interfaces=_interfaces_as_dict(device),
