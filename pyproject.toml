@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "netcad"
-version = "0.3.0"
-description = "NetCAD - Network Automation by Design"
+version = "0.4.0"
+description = "NetCAD/CAM - Network Automation by Design"
 authors = ["Jeremy Schulman"]
 readme = "README.md"
 
