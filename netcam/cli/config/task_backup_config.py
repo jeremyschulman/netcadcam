@@ -12,7 +12,7 @@ from pathlib import Path
 # -----------------------------------------------------------------------------
 
 from netcad.logger import get_logger
-from netcad.netcam.dev_config import AsyncDeviceConfigurable
+from netcam.dev_config import AsyncDeviceConfigurable
 
 # -----------------------------------------------------------------------------
 # Exports

@@ -20,8 +20,8 @@ from netcad.design import load_design
 # Private Module Imports
 # -----------------------------------------------------------------------------
 
-from ..common_opts import opt_designs
-from .cli_netcad_main import cli
+from netcad.cli.common_opts import opt_designs
+from netcad.cli.cli_netcad_main import cli
 
 # -----------------------------------------------------------------------------
 #

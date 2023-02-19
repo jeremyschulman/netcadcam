@@ -4,7 +4,7 @@
 import aiofiles
 
 from netcad.logger import get_logger
-from netcad.netcam.dev_config import AsyncDeviceConfigurable
+from netcam.dev_config import AsyncDeviceConfigurable
 
 
 from .deco_temp_file import temp_file

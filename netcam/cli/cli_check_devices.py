@@ -26,14 +26,15 @@ from rich.table import Table
 
 from netcad.config import Environment, netcad_globals
 from netcad.logger import get_logger
-from netcad.netcam.dut import DeviceUnderTest
+from netcam.dut import DeviceUnderTest
 from netcad.cli.common_opts import opt_devices, opt_designs
 from netcad.cli.device_inventory import get_devices_from_designs
 
 # from netcad.netcam.loader import import_netcam_plugins
 
-from netcad.cli.netcam.cli_netcam_main import cli
-from netcad.netcam.execute_checks import (
+from netcad.cli import cli
+
+from netcam.execute_checks import (
     execute_device_checks,
     cv_check_list,
     cv_service_list,
@@ -156,7 +157,7 @@ def cli_test_device(
         log.info(f"Starting tests for {len(duts)} devices.")
 
         # execute the tests concurrently to minimize the time it takes to run
-        # though all of the tests.
+        # through all the tests.
 
         # TODO: this _presumes_ that the underlying "netcam" plugin was written to
         #       support asyncio.  This might not always be the case, so need to put

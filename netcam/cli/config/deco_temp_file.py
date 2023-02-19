@@ -4,7 +4,7 @@
 from functools import wraps
 
 from netcad.logger import get_logger
-from netcad.netcam.dev_config import AsyncDeviceConfigurable
+from netcam.dev_config import AsyncDeviceConfigurable
 
 
 def temp_file(func):

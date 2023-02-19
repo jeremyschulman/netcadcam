@@ -41,7 +41,7 @@ __all__ = ["DeviceUnderTest", "AsyncDeviceUnderTest", "SetupError"]
 # -----------------------------------------------------------------------------
 
 if TYPE_CHECKING:
-    from netcad.netcam import CheckResultsCollection
+    from netcad.checks import CheckResultsCollection
 
 
 class SetupError(RuntimeError):

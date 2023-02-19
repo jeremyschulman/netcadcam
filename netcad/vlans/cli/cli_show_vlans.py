@@ -32,7 +32,7 @@ from netcad.cli.common_opts import opt_devices, opt_designs
 # Module Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.cli.netcad.clig_netcad_show import clig_design_show
+from netcad.cli.clig_netcad_show import clig_design_show
 
 # -----------------------------------------------------------------------------
 # Exports (none)

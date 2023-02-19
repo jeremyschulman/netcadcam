@@ -26,7 +26,7 @@ from netcad.phy_port import PhyPortProfile
 from netcad.device.profiles.interface_profile import InterfaceVirtual
 from netcad.cabling.cable_plan import CablePlanner
 
-from netcad.cli.netcad.clig_netcad_show import clig_design_show
+from netcad.cli.clig_netcad_show import clig_design_show
 from netcad.cli.device_inventory import get_devices_from_designs
 from netcad.cli.common_opts import opt_devices, opt_designs
 
