@@ -32,7 +32,7 @@ from netcad.cli.device_inventory import get_devices_from_designs
 
 # from netcad.netcam.loader import import_netcam_plugins
 
-from netcad.cli import cli
+from netcam.cli import cli
 
 from netcam.execute_checks import (
     execute_device_checks,
