@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING
 from netcad.device import Device
 
 if TYPE_CHECKING:
-    from netcad.netcam.dut import DeviceUnderTest
-    from netcad.netcam.dev_config import AsyncDeviceConfigurable
+    from netcam.dut import DeviceUnderTest
+    from netcam.dcfg import AsyncDeviceConfigurable
 
 from .plugins import Plugin, PluginProtocol
 

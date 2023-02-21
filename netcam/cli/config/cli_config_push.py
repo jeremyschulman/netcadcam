@@ -11,10 +11,10 @@ import click
 from netcad.config import netcad_globals
 from netcad.logger import get_logger
 from netcad.device import Device, DeviceNonExclusive
-from netcad.netcam.dev_config import AsyncDeviceConfigurable
+from netcam.dcfg import AsyncDeviceConfigurable
 from netcad.cli.device_inventory import get_devices_from_designs
 from netcad.cli.common_opts import opt_devices, opt_designs, opt_configs_dir
-from netcad.cli.netcam.netcam_filter_devices import netcam_filter_devices
+from netcam.cli.netcam_filter_devices import netcam_filter_devices
 
 from .config_main import clig_config
 from .task_config_push import push_device_config

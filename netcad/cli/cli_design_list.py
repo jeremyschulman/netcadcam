@@ -12,7 +12,7 @@ from rich.table import Table
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.cli.netcad.cli_netcad_main import cli
+from netcad.cli.cli_netcad_main import cli
 from netcad.config import netcad_globals
 
 # -----------------------------------------------------------------------------

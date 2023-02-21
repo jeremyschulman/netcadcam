@@ -30,7 +30,7 @@ from netcad.cli.device_inventory import get_devices_from_designs
 # Private Module Imports
 # -----------------------------------------------------------------------------
 
-from netcad.cli.netcad.clig_netcad_show import clig_design_show
+from netcad.cli.clig_netcad_show import clig_design_show
 
 # -----------------------------------------------------------------------------
 # Exports (none)

@@ -52,5 +52,9 @@ def netcad_import_package(pkg_name: str) -> ModuleType:
     # Try splitting the package as given into the package and then an attribute
     # within that module.  This will handle the case described above.
 
-    from_pkg, design_name = pkg_name.rsplit(".", 1)
+    try:
+        from_pkg, design_name = pkg_name.rsplit(".", 1)
+    except ValueError:
+        raise RuntimeError(f"Failed to load package: {pkg_name}")
+
     return getattr(import_module(from_pkg), design_name)

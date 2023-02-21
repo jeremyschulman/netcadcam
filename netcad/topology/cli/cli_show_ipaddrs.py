@@ -23,7 +23,7 @@ from netcad.device import DeviceInterface, Device
 from netcad.device.profiles.l3_interfaces import InterfaceL3
 from netcad.cli.common_opts import opt_devices, opt_designs
 from netcad.cli.device_inventory import get_devices_from_designs
-from netcad.cli.netcad.clig_netcad_show import clig_design_show
+from netcad.cli.clig_netcad_show import clig_design_show
 
 
 # -----------------------------------------------------------------------------

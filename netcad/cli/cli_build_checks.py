@@ -109,7 +109,7 @@ async def _build_device_checks(device: Device, tc_dir: Path):
     """
     This function is used to build the collection of test-case files for the
     given device.  The collection of test-cases will be stored as JSON files,
-    the directory will be the name name as the device.name.
+    the directory will be the name as the device.name.
 
     Parameters
     ----------

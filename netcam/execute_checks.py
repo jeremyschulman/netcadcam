@@ -16,7 +16,7 @@ from contextvars import ContextVar
 from netcad.logger import get_logger
 from netcad.cli.keywords import markup_color
 from netcad.debug import debug_enabled, format_exc_message
-from netcad.netcam.dut import SetupError
+from netcam.dut import SetupError
 
 from netcad.checks import CheckStatus, CheckResult, Check
 from .save_check_results import device_checks_save_results
