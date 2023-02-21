@@ -16,7 +16,7 @@ import asyncio
 from netcad.config import netcad_globals
 from netcad.logger import get_logger
 from netcad.device import Device
-from netcam.dev_config import AsyncDeviceConfigurable
+from netcam.dcfg import AsyncDeviceConfigurable
 from netcad.cli.device_inventory import get_devices_from_designs
 from netcad.cli.common_opts import opt_devices, opt_designs, opt_configs_dir
 

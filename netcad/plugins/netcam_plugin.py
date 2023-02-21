@@ -7,7 +7,7 @@ from netcad.device import Device
 
 if TYPE_CHECKING:
     from netcam.dut import DeviceUnderTest
-    from netcam.dev_config import AsyncDeviceConfigurable
+    from netcam.dcfg import AsyncDeviceConfigurable
 
 from .plugins import Plugin, PluginProtocol
 

@@ -80,6 +80,7 @@ class PhyPortTypes(StrEnum):
     type_40GBASE_CR4 = "40GBASE-CR4"
     type_40GBASE_AOC = "40GBASE-AOC"
     type_40GBASE_SR4 = "40GBASE-SR4"
+    type_40GBASE_SRBD = "40GBASE-SRBD"
     type_40GBASE_XSR4 = "40GBASE-XSR4"
     type_40GBASE_BIDI = "40GBASE-BIDI"
     type_40GBASE_UNIV = "40GBASE-UNIV"
