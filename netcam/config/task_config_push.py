@@ -7,7 +7,7 @@ from netcad.logger import get_logger
 from netcam.dcfg import AsyncDeviceConfigurable
 
 
-from .deco_temp_file import temp_file
+from netcam.config.deco_temp_file import temp_file
 
 _OK_ = "[green]OK:[/green]"
 _CHANGED_ = "[blue]CHANGED:[/blue]"

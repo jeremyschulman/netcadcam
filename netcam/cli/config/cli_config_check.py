@@ -15,7 +15,7 @@ from netcad.cli.common_opts import opt_devices, opt_designs, opt_configs_dir
 from netcam.cli.netcam_filter_devices import netcam_filter_devices
 
 from .config_main import clig_config
-from .task_config_check import check_device_config
+from netcam.config import check_device_config
 
 
 @clig_config.command("check")
