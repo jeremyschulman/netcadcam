@@ -24,8 +24,10 @@ async def check_device_config(dev_cfg: AsyncDeviceConfigurable):
     # Run the config check based on the capabiltiies of the device driver
     # -------------------------------------------------------------------------
 
+    config_mode = "replace" if dev_cfg.replace else "merge"
+
     if dev_cfg.Capabilities.check in dev_cfg.capabilities:
-        log.info(f"{name}: config-check ...")
+        log.info(f"{name}: config-check {config_mode} ...")
 
         if errors := await dev_cfg.config_check():
             log.warning(f"{name}: {_FAIL_} config-check failed: {errors}")
@@ -35,7 +37,7 @@ async def check_device_config(dev_cfg: AsyncDeviceConfigurable):
         config_diff = dev_cfg.config_diff_contents
 
     elif dev_cfg.Capabilities.diff in dev_cfg.capabilities:
-        log.info(f"{name}: config-diff ...")
+        log.info(f"{name}: config-diff {config_mode} ...")
         config_diff = await dev_cfg.config_diff()
 
     else:

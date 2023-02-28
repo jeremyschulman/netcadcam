@@ -18,7 +18,9 @@ _FAIL_ = "[red]FAIL:[/red]"
 async def push_device_config(dev_cfg: AsyncDeviceConfigurable, rollback_timeout: int):
     name = dev_cfg.device.name
     log = get_logger()
-    log.info(f"{name}: deploying config ...")
+    config_mode = "replace" if dev_cfg.replace else "merge"
+
+    log.info(f"{name}: deploying config {config_mode} ...")
 
     try:
         await dev_cfg.config_push(rollback_timeout=rollback_timeout)
