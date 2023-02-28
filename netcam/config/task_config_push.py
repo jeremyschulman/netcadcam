@@ -7,7 +7,7 @@ from netcad.logger import get_logger
 from netcam.dcfg import AsyncDeviceConfigurable
 
 
-from .deco_temp_file import temp_file
+from netcam.config.deco_temp_file import temp_file
 
 _OK_ = "[green]OK:[/green]"
 _CHANGED_ = "[blue]CHANGED:[/blue]"
@@ -18,7 +18,9 @@ _FAIL_ = "[red]FAIL:[/red]"
 async def push_device_config(dev_cfg: AsyncDeviceConfigurable, rollback_timeout: int):
     name = dev_cfg.device.name
     log = get_logger()
-    log.info(f"{name}: deploying config ...")
+    config_mode = "replace" if dev_cfg.replace else "merge"
+
+    log.info(f"{name}: deploying config {config_mode} ...")
 
     try:
         await dev_cfg.config_push(rollback_timeout=rollback_timeout)

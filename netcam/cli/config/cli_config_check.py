@@ -1,21 +1,35 @@
 #  Copyright (c) 2021 Jeremy Schulman
 #  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+# -----------------------------------------------------------------------------
+# System Imports
+# -----------------------------------------------------------------------------
+
 import os
 from typing import Tuple
 from pathlib import Path
 import asyncio
 
+# -----------------------------------------------------------------------------
+# Private Imports
+# -----------------------------------------------------------------------------
+
 from netcad.config import netcad_globals
 from netcad.logger import get_logger
 from netcad.device import Device, DeviceNonExclusive
-from netcam.dcfg import AsyncDeviceConfigurable
 from netcad.cli.device_inventory import get_devices_from_designs
 from netcad.cli.common_opts import opt_devices, opt_designs, opt_configs_dir
+from netcam.dcfg import AsyncDeviceConfigurable
+from netcam.config import check_device_config
 from netcam.cli.netcam_filter_devices import netcam_filter_devices
 
-from .config_main import clig_config
-from .task_config_check import check_device_config
+from .cli_config_main import clig_config
+
+# -----------------------------------------------------------------------------
+#
+#                                 CODE BEGINS
+#
+# -----------------------------------------------------------------------------
 
 
 @clig_config.command("check")
@@ -70,13 +84,15 @@ async def run_check_configs(device_objs: list[Device], configs_dir: Path):
         dev_cfg.config_file = (
             configs_dir / dev_obj.design.name / (dev_obj.name + ".cfg")
         )
-        dev_cfg.config_id = f"{dev_cfg.device.name}-{os.getpid()}-check"
 
         # TODO: for now, we are usin the fact that the device in the design is
         #       either exclusive or non-exclusive to determine whether or not
         #       to check the config with replacing or merging the built config.
 
         dev_cfg.replace = not isinstance(dev_obj, DeviceNonExclusive)
+        dev_cfg.config_id = (
+            f"netcam-{'replace' if dev_cfg.replace else 'merge'}-{os.getpid()}"
+        )
         tasks.append(asyncio.create_task(check_device_config(dev_cfg)))
 
     # TODO: need to check for excpeitons

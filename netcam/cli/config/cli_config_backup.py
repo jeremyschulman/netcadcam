@@ -21,8 +21,8 @@ from netcad.cli.device_inventory import get_devices_from_designs
 from netcad.cli.common_opts import opt_devices, opt_designs, opt_configs_dir
 
 from netcam.cli.netcam_filter_devices import netcam_filter_devices
-from .config_main import clig_config
-from .task_backup_config import backup_device_config
+from netcam.config import backup_device_config
+from .cli_config_main import clig_config
 
 # -----------------------------------------------------------------------------
 # Exports (None)

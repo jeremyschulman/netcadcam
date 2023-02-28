@@ -1,12 +1,24 @@
 #  Copyright (c) 2021 Jeremy Schulman
 #  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+# -----------------------------------------------------------------------------
+# System Imports
+# -----------------------------------------------------------------------------
+
 import os
 from typing import Tuple
 from pathlib import Path
 import asyncio
 
+# -----------------------------------------------------------------------------
+# Public Imports
+# -----------------------------------------------------------------------------
+
 import click
+
+# -----------------------------------------------------------------------------
+# Private Imports
+# -----------------------------------------------------------------------------
 
 from netcad.config import netcad_globals
 from netcad.logger import get_logger
@@ -16,8 +28,14 @@ from netcad.cli.device_inventory import get_devices_from_designs
 from netcad.cli.common_opts import opt_devices, opt_designs, opt_configs_dir
 from netcam.cli.netcam_filter_devices import netcam_filter_devices
 
-from .config_main import clig_config
-from .task_config_push import push_device_config
+from .cli_config_main import clig_config
+from netcam.config import push_device_config
+
+# -----------------------------------------------------------------------------
+#
+#                                 CODE BEGINS
+#
+# -----------------------------------------------------------------------------
 
 
 @clig_config.command("push")
@@ -77,13 +95,15 @@ async def run_deploy_configs(
         dev_cfg.config_file = (
             configs_dir / dev_obj.design.name / (dev_obj.name + ".cfg")
         )
-        dev_cfg.config_id = f"{dev_cfg.device.name}-{os.getpid()}"
 
         # TODO: for now, we are usin the fact that the device in the design is
         #       either exclusive or non-exclusive to determine whether or not
         #       to check the config with replacing or merging the built config.
 
         dev_cfg.replace = not isinstance(dev_obj, DeviceNonExclusive)
+        dev_cfg.config_id = (
+            f"netcam-{'replace' if dev_cfg.replace else 'merge'}-{os.getpid()}"
+        )
 
         # TODO: need to check for exceptions
         await push_device_config(dev_cfg, rollback_timeout=rollback_timeout)
