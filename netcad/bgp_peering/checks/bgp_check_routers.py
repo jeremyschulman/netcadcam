@@ -127,7 +127,5 @@ class BgpRoutersCheckCollection(CheckCollection):
         )
 
         # return the test-cases sorted by check parameter values.
-
-        collection.checks.sort(key=lambda c: c.check_params.dict().values())
-
+        collection.checks.sort(key=lambda c: tuple(c.check_params.dict().values()))
         return collection
