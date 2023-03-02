@@ -33,7 +33,7 @@ from .cli_show_bgp import clig_show_bgp
 # -----------------------------------------------------------------------------
 
 
-@clig_show_bgp.command(name="routers")
+@clig_show_bgp.command(name="speakers")
 @opt_designs()
 @opt_devices()
 def cli_show_bgp_routers(devices: Tuple[str], designs: Tuple[str]):
@@ -109,5 +109,5 @@ def display_device_routers(map_dev_bgp_spkrs):
                 str(len(spkr.neighbors)),
             )
 
-    table.title = f"{len(table.rows)} BGP routers"
+    table.title = f"{len(table.rows)} BGP speakers"
     console.print("\n", table)
