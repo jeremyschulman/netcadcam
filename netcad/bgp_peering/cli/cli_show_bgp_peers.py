@@ -58,26 +58,57 @@ def display_bgp_peers(map_dev_bgp_spkrs):
     """
     console = Console()
     table = Table(
+        # Local information
         "Device",
+        "VRF",
+        "ASN",
+        "Router-ID",
+        "Via-IP",
+        "BGP Type",
+        # Peering information
+        "Via-IP",
         "Router-ID",
         "ASN",
         "VRF",
-        "#Neighbors",
+        "Device",
         title_justify="left",
         show_header=True,
         show_lines=True,
         header_style="bold magenta",
     )
 
+    # the BGP peers share a common ID value.  We will use this value to ensure
+    # we only show one instance of the peering relationship.
+
+    known_peer_ids = set()
+
     for hostname, bgp_spkrs in map_dev_bgp_spkrs.items():
         for spkr in bgp_spkrs:
-            table.add_row(
-                hostname,
-                str(spkr.router_id),
-                str(spkr.asn),
-                spkr.vrf or "default",
-                str(len(spkr.neighbors)),
-            )
+            for nei in spkr.neighbors:
+                # if we're already seen this BGP peering relationship then skip
+                # it so we do not have duplicate A <> B,  B <> A table entries.
 
-    table.title = f"{len(table.rows)} BGP speakers"
+                if nei.peer_id in known_peer_ids:
+                    continue
+
+                known_peer_ids.add(nei.peer_id)
+
+                lcl_spkr = nei.speaker
+                rmt_spkr = nei.remote.speaker
+
+                table.add_row(
+                    hostname,
+                    lcl_spkr.vrf or "default",
+                    str(lcl_spkr.asn),
+                    str(lcl_spkr.router_id),
+                    str(nei.via_ip),
+                    nei.bgp_type,
+                    str(nei.remote.via_ip),
+                    str(rmt_spkr.router_id),
+                    str(rmt_spkr.asn),
+                    rmt_spkr.vrf or "default",
+                    rmt_spkr.device.name,
+                )
+
+    table.title = f"{len(table.rows)} BGP peers"
     console.print("\n", table)
