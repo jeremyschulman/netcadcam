@@ -6,7 +6,6 @@
 # -----------------------------------------------------------------------------
 
 from typing import Tuple
-from collections import defaultdict
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -19,11 +18,8 @@ from rich.console import Console
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.logger import get_logger
 from netcad.design import load_design
 from netcad.cli.common_opts import opt_devices, opt_designs
-
-from ..bgp_peering_design_service import BgpPeeringDesignService
 from .cli_show_bgp import clig_show_bgp
 from .bgp_design_spkrs import find_design_bgp_speakers
 

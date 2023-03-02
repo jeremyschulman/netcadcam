@@ -2,4 +2,4 @@
 #  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from . import cli_show_bgp_peers
-from . import cli_show_bgp_routers
+from . import cli_show_bgp_spakers
