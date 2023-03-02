@@ -25,6 +25,7 @@ from netcad.cli.common_opts import opt_devices, opt_designs
 
 from ..bgp_peering_design_service import BgpPeeringDesignService
 from .cli_show_bgp import clig_show_bgp
+from .bgp_design_spkrs import find_design_bgp_speakers
 
 # -----------------------------------------------------------------------------
 #
@@ -41,41 +42,17 @@ def cli_show_bgp_routers(devices: Tuple[str], designs: Tuple[str]):
     Show the BGP routers in the design(s)
     """
 
-    log = get_logger()
-
     # -------------------------------------------------------------------------
     # find all BGP services in the given design(s)
     # -------------------------------------------------------------------------
 
     design_insts = {load_design(dsn_name) for dsn_name in designs}
-    if not design_insts:
-        log.error("No designs found")
-        return
 
-    bgp_svc_insts: set[BgpPeeringDesignService] = set()
-    for design in design_insts:
-        bgp_svc_insts.update(design.services_of(BgpPeeringDesignService))
-
-    if not bgp_svc_insts:
-        log.error("No BGP services found")
-        return
-
-    # -------------------------------------------------------------------------
-    # create a map of device-name to a list of (BGP-SVC, BGP-SPKR) so that the
-    # report is organized by device.  If the User provided a list of `devices`
-    # to filter against, ensure only those devices end up in the map.
-    # -------------------------------------------------------------------------
-
-    map_dev_bgp_spkrs = defaultdict(list)
-    for bgp_svc in bgp_svc_insts:
-        for spkr in bgp_svc.speakers.values():
-            hostname = spkr.device.name
-            if devices and hostname not in devices:
-                continue
-            map_dev_bgp_spkrs[hostname].append(spkr)
-
-    if not map_dev_bgp_spkrs:
-        log.error("No devices found in BGP services")
+    if not (
+        map_dev_bgp_spkrs := find_design_bgp_speakers(
+            design_insts=design_insts, devices=devices
+        )
+    ):
         return
 
     display_device_routers(map_dev_bgp_spkrs)
