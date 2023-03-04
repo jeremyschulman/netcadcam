@@ -54,7 +54,7 @@ class P2PInterfaces(UserDict):
     ) -> Tuple[IPv4Interface]:
         """
         Returns a tuple of two IPv4 Interface instances with /31 prefixlen
-        whose values are the offset from the network address.  The first is the
+        whose values are the offset from the given key.  The first is the
         "even" numbered interface and the second is the "odd".
 
         Parameters
@@ -71,6 +71,12 @@ class P2PInterfaces(UserDict):
             "192.168.0.0/16" and the key was the tupe (2, 10), then the
             returned IPs would be IPv4Interface instance with values:
             (192.168.2.10/16, 192.168.2.11/16)
+
+        Raises
+        ------
+        ValueError:
+           * The key is a tuple, length > 4, only IPv4 is supported
+           * The key results in a /31 subnet that is not withing the network
         """
 
         # if the key is not a tuple, then shape it into one.
