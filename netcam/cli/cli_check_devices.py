@@ -138,9 +138,10 @@ def cli_test_device(
 
         for dev_obj in device_objs:
             if not (pg_obj := netcam_plugins.get(dev_obj.os_name)):
-                raise RuntimeError(
-                    f"Missing testing plugin for {dev_obj.name}: os-name: {dev_obj.os_name}"
+                log.error(
+                    f"Missing testing plugin for {dev_obj.name}: os-name: {dev_obj.os_name}, skipping."
                 )
+                continue
 
             duts[dev_obj] = dut_obj = pg_obj.module.plugin_get_dut(device=dev_obj)
 
