@@ -1,3 +1,6 @@
+#  Copyright (c) 2021 Jeremy Schulman
+#  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
 # -----------------------------------------------------------------------------
 # System Imports
 # -----------------------------------------------------------------------------
@@ -5,6 +8,19 @@
 from typing import Tuple
 from ipaddress import IPv4Network, IPv4Interface
 from collections import UserDict
+
+# -----------------------------------------------------------------------------
+# Exports
+# -----------------------------------------------------------------------------
+
+__all__ = ["P2PInterfaces"]
+
+
+# -----------------------------------------------------------------------------
+#
+#                                 CODE BEGINS
+#
+# -----------------------------------------------------------------------------
 
 
 class P2PInterfaces(UserDict):
