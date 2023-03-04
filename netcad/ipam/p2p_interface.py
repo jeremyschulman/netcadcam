@@ -46,8 +46,12 @@ class P2PInterfaces(UserDict):
         super().__init__()
         self.network = IPv4Network(network)
         self.octet_mode = octet_mode
+        self.new_prefix = 31
 
-    def __missing__(self, key: int | tuple[int], new_prefix=31) -> Tuple[IPv4Interface]:
+    def __missing__(
+        self,
+        key: int | tuple[int],
+    ) -> Tuple[IPv4Interface]:
         """
         Returns a tuple of two IPv4 Interface instances with /31 prefixlen
         whose values are the offset from the network address.  The first is the
@@ -85,11 +89,11 @@ class P2PInterfaces(UserDict):
         netaddr_offset, is_odd = divmod(key_offset, 2)
 
         p2p_subnet = IPv4Network(
-            (self.network.network_address + (netaddr_offset * 2), new_prefix)
+            (self.network.network_address + (netaddr_offset * 2), self.new_prefix)
         )
 
         if not self.network.supernet_of(p2p_subnet):
-            raise ValueError(f"{key} not a subnet of {self.network}")
+            raise ValueError(f"{p2p_subnet} not a subnet of {self.network}")
 
         p2p_ifs = tuple(
             IPv4Interface((host, p2p_subnet.prefixlen)) for host in p2p_subnet.hosts()
