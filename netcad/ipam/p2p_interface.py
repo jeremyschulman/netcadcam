@@ -5,7 +5,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Tuple
+from typing import Optional
 from ipaddress import IPv4Network, IPv4Interface
 from collections import UserDict
 
@@ -58,16 +58,16 @@ class P2PInterfaces(UserDict):
     # if_b = IPv4Interface("10.115.124.11/31")
     """
 
-    def __init__(self, network: str, octet_mode=True):
+    def __init__(self, network: str, octet_mode=True, new_prefix: Optional[int] = None):
         super().__init__()
         self.network = IPv4Network(network)
         self.octet_mode = octet_mode
-        self.new_prefix = 31
+        self.new_prefix = new_prefix or 31
 
     def __missing__(
         self,
         key: int | tuple[int],
-    ) -> Tuple[IPv4Interface]:
+    ) -> tuple[IPv4Interface, ...]:
         """
         Returns a tuple of two IPv4 Interface instances with /31 prefixlen
         whose values are the offset from the given key.  The first is the
