@@ -89,7 +89,7 @@ class IPAMNetwork(UserDict):
             network collection.  This value is used by the Caller when
             retrieving the interface instance via dict-getitem, for example:
 
-            nwk.interface(name="foo", host_octet=22)
+            nwk.interface(name="foo", host_offset=22)
 
             ... later ...
 
@@ -120,12 +120,12 @@ class IPAMNetwork(UserDict):
 
         return self[name]
 
-    def loopback(self, name: t.Hashable, host_octet: int) -> AnyIPInterface:
+    def loopback(self, name: t.Hashable, host_offset: int) -> AnyIPInterface:
         return self.interface(
-            name, host_octet, new_prefix=self.ip_network.max_prefixlen
+            name, host_offset, new_prefix=self.ip_network.max_prefixlen
         )
 
-    def host(self, name: t.Hashable, offset_octet: int) -> AnyIPAddress:
+    def host(self, name: t.Hashable, offset_offset: int) -> AnyIPAddress:
         """
         Create a host IP address for the given name usig the `host_offset`
         combined with the subnet address.
@@ -136,7 +136,7 @@ class IPAMNetwork(UserDict):
             Used to uniquely identify the name of the host; does not need to be a string but
             must be a hashable value.
 
-        offset_octet: int
+        offset_offset: int
             The last octet of the IP address
 
         Returns
@@ -144,7 +144,7 @@ class IPAMNetwork(UserDict):
         The ipaddress instance for the IP address.
         """
         self[name] = ipaddress.ip_address(
-            f"{self.ip_network.network_address + offset_octet}"
+            f"{self.ip_network.network_address + offset_offset}"
         )
 
         return self[name]
@@ -161,7 +161,7 @@ class IPAMNetwork(UserDict):
         """
         ip = self.ip_network.network_address + self._gateway_host_octet
         return self.setdefault(
-            name, ipaddress.ip_interface((ip, self.ip_network.prefixlen))
+            name, ipaddress.ip_interface((ip, self.ip_network.prefixlen))  # noqa
         )
 
     def network(self, name: t.Hashable, prefix: str | AnyIPNetwork) -> "IPAMNetwork":
