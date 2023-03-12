@@ -40,6 +40,7 @@ class InterfaceLagMember(InterfaceProfile):
 
 
 class InterfaceLag(InterfaceVirtual):
+    is_lag = True
     if_lag_member_profile: Optional[Type[InterfaceLagMember]] = InterfaceLagMember
 
     def __init__(
