@@ -46,15 +46,23 @@ def netcad_import_package(pkg_name: str) -> ModuleType:
     # direct import_module will fail resulting in a ModuleNotFound Error.
     try:
         return import_module(pkg_name)
-    except ModuleNotFoundError:
-        pass
+    except ModuleNotFoundError as exc:
+        if exc.name != pkg_name:
+            raise RuntimeError(
+                f"Failed to load {pkg_name} due to missing dependency: {exc.name}"
+            )
+
+        # otherwise pass
 
     # Try splitting the package as given into the package and then an attribute
     # within that module.  This will handle the case described above.
 
     try:
         from_pkg, design_name = pkg_name.rsplit(".", 1)
-    except ValueError:
-        raise RuntimeError(f"Failed to load package: {pkg_name}")
+    except ValueError as exc:
+        import traceback
+
+        tb_data = traceback.format_tb(exc.__traceback__)
+        raise RuntimeError(f"Failed to load package: {pkg_name}: {tb_data}")
 
     return getattr(import_module(from_pkg), design_name)

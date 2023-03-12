@@ -14,6 +14,7 @@ class PhyPortSpeeds(IntEnum):
     speed_10G = 10_000
     speed_25G = 25_000
     speed_40G = 40_000
+    speed_50G = 50_000
     speed_100G = 100_000
     speed_200G = 200_000
     speed_400G = 400_000

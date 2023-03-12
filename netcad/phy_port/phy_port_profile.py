@@ -96,8 +96,10 @@ class PhyPortProfile(BaseModel):
 
     transceiver: Optional[PortTransceiver]
 
-    # `poe` - when used, denotes if POE is enabled/disabled
+    # all that do not have a transceiver  need a form-factor defined.
+    form_factor: Optional[PhyPortFormFactorType] = Field(default=None)
 
+    # `poe` - when used, denotes if POE is enabled/disabled
     poe: Optional[bool] = Field(default=None)
 
     # `speed` - when used, changes the port default speed (megabits/sec)
