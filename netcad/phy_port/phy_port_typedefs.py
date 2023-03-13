@@ -145,7 +145,6 @@ class CableTerminationType(StrEnum):
 class PhyPortFormFactorType(StrEnum):
     """denotes the transciever form-factor type"""
 
-    AOC = enum.auto()
     SFP = enum.auto()
     SFPP = enum.auto()  # SFP+
     SFP28 = enum.auto()
@@ -153,7 +152,6 @@ class PhyPortFormFactorType(StrEnum):
     QSFPP = enum.auto()  # QSFP+
     QSFP28 = enum.auto()
     RJ45 = enum.auto()
-    DAC = enum.auto()
 
 
 class PhyPortReachType(StrEnum):

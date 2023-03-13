@@ -20,6 +20,7 @@ from rich.table import Table, Text
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device
+from netcad.device.profiles import InterfaceProfile
 from netcad.device.profiles import interface_profile as ip
 from netcad.logger import get_logger
 
@@ -93,6 +94,7 @@ def show_device_interfaces(device: Device, **options):
         "Description",
         "Profile",
         "Port",
+        "Speed\n(Kbps)",
         show_header=True,
         header_style="bold magenta",
     )
@@ -108,7 +110,7 @@ def show_device_interfaces(device: Device, **options):
         for iface in sorted(device.interfaces.values()):
             if not iface.used:
                 if_spec = device.device_type_spec.get_interface(if_name=iface.name)
-                add_row(iface.name, None, keywords.NOT_USED, if_spec.formfactor)
+                add_row(iface.name, None, keywords.NOT_USED, if_spec.formfactor, None)
 
         console.print(table)
         return
@@ -118,14 +120,16 @@ def show_device_interfaces(device: Device, **options):
     # -------------------------------------------------------------------------
 
     for iface in sorted(device.interfaces.values()):
+        pp_speed = None
         if not iface.used:
             if options["show_all"]:
                 if_spec = device.device_type_spec.get_interface(if_name=iface.name)
-                add_row(iface.name, None, keywords.NOT_USED, if_spec.formfactor)
+                add_row(iface.name, None, keywords.NOT_USED, if_spec.formfactor, None)
             continue
 
+        if_prof: InterfaceProfile
         if not (if_prof := getattr(iface, "profile", None)):
-            add_row(iface.name, iface.desc, None, keywords.NOT_USED)
+            add_row(iface.name, iface.desc, None, keywords.NOT_USED, None)
             continue
 
         if_prof_name = if_prof.name
@@ -133,11 +137,12 @@ def show_device_interfaces(device: Device, **options):
             pp_name = keywords.MISSING
         else:
             pp_name = port_prof.name
+            pp_speed = f"{int(port_prof.speed):,}"
 
         if isinstance(if_prof, ip.InterfaceVirtual):
             pp_name = keywords.VIRTUAL
 
         if_desc = Text(iface.desc, "yellow") if if_prof.is_reserved else iface.desc
-        add_row(iface.name, if_desc, if_prof_name, pp_name)
+        add_row(iface.name, if_desc, if_prof_name, pp_name, pp_speed)
 
     console.print(table)
