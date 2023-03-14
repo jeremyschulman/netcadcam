@@ -105,6 +105,7 @@ def show_network_devices(design: Design, **flags):
         "OS",
         "Product Model",
         "Primary IP",
+        "Managed Mode",
         show_header=True,
         header_style="bold magenta",
         title_justify="left",
@@ -126,7 +127,8 @@ def show_network_devices(design: Design, **flags):
         primary_ip = dev.primary_ip or "[red]unassigned[/red]"
 
         table.add_row(
-            dev.name, dev_type, dev.os_name, dev.product_model, str(primary_ip)
+            dev.name, dev_type, dev.os_name, dev.product_model, str(primary_ip),
+            "partial" if dev.is_not_exclusive else "complete"
         )
 
     console.print("\n", table)
