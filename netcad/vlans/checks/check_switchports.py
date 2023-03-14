@@ -5,7 +5,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import List, Optional, Union
+from typing import List, Optional, Union, TYPE_CHECKING
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -20,6 +20,10 @@ from pydantic import BaseModel, validator
 from netcad.device import Device
 from netcad.vlans import VlanProfile
 from netcad.vlans.profiles.l2_interfaces import InterfaceL2Access, InterfaceL2Trunk
+
+if TYPE_CHECKING:
+    from ..vlan_design_service import VlansDesignService
+
 
 from netcad.checks import (
     CheckCollection,
@@ -104,9 +108,12 @@ class SwitchportCheckResult(CheckResult[SwitchportCheck]):
 class SwitchportCheckCollection(CheckCollection):
     name = "switchports"
     checks: Optional[List[SwitchportCheck]]
+    config: Optional[dict]
 
     @classmethod
-    def build(cls, device: Device, **kwargs) -> "SwitchportCheckCollection":
+    def build(
+        cls, device: Device, design_service: "VlansDesignService"
+    ) -> "SwitchportCheckCollection":
         checks = list()
 
         for if_name, interface in device.interfaces.used().items():
@@ -134,4 +141,6 @@ class SwitchportCheckCollection(CheckCollection):
                 SwitchportCheck(check_params=tc_params, expected_results=tc_expd)
             )
 
-        return SwitchportCheckCollection(device=device.name, checks=checks)
+        return SwitchportCheckCollection(
+            device=device.name, checks=checks, config=design_service.config
+        )
