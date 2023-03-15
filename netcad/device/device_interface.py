@@ -125,6 +125,7 @@ class DeviceInterface(object):
         self.profile = profile
         self.cable_peer: Optional[DeviceInterface] = None
         self.interfaces = interfaces
+        self._notes = list()
 
     # -------------------------------------------------------------------------
     #
@@ -245,6 +246,23 @@ class DeviceInterface(object):
         self.enabled = True
 
         profile.interface = self
+
+    def add_note(self, note: str):
+        """
+        This function is used to add a text string note to the interface.  This
+        note is used during any output information when needed; for example the
+        output of the checks may report a failure, and this note may explain
+        that failure.
+        """
+        self._notes.append(note)
+
+    def get_notes(self, as_list: Optional[bool] = False) -> str | list[str]:
+        """
+        This function return the notes as a single string with newlines, by
+        default. If the as_list parameter is True, then this function will
+        return the notes in a list directly.
+        """
+        return self._notes if as_list else "\n".join(self._notes)
 
     @staticmethod
     def sorted_interface_names(if_names: Iterable[str]) -> List[str]:

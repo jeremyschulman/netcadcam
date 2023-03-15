@@ -165,6 +165,12 @@ def _finalize_result(result: CheckResult, **kwargs) -> CheckResult:
     expd = check.expected_results
     msrd = result.measurement
 
+    # if the result status is already assigned to INFO, then do not do any
+    # further processing on it.
+
+    if result.status == CheckStatus.INFO:
+        return result
+
     # -------------------------------------------------------------------------
     # if the check-result does not contain a measurement value, then this
     # condition indicates that the check failed because the "thing" to be
