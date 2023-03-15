@@ -254,15 +254,13 @@ class DeviceInterface(object):
         output of the checks may report a failure, and this note may explain
         that failure.
         """
-        self._notes.append(note)
+        self._notes.append((self, note))
 
-    def get_notes(self, as_list: Optional[bool] = False) -> str | list[str]:
+    def get_notes(self) -> list[tuple["DeviceInterface", str]]:
         """
-        This function return the notes as a single string with newlines, by
-        default. If the as_list parameter is True, then this function will
-        return the notes in a list directly.
+        This function returns the collection of notes for this interface.
         """
-        return self._notes if as_list else "\n".join(self._notes)
+        return self._notes
 
     @staticmethod
     def sorted_interface_names(if_names: Iterable[str]) -> List[str]:

@@ -312,6 +312,13 @@ class Device(Registry, registry_name="devices"):
 
         return self.template_env.get_template(str(as_path))
 
+    def get_interfaces_notes(self) -> list:
+        return [
+            _notes
+            for if_obj in self.interfaces.values()
+            if (_notes := if_obj.get_notes())
+        ]
+
     # -------------------------------------------------------------------------
     #
     #                            Class Methods
