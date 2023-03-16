@@ -44,7 +44,7 @@ from netcad.cli.clig_netcad_show import clig_design_show
     "--all", "show_all", help="show all interfaces, including unused", is_flag=True
 )
 @opt_designs()
-@opt_devices(required=True)
+@opt_devices()
 def cli_design_report_interfaces(devices: Tuple[str], designs: Tuple[str], **flags):
     """
     show device interfaces usage
@@ -97,6 +97,8 @@ def show_device_interfaces(device: Device, **options):
         "Speed\n(Kbps)",
         show_header=True,
         header_style="bold magenta",
+        title_justify="left",
+        title_style="bold",
     )
 
     def add_row(*columns):
@@ -145,4 +147,5 @@ def show_device_interfaces(device: Device, **options):
         if_desc = Text(iface.desc, "yellow") if if_prof.is_reserved else iface.desc
         add_row(iface.name, if_desc, if_prof_name, pp_name, pp_speed)
 
+    table.title = f"{device.name}: {len(table.rows)} interfaces"
     console.print(table)

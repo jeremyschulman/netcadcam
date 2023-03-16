@@ -92,7 +92,4 @@ def show_design_summary_table(
         f"Design: {design.name}, Total Results: {design_tc_counts}", justify="left"
     )
 
-    # TODO: show design notes.
     console.print("\n", table, "\n")
-    if design.notes:
-        console.print(design.notes.table(), "\n")

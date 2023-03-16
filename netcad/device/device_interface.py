@@ -9,14 +9,20 @@ from typing import Optional, Union, Iterable, List, Callable
 from typing import TYPE_CHECKING
 import re
 
-if TYPE_CHECKING:
-    from netcad.device.profiles import InterfaceProfile
-
 # -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
 
 import jinja2
+
+# -----------------------------------------------------------------------------
+# Private Imports
+# -----------------------------------------------------------------------------
+
+if TYPE_CHECKING:
+    from netcad.device.profiles import InterfaceProfile
+
+from netcad.notes import Notepad
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -125,7 +131,16 @@ class DeviceInterface(object):
         self.profile = profile
         self.cable_peer: Optional[DeviceInterface] = None
         self.interfaces = interfaces
-        self._notes = list()
+
+        # ---------------------------------------------------------------------
+        # for notes on interfaces ...
+        # ---------------------------------------------------------------------
+
+        def note_sig(_if_obj: "DeviceInterface") -> str:
+            _sig = f"{_if_obj.device.name}: {_if_obj.short_name}: {_if_obj.desc}"
+            return _sig if not _if_obj.profile else _sig + f": ({_if_obj.profile.name})"
+
+        self.notepad: Notepad["DeviceInterface"] = Notepad(self, singature=note_sig)
 
     # -------------------------------------------------------------------------
     #
@@ -246,21 +261,6 @@ class DeviceInterface(object):
         self.enabled = True
 
         profile.interface = self
-
-    def add_note(self, note: str):
-        """
-        This function is used to add a text string note to the interface.  This
-        note is used during any output information when needed; for example the
-        output of the checks may report a failure, and this note may explain
-        that failure.
-        """
-        self._notes.append((self, note))
-
-    def get_notes(self) -> list[tuple["DeviceInterface", str]]:
-        """
-        This function returns the collection of notes for this interface.
-        """
-        return self._notes
 
     @staticmethod
     def sorted_interface_names(if_names: Iterable[str]) -> List[str]:
