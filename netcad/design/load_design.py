@@ -58,13 +58,13 @@ def load_design(design_name: str) -> Design:
     The design instance associated with the design-name.
     """
 
-    if not (design_config := netcad_globals.g_netcad_designs.get(design_name)):
+    if not (design_decl := netcad_globals.g_netcad_designs.get(design_name)):
         raise RuntimeError(
             f'Missing design "{design_name}" definitions in config-file: '
         )
 
-    design_pkg = design_config.get("package")
-    group_members = design_config.get("group")
+    design_pkg = design_decl.get("package")
+    group_members = design_decl.get("group")
 
     if not group_members and not design_pkg:
         raise RuntimeError(
@@ -76,7 +76,7 @@ def load_design(design_name: str) -> Design:
 
     if design_pkg:
         return load_design_singleton(
-            design_name=design_name, pkg_name=design_pkg, design_config=design_config
+            design_name=design_name, pkg_name=design_pkg, design_decl=design_decl
         )
 
     # if here, then then the User selected a group that does not include a
@@ -84,7 +84,7 @@ def load_design(design_name: str) -> Design:
     # automatically.
 
     return load_design_group(
-        group_name=design_name, group_members=group_members, design_config=design_config
+        group_name=design_name, group_members=group_members, design_config=design_decl
     )
 
 
@@ -122,7 +122,7 @@ def load_design_group(
     return group_design
 
 
-def load_design_singleton(design_name: str, pkg_name: str, design_config: dict):
+def load_design_singleton(design_name: str, pkg_name: str, design_decl: dict) -> Design:
     """
     Load a single design module, calling the `create_design` method.
 
@@ -135,7 +135,7 @@ def load_design_singleton(design_name: str, pkg_name: str, design_config: dict):
         The package name in dotted-notation where the create_design function
         is located.
 
-    design_config: dict
+    design_decl: dict
         The dict instance of the design as found in the User configuration.  This
         is the entire body contents of the [[design]] block associated with
         the design-name.
@@ -167,10 +167,10 @@ def load_design_singleton(design_name: str, pkg_name: str, design_config: dict):
     # ensure there is a design.config dictionary, that is initialized
     # with the description value from the config file.from
 
-    design_config.setdefault("config", {})
-    design_config["config"]["description"] = design_config.get("description", "")
+    design_decl.setdefault("config", {})
+    design_decl["config"]["description"] = design_decl.get("description", "")
 
-    design_inst = Design(name=design_name, config=design_config)
+    design_inst = Design(name=design_name, config=design_decl["config"])
 
     # Execute the design function in the module if present.  If one is not
     # found, then this is a Designer error, and raise a Runtime exception.

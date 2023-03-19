@@ -93,5 +93,3 @@ def show_design_summary_table(
     )
 
     console.print("\n", table, "\n")
-    if design.notes:
-        console.print(design.notes.table(), "\n")

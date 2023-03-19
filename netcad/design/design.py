@@ -15,7 +15,7 @@ from types import ModuleType
 
 from netcad.registry import Registry
 from netcad.device import Device
-from netcad.notes import DesignNotes
+from netcad.notepad import Notepad
 from netcad.ipam import IPAM
 
 # -----------------------------------------------------------------------------
@@ -72,8 +72,8 @@ class Design(Registry, registry_name="designs"):
 
         self.group: Optional[List[str]] = None
 
-        # collection of notes defined by the Designer
-        self.notes = DesignNotes()
+        # collection of notepad defined by the Designer
+        self.notes: Notepad["Design"] = Notepad(self)
         self.notes.design = self
 
         # The config that originated from the netcad configuration file for this

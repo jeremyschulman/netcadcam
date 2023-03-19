@@ -9,14 +9,19 @@ from typing import Optional, Union, Iterable, List, Callable
 from typing import TYPE_CHECKING
 import re
 
-if TYPE_CHECKING:
-    from netcad.device.profiles import InterfaceProfile
-
 # -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
 
 import jinja2
+
+# -----------------------------------------------------------------------------
+# Private Imports
+# -----------------------------------------------------------------------------
+from netcad.notepad import Notepad, Note, DateExpiryType
+
+if TYPE_CHECKING:
+    from netcad.device.profiles import InterfaceProfile
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -125,6 +130,32 @@ class DeviceInterface(object):
         self.profile = profile
         self.cable_peer: Optional[DeviceInterface] = None
         self.interfaces = interfaces
+
+    # -------------------------------------------------------------------------
+    #
+    #                          Public Methods
+    #
+    # -------------------------------------------------------------------------
+
+    @staticmethod
+    def note_sig(note: Note) -> str:
+        """
+        For note-taking on the interface, this method defines show the "signature"
+        is shown in the CLI output.
+
+        Returns
+        -------
+        The "signature" string value referring to this specific device-interface
+        """
+        self: "DeviceInterface" = note.signatory
+        _sig = f"{self.device.name}: {self.short_name}: {self.desc}"
+        return _sig if not self.profile else _sig + f": ({self.profile.name})"
+
+    def add_note(self, message: str, expires: Optional[DateExpiryType] = None):
+        notepad: Notepad = self.device.notepad
+        notepad.add_note(
+            signatory=self, message=message, expires=expires, signature=self.note_sig
+        )
 
     # -------------------------------------------------------------------------
     #

@@ -161,9 +161,6 @@ def cli_report_tests(
             for dev_obj in device_objs:
                 show_device_brief_table(console, dev_obj, optionals)
 
-            if design.notes:
-                console.print("\n", design.notes.table(), "\n")
-
         # done with brief mode, exit CLI processing
         return
 
@@ -174,6 +171,3 @@ def cli_report_tests(
     for design, device_objs in devices_by_design:
         for dev_obj in device_objs:
             show_device_test_logs(console, dev_obj, optionals)
-
-        if design.notes:
-            console.print("\n", design.notes.table(), "\n")

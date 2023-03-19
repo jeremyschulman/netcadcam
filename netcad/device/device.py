@@ -27,6 +27,7 @@ from netcad.registry import Registry
 from netcad.config import Environment
 from netcad.config import netcad_globals
 from netcad.jinja2.j2_env import get_env, expand_templates_dirs
+from netcad.notepad import Notepad
 
 from .device_type import DeviceType, DeviceTypeRegistry
 from .device_interfaces import DeviceInterfaces
@@ -173,6 +174,7 @@ class Device(Registry, registry_name="devices"):
             setattr(self, attr, value)
 
         self.template_env: Optional[jinja2.Environment] = None
+        self.notepad = Notepad(owner=self)
 
     @classmethod
     def parse_interface_name(cls, name: str) -> DeviceInterfaceNameParsed:
@@ -311,6 +313,13 @@ class Device(Registry, registry_name="devices"):
             )
 
         return self.template_env.get_template(str(as_path))
+
+    def get_interfaces_notes(self) -> list:
+        return [
+            _notes
+            for if_obj in self.interfaces.values()
+            if (_notes := if_obj.get_notes())
+        ]
 
     # -------------------------------------------------------------------------
     #
