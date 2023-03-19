@@ -18,11 +18,10 @@ import jinja2
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
+from netcad.notepad import Notepad, Note, DateExpiryType
 
 if TYPE_CHECKING:
     from netcad.device.profiles import InterfaceProfile
-
-from netcad.notes import Notepad
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -132,15 +131,31 @@ class DeviceInterface(object):
         self.cable_peer: Optional[DeviceInterface] = None
         self.interfaces = interfaces
 
-        # ---------------------------------------------------------------------
-        # for notes on interfaces ...
-        # ---------------------------------------------------------------------
+    # -------------------------------------------------------------------------
+    #
+    #                          Public Methods
+    #
+    # -------------------------------------------------------------------------
 
-        def note_sig(_if_obj: "DeviceInterface") -> str:
-            _sig = f"{_if_obj.device.name}: {_if_obj.short_name}: {_if_obj.desc}"
-            return _sig if not _if_obj.profile else _sig + f": ({_if_obj.profile.name})"
+    @staticmethod
+    def note_sig(note: Note) -> str:
+        """
+        For note-taking on the interface, this method defines show the "signature"
+        is shown in the CLI output.
 
-        self.notepad: Notepad["DeviceInterface"] = Notepad(self, singature=note_sig)
+        Returns
+        -------
+        The "signature" string value referring to this specific device-interface
+        """
+        self: "DeviceInterface" = note.signatory
+        _sig = f"{self.device.name}: {self.short_name}: {self.desc}"
+        return _sig if not self.profile else _sig + f": ({self.profile.name})"
+
+    def add_note(self, message: str, expires: Optional[DateExpiryType] = None):
+        notepad: Notepad = self.device.notepad
+        notepad.add_note(
+            signatory=self, message=message, expires=expires, signature=self.note_sig
+        )
 
     # -------------------------------------------------------------------------
     #

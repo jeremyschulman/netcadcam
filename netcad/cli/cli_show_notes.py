@@ -60,10 +60,9 @@ def cli_show_notes(
     # -------------------------------------------------------------------------
 
     for dev in dev_objs:
-        for if_obj in dev.interfaces.values():
-            for note in if_obj.notepad.notes:
-                exp_on = note.expires.slang_time() if note.expires else ""
-                table.add_row(if_obj.notepad.signature(note.obj), note.message, exp_on)
+        for note in dev.notepad.notes:
+            exp_on = note.expires.slang_time() if note.expires else ""
+            table.add_row(note.signature(), note.message, exp_on)
         table.add_section()
 
     if not table.rows:

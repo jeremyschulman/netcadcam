@@ -15,7 +15,7 @@ from types import ModuleType
 
 from netcad.registry import Registry
 from netcad.device import Device
-from netcad.notes import Notepad
+from netcad.notepad import Notepad
 from netcad.ipam import IPAM
 
 # -----------------------------------------------------------------------------
