@@ -6,6 +6,6 @@ from .cli_netcad_main import cli
 
 from . import cli_build_checks
 from . import cli_build_configs
-from . import cli_design_list
+from . import cli_list_designs
 from . import cli_show_services
 from . import cli_show_notes
