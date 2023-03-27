@@ -113,9 +113,14 @@ class ServiceReporting:
         ct_spokes = [check_type.check_type_() for check_type in spoke_check_types]
 
         for dev in self.devices:
-            res_map = self.results_map[dev]
+            if not (res_map := self.results_map.get(dev)):
+                continue
 
-            hub_r = res_map[ct_hub][dev.name]
+            # if the device is not in the results for any reason, then skip
+            # this device.
+
+            if not (hub_r := res_map[ct_hub].get(dev.name)):
+                continue
 
             # associate the port, single-slave, and exclusive checks to the
             # ptp-system node

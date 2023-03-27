@@ -66,7 +66,13 @@ class TopologyResultsGrapher(ServiceReporting):
 
                 rmt_iface = dev.interfaces[dev_ifname].cable_peer
                 rmt_dev = rmt_iface.device
-                rmt_cable_r = build[rmt_dev][rmt_iface.name]
+
+                # need to ensure that the results for this check actually
+                # exist; since skipped devices (for any reason) will be
+                # missing.
+
+                if not (rmt_cable_r := build[rmt_dev].get(rmt_iface.name)):
+                    continue
 
                 self.add_graph_edge(
                     source=cable_r, target=rmt_cable_r, status=cable_r.status
