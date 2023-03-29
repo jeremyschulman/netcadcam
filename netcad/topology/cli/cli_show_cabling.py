@@ -152,7 +152,13 @@ def cabling_table(table: Table, cables) -> Table:
         # if the physical port definitions are not the same, then color them in
         # red to indicate the error to the User.
 
-        if all((dev_if.profile, rmt_if.profile)) and phy_is_different(
+        # if the interfaces are designed to be disabled, then do not include
+        # them in the cabling table.
+
+        if not all((dev_if.enabled, rmt_if.enabled)):
+            continue
+
+        elif all((dev_if.profile, rmt_if.profile)) and phy_is_different(
             dev_if.profile.phy_profile, rmt_if.profile.phy_profile
         ):
             dev_phy_prof.style = Style(color="red")

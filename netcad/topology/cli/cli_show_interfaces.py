@@ -91,6 +91,7 @@ def show_device_interfaces(device: Device, **options):
     console = Console()
     table = Table(
         "Name",
+        "Enabled",
         "Description",
         "Profile",
         "Port",
@@ -112,7 +113,14 @@ def show_device_interfaces(device: Device, **options):
         for iface in sorted(device.interfaces.values()):
             if not iface.used:
                 if_spec = device.device_type_spec.get_interface(if_name=iface.name)
-                add_row(iface.name, None, keywords.NOT_USED, if_spec.formfactor, None)
+                add_row(
+                    iface.name,
+                    iface.enabled,
+                    None,
+                    keywords.NOT_USED,
+                    if_spec.formfactor,
+                    None,
+                )
 
         console.print(table)
         return
@@ -122,16 +130,28 @@ def show_device_interfaces(device: Device, **options):
     # -------------------------------------------------------------------------
 
     for iface in sorted(device.interfaces.values()):
+        if_enabled_str = (
+            Text("True", "green") if iface.enabled else Text("False", "red")
+        )
         pp_speed = None
         if not iface.used:
             if options["show_all"]:
                 if_spec = device.device_type_spec.get_interface(if_name=iface.name)
-                add_row(iface.name, None, keywords.NOT_USED, if_spec.formfactor, None)
+                add_row(
+                    iface.name,
+                    if_enabled_str,
+                    None,
+                    keywords.NOT_USED,
+                    if_spec.formfactor,
+                    None,
+                )
             continue
 
         if_prof: InterfaceProfile
         if not (if_prof := getattr(iface, "profile", None)):
-            add_row(iface.name, iface.desc, None, keywords.NOT_USED, None)
+            add_row(
+                iface.name, if_enabled_str, iface.desc, None, keywords.NOT_USED, None
+            )
             continue
 
         if_prof_name = if_prof.name
@@ -145,7 +165,7 @@ def show_device_interfaces(device: Device, **options):
             pp_name = keywords.VIRTUAL
 
         if_desc = Text(iface.desc, "yellow") if if_prof.is_reserved else iface.desc
-        add_row(iface.name, if_desc, if_prof_name, pp_name, pp_speed)
+        add_row(iface.name, if_enabled_str, if_desc, if_prof_name, pp_name, pp_speed)
 
     table.title = f"{device.name}: {len(table.rows)} interfaces"
     console.print(table)
