@@ -68,7 +68,8 @@ async def execute_device_checks(dut: AsyncDeviceUnderTest):
 
     except SetupError as exc:
         errmsg = str(exc) or exc.__class__.__name__
-        log.error(f"{dut_name}: {FAIL_CLRD}:\t!!! Setup failed: {errmsg}, aborting.")
+        log.error(f"{dut_name}: {FAIL_CLRD}: {errmsg}")
+        log.error(f"{dut_name}: {FAIL_CLRD}: Setup failed, aborting.")
 
         dut.result_counts["FAIL"] = 1
         log.info(f"{dut_name}: {SUMMARY_CLRD} ----\tChecks: PASS=0, FAIL=1, INFO=0")
@@ -76,7 +77,8 @@ async def execute_device_checks(dut: AsyncDeviceUnderTest):
 
     except Exception as exc:
         errmsg = str(exc) or exc.__class__.__name__
-        log.critical(f"{dut_name}: {FAIL_CLRD}:\t!!! Setup failed: {errmsg}, aborting.")
+        log.critical(f"{dut_name}: {FAIL_CLRD}: {errmsg}")
+        log.critical(f"{dut_name}: {FAIL_CLRD}: Setup failed, aborting.")
 
         if debug_enabled():
             log.critical(format_exc_message(exc))
