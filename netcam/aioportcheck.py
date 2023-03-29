@@ -25,6 +25,35 @@ __all__ = ["port_check_url"]
 #
 # -----------------------------------------------------------------------------
 
+async def port_check_host(host: str, port: int, timeout: Optional[int] = 5) -> bool:
+    """
+    General purpose "check to see if a port is open on a host" function. Return
+    True if it is, False if it is not within the given timeout (second).
+
+    Parameters
+    ----------
+    host: str
+        The host or IP address of the target system
+
+    port: int
+        The port number to check
+
+    timeout: int
+        The timeout in seconds to wait before declaring False.
+    """
+    try:
+        wr: asyncio.StreamWriter
+        _, wr = await asyncio.wait_for(
+            asyncio.open_connection(host=host, port=port), timeout=timeout
+        )
+
+        # MUST close if opened!
+        wr.close()
+        return True
+
+    except Exception:  # noqa
+        return False
+
 
 async def port_check_url(url: URL, timeout: Optional[int] = 5) -> bool:
     """
@@ -40,17 +69,7 @@ async def port_check_url(url: URL, timeout: Optional[int] = 5) -> bool:
     timeout: optional, default is 5 seonds
         Time to await for the port to open in seconds
     """
-    port = url.port or socket.getservbyname(url.scheme)
-
-    try:
-        wr: asyncio.StreamWriter
-        _, wr = await asyncio.wait_for(
-            asyncio.open_connection(host=url.host, port=port), timeout=timeout
-        )
-
-        # MUST close if opened!
-        wr.close()
-        return True
-
-    except Exception:  # noqa
-        return False
+    return await port_check_host(
+        host=url.host, port=url.port or socket.getservbyname(url.scheme),
+        timeout=timeout
+    )
