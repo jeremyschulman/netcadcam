@@ -25,6 +25,7 @@ __all__ = ["port_check_url"]
 #
 # -----------------------------------------------------------------------------
 
+
 async def port_check_host(host: str, port: int, timeout: Optional[int] = 5) -> bool:
     """
     General purpose "check to see if a port is open on a host" function. Return
@@ -70,6 +71,7 @@ async def port_check_url(url: URL, timeout: Optional[int] = 5) -> bool:
         Time to await for the port to open in seconds
     """
     return await port_check_host(
-        host=url.host, port=url.port or socket.getservbyname(url.scheme),
-        timeout=timeout
+        host=url.host,
+        port=url.port or socket.getservbyname(url.scheme),
+        timeout=timeout,
     )

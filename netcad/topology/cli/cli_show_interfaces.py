@@ -115,7 +115,7 @@ def show_device_interfaces(device: Device, **options):
                 if_spec = device.device_type_spec.get_interface(if_name=iface.name)
                 add_row(
                     iface.name,
-                    iface.enabled,
+                    str(iface.enabled),
                     None,
                     keywords.NOT_USED,
                     if_spec.formfactor,
