@@ -83,6 +83,14 @@ class BGPSpeaker(Peer[Device, BGPPeeringEndpoint]):
         The name of the VRF the speaker is associated with.  The None value
         indicates the "default VRF", for whatever that means on the specific
         device.
+
+    rd: str, optional
+        The route distinguisher to be appended to all VPN prefixes creating
+        unique prefixes. This requires multiprotocol BGP: MP-BGP.
+
+    rt: str, optional
+        The route target (extended community attribute) is attached to to the route
+        and tells the receiving router what VRF to put the route into.
     """
 
     def __init__(
@@ -91,6 +99,8 @@ class BGPSpeaker(Peer[Device, BGPPeeringEndpoint]):
         asn: int,
         router_id: Optional[RouterID] = None,
         vrf: Optional[str] = None,
+        rd: Optional[str] = None,
+        rt: Optional[str] = None,
     ):
         # Use the tuple of the device name and VRF name as the peering-name.
         # This allows for a device/router to have multiple configurations based
@@ -101,6 +111,8 @@ class BGPSpeaker(Peer[Device, BGPPeeringEndpoint]):
         self.asn = asn
         self.router_id = router_id or device.primary_ip
         self.vrf = vrf
+        self.rd = rd
+        self.rt = rt
 
     @property
     def speaker_id(self) -> str:
@@ -168,6 +180,8 @@ class BGPSpeaker(Peer[Device, BGPPeeringEndpoint]):
                 "asn": self.asn,
                 "router_id": self.router_id,
                 "vrf": self.vrf,
+                "rd": self.rd,
+                "rt": self.rt,
             }
         )
         return f"{self.__class__.__name__}({attribs})"
