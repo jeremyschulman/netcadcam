@@ -55,7 +55,9 @@ class CheckExclusiveResult(CheckResult[CheckT], Generic[CheckT]):
     https://github.com/samuelcolvin/pydantic/issues/2380#issuecomment-782330241
     """
 
-    def measure(self, sort_key: Optional[Callable] = None):
+    def measure(
+        self, sort_key: Optional[Callable] = None, on_extra: CheckStatus = None
+    ):
         check = self.check
         msrd = self.measurement
         expd = check.expected_results
@@ -66,12 +68,17 @@ class CheckExclusiveResult(CheckResult[CheckT], Generic[CheckT]):
         if missing_set := expd_set - msrd_set:
             items = sorted(missing_set, key=sort_key)
             self.logs.FAIL("missing", items)
+            self.status = CheckStatus.FAIL
 
         if extra_set := (msrd_set - expd_set):
             items = sorted(extra_set, key=sort_key)
-            self.logs.FAIL("extra", items)
 
-        if missing_set or extra_set:
-            self.status = CheckStatus.FAIL
+            if not on_extra:
+                self.logs.FAIL("extra", items)
+                self.status = CheckStatus.FAIL
+
+            else:
+                getattr(self.logs, on_extra)("extra", items)
+                self.status = on_extra
 
         return self
