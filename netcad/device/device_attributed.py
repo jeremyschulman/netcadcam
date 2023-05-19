@@ -16,6 +16,7 @@ class HostDevice(Device):
 
     is_host = True
     is_pseudo = True
+    is_not_managed = True
 
 
 # noinspection PyUnresolvedReferences
@@ -30,3 +31,12 @@ class DeviceNonExclusive(Device):
     """
 
     is_not_exclusive = True
+
+
+class DeviceNotManaged(Device):
+    """
+    Denotes a device that is part of the network design, but is not managed in any way
+    such that checks/checking is not performed.  Config generation is not performed.
+    """
+
+    is_not_managed = True

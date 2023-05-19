@@ -76,7 +76,11 @@ def cli_render(
     # purposes. for example the device representing an MLAG redundant pair. Then
     # sort the devices based on their sorting mechanism.
 
-    if not (device_objs := sorted((dev for dev in device_objs if not dev.is_pseudo))):
+    if not (
+        device_objs := sorted(
+            (dev for dev in device_objs if not any((dev.is_pseudo, dev.is_not_managed)))
+        )
+    ):
         log.error("No devices located in the given designs")
         return
 
