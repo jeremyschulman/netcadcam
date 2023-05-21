@@ -112,6 +112,14 @@ def show_network_devices(design: Design, **flags):
         title=f"Design '{design.name}', {design_desc}",
     )
 
+    def managed_mode(_d):
+        if _d.is_not_exclusive:
+            return "partial"
+        elif _d.is_not_managed:
+            return "unmanaged"
+        else:
+            return "complete"
+
     for dev in sorted(design.devices.values(), key=attrgetter("name")):
         dev_type = dev.__class__.__name__
 
@@ -132,7 +140,7 @@ def show_network_devices(design: Design, **flags):
             dev.os_name,
             dev.product_model,
             str(primary_ip),
-            "partial" if dev.is_not_exclusive else "complete",
+            managed_mode(dev),
         )
 
     console.print("\n", table)

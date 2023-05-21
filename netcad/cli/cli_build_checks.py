@@ -78,7 +78,9 @@ def cli_build_tests(devices: Tuple[str], designs: Tuple[str], checks_dir: Path):
     if devices:
         device_objs = [obj for obj in device_objs if obj.name in devices]
 
-    device_objs = [dev for dev in device_objs if not dev.is_pseudo]
+    device_objs = [
+        dev for dev in device_objs if not any((dev.is_pseudo, dev.is_not_managed))
+    ]
     device_objs.sort()
 
     log.info(f"Building device audits for {len(device_objs)} devices")

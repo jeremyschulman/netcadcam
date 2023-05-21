@@ -121,7 +121,9 @@ def cli_test_device(
         log.error("No devices located in the given designs")
         return
 
-    device_objs = [dev for dev in device_objs if not dev.is_pseudo]
+    device_objs = [
+        dev for dev in device_objs if not any((dev.is_pseudo, dev.is_not_managed))
+    ]
 
     # create the device-under-test (DUT) instances for each of the devices in
     # the design. we keep this collection as a dictionary so that we can refer

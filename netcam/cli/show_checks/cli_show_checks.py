@@ -108,7 +108,9 @@ def cli_report_tests(
         log.error("No devices located in the given designs")
         return
 
-    device_objs = [dev for dev in device_objs if not dev.is_pseudo]
+    device_objs = [
+        dev for dev in device_objs if not any((dev.is_pseudo, dev.is_not_managed))
+    ]
 
     log.info(f"Showing test logs for {len(device_objs)} devices.")
 
