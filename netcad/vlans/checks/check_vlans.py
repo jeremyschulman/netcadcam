@@ -64,21 +64,23 @@ __all__ = [
 # -----------------------------------------------------------------------------
 
 
+class VlanCheckExpect(BaseModel):
+    name: Optional[str] = Field(
+        ..., description="The configured VLAN name; or unchecked if None"
+    )
+    oper_up: bool = Field(True, description="The operational state of the VLAN")
+    interfaces: List[str]
+
+
 class VlanCheck(Check):
     check_type = "vlan"
 
     class Params(BaseModel):
         vlan_id: int
 
-    class Expect(BaseModel):
-        name: Optional[str] = Field(
-            ..., description="The configured VLAN name; or unchecked if None"
-        )
-        oper_up: bool = Field(True, description="The operational state of the VLAN")
-        interfaces: List[str]
-
+    Expect = VlanCheckExpect
     check_params: Params
-    expected_results: Expect
+    expected_results: VlanCheckExpect
 
     def check_id(self) -> str:
         return str(self.check_params.vlan_id)

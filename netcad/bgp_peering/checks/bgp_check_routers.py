@@ -38,6 +38,11 @@ __all__ = ["BgpRoutersCheckCollection", "BgpRouterCheck", "BgpRouterCheckResult"
 # -----------------------------------------------------------------------------
 
 
+class BgpRouterCheckParams(BaseModel):
+    name: str = Field(..., description="The device hostname")
+    vrf: Optional[str] = Field(None, description="VRF used if not default")
+
+
 class BgpRouterCheck(Check):
     """
     Validate that the device has a BGP speaker operating, i.e. configured for
@@ -46,15 +51,13 @@ class BgpRouterCheck(Check):
 
     check_type = "bgp-router"
 
-    class Params(BaseModel):
-        name: str = Field(..., description="The device hostname")
-        vrf: Optional[str] = Field(None, description="VRF used if not default")
+    Params = BgpRouterCheckParams
 
     class Expect(BaseModel):
         asn: int = Field(..., description="The speaker ASN value")
         router_id: str = Field(..., description="The speaker router-ID value (IP addr)")
 
-    check_params: Params
+    check_params: BgpRouterCheckParams
     expected_results: Expect
 
     def check_id(self) -> str:

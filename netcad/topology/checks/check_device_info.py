@@ -44,6 +44,10 @@ __all__ = [
 # -----------------------------------------------------------------------------
 
 
+class DeviceInformationCheckExpect(BaseModel):
+    product_model: str
+
+
 class DeviceInformationCheck(Check):
     check_type = "device-info"
 
@@ -51,11 +55,9 @@ class DeviceInformationCheck(Check):
         device: str
         os_name: str
 
-    class Expect(BaseModel):
-        product_model: str
-
+    Expect = DeviceInformationCheckExpect
     check_params: Params
-    expected_results: Expect
+    expected_results: DeviceInformationCheckExpect
 
     def check_id(self) -> str:
         return self.check_params.device
