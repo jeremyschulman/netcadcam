@@ -43,21 +43,24 @@ __all__ = [
 # -----------------------------------------------------------------------------
 
 
+class IPInterfaceCheckExpect(BaseModel):
+    if_ipaddr: str
+    # TODO: for now this check hardcoded the expectation that the interface
+    #       bound to this IP address is in the "up" condition.  In the
+    #       future we could make this configurable based on the design.
+    oper_up: bool = True
+
+
 class IPInterfaceCheck(Check):
     check_type = "ipaddr"
 
     class Params(BaseModel):
         if_name: str
 
-    class Expect(BaseModel):
-        if_ipaddr: str
-        # TODO: for now this check hardcoded the expectation that the interface
-        #       bound to this IP address is in the "up" condition.  In the
-        #       future we could make this configurable based on the design.
-        oper_up: bool = True
+    Expect = IPInterfaceCheckExpect
 
     check_params: Params
-    expected_results: Expect
+    expected_results: IPInterfaceCheckExpect
 
     def check_id(self) -> str:
         return str(self.check_params.if_name)

@@ -47,6 +47,15 @@ __all__ = ["BgpNeighborsCheckCollection", "BgpNeighborCheck", "BgpNeighborCheckR
 # -----------------------------------------------------------------------------
 
 
+class BgpNeighborCheckParams(BaseModel):
+    via_ip: str = Field(
+        ..., description="The local device IP address used to reach the neighbor"
+    )
+    nei_name: str = Field(..., description="The BGP speaker (device) name")
+    nei_ip: str = Field(..., description="The BGP neighbor IP address")
+    vrf: Optional[str] = Field(None, description="VRF used if not default")
+
+
 class BgpNeighborCheck(Check):
     check_type = "bgp-neighbor"
 
@@ -56,13 +65,7 @@ class BgpNeighborCheck(Check):
         """
         return str(self.check_params.nei_ip)
 
-    class Params(BaseModel):
-        via_ip: str = Field(
-            ..., description="The local device IP address used to reach the neighbor"
-        )
-        nei_name: str = Field(..., description="The BGP speaker (device) name")
-        nei_ip: str = Field(..., description="The BGP neighbor IP address")
-        vrf: Optional[str] = Field(None, description="VRF used if not default")
+    Params = BgpNeighborCheckParams
 
     class Expect(BaseModel):
         remote_asn: int = Field(..., description="The remote BGP speaker ASN")
@@ -70,7 +73,7 @@ class BgpNeighborCheck(Check):
             ..., description="The BGP neighbor state, enum(int)"
         )
 
-    check_params: Params
+    check_params: BgpNeighborCheckParams
     expected_results: Expect
 
 

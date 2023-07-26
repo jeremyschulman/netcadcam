@@ -1,6 +1,5 @@
 #  Copyright (c) 2021 Jeremy Schulman
 #  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
-
 # -----------------------------------------------------------------------------
 # System Imports
 # -----------------------------------------------------------------------------
@@ -8,6 +7,7 @@
 from typing import Tuple
 from pathlib import Path
 from itertools import groupby
+import shutil
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -136,7 +136,8 @@ def cli_report_tests(
         sorted(device_objs, key=lambda d: id(d.design)), key=lambda d: d.design
     )
 
-    console = Console()
+    term_sz = shutil.get_terminal_size()
+    console = Console(record=True, width=term_sz.columns)
 
     # -------------------------------------------------------------------------
     # Option --brief
@@ -173,3 +174,5 @@ def cli_report_tests(
     for design, device_objs in devices_by_design:
         for dev_obj in device_objs:
             show_device_test_logs(console, dev_obj, optionals)
+
+    console.save_html(path="log.html")
