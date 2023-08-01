@@ -6,7 +6,7 @@
 # -----------------------------------------------------------------------------
 
 from typing import Optional
-from ipaddress import IPv4Address
+from ipaddress import IPv4Interface
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -33,7 +33,7 @@ __all__ = [
 
 
 class InterfaceL3(InterfaceProfile):
-    def __init__(self, if_ipaddr: Optional[IPv4Address] = None, **params):
+    def __init__(self, if_ipaddr: Optional[IPv4Interface] = None, **params):
         super(InterfaceL3, self).__init__(**params)
         self.if_ipaddr = if_ipaddr
 
