@@ -2,7 +2,8 @@
 #  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from .device import Device, DeviceInterface, DeviceCatalog
-from .device_attributed import HostDevice, DeviceNonExclusive, DeviceNotManaged
+from .device_attributed import DeviceNonExclusive, DeviceNotManaged
+from .device_host import HostDevice, attach_host_port
 from .device_group import PseudoDevice, DeviceGroup, DeviceGroupMember
 from .peer_interface_id import PeerInterfaceId
 from .device_type import DeviceType, DeviceTypeRegistry
