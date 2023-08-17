@@ -105,7 +105,7 @@ class IPInterfacesCheckCollection(CheckCollection):
     def build(cls, device: Device, **kwargs) -> Optional["IPInterfacesCheckCollection"]:
         if_l3_list = [
             iface
-            for iface in device.interfaces.used().values()
+            for iface in sorted(device.interfaces.used().values())
             if isinstance(iface.profile, InterfaceL3)
             and (iface.profile.if_ipaddr or iface.profile.is_reserved)
         ]

@@ -82,10 +82,11 @@ class DeviceInterfaceInfo(BaseModel):
 def _interfaces_as_dict(device: Device) -> dict:
     as_dict = dict()
 
-    for if_name, iface in device.interfaces.items():
+    for iface  in sorted(device.interfaces.values()):
+        iface = device.interfaces[iface.name]
         if not iface.used:
-            as_dict[if_name] = DeviceInterfaceInfo(
-                used=False, name=if_name, enabled=iface.enabled, desc=iface.desc
+            as_dict[iface.name] = DeviceInterfaceInfo(
+                used=False, name=iface.name, enabled=iface.enabled, desc=iface.desc
             )
             continue
 
@@ -99,9 +100,9 @@ def _interfaces_as_dict(device: Device) -> dict:
 
         flags = if_prof.profile_flags
 
-        as_dict[if_name] = DeviceInterfaceInfo(
+        as_dict[iface.name] = DeviceInterfaceInfo(
             used=True,
-            name=if_name,
+            name=iface.name,
             enabled=iface.enabled,
             desc=iface.desc,
             port_type=port_type,
