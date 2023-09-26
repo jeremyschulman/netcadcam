@@ -3,7 +3,7 @@
 
 from .device import Device, DeviceInterface, DeviceCatalog
 from .device_attributed import DeviceNonExclusive, DeviceNotManaged
-from .device_host import HostDevice, attach_host_port
+from .device_host import HostDevice, attach_host_port, detach_host_port
 from .device_group import PseudoDevice, DeviceGroup, DeviceGroupMember
 from .peer_interface_id import PeerInterfaceId
 from .device_type import DeviceType, DeviceTypeRegistry
