@@ -36,3 +36,14 @@ def attach_host_port(dev: Device, if_name: str, host_name: str | StrEnum, host_p
     with dev.interfaces[if_name] as iface:
         iface.profile = host_dev.port_connectivity[host_port]
         iface.cable_id = host_dev.cable_id(host_port)
+
+def detach_host_port(dev: Device, if_name: str, host_name: str | StrEnum, host_port: str):
+    host_dev = dev.design.devices[host_name]
+
+    with host_dev.interfaces[host_port] as if_host:
+        if_host.profile = None
+        if_host.cable_id = None
+
+    with dev.interfaces[if_name] as if_net:
+        if_net.profile = None
+        if_net.cable_id = None
