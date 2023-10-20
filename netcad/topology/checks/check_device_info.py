@@ -82,7 +82,7 @@ class DeviceInterfaceInfo(BaseModel):
 def _interfaces_as_dict(device: Device) -> dict:
     as_dict = dict()
 
-    for iface  in sorted(device.interfaces.values()):
+    for iface in sorted(device.interfaces.values()):
         iface = device.interfaces[iface.name]
         if not iface.used:
             as_dict[iface.name] = DeviceInterfaceInfo(

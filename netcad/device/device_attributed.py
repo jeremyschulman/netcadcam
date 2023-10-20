@@ -1,5 +1,6 @@
 from .device import Device
 
+
 # noinspection PyUnresolvedReferences
 class DeviceNonExclusive(Device):
     """

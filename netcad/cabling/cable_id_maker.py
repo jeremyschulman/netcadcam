@@ -1,10 +1,9 @@
 from typing import Optional
 from netcad.device import Device
 
+
 def cable_id_maker(
-    device_1: Device, device_2: Device,
-    link_id: int = 1,
-    id_type: Optional[str] = None
+    device_1: Device, device_2: Device, link_id: int = 1, id_type: Optional[str] = None
 ) -> str:
     """
     This function creates a string cable_id value based on the device hostnames
@@ -41,7 +40,7 @@ def cable_id_maker(
     """
     _dev1, _dev2 = sorted((device_1, device_2))
     return (
-        f"{_dev1.name}_{_dev2.name}_{link_id}" if not id_type else
-        f"{_dev1.name}_{_dev2.name}_{id_type}_{link_id}"
+        f"{_dev1.name}_{_dev2.name}_{link_id}"
+        if not id_type
+        else f"{_dev1.name}_{_dev2.name}_{id_type}_{link_id}"
     )
-
