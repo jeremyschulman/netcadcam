@@ -143,8 +143,8 @@ class InterfaceCheckCollection(CheckCollection):
     def build(cls, device: Device, **kwargs) -> "InterfaceCheckCollection":
         def build_check(iface: DeviceInterface):
             # if the interface is not used, meaning it is not part of the
-            # design, then there is no profile, and .enabled=False.  No other
-            # interface valiation is required for operational state.
+            # design, then there is no profile.  No other interface valiation
+            # is required for operational state.
 
             if not iface.used:
                 expected_results = InterfaceCheckNotUsedExpectations(used=False)
@@ -158,14 +158,27 @@ class InterfaceCheckCollection(CheckCollection):
                 port_profile = iface.profile.phy_profile
                 if_flags = iface.profile.profile_flags
 
-                disable_port = isinstance(
+                # -------------------------------------------------------------
+                # adding a feature that allows for a design to explicitly
+                # transition an interface to the unused state.
+                # -------------------------------------------------------------
+                # The designer would need to assisgn the interface profile the
+                # same class instance as the device unused_interface_profile.
+                # When this is the case then a check will be generated to
+                # verify that the port is shutdown and any associated interface
+                # description in the interface profile instance is collected
+                # and checked.  We add a new interface flag for this purpose to
+                # let the check generator (later) and underlying "netcam"
+                # drivers know of this specific case.
+
+                is_forced_unused = isinstance(
                     iface.profile, device.unused_interface_profile.__class__
                 )
-                if disable_port:
+                if is_forced_unused:
                     if_flags["is_forced_unused"] = True
 
                 expected_results = InterfaceCheckUsedExpectations(
-                    used=not disable_port,
+                    used=True,
                     desc=iface.desc,
                     oper_up=iface.enabled,
                     speed=port_profile.speed if port_profile else None,
