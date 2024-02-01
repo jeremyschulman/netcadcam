@@ -63,7 +63,7 @@ class InterfaceCheckParams(BaseModel):
 class InterfaceCheckUsedExpectations(BaseModel):
     """For when an interface IS used"""
 
-    used: bool
+    used: Literal[True]
     desc: str
     oper_up: Optional[bool]
     speed: Optional[NonNegativeInt]
