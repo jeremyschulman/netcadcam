@@ -63,7 +63,7 @@ class InterfaceCheckParams(BaseModel):
 class InterfaceCheckUsedExpectations(BaseModel):
     """For when an interface IS used"""
 
-    used: Literal[True]
+    used: bool
     desc: str
     oper_up: Optional[bool]
     speed: Optional[NonNegativeInt]
@@ -158,8 +158,14 @@ class InterfaceCheckCollection(CheckCollection):
                 port_profile = iface.profile.phy_profile
                 if_flags = iface.profile.profile_flags
 
+                disable_port = isinstance(
+                    iface.profile, device.unused_interface_profile.__class__
+                )
+                if disable_port:
+                    if_flags["is_forced_unused"] = True
+
                 expected_results = InterfaceCheckUsedExpectations(
-                    used=True,
+                    used=not disable_port,
                     desc=iface.desc,
                     oper_up=iface.enabled,
                     speed=port_profile.speed if port_profile else None,
@@ -192,7 +198,11 @@ class InterfaceCheckCollection(CheckCollection):
             collection.checks = [
                 check
                 for check in collection.checks
-                if check.expected_results.used is True
+                if (check.expected_results.used is True)
+                or (
+                    (if_flags := check.check_params.interface_flags)
+                    and if_flags.get("is_forced_unused")
+                )
             ]
 
         # return the checks sorted by the lag interface name

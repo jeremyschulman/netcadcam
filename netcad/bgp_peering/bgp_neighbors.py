@@ -18,7 +18,7 @@ class BGPPeerNeighbors:
         self.speakers: Set[BGPSpeaker] = set()
 
     def add_sesson(self, speaker: BGPSpeaker, session: BGPNeighborSession):
-        ...
+        pass
 
     def add_speakers(self, *speakers: BGPSpeaker):
         self.speakers.update(speakers)
