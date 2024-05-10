@@ -1,5 +1,6 @@
 from typing import Optional
 from collections import defaultdict
+from copy import deepcopy
 
 from bracket_expansion import expand
 from .device_type import DeviceType, DeviceTypeRegistry
@@ -55,3 +56,26 @@ class DeviceTypeFactory:
         )
         DeviceTypeRegistry.registry_add(name or self.product_model, dt)
         return dt
+
+    @staticmethod
+    def copy(src: DeviceType, suffix: str):
+        """
+        Copies the device type using a different suffix value.  For example a
+        front-fant model  ("-F") is copied to a rear-fan model "-R"
+
+        Parameters
+        ----------
+        src:
+            The source DeviceType to copy.
+
+        suffix:
+            The new suffix value.
+
+        Returns
+        -------
+        The new device type
+        """
+        dst = deepcopy(src)
+        dst.product_model = src.model + suffix
+        DeviceTypeRegistry.registry_add(dst.product_model, dst)
+        return dst
