@@ -5,6 +5,8 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
+import asyncio
+from inspect import iscoroutinefunction
 from typing import List
 
 # -----------------------------------------------------------------------------
@@ -177,7 +179,10 @@ def load_design_singleton(design_name: str, pkg_name: str, design_decl: dict) ->
 
     if hasattr(design_mod, "create_design") and callable(design_mod.create_design):
         try:
-            design_inst = design_mod.create_design(design_inst)
+            if iscoroutinefunction(design_mod.create_design):
+                design_inst = asyncio.run(design_mod.create_design(design_inst))
+            else:
+                design_inst = design_mod.create_design(design_inst)
 
         except Exception as exc:
             rt_exc = RuntimeError(
