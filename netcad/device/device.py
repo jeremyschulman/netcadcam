@@ -365,16 +365,16 @@ class Device(Registry, registry_name="devices"):
             name=device_type
         )
 
+        if not cls.device_type_spec:
+            raise RuntimeError(
+                f"Device class {cls.__name__} missing spec for device-type: {device_type}.  "
+            )
+
         # if the device_type was specified, then autopopulate the
         # product_model based on the device_type_spec.
 
         if not cls.product_model:
             cls.product_model = cls.device_type_spec.product_model
-
-        if not cls.device_type_spec:
-            raise RuntimeError(
-                f"Device class {cls.__name__} missing spec for device-type: {device_type}.  "
-            )
 
         # # initialize the interfaces in the device so that those defined in the
         # # spec exist; initializing the profile value to None.

@@ -101,7 +101,7 @@ def cli_render(
         save_dir.joinpath("backup").mkdir(parents=True, exist_ok=True)
         save_dir.joinpath("diffs").mkdir(parents=True, exist_ok=True)
 
-        if not dev_obj.template:
+        if not dev_obj.template and not template_file:
             log.warning(
                 f"BUILD SKIP: device {dev_obj.name} - no template file defined."
             )
