@@ -95,7 +95,7 @@ def show_device_interfaces(device: Device, **options):
         "Description",
         "Profile",
         "Port",
-        "Speed\n(Kbps)",
+        "Speed\n(Mbps)",
         show_header=True,
         header_style="bold magenta",
         title_justify="left",
