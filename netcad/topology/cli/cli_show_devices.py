@@ -52,7 +52,7 @@ __all__ = []
 @opt_designs()
 @click.option("--all", "include_pseudo", help="show pseudo devices", is_flag=True)
 @click.option("--csv", "csv_", help="csv output", is_flag=True)
-def cli_design_report_devices(designs: Tuple[str], csv_, **flags):
+def cli_design_report_devices(designs: Tuple[str], **flags):
     """
     show devices in design
 
@@ -89,7 +89,7 @@ def cli_design_report_devices(designs: Tuple[str], csv_, **flags):
     by_design = sorted(device_objs, key=lambda d: id(d.design))
 
     for design, devices in groupby(by_design, key=lambda d: d.design):
-        show_network_devices(design, csv_, **flags)
+        show_network_devices(design, **flags)
 
 
 # -----------------------------------------------------------------------------
@@ -99,7 +99,7 @@ def cli_design_report_devices(designs: Tuple[str], csv_, **flags):
 # -----------------------------------------------------------------------------
 
 
-def show_network_devices(design: Design, csv_, **flags):
+def show_network_devices(design: Design, **flags):
     console = Console()
     design_desc = design.config.get("description") or ""
 
@@ -113,7 +113,7 @@ def show_network_devices(design: Design, csv_, **flags):
         else:
             return "complete"
 
-    if csv_:
+    if flags["csv_"]:
         writer = csv.writer(
             sys.stdout, delimiter=",", quotechar='"', quoting=csv.QUOTE_MINIMAL
         )
