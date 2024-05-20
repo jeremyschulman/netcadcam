@@ -48,8 +48,13 @@ from netcam.config import push_device_config
     type=click.IntRange(min=1, max=5),
     default=1,
 )
+@click.option("--concurrent", "-c", is_flag=True, help="Enable concurrent push")
 def cli_netcam_config_backup(
-    devices: Tuple[str], designs: Tuple[str], configs_dir: Path, timeout_min: int
+    devices: Tuple[str],
+    designs: Tuple[str],
+    configs_dir: Path,
+    timeout_min: int,
+    concurrent: bool,
 ):
     """
     Deploy the design build configurations to device(s)
@@ -66,18 +71,23 @@ def cli_netcam_config_backup(
             configs_dir=configs_dir,
             device_objs=use_device_objs,
             rollback_timeout=timeout_min,
+            concurrent=concurrent,
         )
     )
 
 
 async def run_deploy_configs(
-    device_objs: list[Device], configs_dir: Path, rollback_timeout: int
+    device_objs: list[Device],
+    configs_dir: Path,
+    rollback_timeout: int,
+    concurrent: bool,
 ):
     log = get_logger()
 
     netcam_plugins = netcad_globals.g_netcam_plugins_os_catalog
 
     dev_cfg: AsyncDeviceConfigurable
+    tasks = list()
 
     for dev_obj in device_objs:
         if not (pg_obj := netcam_plugins.get(dev_obj.os_name)):
@@ -106,4 +116,11 @@ async def run_deploy_configs(
         )
 
         # TODO: need to check for exceptions
-        await push_device_config(dev_cfg, rollback_timeout=rollback_timeout)
+        tasks.append(push_device_config(dev_cfg, rollback_timeout=rollback_timeout))
+
+    if concurrent:
+        await asyncio.gather(*tasks)
+
+    else:
+        for task in tasks:
+            await task
