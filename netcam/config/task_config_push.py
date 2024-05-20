@@ -30,7 +30,7 @@ async def push_device_config(dev_cfg: AsyncDeviceConfigurable, rollback_timeout:
         return
 
     if not dev_cfg.config_diff_contents:
-        log.info(f"{name}: no config differences, nothig changed.")
+        log.info(f"{name}: no config differences, nothing changed.")
         return
 
     log.info(f"{name}: config active and saved to startup")

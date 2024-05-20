@@ -14,6 +14,8 @@ from operator import attrgetter
 # -----------------------------------------------------------------------------
 
 import click
+import csv
+import sys
 from rich.console import Console
 from rich.table import Table
 
@@ -49,6 +51,7 @@ __all__ = []
 @clig_design_show.command(name="devices")
 @opt_designs()
 @click.option("--all", "include_pseudo", help="show pseudo devices", is_flag=True)
+@click.option("--csv", "csv_", help="csv output", is_flag=True)
 def cli_design_report_devices(designs: Tuple[str], **flags):
     """
     show devices in design
@@ -84,6 +87,7 @@ def cli_design_report_devices(designs: Tuple[str], **flags):
     # reference a group of designs.
 
     by_design = sorted(device_objs, key=lambda d: id(d.design))
+
     for design, devices in groupby(by_design, key=lambda d: d.design):
         show_network_devices(design, **flags)
 
@@ -99,18 +103,7 @@ def show_network_devices(design: Design, **flags):
     console = Console()
     design_desc = design.config.get("description") or ""
 
-    table = Table(
-        "Device",
-        "Profile",
-        "OS",
-        "Product Model",
-        "Primary IP",
-        "Managed Mode",
-        show_header=True,
-        header_style="bold magenta",
-        title_justify="left",
-        title=f"Design '{design.name}', {design_desc}",
-    )
+    headers = ["Device", "Profile", "OS", "Product Model", "Primary IP", "Managed Mode"]
 
     def managed_mode(_d):
         if _d.is_not_exclusive:
@@ -120,27 +113,54 @@ def show_network_devices(design: Design, **flags):
         else:
             return "complete"
 
-    for dev in sorted(design.devices.values(), key=attrgetter("name")):
-        dev_type = dev.__class__.__name__
+    if flags["csv_"]:
+        writer = csv.writer(
+            sys.stdout, delimiter=",", quotechar='"', quoting=csv.QUOTE_MINIMAL
+        )
+        writer.writerow(headers)
+        for dev in sorted(design.devices.values(), key=attrgetter("name")):
+            dev_type = dev.__class__.__name__
 
-        # if the device is pseudo, and the User requested these to be shown,
-        # then include them with a blue-color-style.  Otherwise skip this
-        # device.
-
-        if dev.is_pseudo:
-            if not flags["include_pseudo"]:
-                continue
-            dev_type = f"[blue]{dev_type}[/blue]"
-
-        primary_ip = dev.primary_ip or "[red]unassigned[/red]"
-
-        table.add_row(
-            dev.name,
-            dev_type,
-            dev.os_name,
-            dev.product_model,
-            str(primary_ip),
-            managed_mode(dev),
+            writer.writerow(
+                [
+                    dev.name,
+                    dev_type,
+                    dev.os_name,
+                    dev.product_model,
+                    str(dev.primary_ip),
+                    managed_mode(dev),
+                ]
+            )
+    else:
+        table = Table(
+            *headers,
+            show_header=True,
+            header_style="bold magenta",
+            title_justify="left",
+            title=f"Design '{design.name}', {design_desc}",
         )
 
-    console.print("\n", table)
+        for dev in sorted(design.devices.values(), key=attrgetter("name")):
+            dev_type = dev.__class__.__name__
+
+            # if the device is pseudo, and the User requested these to be shown,
+            # then include them with a blue-color-style.  Otherwise skip this
+            # device.
+
+            if dev.is_pseudo:
+                if not flags["include_pseudo"]:
+                    continue
+                dev_type = f"[blue]{dev_type}[/blue]"
+
+            primary_ip = dev.primary_ip or "[red]unassigned[/red]"
+
+            table.add_row(
+                dev.name,
+                dev_type,
+                dev.os_name,
+                dev.product_model,
+                str(primary_ip),
+                managed_mode(dev),
+            )
+
+        console.print("\n", table)
