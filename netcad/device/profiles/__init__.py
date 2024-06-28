@@ -4,8 +4,8 @@
 from .interface_profile import InterfaceProfile, InterfaceVirtual
 from .l3_interfaces import (
     InterfaceL3,
-    InterfaceIsLoopback,
-    InterfaceIsManagement,
+    InterfaceLoopback,
+    InterfaceManagement,
     InterfaceIsInVRF,
 )
 from .lag_interfaces import InterfaceLag, InterfaceLagMember

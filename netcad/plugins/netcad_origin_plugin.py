@@ -52,7 +52,7 @@ class NetcadOriginPlugin(Plugin):
     def __init__(self, config: dict):
         super().__init__(config)
 
-        if "services" not in self.config:
+        if "features" not in self.config:
             raise RuntimeError(
                 f'Missing required "service" list in netcad.origins.name={self.name}'
             )
@@ -64,13 +64,13 @@ class NetcadOriginPlugin(Plugin):
         # setup any global config.
         super().load()
 
-        # now import any packages supporting the design services.  by default
+        # now import any packages supporting the design features.  by default
         # the configuration will include the 'service' name value so that the
         # underlying origin processor will be able to associate the User defined
         # service-name with other meta-data.
 
         svc: dict
-        for svc in self.config["services"]:
+        for svc in self.config["features"]:
             svc_name = svc.get("name")
             svc_config = svc.setdefault("config", {})
             svc_config.setdefault("service", svc_name)

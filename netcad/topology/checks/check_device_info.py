@@ -20,12 +20,13 @@ from pydantic import BaseModel, Field
 from netcad.device import Device
 from netcad.checks import (
     CheckCollection,
-    register_collection,
     Check,
     CheckResult,
     CheckMeasurement,
 )
 
+
+from ..topology_feature import TopologyDesignFeature
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -112,7 +113,7 @@ def _interfaces_as_dict(device: Device) -> dict:
     return as_dict
 
 
-@register_collection
+@TopologyDesignFeature.register_check_collection
 class DeviceInformationCheckCollection(CheckCollection):
     name = "device"
     checks: List[DeviceInformationCheck]

@@ -19,7 +19,7 @@ from pydantic import BaseModel
 
 from netcad.device import Device, DeviceInterface, HostDevice
 from netcad.checks import CheckCollection, Check, CheckResult, CheckMeasurement
-from netcad.checks import register_collection
+from ..topology_feature import TopologyDesignFeature
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -79,7 +79,7 @@ class InterfaceCablingCheckResult(CheckResult[InterfaceCablingCheck]):
     measurement: Measurement = None
 
 
-@register_collection
+@TopologyDesignFeature.register_check_collection
 class InterfaceCablingCheckCollection(CheckCollection):
     name = "cabling"
     checks: Optional[List[InterfaceCablingCheck]]

@@ -136,12 +136,12 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
 
     for ds_name, design_service in device.services.items():
         # Handle User provided service list, if provided; only execute the
-        # services the User requested explicitly.
+        # features the User requested explicitly.
 
         if service_list and ds_name not in service_list:
             continue
 
-        # there could be design services without defined testing services, so
+        # there could be design features without defined testing features, so
         # skip if that is the case.
 
         if not design_service.check_collections:

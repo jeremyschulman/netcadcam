@@ -25,7 +25,7 @@ import aiofiles
 from . import Check, CheckResult
 
 if TYPE_CHECKING:
-    from netcad.design import DesignService
+    from netcad.design import DesignFeature
 
 
 # noinspection PyUnresolvedReferences
@@ -78,7 +78,7 @@ class CheckCollection(BaseModel):
             return parse_obj_as(cls, json.loads(await infile.read()))
 
     @classmethod
-    def build(cls, obj: Any, design_service: "DesignService") -> "CheckCollection":
+    def build(cls, obj: Any, design_feature: "DesignFeature") -> "CheckCollection":
         raise NotImplementedError()
 
     # -------------------------------------------------------------------------

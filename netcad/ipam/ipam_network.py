@@ -161,7 +161,8 @@ class IPAMNetwork(UserDict):
         """
         ip = self.ip_network.network_address + self._gateway_host_octet
         return self.setdefault(
-            name, ipaddress.ip_interface((ip, self.ip_network.prefixlen))  # noqa
+            name,
+            ipaddress.ip_interface((ip, self.ip_network.prefixlen)),  # noqa
         )
 
     def network(self, name: t.Hashable, prefix: str | AnyIPNetwork) -> "IPAMNetwork":

@@ -23,7 +23,7 @@ class CheckRegistry(Registry, registry_name="check_services"):
                 ...
 
         The __call__ decorator will validate that the decorating class is of
-        type TestCases and has a "services" attribute defined.
+        type TestCases and has a "features" attribute defined.
 
         Parameters
         ----------

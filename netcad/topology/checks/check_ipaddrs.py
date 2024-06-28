@@ -21,7 +21,7 @@ from netcad.device import Device
 from netcad.device.profiles.l3_interfaces import InterfaceL3
 from netcad.checks import CheckCollection, Check, CheckResult, CheckMeasurement
 from netcad.checks import CheckExclusiveList, CheckExclusiveResult
-from netcad.checks import register_collection
+from ..topology_feature import TopologyDesignFeature
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -57,7 +57,8 @@ class IPInterfaceCheck(Check):
     class Params(BaseModel):
         if_name: str
 
-    Expect = IPInterfaceCheckExpect
+    class Expect(IPInterfaceCheckExpect):
+        pass
 
     check_params: Params
     expected_results: IPInterfaceCheckExpect
@@ -96,7 +97,7 @@ class IPInterfaceExclusiveListCheckResult(
 # -----------------------------------------------------------------------------
 
 
-@register_collection
+@TopologyDesignFeature.register_check_collection
 class IPInterfacesCheckCollection(CheckCollection):
     name = "ipaddrs"
     checks: Optional[List[IPInterfaceCheck]]

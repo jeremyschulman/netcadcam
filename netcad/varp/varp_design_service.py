@@ -11,7 +11,7 @@ from typing import Optional, TypeVar
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.design.design_service import DesignService
+from netcad.design.design_feature import DesignFeature
 
 # -----------------------------------------------------------------------------
 # Private Module Imports
@@ -30,7 +30,7 @@ __all__ = ["VarpDesignService", "VarpDesignServiceLike"]
 # -----------------------------------------------------------------------------
 
 
-class VarpDesignService(DesignService, registry_name="varp"):
+class VarpDesignService(DesignFeature, registry_name="varp"):
     """
     The VARP Design Service is specific to Arista EOS.
     """
@@ -39,9 +39,9 @@ class VarpDesignService(DesignService, registry_name="varp"):
 
     CHECK_COLLECTIONS = []
 
-    def __init__(self, service_name: Optional[str] = None, **kwargs):
+    def __init__(self, feature_name: Optional[str] = None, **kwargs):
         super(VarpDesignService, self).__init__(
-            service_name=service_name or self.DEFAULT_SERVICE_NAME, **kwargs
+            feature_name=feature_name or self.DEFAULT_SERVICE_NAME, **kwargs
         )
 
     def validate(self):
@@ -52,5 +52,5 @@ class VarpDesignService(DesignService, registry_name="varp"):
 
 
 VarpDesignServiceLike = TypeVar(
-    "VarpDesignServiceLike", VarpDesignService, DesignService
+    "VarpDesignServiceLike", VarpDesignService, DesignFeature
 )

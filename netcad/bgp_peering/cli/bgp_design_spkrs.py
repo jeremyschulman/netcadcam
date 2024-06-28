@@ -30,7 +30,7 @@ def find_design_bgp_speakers(
         bgp_svc_insts.update(design.services_of(BgpPeeringDesignService))
 
     if not bgp_svc_insts:
-        log.error("No BGP services found")
+        log.error("No BGP features found")
         return None
 
     # -------------------------------------------------------------------------
@@ -50,7 +50,7 @@ def find_design_bgp_speakers(
             map_dev_bgp_spkrs[hostname].append(spkr)
 
     if not map_dev_bgp_spkrs:
-        log.error("No devices found in BGP services")
+        log.error("No devices found in BGP features")
         return None
 
     return map_dev_bgp_spkrs

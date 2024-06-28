@@ -34,13 +34,13 @@ from .clig_netcad_show import clig_design_show as cli
 # -----------------------------------------------------------------------------
 
 
-@cli.command(name="services")
+@cli.command(name="features")
 @opt_designs()
 def cli_show_services(designs: Tuple[str]):
     """
-    show services in design
+    show features in design
 
-    This command will show the design services, service checks, and
+    This command will show the design features, service checks, and
     associated devices in the given design(s).
     """
 
@@ -69,10 +69,10 @@ def show_design_services(design: Design):
         title=f"Design: '{design.name}'",
     )
 
-    service_names = sorted(design.services)
+    service_names = sorted(design.features)
 
     for service_name in service_names:
-        service = design.services[service_name]
+        service = design.features[service_name]
 
         devices = sorted(
             filterfalse(lambda _d: isinstance(_d, HostDevice), service.devices)

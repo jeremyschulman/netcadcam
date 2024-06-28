@@ -112,7 +112,7 @@ class SwitchportCheckCollection(CheckCollection):
 
     @classmethod
     def build(
-        cls, device: Device, design_service: "VlansDesignService"
+        cls, device: Device, design_feature: "VlansDesignService"
     ) -> "SwitchportCheckCollection":
         checks = list()
 
@@ -142,5 +142,5 @@ class SwitchportCheckCollection(CheckCollection):
             )
 
         return SwitchportCheckCollection(
-            device=device.name, checks=checks, config=design_service.config
+            device=device.name, checks=checks, config=design_feature.config
         )

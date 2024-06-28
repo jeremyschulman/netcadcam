@@ -156,7 +156,8 @@ def cabling_table(table: Table, cables) -> Table:
         # them in the cabling table.
 
         if not all((dev_if.enabled, rmt_if.enabled)):
-            continue
+            pass
+            # continue
 
         elif all((dev_if.profile, rmt_if.profile)) and phy_is_different(
             dev_if.profile.phy_profile, rmt_if.profile.phy_profile

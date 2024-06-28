@@ -121,7 +121,7 @@ class VlanCheckCollection(CheckCollection):
 
     @classmethod
     def build(
-        cls, device: Device, design_service: "VlansDesignService"
+        cls, device: Device, design_feature: "VlansDesignService"
     ) -> "VlanCheckCollection":
         """
         Builds the VLAN checks for the given device.
@@ -131,7 +131,7 @@ class VlanCheckCollection(CheckCollection):
         device:
             The device instance
 
-        design_service: DeviceVlanDesignService
+        design_feature: DeviceVlanDesignService
             This is actually the _device_ vlan design service, and not
             the top-level vlan design service.
         """
@@ -186,8 +186,8 @@ class VlanCheckCollection(CheckCollection):
 
         collection = VlanCheckCollection(
             device=device.name,
-            exclusive=design_service.should_check_exclusively(device),
-            config=design_service.config,
+            exclusive=design_feature.should_check_exclusively(device),
+            config=design_feature.config,
             checks=[
                 VlanCheck(
                     check_params=VlanCheck.Params(vlan_id=vlan_p.vlan_id),

@@ -42,9 +42,9 @@ def import_netcam_plugins() -> Optional[PluginCatalog]:
         for os_name in supported_os:
             netcad_globals.g_netcam_plugins_os_catalog[os_name] = pg_obj
 
-        if not (svcs := pg_obj.config.get("services")):
+        if not (svcs := pg_obj.config.get("features")):
             raise RuntimeError(
-                f"netcam plugin {pg_obj.name} missing 'services' package list definition"
+                f"netcam plugin {pg_obj.name} missing 'features' package list definition"
             )
 
         for svc_pkg in svcs:

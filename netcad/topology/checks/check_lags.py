@@ -21,8 +21,7 @@ from pydantic import BaseModel
 from netcad.device import Device, DeviceInterface
 from netcad.checks import CheckCollection, Check, CheckResult, CheckMeasurement
 from netcad.device.profiles import InterfaceLag
-
-from netcad.checks import register_collection
+from ..topology_feature import TopologyDesignFeature
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -71,7 +70,7 @@ class LagCheckResult(CheckResult[LagCheck]):
     measurement: Measurement = None
 
 
-@register_collection
+@TopologyDesignFeature.register_check_collection
 class LagCheckCollection(CheckCollection):
     name = "lags"
     checks: Optional[List[LagCheck]]

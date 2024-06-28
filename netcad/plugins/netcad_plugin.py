@@ -16,7 +16,7 @@ from .plugins import Plugin, PluginProtocol
 
 class NetcadPlugin(Plugin):
     """
-    Netcad design plugins support for CLI extensions, design services, etc.
+    Netcad design plugins support for CLI extensions, design features, etc.
     """
 
     _plugin_typeref = PluginProtocol

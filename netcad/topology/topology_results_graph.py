@@ -5,6 +5,7 @@
 from netcad.reporting import ServiceReporting
 from netcad.checks import CheckStatus
 
+from .topology_feature import TopologyDesignFeature
 from .checks.check_device_info import DeviceInformationCheck
 from .checks.check_cabling_nei import InterfaceCablingCheck, InterfaceCablingCheckResult
 from .checks.check_interfaces import InterfaceCheck, InterfaceExclusiveListCheck
@@ -77,3 +78,6 @@ class TopologyResultsGrapher(ServiceReporting):
                 self.add_graph_edge(
                     source=cable_r, target=rmt_cable_r, status=cable_r.status
                 )
+
+
+TopologyDesignFeature.REPORTER = TopologyResultsGrapher

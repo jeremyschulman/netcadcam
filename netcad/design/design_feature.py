@@ -16,17 +16,18 @@ from netcad.registry import Registry
 from netcad.checks import CheckCollection
 
 from netcad.reporting import DesginReporting, ServiceReporting
+from netcad.checks import register_collection
 
 # -----------------------------------------------------------------------------
 # Exports`
 # -----------------------------------------------------------------------------
 
-__all__ = ["DesignService", "DesignServiceCatalog", "DesignServiceLike"]
+__all__ = ["DesignFeature", "DesignFeatureCatalog", "DesignFeatureLike"]
 
 
-class DesignService(Registry, registry_name="design_services"):
+class DesignFeature(Registry, registry_name="design_features"):
     """
-    A DesignService is a composition element within a Design.  Said another way,
+    A DesignFeature is a composition element within a Design.  Said another way,
     a Design is the composition of (collection of) DesignServices that the User
     wants to use to represent the operational state of their network.
 
@@ -34,8 +35,8 @@ class DesignService(Registry, registry_name="design_services"):
     ----------
     name: str
         The User defined name of the Design service instance.  In many cases a
-        subclass of DesignService may default this value.  For example, the
-        TopologyDesignService uses a name of "topology".
+        subclass of DesignFeature may default this value.  For example, the
+        TopologyDesignFeature uses a name of "topology".
 
     devices: Set[Device]
         The collection of devices that are "using" this service.  Some
@@ -56,22 +57,23 @@ class DesignService(Registry, registry_name="design_services"):
     """
 
     REPORTER = ServiceReporting
+    CHECK_COLLECTIONS = []
 
     def __init__(
         self,
-        service_name: str,
+        feature_name: str,
         devices: Optional[Iterable[Device]] = None,
         exclusive: Optional[bool] = None,
     ):
         """
         Superclass for create a new instance of a design service.  A Designer
         should not be calling this class directly, but rather a specific
-        DesignService subclass, such as TopologyDesignService or
+        DesignFeature subclass, such as TopologyDesignFeature or
         VlanDesignService.
 
         Parameters
         ----------
-        service_name: str
+        feature_name: str
             The User defiined name of the service.  They can use this
             name to retrieve the service from the Design instance.
 
@@ -82,7 +84,7 @@ class DesignService(Registry, registry_name="design_services"):
         """
         super().__init__()
 
-        self.name = service_name
+        self.name = feature_name
         self.devices: Set[Device] = set()
         self.exclusive = exclusive
 
@@ -131,6 +133,11 @@ class DesignService(Registry, registry_name="design_services"):
     def reporter(self, drg: DesginReporting) -> ServiceReporting:
         return self.REPORTER(drg=drg, service=self)
 
+    @classmethod
+    def register_check_collection(cls, collection):
+        cls.CHECK_COLLECTIONS.append(collection)
+        register_collection(collection)
 
-DesignServiceCatalog = Dict[Hashable, DesignService]
-DesignServiceLike = TypeVar("DesignServiceLike", bound=DesignService)
+
+DesignFeatureCatalog = Dict[Hashable, DesignFeature]
+DesignFeatureLike = TypeVar("DesignFeatureLike", bound=DesignFeature)

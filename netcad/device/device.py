@@ -40,14 +40,14 @@ from .device_interface_parse_name import (
 from .interface_ip import InterfaceIP, to_interface_ip
 
 if TYPE_CHECKING:
-    from netcad.design import Design, DesignServiceCatalog, DesignServiceLike
+    from netcad.design import Design, DesignFeatureCatalog, DesignFeatureLike
 
 
 # -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["Device", "DeviceInterface", "DeviceCatalog"]
+__all__ = ["Device", "DeviceInterface", "DeviceCatalog", "DeviceKindRegistry"]
 
 # -----------------------------------------------------------------------------
 #
@@ -57,6 +57,8 @@ __all__ = ["Device", "DeviceInterface", "DeviceCatalog"]
 
 
 PathLike = TypeVar("PathLike", str, Path)
+
+DeviceKindRegistry: dict[str, "DeviceType"] = dict()
 
 
 class Device(Registry, registry_name="devices"):
@@ -110,10 +112,11 @@ class Device(Registry, registry_name="devices"):
     device_type_sepc: Optional[DeviceType] = None
 
     interfaces: DeviceInterfaces = None
+    interfaces_map: Dict[str, str] = dict()
 
     template: Optional[PathLike] = None
 
-    def __init__(self, name: str, **kwargs):
+    def __init__(self, name: str, alias: str | None = None, **kwargs):
         """
         Device initialization creates a specific device instance for the given
         subclass.
@@ -128,6 +131,7 @@ class Device(Registry, registry_name="devices"):
         key-values that override the class attributes.
         """
 
+        self.alias = alias or name
         self.name = name
         self.sort_key = name
 
@@ -162,10 +166,10 @@ class Device(Registry, registry_name="devices"):
 
         self.design: Optional["Design"] = None
 
-        # services is a list of DesignService instances bound to this device.
-        # These services will later be used to generate test cases.
+        # features is a list of DesignFeature instances bound to this device.
+        # These features will later be used to generate test cases.
 
-        self.services: DesignServiceCatalog = dict()
+        self.services: DesignFeatureCatalog = dict()
 
         # for any Caller provided values, override the class attributes; or set
         # new attributes (TODO: rethink this approach)
@@ -246,9 +250,9 @@ class Device(Registry, registry_name="devices"):
             return None
 
     def services_of(
-        self, svc_cls: Type["DesignServiceLike"]
-    ) -> List["DesignServiceLike"]:
-        """Return the device services that are of the given service type"""
+        self, svc_cls: Type["DesignFeatureLike"]
+    ) -> List["DesignFeatureLike"]:
+        """Return the device features that are of the given service type"""
         return [svc for svc in self.services.values() if isinstance(svc, svc_cls)]
 
     # -------------------------------------------------------------------------
@@ -335,7 +339,9 @@ class Device(Registry, registry_name="devices"):
         Device _instance_ will get a deepcopy of these interfaces so that they
         can make one-off adjustments to the device standard.
         """
+
         super().__init_subclass__(**kwargs)
+        DeviceKindRegistry[cls.__name__] = cls
 
         cls.interfaces = DeviceInterfaces(DeviceInterface)
         cls.interfaces.device_cls = cls
@@ -437,4 +443,5 @@ class Device(Registry, registry_name="devices"):
 
 
 # A device catalog is a dictionary of devices key=dev.name, value=device-obj
+DeviceType = Type[Device]
 DeviceCatalog = Dict[str, Device]

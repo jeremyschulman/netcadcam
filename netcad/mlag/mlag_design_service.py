@@ -12,7 +12,7 @@ from copy import copy
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.design.design_service import DesignService
+from netcad.design.design_feature import DesignFeature
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -33,19 +33,19 @@ __all__ = ["MLagDesignService", "MLagServiceLike"]
 # -----------------------------------------------------------------------------
 
 
-class MLagDesignService(DesignService, registry_name="mlags"):
+class MLagDesignService(DesignFeature, registry_name="mlags"):
     CHECK_COLLECTIONS = []  # none for now
 
-    def __init__(self, service_name: str, **kwargs):
+    def __init__(self, feature_name: str, **kwargs):
         # The cabling must be created first becasue the add_devices, which is
         # called by the superclass constructor, uses cabling
 
-        self.cabling = CableMLagsByCableId(name=service_name)
+        self.cabling = CableMLagsByCableId(name=feature_name)
 
         # set up the design service with the User provided service name
 
-        super(MLagDesignService, self).__init__(service_name=service_name, **kwargs)
-        self.registry_add(name=service_name, obj=self)
+        super(MLagDesignService, self).__init__(feature_name=feature_name, **kwargs)
+        self.registry_add(name=feature_name, obj=self)
         self.check_collections = copy(self.__class__.CHECK_COLLECTIONS)
 
     def add_devices(self, *devices):
@@ -71,4 +71,4 @@ class MLagDesignService(DesignService, registry_name="mlags"):
         pass
 
 
-MLagServiceLike = TypeVar("MLagServiceLike", MLagDesignService, DesignService)
+MLagServiceLike = TypeVar("MLagServiceLike", MLagDesignService, DesignFeature)

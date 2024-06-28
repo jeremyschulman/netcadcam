@@ -36,7 +36,7 @@ def cli_show_bgp_peers(devices: Tuple[str], designs: Tuple[str]):
     """
 
     # -------------------------------------------------------------------------
-    # find all BGP services in the given design(s)
+    # find all BGP features in the given design(s)
     # -------------------------------------------------------------------------
 
     design_insts = {load_design(dsn_name) for dsn_name in designs}

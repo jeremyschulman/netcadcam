@@ -25,8 +25,8 @@ from netcad.checks import (
     CheckResult,
     CheckExclusiveList,
     CheckExclusiveResult,
-    register_collection,
 )
+from ..topology_feature import TopologyDesignFeature
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -103,7 +103,7 @@ class TransceiverExclusiveListCheckResult(
 # -----------------------------------------------------------------------------#
 
 
-@register_collection
+@TopologyDesignFeature.register_check_collection
 class TransceiverCheckCollection(CheckCollection):
     name = "transceivers"
     checks: Optional[List[TransceiverCheck]]

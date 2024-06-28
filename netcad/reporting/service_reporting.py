@@ -36,14 +36,14 @@ from netcad.device import Device, PseudoDevice, HostDevice
 from netcad.checks import CheckCollectionT, CheckResult, Check, CheckStatus
 
 if TYPE_CHECKING:
-    from netcad.design import DesignService
+    from netcad.design import DesignFeature
     from .design_reporting import DesginReporting
 
 from .reporter_logs import ReporterLogs
 
 
 class ServiceReporting:
-    def __init__(self, drg: "DesginReporting", service: "DesignService"):
+    def __init__(self, drg: "DesginReporting", service: "DesignFeature"):
         self.design = drg.design
         self.service = service
         self.graph = drg.graph
@@ -249,7 +249,7 @@ class ServiceReporting:
             # add the node to _this_service_ grapher
             self.results.add(res_obj)
 
-            # add the node to the design results-graph so services can
+            # add the node to the design results-graph so features can
             # cross-functionally use them.
             self.nodes_map[res_obj] = node.index
             self.results_map[device][check_type][res_obj.check_id] = res_obj

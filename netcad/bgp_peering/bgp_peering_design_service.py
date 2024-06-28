@@ -12,7 +12,7 @@ from copy import copy
 # Public Imports
 # -----------------------------------------------------------------------------
 
-from netcad.design.design_service import DesignService
+from netcad.design.design_feature import DesignFeature
 from netcad.peering import PeeringPlanner
 
 # -----------------------------------------------------------------------------
@@ -40,7 +40,7 @@ class BgpPeeringPlanner(PeeringPlanner[BGPSpeaker, BGPSpeakerName, BGPPeeringEnd
     pass
 
 
-class BgpPeeringDesignService(DesignService, registry_name="bgp_peering"):
+class BgpPeeringDesignService(DesignFeature, registry_name="bgp_peering"):
     """
     The VARP Design Service is specific to Arista EOS.
     """
@@ -50,12 +50,12 @@ class BgpPeeringDesignService(DesignService, registry_name="bgp_peering"):
     CHECK_COLLECTIONS = [BgpRoutersCheckCollection, BgpNeighborsCheckCollection]
     REPORTER = BgpPeeringResultsGrapher
 
-    def __init__(self, service_name: Optional[str] = None, **kwargs):
+    def __init__(self, feature_name: Optional[str] = None, **kwargs):
         super(BgpPeeringDesignService, self).__init__(
-            service_name=service_name or self.DEFAULT_SERVICE_NAME, **kwargs
+            feature_name=feature_name or self.DEFAULT_SERVICE_NAME, **kwargs
         )
         self.check_collections = copy(self.__class__.CHECK_COLLECTIONS)
-        self.peering = BgpPeeringPlanner(name=service_name)
+        self.peering = BgpPeeringPlanner(name=feature_name)
 
     def get_speaker(self, hostname: str, vrf: Optional[str] = None) -> "BGPSpeaker":
         """
@@ -96,5 +96,5 @@ class BgpPeeringDesignService(DesignService, registry_name="bgp_peering"):
 
 
 BgpPeeringDesignServiceLike = TypeVar(
-    "BgpPeeringDesignServiceLike", BgpPeeringDesignService, DesignService
+    "BgpPeeringDesignServiceLike", BgpPeeringDesignService, DesignFeature
 )

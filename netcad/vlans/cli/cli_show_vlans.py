@@ -75,7 +75,7 @@ def cli_report_vlans(devices: Tuple[str], designs: Tuple[str]):
 
 
 def show_device_vlan_table(device: Device, quiet=True):
-    # each device instance may have one or more device-vlan design services.
+    # each device instance may have one or more device-vlan design features.
     # Typically, it will be one, but perhaps a Designer comes up with a usage
     # that does have more than one.  So handle that, just in case ;-)
 

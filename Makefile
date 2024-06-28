@@ -2,26 +2,15 @@
 
 DIST_BASENAME := $(shell poetry version | tr ' ' '-')
 
-all: precheck
+precheck: code-format code-check
+	pre-commit run -a && \
+	interrogate -c pyproject.toml
 
-develop: setup.py requirements.txt
+code-format:
+	ruff format --config pyproject.toml $(CODE_DIRS)
 
-setup.py:
-	poetry build && \
-	tar --strip-components=1 -xvf dist/$(DIST_BASENAME).tar.gz '*/setup.py'
+code-check:
+	ruff check --config pyproject.toml $(CODE_DIRS)
 
-requirements.txt:
-	poetry export --without-hashes > requirements.txt
-
-clean:
-	rm -rf dist *.egg-info .pytest_cache
-	rm -f requirements.txt setup.py
-	rm -f poetry.lock
-	find . -name '__pycache__' | xargs rm -rf
-
-precheck:
-	invoke precheck
-
-.PHONY: tests
-tests:
-	cd tests && pytest -vvv
+doc-check:
+	interrogate -vvv $(PACKAGE_DIR) --omit-covered-files

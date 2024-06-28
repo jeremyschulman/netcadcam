@@ -17,7 +17,7 @@ from copy import copy
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device
-from netcad.design import DesignService
+from netcad.design import DesignFeature
 
 # -----------------------------------------------------------------------------
 # Module Private Imports
@@ -46,10 +46,10 @@ __all__ = [
 # -----------------------------------------------------------------------------
 
 
-class DeviceVlanDesignService(DesignService):
+class DeviceVlanDesignService(DesignFeature):
     """
     The "Device Vlan" design service is used to manage the vlans on a per-device
-    basis. This sevice, while all design services mataining a list of associated
+    basis. This sevice, while all design features mataining a list of associated
     devices, has only one device.
     """
 
@@ -59,9 +59,9 @@ class DeviceVlanDesignService(DesignService):
         self,
         device: Device,
         config: VlanDesignServiceConfig,
-        service_name: Optional[str] = "vlans",
+        feature_name: Optional[str] = "vlans",
     ):
-        super().__init__(service_name=service_name)
+        super().__init__(feature_name=feature_name)
         self.device = device
         self.check_collections = copy(self.__class__.CHECKS)
         self.add_devices(device)
@@ -103,12 +103,12 @@ class DeviceVlanDesignService(DesignService):
 
 
 DeviceVlanDesignServiceLike = TypeVar(
-    "DeviceVlanDesignServiceLike", DeviceVlanDesignService, DesignService
+    "DeviceVlanDesignServiceLike", DeviceVlanDesignService, DesignFeature
 )
 
 
 class VlansDesignService(
-    DesignService, UserDict, MutableMapping[Device, DeviceVlanDesignService]
+    DesignFeature, UserDict, MutableMapping[Device, DeviceVlanDesignService]
 ):
     """
     The VlansDesignService enables a Designer to manage the arrangement and
@@ -127,13 +127,13 @@ class VlansDesignService(
 
     def __init__(
         self,
-        service_name: Optional[str] = "vlans",
+        feature_name: Optional[str] = "vlans",
         device_service_name: Optional[str] = "vlans",
         config: Optional[VlanDesignServiceConfig] = None,
         **kwargs,
     ):
         """
-        Initialize the design level Vlan services.
+        Initialize the design level Vlan features.
 
         Parameters
         ----------
@@ -152,7 +152,7 @@ class VlansDesignService(
         """
         self._device_service_name = device_service_name
         self.config = config or VlanDesignServiceConfig()
-        super().__init__(service_name=service_name, **kwargs)
+        super().__init__(feature_name=feature_name, **kwargs)
 
     def add_devices(
         self, *devices: Device, config: Optional[VlanDesignServiceConfig] = None

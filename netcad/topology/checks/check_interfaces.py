@@ -25,7 +25,7 @@ from netcad.checks import (
     CheckExclusiveResult,
     CheckMeasurement,
 )
-from netcad.checks import register_collection
+from ..topology_feature import TopologyDesignFeature
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -134,7 +134,7 @@ class InterfaceExclusiveListCheckResult(CheckExclusiveResult):
 # -----------------------------------------------------------------------------
 
 
-@register_collection
+@TopologyDesignFeature.register_check_collection
 class InterfaceCheckCollection(CheckCollection):
     name = "interfaces"
     checks: Optional[List[InterfaceCheck]]

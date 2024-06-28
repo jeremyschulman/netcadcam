@@ -111,7 +111,7 @@ class BgpNeighborsCheckCollection(CheckCollection):
 
     @classmethod
     def build(
-        cls, device: Device, design_service: "BgpPeeringDesignService"
+        cls, device: Device, design_feature: "BgpPeeringDesignService"
     ) -> "BgpNeighborsCheckCollection":
         # import here to avoid circular imports
         from ..bgp_peering_design_service import BgpPeeringDesignService

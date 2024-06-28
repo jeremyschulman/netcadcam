@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 class DesginReporting:
     """
     DesignResultsGraph stores the graph of all check-results across all the
-    design services.  There is one graph.  Each design-service-result graph
+    design features.  There is one graph.  Each design-service-result graph
     will be initalized with a reference to this graph so that it can populate
     the contents.
     """
@@ -44,7 +44,7 @@ class DesginReporting:
         self.reporters: List[ServiceReporting] = list()
 
     def build(self):
-        for svc in self.design.services.values():
+        for svc in self.design.features.values():
             self.reporters.append(svc.reporter(drg=self))
 
         for gr in self.reporters:
