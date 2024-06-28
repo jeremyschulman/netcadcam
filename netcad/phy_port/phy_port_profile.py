@@ -5,7 +5,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional
+from typing import Optional, Type
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -70,6 +70,9 @@ class PortTransceiver(BaseModel):
     model: Optional[str] = None
 
 
+PhyProfileKindRegistry: dict[str, "PhyPortProfileType"] = dict()
+
+
 class PhyPortProfile(BaseModel):
     """
     A PortProfile is used to identify the physical port criterial if-and-only-if
@@ -119,3 +122,9 @@ class PhyPortProfile(BaseModel):
         le=4,
         description="",
     )
+
+    def __init_subclass__(cls, **kwargs):
+        PhyProfileKindRegistry[cls.__name__] = cls
+
+
+PhyPortProfileType = Type[PhyPortProfile]

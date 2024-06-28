@@ -106,7 +106,7 @@ class Design(Registry, registry_name="designs"):
         """
 
         for dev in devices:
-            self.devices[dev.name] = dev
+            self.devices[dev.alias] = dev
             dev.design = self
 
         # for method chaining

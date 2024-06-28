@@ -15,4 +15,5 @@ from netcad.phy_port.phy_port_profile import (
     PhyPortProfile,
     PortTransceiver,
     PortCable,
+    PhyProfileKindRegistry,
 )

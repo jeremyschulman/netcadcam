@@ -5,7 +5,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional, Union, Dict
+from typing import Optional, Union, Dict, Type
 from pathlib import Path
 from functools import cached_property
 
@@ -27,16 +27,15 @@ from netcad.helpers import SafeIsAttribute
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = [
-    "InterfaceProfile",
-    "InterfaceVirtual",
-]
+__all__ = ["InterfaceProfile", "InterfaceVirtual", "InterfaceProfileKindRegistry"]
 
 # -----------------------------------------------------------------------------
 #
 #                                 CODE BEGINS
 #
 # -----------------------------------------------------------------------------
+
+InterfaceProfileKindRegistry: dict[str, "InterfaceProfileType"] = dict()
 
 
 class InterfaceProfile(SafeIsAttribute):
@@ -63,6 +62,9 @@ class InterfaceProfile(SafeIsAttribute):
 
         for attr, value in kwargs.items():
             setattr(self, attr, value)
+
+    def __init_subclass__(cls, **kwargs):
+        InterfaceProfileKindRegistry[cls.__name__] = cls
 
     def get_template(self, env: jinja2.Environment) -> jinja2.Template:
         if not self.template:
@@ -95,6 +97,9 @@ class InterfaceProfile(SafeIsAttribute):
     @property
     def name(self):
         return self.__class__.__name__
+
+
+InterfaceProfileType = Type[InterfaceProfile]
 
 
 class InterfaceVirtual(InterfaceProfile):
