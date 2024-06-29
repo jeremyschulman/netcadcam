@@ -76,7 +76,7 @@ class InterfaceCablingCheckResult(CheckResult[InterfaceCablingCheck]):
     class Measurement(InterfaceCablingCheck.Expect, CheckMeasurement):
         pass
 
-    measurement: Measurement = None
+    measurement: Measurement | None = None
 
 
 @TopologyDesignFeature.register_check_collection

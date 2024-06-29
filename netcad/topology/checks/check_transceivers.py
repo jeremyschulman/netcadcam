@@ -5,7 +5,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import List, Optional
+from typing import List, Optional, ClassVar
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -48,7 +48,7 @@ __all__ = [
 
 
 class TransceiverCheck(Check):
-    check_type = "transceiver"
+    check_type: str = "transceiver"
 
     class Params(BaseModel):
         interface: str
@@ -83,7 +83,7 @@ class TransceiverCheckResult(CheckResult[TransceiverCheck]):
 
 
 class TransceiverExclusiveListCheck(Check):
-    check_type = "transceivers-exclusive"
+    check_type: str = "transceivers-exclusive"
     expected_results: CheckExclusiveList
 
 
@@ -105,7 +105,7 @@ class TransceiverExclusiveListCheckResult(
 
 @TopologyDesignFeature.register_check_collection
 class TransceiverCheckCollection(CheckCollection):
-    name = "transceivers"
+    name: ClassVar[str] = "transceivers"
     checks: Optional[List[TransceiverCheck]]
 
     @classmethod

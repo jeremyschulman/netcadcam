@@ -95,7 +95,7 @@ class VlanCheckResult(CheckResult[VlanCheck]):
     class Measurement(VlanCheckExpect, CheckMeasurement):
         pass
 
-    measurement: Measurement
+    measurement: Measurement | None = None
 
 
 # -----------------------------------------------------------------------------

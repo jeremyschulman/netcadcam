@@ -13,8 +13,7 @@ import types
 # Public Imports
 # -----------------------------------------------------------------------------
 
-from pydantic import Field, validator, RootModel
-from pydantic.generics import GenericModel
+from pydantic import Field, validator, RootModel, BaseModel
 from pydantic._internal._model_construction import ModelMetaclass
 
 # -----------------------------------------------------------------------------
@@ -73,7 +72,7 @@ class MetaCheckResult(ModelMetaclass):
 CheckT = TypeVar("CheckT", bound=Check)
 
 
-class CheckResult(GenericModel, Generic[CheckT], metaclass=MetaCheckResult):
+class CheckResult(BaseModel, Generic[CheckT], metaclass=MetaCheckResult):
     """
     The CheckResult is the base class for all Design service specific
     check-result definitions.  Each design service *SHOULD* define check

@@ -5,7 +5,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import List, Optional
+from typing import List, Optional, ClassVar
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -52,7 +52,7 @@ class IPInterfaceCheckExpect(BaseModel):
 
 
 class IPInterfaceCheck(Check):
-    check_type = "ipaddr"
+    check_type: str = "ipaddr"
 
     class Params(BaseModel):
         if_name: str
@@ -80,7 +80,7 @@ class IPInterfaceCheckResult(CheckResult[IPInterfaceCheck]):
 
 
 class IPInterfaceExclusiveListCheck(Check):
-    check_type = "ipaddrs-exclusive"
+    check_type: str = "ipaddrs-exclusive"
 
     expected_results: CheckExclusiveList
 
@@ -99,7 +99,7 @@ class IPInterfaceExclusiveListCheckResult(
 
 @TopologyDesignFeature.register_check_collection
 class IPInterfacesCheckCollection(CheckCollection):
-    name = "ipaddrs"
+    name: ClassVar[str] = "ipaddrs"
     checks: Optional[List[IPInterfaceCheck]]
 
     @classmethod

@@ -6,7 +6,6 @@
 # -----------------------------------------------------------------------------
 
 from typing import Tuple
-from operator import attrgetter
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -20,11 +19,9 @@ from rich.console import Console
 # -----------------------------------------------------------------------------
 
 from netcad.logger import get_logger
-from netcad.config import netcad_globals
 from netcad.device import Device, DeviceInterface
 from netcad.phy_port import PhyPortProfile
 from netcad.device.profiles.interface_profile import InterfaceVirtual
-from netcad.cabling.cable_plan import CablePlanner
 
 from netcad.cli.clig_netcad_show import clig_design_show
 from netcad.cli.device_inventory import get_devices_from_designs
@@ -49,27 +46,13 @@ def cli_design_report_cabling(devices: Tuple[str], designs: Tuple[str]):
         log.error("No devices located in the given designs")
         return
 
-    # If specific devices were requested by the User, then report each device
-    # separately.
+    log.info(f"Reporting on {len(device_objs)} devices ...")
 
     if devices:
-        print(f"Reporting on {len(device_objs)} devices ...")
         for dev_obj in device_objs:
             report_cabling_per_device(dev_obj)
-
-        return
-
-    # If here, then the User did not request a specific device, but rather would
-    # like to see the cabling report for all devices in each of the requested
-    # designs.
-
-    for design_name in designs:
-        cabler: CablePlanner
-        if not (cabler := CablePlanner.registry_get(name=design_name)):
-            log.error(f"No cabling found for design: {design_name}")
-            return
-
-        report_cabling_per_network(network=design_name, cabling=cabler)
+    else:
+        report_cabling_per_network(device_objs)
 
 
 # -----------------------------------------------------------------------------
@@ -207,22 +190,18 @@ def report_cabling_per_device(device: Device):
     console.print(table)
 
 
-def report_cabling_per_network(cabling: CablePlanner, network: str):
+def report_cabling_per_network(devices: dict[str, Device]):
     console = Console()
+    design = next(iter(devices)).design
+    design_desc = design.config.get("description", "")
 
-    if not cabling.cables:
-        console.print(f"[yellow]{network}: No cables.[/yellow]")
-        return
-
-    design = netcad_globals.g_netcad_designs[network]
-    design_desc = design.get("description") or ""
-
-    # orient each cable row (left-device, right-device) based on their sorting
-    # property (User defined, or hostname by default)
-
+    device: Device
     cables = [
-        [cable[0], *sorted(cable[1], key=attrgetter("device"))]
-        for cable in cabling.cables.items()
+        (interface.cable_id, interface, interface.cable_peer)
+        for device in devices
+        if not device.is_pseudo
+        for interface in device.interfaces.values()
+        if interface.cable_peer and not interface.cable_peer.device.is_pseudo
     ]
 
     # then sort the table based on the device-name, and interface sort-key
@@ -231,7 +210,7 @@ def report_cabling_per_network(cabling: CablePlanner, network: str):
 
     table = cabling_table(
         table=Table(
-            title=f"Design Cabling '{network}', {design_desc}",
+            title=f"Design Cabling '{design.name}', {design_desc}",
             title_justify="left",
             show_header=True,
             header_style="bold magenta",

@@ -47,7 +47,7 @@ class LagCheckExpectedInterfaceStatus(BaseModel):
 
 
 class LagCheck(Check):
-    check_type = "lag"
+    check_type: str = "lag"
 
     class Params(BaseModel):
         interface: str  # interface name of LAG

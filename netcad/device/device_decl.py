@@ -6,8 +6,8 @@ from .device import DeviceKindRegistry, Device
 
 class DeviceDecl(BaseModel):
     alias: str
-    hostname: str
     kind: str
+    hostname: str
     use_interface_maps: list[str] | None = Field(default_factory=list)
     primary_ip: str | None = Field(None)
 

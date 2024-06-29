@@ -12,7 +12,7 @@ from itertools import filterfalse
 # Public Imports
 # -----------------------------------------------------------------------------
 
-from pydantic import BaseModel, Extra
+from pydantic import BaseModel
 from pydantic._internal._model_construction import ModelMetaclass
 
 # -----------------------------------------------------------------------------
@@ -65,5 +65,5 @@ class MetaMeasurement(ModelMetaclass):
         return new_cls
 
 
-class CheckMeasurement(BaseModel, extra=Extra.allow, metaclass=MetaMeasurement):
+class CheckMeasurement(BaseModel, metaclass=MetaMeasurement):  # extra=Extra.allow
     pass

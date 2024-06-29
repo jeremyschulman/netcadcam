@@ -5,7 +5,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, ClassVar
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -50,7 +50,7 @@ class DeviceInformationCheckExpect(BaseModel):
 
 
 class DeviceInformationCheck(Check):
-    check_type = "device-info"
+    check_type: str = "device-info"
 
     class Params(BaseModel):
         device: str
@@ -75,7 +75,7 @@ class DeviceInterfaceInfo(BaseModel):
     name: str
     enabled: bool
     used: bool
-    port_type: Optional[str]
+    port_type: Optional[str] = Field("")
     desc: Optional[str] = Field("")
     profile_flags: Optional[dict] = Field(default_factory=dict)
 
@@ -115,7 +115,7 @@ def _interfaces_as_dict(device: Device) -> dict:
 
 @TopologyDesignFeature.register_check_collection
 class DeviceInformationCheckCollection(CheckCollection):
-    name = "device"
+    name: ClassVar[str] = "device"
     checks: List[DeviceInformationCheck]
     interfaces: Dict[str, DeviceInterfaceInfo]
 

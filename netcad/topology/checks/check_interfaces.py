@@ -5,13 +5,13 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import List, Optional, Union, Literal
+from typing import List, Optional, Union, Literal, ClassVar
 
 # -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
 
-from pydantic import BaseModel, NonNegativeInt
+from pydantic import BaseModel, NonNegativeInt, RootModel
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -76,7 +76,7 @@ class InterfaceCheckNotUsedExpectations(BaseModel):
 
 
 class InterfaceCheck(Check):
-    check_type = "interface"
+    check_type: str = "interface"
 
     check_params: InterfaceCheckParams
     expected_results: Union[
@@ -109,8 +109,8 @@ class InterfaceCheckResult(CheckResult):
 # -----------------------------------------------------------------------------
 
 
-class InterfacesListExpected(BaseModel):
-    __root__: List[str]
+class InterfacesListExpected(RootModel):
+    root: List[str]
 
 
 class InterfacesListExpectedMesurement(InterfacesListExpected, CheckMeasurement):
@@ -118,7 +118,7 @@ class InterfacesListExpectedMesurement(InterfacesListExpected, CheckMeasurement)
 
 
 class InterfaceExclusiveListCheck(Check):
-    check_type = "interfaces-exclusive"
+    check_type: str = "interfaces-exclusive"
     expected_results: InterfacesListExpected
 
 
@@ -136,7 +136,7 @@ class InterfaceExclusiveListCheckResult(CheckExclusiveResult):
 
 @TopologyDesignFeature.register_check_collection
 class InterfaceCheckCollection(CheckCollection):
-    name = "interfaces"
+    name: ClassVar[str] = "interfaces"
     checks: Optional[List[InterfaceCheck]]
 
     @classmethod
