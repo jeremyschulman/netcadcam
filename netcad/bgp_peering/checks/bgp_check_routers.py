@@ -5,7 +5,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import List, Optional
+from typing import List, Optional, ClassVar
 from typing import TYPE_CHECKING
 
 # -----------------------------------------------------------------------------
@@ -49,7 +49,7 @@ class BgpRouterCheck(Check):
     running BGP and showing that it is operationally present.
     """
 
-    check_type = "bgp-router"
+    check_type: str = "bgp-router"
 
     Params = BgpRouterCheckParams
 
@@ -84,7 +84,7 @@ class BgpRouterCheckResult(CheckResult[BgpRouterCheck]):
 
 @register_collection
 class BgpRoutersCheckCollection(CheckCollection):
-    name = "bgp-routers"
+    name: ClassVar[str] = "bgp-routers"
     checks: List[BgpRouterCheck]
 
     @classmethod

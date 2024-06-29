@@ -68,7 +68,7 @@ class DeviceInformationCheckResult(CheckResult[DeviceInformationCheck]):
     class Measurement(DeviceInformationCheck.Expect, CheckMeasurement):
         pass
 
-    measurement: Measurement = None
+    measurement: Measurement
 
 
 class DeviceInterfaceInfo(BaseModel):

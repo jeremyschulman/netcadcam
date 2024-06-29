@@ -175,7 +175,7 @@ class Device(Registry, registry_name="devices"):
         # features is a list of DesignFeature instances bound to this device.
         # These features will later be used to generate test cases.
 
-        self.services: DesignFeatureCatalog = dict()
+        self.features: DesignFeatureCatalog = dict()
 
         # for any Caller provided values, override the class attributes; or set
         # new attributes (TODO: rethink this approach)
@@ -266,7 +266,7 @@ class Device(Registry, registry_name="devices"):
         self, svc_cls: Type["DesignFeatureLike"]
     ) -> List["DesignFeatureLike"]:
         """Return the device features that are of the given service type"""
-        return [svc for svc in self.services.values() if isinstance(svc, svc_cls)]
+        return [svc for svc in self.features.values() if isinstance(svc, svc_cls)]
 
     # -------------------------------------------------------------------------
     #

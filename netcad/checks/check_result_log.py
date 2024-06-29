@@ -21,12 +21,12 @@ class CheckResultLogs(RootModel):
         if not table:
             table = Table(show_header=False, box=None)
 
-        status_id_hash = {id(log): CheckStatus(log[0]) for log in self.__root__}
+        status_id_hash = {id(log): CheckStatus(log[0]) for log in self.root}
 
         def sorted_by_status(_log):
             return status_id_hash[id(_log)].to_flag()
 
-        for log in sorted(self.__root__, key=sorted_by_status, reverse=True):
+        for log in sorted(self.root, key=sorted_by_status, reverse=True):
             st_enum = status_id_hash[id(log)]
             status, field, log_info = log
 
@@ -40,7 +40,7 @@ class CheckResultLogs(RootModel):
         return table
 
     def log(self, /, status, field, data):
-        self.__root__.append([status, field, data])
+        self.root.append([status, field, data])
 
     def __getattr__(self, item):
         """

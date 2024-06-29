@@ -81,7 +81,7 @@ def show_design_services(design: Design):
         if not devices:
             continue
 
-        device_svc = devices[0].services[service.name]
+        device_svc = devices[0].features[service.name]
         checks = sorted(check.get_name() for check in device_svc.check_collections)
 
         kind = service.__class__.__name__

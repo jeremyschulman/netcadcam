@@ -106,7 +106,7 @@ class DesignFeature(Registry, registry_name="design_features"):
 
         self.devices.update(devices)
         for each_dev in devices:
-            each_dev.services[self.name] = self
+            each_dev.features[self.name] = self
 
     def build(self):
         raise NotImplementedError()

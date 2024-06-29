@@ -84,9 +84,8 @@ class CheckResult(BaseModel, Generic[CheckT], metaclass=MetaCheckResult):
     status: CheckStatus = Field(CheckStatus.PASS)
     device: Device | str
     check: CheckT
-    check_id: Optional[str]
-
-    field: Optional[str]
+    check_id: Optional[str] = Field(None)
+    field: Optional[str] = Field(None)
 
     # even though the default-factory here is provided as dict, the use of the
     # metaclass will instantiate measurement as an instance of the measurement

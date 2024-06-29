@@ -134,7 +134,7 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
     check_service_list = cv_check_list.get()
     service_list = cv_service_list.get()
 
-    for ds_name, design_service in device.services.items():
+    for ds_name, design_service in device.features.items():
         # Handle User provided service list, if provided; only execute the
         # features the User requested explicitly.
 

@@ -5,7 +5,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import List, Optional
+from typing import List, Optional, ClassVar
 from typing import TYPE_CHECKING
 from ipaddress import ip_address
 
@@ -57,7 +57,7 @@ class BgpNeighborCheckParams(BaseModel):
 
 
 class BgpNeighborCheck(Check):
-    check_type = "bgp-neighbor"
+    check_type: str = "bgp-neighbor"
 
     def check_id(self) -> str:
         """
@@ -91,7 +91,7 @@ class BgpNeighborCheckResult(CheckResult[BgpNeighborCheck]):
 
 
 class BgpNeighborExclusiveListCheck(Check):
-    check_type = "exclusive_list"
+    check_type: str = "exclusive_list"
     expected_results: List[BgpNeighborCheck.Expect]
 
     def check_id(self) -> str:
@@ -106,7 +106,7 @@ class BgpNeighborExclusiveListCheck(Check):
 
 @register_collection
 class BgpNeighborsCheckCollection(CheckCollection):
-    name = "bgp-peering"
+    name: ClassVar[str] = "bgp-peering"
     checks: List[BgpNeighborCheck]
 
     @classmethod
