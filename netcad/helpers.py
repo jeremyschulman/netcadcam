@@ -88,7 +88,7 @@ class HashableModel(BaseModel):
         return hash((type(self),) + tuple(self.__dict__.values()))
 
 
-class SafeIsAttribute(object):
+class SafeIsAttribute:
     def __getattr__(self, item):
         if item.startswith("is_"):
             return False

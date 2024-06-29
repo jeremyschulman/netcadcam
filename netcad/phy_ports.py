@@ -103,11 +103,6 @@ QSFP_100G_SRBD = PhyPortProfile(
 #
 # -----------------------------------------------------------------------------
 
-QSFP_40G = PhyPortProfile(
-    name="QSFP-40G",
-    speed=PhyPortSpeeds.speed_40G,
-)
-
 QSFP_40G_LR4 = PhyPortProfile(
     name="QSFP-40G-LR4",
     speed=PhyPortSpeeds.speed_40G,

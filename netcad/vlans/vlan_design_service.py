@@ -180,7 +180,7 @@ class VlansDesignService(
 
         for each_dev in filterfalse(lambda d: d in self.data, devices):
             self[each_dev] = self.device_vlan_service(
-                service_name=self._device_service_name,
+                feature_name=self._device_service_name,
                 device=each_dev,
                 config=config or self.config,
             )

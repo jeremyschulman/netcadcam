@@ -19,7 +19,7 @@ import jinja2
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.phy_port.phy_port_profile import PhyPortProfile
+from netcad.phy_port.phy_port_profile import PhyPortProfile, PhyProfileRegistry
 from netcad.device.device_interface import DeviceInterface
 from netcad.helpers import SafeIsAttribute
 
@@ -27,7 +27,7 @@ from netcad.helpers import SafeIsAttribute
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["InterfaceProfile", "InterfaceVirtual", "InterfaceProfileKindRegistry"]
+__all__ = ["InterfaceProfile", "InterfaceVirtual", "InterfaceProfileRegistry"]
 
 # -----------------------------------------------------------------------------
 #
@@ -35,7 +35,7 @@ __all__ = ["InterfaceProfile", "InterfaceVirtual", "InterfaceProfileKindRegistry
 #
 # -----------------------------------------------------------------------------
 
-InterfaceProfileKindRegistry: dict[str, "InterfaceProfileType"] = dict()
+InterfaceProfileRegistry: dict[str, "InterfaceProfileType"] = dict()
 
 
 class InterfaceProfile(SafeIsAttribute):
@@ -64,7 +64,7 @@ class InterfaceProfile(SafeIsAttribute):
             setattr(self, attr, value)
 
     def __init_subclass__(cls, **kwargs):
-        InterfaceProfileKindRegistry[cls.__name__] = cls
+        InterfaceProfileRegistry[cls.__name__] = cls
 
     def get_template(self, env: jinja2.Environment) -> jinja2.Template:
         if not self.template:
@@ -97,6 +97,18 @@ class InterfaceProfile(SafeIsAttribute):
     @property
     def name(self):
         return self.__class__.__name__
+
+    @staticmethod
+    def attrs_from_decl(ifp_decl: dict):
+        ret = {"desc": ifp_decl.get("desc")}
+
+        if ifp_phy := ifp_decl.get("phy_profile"):
+            ret["phy_profile"] = PhyProfileRegistry[ifp_phy]
+
+        if ifp_template := ifp_decl.get("template"):
+            ret["template"] = Path(ifp_template)
+
+        return ret
 
 
 InterfaceProfileType = Type[InterfaceProfile]

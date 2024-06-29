@@ -5,7 +5,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import List, Optional
+from typing import List, Optional, Annotated, ClassVar, Any
 from typing import TYPE_CHECKING
 from itertools import chain
 from operator import itemgetter
@@ -73,12 +73,14 @@ class VlanCheckExpect(BaseModel):
 
 
 class VlanCheck(Check):
-    check_type = "vlan"
+    check_type: str = "vlan"
 
     class Params(BaseModel):
         vlan_id: int
 
-    Expect = VlanCheckExpect
+    class Expect(VlanCheckExpect):
+        pass
+
     check_params: Params
     expected_results: VlanCheckExpect
 
@@ -86,11 +88,14 @@ class VlanCheck(Check):
         return str(self.check_params.vlan_id)
 
 
+VlanChecKA = Annotated[VlanCheck, "a vlan check"]
+
+
 class VlanCheckResult(CheckResult[VlanCheck]):
-    class Measurement(VlanCheck.Expect, CheckMeasurement):
+    class Measurement(VlanCheckExpect, CheckMeasurement):
         pass
 
-    measurement: Measurement = None
+    measurement: Measurement
 
 
 # -----------------------------------------------------------------------------
@@ -99,7 +104,7 @@ class VlanCheckResult(CheckResult[VlanCheck]):
 
 
 class VlanExclusiveListCheck(Check):
-    check_type = "vlans-exclusive"
+    check_type: str = "vlans-exclusive"
     expected_results: CheckExclusiveList
 
 
@@ -115,9 +120,9 @@ class VlanExclusiveListCheckResult(CheckExclusiveResult[VlanExclusiveListCheck])
 
 @register_collection
 class VlanCheckCollection(CheckCollection):
-    name = "vlans"
+    name: ClassVar[str] = "vlans"
     checks: Optional[List[VlanCheck]]
-    config: Optional[dict]
+    config: Optional[Any]
 
     @classmethod
     def build(

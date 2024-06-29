@@ -12,7 +12,7 @@ from typing import Set, Optional, List
 # -----------------------------------------------------------------------------
 
 from netcad.device.profiles.interface_profile import InterfaceProfile
-from netcad.vlans import VlanProfile
+from netcad.vlans import VlanProfile, VlanProfileRegistry
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -37,6 +37,16 @@ class InterfaceL2Access(InterfaceL2):
 
     def vlans_used(self) -> Set[VlanProfile]:
         return {self.vlan}
+
+    @staticmethod
+    def attrs_from_decl(ifp_decl: dict):
+        if not (vlan_name := ifp_decl.get("vlan")):
+            return {}
+
+        if not (vlan_obj := VlanProfileRegistry.get(vlan_name)):
+            raise ValueError(f"vlan profile '{ifp_decl['vlan']}' not found")
+
+        return {"vlan": vlan_obj}
 
 
 class InterfaceL2Trunk(InterfaceL2):

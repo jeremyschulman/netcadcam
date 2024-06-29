@@ -11,7 +11,7 @@ import os
 from copy import deepcopy
 from pathlib import Path
 from itertools import chain
-from ipaddress import IPv4Interface, IPv6Interface
+from ipaddress import IPv4Interface, IPv6Interface, ip_interface
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -116,7 +116,13 @@ class Device(Registry, registry_name="devices"):
 
     template: Optional[PathLike] = None
 
-    def __init__(self, name: str, alias: str | None = None, **kwargs):
+    def __init__(
+        self,
+        name: str,
+        alias: str | None = None,
+        primary_ip: str | None = None,
+        **kwargs,
+    ):
         """
         Device initialization creates a specific device instance for the given
         subclass.
@@ -135,7 +141,7 @@ class Device(Registry, registry_name="devices"):
         self.name = name
         self.sort_key = name
 
-        self._primary_ip: Optional[IPv4Interface | IPv6Interface] = None
+        self._primary_ip: Optional[IPv4Interface | IPv6Interface] = primary_ip
         self._primary_ip_interface: Optional[DeviceInterface] = None
 
         # make a copy of the device class interfaces so that the instance can
@@ -248,6 +254,13 @@ class Device(Registry, registry_name="devices"):
             )
         except AttributeError:
             return None
+
+    @primary_ip.setter
+    def primary_ip(self, ipaddr: str):
+        self.set_primary_ip(ip_interface(ipaddr))
+
+    def set_primary_ip(self, ipaddr: str):
+        raise NotImplementedError()
 
     def services_of(
         self, svc_cls: Type["DesignFeatureLike"]

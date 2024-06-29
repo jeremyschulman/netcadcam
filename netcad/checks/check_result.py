@@ -13,9 +13,9 @@ import types
 # Public Imports
 # -----------------------------------------------------------------------------
 
-import pydantic
-from pydantic import BaseModel, Field, validator
+from pydantic import Field, validator, RootModel
 from pydantic.generics import GenericModel
+from pydantic._internal._model_construction import ModelMetaclass
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -32,6 +32,7 @@ from .check_result_log import CheckResultLogs
 
 __all__ = ["CheckResult", "CheckResultList", "CheckResultsCollection"]
 
+
 # -----------------------------------------------------------------------------
 #
 #                                 CODE BEGINS
@@ -39,7 +40,7 @@ __all__ = ["CheckResult", "CheckResultList", "CheckResultsCollection"]
 # -----------------------------------------------------------------------------
 
 
-class MetaCheckResult(pydantic.main.ModelMetaclass):
+class MetaCheckResult(ModelMetaclass):
     """
     This metaclass is used to default-factory the 'measurement' instance to the
     specific class-type designated in the measurement annotation.  This is done
@@ -48,8 +49,10 @@ class MetaCheckResult(pydantic.main.ModelMetaclass):
     """
 
     def __new__(mcs, name, bases, namespaces, **kwargs):
+        if not (annots := namespaces.get("__annotations__", {})):
+            return super().__new__(mcs, name, bases, namespaces, **kwargs)
+
         _field = "measurement"
-        annots = namespaces.get("__annotations__", {})
 
         if (msrd_cls := annots.get(_field)) is None:
             if Generic not in bases:
@@ -238,5 +241,5 @@ def _finalize_result(result: CheckResult, **kwargs) -> CheckResult:
 CheckResultsCollection = List[CheckResult]
 
 
-class CheckResultList(BaseModel):
-    __root__: Optional[List[CheckResult]] = Field(default_factory=list)
+class CheckResultList(RootModel):
+    root: Optional[List[CheckResult]] = Field(default_factory=list)

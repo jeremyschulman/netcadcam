@@ -5,7 +5,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import List, Optional
+from typing import List, Optional, ClassVar
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -56,7 +56,7 @@ NoValidateCabling = NoValidateCablingSential()
 
 
 class InterfaceCablingCheck(Check):
-    check_type = "cabling"
+    check_type: str = "cabling"
 
     class Params(BaseModel):
         interface: str
@@ -81,7 +81,7 @@ class InterfaceCablingCheckResult(CheckResult[InterfaceCablingCheck]):
 
 @TopologyDesignFeature.register_check_collection
 class InterfaceCablingCheckCollection(CheckCollection):
-    name = "cabling"
+    name: ClassVar[str] = "cabling"
     checks: Optional[List[InterfaceCablingCheck]]
 
     @classmethod

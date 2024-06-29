@@ -12,12 +12,13 @@ from typing import Callable
 # Public Imports
 # -----------------------------------------------------------------------------
 
-from pydantic.generics import GenericModel
+from pydantic import RootModel
 
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
+from .check import Check
 from .check_status import CheckStatus
 from .check_result import CheckResult
 
@@ -29,11 +30,11 @@ __all__ = ["CheckExclusiveResult", "CheckExclusiveList", "CheckExclusiveListGene
 
 
 DataT = TypeVar("DataT")
-CheckT = TypeVar("CheckT")
+CheckT = TypeVar("CheckT", bound=Check)
 
 
-class CheckExclusiveListGeneric(GenericModel, Generic[DataT]):
-    __root__: List[DataT]
+class CheckExclusiveListGeneric(RootModel[DataT]):
+    root: List[DataT]
 
 
 class CheckExclusiveList(CheckExclusiveListGeneric[str]):
@@ -62,8 +63,8 @@ class CheckExclusiveResult(CheckResult[CheckT], Generic[CheckT]):
         msrd = self.measurement
         expd = check.expected_results
 
-        msrd_set = set(msrd.__root__)
-        expd_set = set(expd.__root__)  # noqa
+        msrd_set = set(msrd.root)
+        expd_set = set(expd.root)
 
         if missing_set := expd_set - msrd_set:
             items = sorted(missing_set, key=sort_key)

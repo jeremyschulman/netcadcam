@@ -12,6 +12,7 @@ from typing import Optional, Type
 # -----------------------------------------------------------------------------
 
 from pydantic import PositiveInt, BaseModel, Field
+from pydantic.dataclasses import dataclass
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -70,10 +71,11 @@ class PortTransceiver(BaseModel):
     model: Optional[str] = None
 
 
-PhyProfileKindRegistry: dict[str, "PhyPortProfileType"] = dict()
+PhyProfileRegistry: dict[str, "PhyPortProfileType"] = dict()
 
 
-class PhyPortProfile(BaseModel):
+@dataclass
+class PhyPortProfile:
     """
     A PortProfile is used to identify the physical port criterial if-and-only-if
     a change from the default port is required.  Common usages of a PortProfile:
@@ -97,7 +99,7 @@ class PhyPortProfile(BaseModel):
     # `transceiver` - when used, identifies the transceiver expected to be
     # inserted into the physical port; or use of breakout.
 
-    transceiver: Optional[PortTransceiver]
+    transceiver: Optional[PortTransceiver] = Field(None)
 
     # all that do not have a transceiver  need a form-factor defined.
     form_factor: Optional[PhyPortFormFactorType] = Field(default=None)
@@ -123,8 +125,8 @@ class PhyPortProfile(BaseModel):
         description="",
     )
 
-    def __init_subclass__(cls, **kwargs):
-        PhyProfileKindRegistry[cls.__name__] = cls
+    def __post_init__(self):
+        PhyProfileRegistry[self.name] = self
 
 
 PhyPortProfileType = Type[PhyPortProfile]

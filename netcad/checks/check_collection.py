@@ -6,7 +6,7 @@
 # -----------------------------------------------------------------------------
 
 import sys
-from typing import List, Optional, Any, Type, Dict
+from typing import List, Optional, Any, Type, ClassVar
 from typing import TYPE_CHECKING
 from pathlib import Path
 import json
@@ -55,7 +55,7 @@ class CheckCollection(BaseModel):
         engine.
     """
 
-    name: str
+    name: ClassVar[str]
     device: str
     exclusive: Optional[bool] = Field(default=True)
     checks: Optional[List[Check]] = Field(default_factory=list)
@@ -70,7 +70,8 @@ class CheckCollection(BaseModel):
 
     @classmethod
     def get_name(cls):
-        return cls.__dict__["__fields__"]["name"].default
+        # return cls.__dict__["__fields__"]["name"].default
+        return cls.name
 
     @classmethod
     async def load(cls, testcase_dir: Path):
@@ -91,7 +92,7 @@ class CheckCollection(BaseModel):
     # so that we can parse these JSON payloads into objects later.
     # -------------------------------------------------------------------------
 
-    _check_results_type_map: Dict[str, Type[CheckResult]] = dict()
+    _check_results_type_map: ClassVar[dict[str, Type[CheckResult]]] = dict()
 
     @classmethod
     def parse_result(cls, result: dict) -> CheckResult:
@@ -134,7 +135,8 @@ class CheckCollection(BaseModel):
             if (check_field := each.__fields__.get("check")) is None:
                 raise RuntimeError(f'Required "check" missing from {str(each)}')
 
-            check_type_value = check_field.type_.__fields__["check_type"].default
+            rba = check_field.rebuild_annotation()
+            check_type_value = rba.__fields__["check_type"].default
             if not check_type_value:
                 raise RuntimeError(f'Required "check_type" missing from: {str(each)}')
 

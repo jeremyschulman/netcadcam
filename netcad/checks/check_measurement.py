@@ -12,8 +12,8 @@ from itertools import filterfalse
 # Public Imports
 # -----------------------------------------------------------------------------
 
-import pydantic
 from pydantic import BaseModel, Extra
+from pydantic._internal._model_construction import ModelMetaclass
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -44,7 +44,7 @@ from pydantic import BaseModel, Extra
 AnyMeasurementType = Union[bool, int, float, List, Dict, None, str]
 
 
-class MetaMeasurement(pydantic.main.ModelMetaclass):
+class MetaMeasurement(ModelMetaclass):
     def __new__(mcs, name, bases, namespaces, **kwargs):
         annotations = namespaces.get("__annotations__", {})
 

@@ -5,7 +5,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import List, Optional, Union, TYPE_CHECKING
+from typing import List, Optional, Union, TYPE_CHECKING, ClassVar, Any
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -47,7 +47,7 @@ __all__ = ["SwitchportCheckCollection", "SwitchportCheck", "SwitchportCheckResul
 
 
 class SwitchportCheck(Check):
-    check_type = "switchport"
+    check_type: str = "switchport"
 
     class Params(BaseModel):
         if_name: str
@@ -56,11 +56,11 @@ class SwitchportCheck(Check):
         switchport_mode: Optional[str]
 
     class ExpectAccess(ExpectSwitchport):
-        switchport_mode = "access"
+        switchport_mode: str = "access"
         vlan: VlanProfile
 
     class ExpectTrunk(ExpectSwitchport):
-        switchport_mode = "trunk"
+        switchport_mode: str = "trunk"
         native_vlan: Optional[VlanProfile]
         trunk_allowed_vlans: List[VlanProfile]
 
@@ -106,9 +106,9 @@ class SwitchportCheckResult(CheckResult[SwitchportCheck]):
 
 @register_collection
 class SwitchportCheckCollection(CheckCollection):
-    name = "switchports"
+    name: ClassVar[str] = "switchports"
     checks: Optional[List[SwitchportCheck]]
-    config: Optional[dict]
+    config: Optional[Any]
 
     @classmethod
     def build(

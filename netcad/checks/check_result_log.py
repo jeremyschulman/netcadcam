@@ -3,19 +3,19 @@ from functools import partial
 
 from rich.table import Table, Text
 from rich.pretty import Pretty
-from pydantic import BaseModel, Field
+from pydantic import Field, RootModel
 
 from netcad.checks.check_status import CheckStatus
 
 
-class CheckResultLogs(BaseModel):
+class CheckResultLogs(RootModel):
     """
     The CheckResultLog is a field within the CheckResult class.  It is used to
     store the check-result logging information so that it can be expressed to
     the User in an easy manner.
     """
 
-    __root__: List = Field(default_factory=list)
+    root: List = Field(default_factory=list)
 
     def pretty_table(self, table: Optional[Table] = None) -> Table:
         if not table:

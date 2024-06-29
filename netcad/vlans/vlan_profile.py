@@ -5,13 +5,13 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional, Hashable, TypeVar
+from typing import Optional, Hashable, TypeVar, Type
 
 # -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -23,7 +23,7 @@ from netcad.helpers import HashableModel
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["VlanProfile", "VlanProfileLike"]
+__all__ = ["VlanProfile", "VlanProfileLike", "VlanProfileRegistry"]
 
 
 # -----------------------------------------------------------------------------
@@ -32,8 +32,9 @@ __all__ = ["VlanProfile", "VlanProfileLike"]
 #
 # -----------------------------------------------------------------------------
 
+VlanProfileRegistry: dict[str, "VlanProfileType"] = dict()
 
-# noinspection PyUnresolvedReferences
+
 class VlanProfile(HashableModel):
     """
     VlanProfile is used to store the specific attributes of a VLAN that is used
@@ -58,11 +59,17 @@ class VlanProfile(HashableModel):
         None, description="VLAN name.  If not set then name is not checked"
     )
     vlan_id: int = Field(..., ge=1, le=4094)
-    description: Optional[str]
+    description: Optional[str] = Field(None)
 
     def __lt__(self, other: "VlanProfile"):
         """Enabled sorting by vlan-ID value"""
         return self.vlan_id < other.vlan_id
 
+    @model_validator(mode="after")
+    def _register(self):
+        VlanProfileRegistry[self.name] = self
+        return self
+
 
 VlanProfileLike = TypeVar("VlanProfileLike", VlanProfile, Hashable)
+VlanProfileType = Type[VlanProfile]

@@ -11,7 +11,7 @@ from netcad import __version__ as plugin_version  # noqa
 # Private Module Imports
 # -----------------------------------------------------------------------------
 
-from .vlan_profile import VlanProfile, VlanProfileLike
+from .vlan_profile import VlanProfile, VlanProfileLike, VlanProfileRegistry
 from .descriptor_peer_vlan_info import VlansFromPeer
 from .descriptor_vlan_all import VlansAll
 from .profiles.l2_interfaces import InterfaceL2, InterfaceL2Access, InterfaceL2Trunk
@@ -22,6 +22,7 @@ from .vlan_design_service import (
     DeviceVlanDesignService,
     DeviceVlanDesignServiceLike,
 )
+from .vlan_decl import build_vlans_from_decl
 
 from . import cli
 

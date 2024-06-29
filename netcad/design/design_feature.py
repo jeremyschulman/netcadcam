@@ -137,6 +137,7 @@ class DesignFeature(Registry, registry_name="design_features"):
     def register_check_collection(cls, collection):
         cls.CHECK_COLLECTIONS.append(collection)
         register_collection(collection)
+        return collection
 
 
 DesignFeatureCatalog = Dict[Hashable, DesignFeature]
