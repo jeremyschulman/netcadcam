@@ -7,13 +7,12 @@
 
 from typing import Optional, Any, List, TypeVar, Generic
 import typing
-import types
 
 # -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
 
-from pydantic import Field, validator, RootModel, BaseModel
+from pydantic import Field, field_validator, RootModel, BaseModel
 from pydantic._internal._model_construction import ModelMetaclass
 
 # -----------------------------------------------------------------------------
@@ -24,7 +23,6 @@ from netcad.device import Device
 from .check import Check
 from .check_status import CheckStatus, CheckStatusFlag
 from .check_result_log import CheckResultLogs
-from .check_measurement import CheckMeasurement
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -52,7 +50,6 @@ class MetaCheckResult(ModelMetaclass):
         if not (annots := namespaces.get("__annotations__")):
             return super().__new__(mcs, name, bases, namespaces, **kwargs)
 
-
         _field = "measurement"
 
         if (msrd_cls := annots.get(_field)) is None:
@@ -67,16 +64,6 @@ class MetaCheckResult(ModelMetaclass):
 
         annots[_field] = Optional[annots[_field]]
         namespaces[_field] = Field(default_factory=msrd_cls)
-
-        # for field_name, field_info in msrd_cls.model_fields.items():
-        #     f_annot = field_info.annotation
-        #     field_info = Field(None)
-        #     field_info.annotation = f_annot
-        #
-        # if name == 'InterfaceCablingCheckResult':
-        #     breakpoint()
-        #     x=1
-
 
         new_type = super().__new__(mcs, name, bases, namespaces, **kwargs)
         return new_type
@@ -152,7 +139,8 @@ class CheckResult(BaseModel, Generic[CheckT], metaclass=MetaCheckResult):
         json_encoders = {CheckResultLogs: lambda log: log.data}
 
     # noinspection PyUnusedLocal
-    @validator("check_id", always=True)
+    @field_validator("check_id", mode="before")
+    @classmethod
     def _save_tc_id(cls, value, values: dict):
         return values["check"].check_id()
 

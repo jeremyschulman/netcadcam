@@ -37,7 +37,7 @@ class CheckExclusiveListGeneric(RootModel[DataT]):
     root: List[DataT]
 
 
-class CheckExclusiveList(CheckExclusiveListGeneric[str]):
+class CheckExclusiveList(CheckExclusiveListGeneric[DataT], Generic[DataT]):
     pass
 
 

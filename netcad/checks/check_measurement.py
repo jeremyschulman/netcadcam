@@ -6,13 +6,12 @@
 # -----------------------------------------------------------------------------
 
 from typing import Union, List, Dict, Optional
-from itertools import filterfalse
 
 # -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from pydantic._internal._model_construction import ModelMetaclass
 
 # -----------------------------------------------------------------------------
@@ -43,18 +42,17 @@ from pydantic._internal._model_construction import ModelMetaclass
 # !! order matters here, ensure bool is first
 AnyMeasurementType = Union[bool, int, float, List, Dict, None, str]
 
-from pydantic import Field
 
 class MetaMeasurement(ModelMetaclass):
     def __new__(mcs, name, bases, namespaces, **kwargs):
-        annots = namespaces.get('__annotations__', {})
+        annots = namespaces.get("__annotations__", {})
         cls = next((cls for cls in bases if cls.model_fields), None)
 
         if not cls and not annots:
             return super().__new__(mcs, name, bases, namespaces, **kwargs)
 
         if not annots:
-            namespaces['__annotations__'] = annots
+            namespaces["__annotations__"] = annots
 
         if annots:
             for f_name, f_annot in annots.items():

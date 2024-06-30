@@ -11,7 +11,7 @@ from typing import Optional
 # Public Imports
 # -----------------------------------------------------------------------------
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -49,8 +49,8 @@ class Check(BaseModel):
     """
 
     check_type: str
-    check_params: Optional[BaseModel]
     expected_results: BaseModel
+    check_params: Optional[BaseModel] = Field(None)
 
     def check_id(self) -> str:
         """

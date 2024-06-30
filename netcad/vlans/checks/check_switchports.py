@@ -11,7 +11,7 @@ from typing import List, Optional, Union, TYPE_CHECKING, ClassVar, Any
 # Public Imports
 # -----------------------------------------------------------------------------
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -90,7 +90,8 @@ class SwitchportCheckResult(CheckResult[SwitchportCheck]):
 
     measurement: Measurement = None
 
-    @validator("measurement", pre=True, always=True)
+    @field_validator("measurement", mode="before")
+    @classmethod
     def _on_measurement(cls, value, values):
         check = values["check"]
         msrd_type = (

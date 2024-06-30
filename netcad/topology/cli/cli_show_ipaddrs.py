@@ -66,7 +66,6 @@ def cli_design_report_interfaces(devices: Tuple[str], designs: Tuple[str]):
     #     if isinstance(iface.profile, InterfaceL3)
     # ]
     #
-    # breakpoint()
 
     if_l3_list = [
         (dev, iface)

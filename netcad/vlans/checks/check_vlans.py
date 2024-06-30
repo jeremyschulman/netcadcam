@@ -5,7 +5,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import List, Optional, Annotated, ClassVar, Any
+from typing import List, Optional, ClassVar, Any
 from typing import TYPE_CHECKING
 from itertools import chain
 from operator import itemgetter
@@ -89,7 +89,6 @@ class VlanCheck(Check):
 
 
 class VlanCheckResult(CheckResult[VlanCheck]):
-
     class Measurement(VlanCheckExpect, CheckMeasurement):
         pass
 
@@ -103,7 +102,7 @@ class VlanCheckResult(CheckResult[VlanCheck]):
 
 class VlanExclusiveListCheck(Check):
     check_type: str = "vlans-exclusive"
-    expected_results: CheckExclusiveList
+    expected_results: CheckExclusiveList[int]
 
 
 class VlanExclusiveListCheckResult(CheckExclusiveResult[VlanExclusiveListCheck]):

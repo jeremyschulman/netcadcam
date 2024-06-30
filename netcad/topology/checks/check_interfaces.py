@@ -86,7 +86,6 @@ class InterfaceCheck(Check):
     def check_id(self) -> str:
         return str(self.check_params.interface)
 
-from pydantic import Field
 
 class InterfaceCheckMeasurement(CheckMeasurement):
     """

@@ -54,7 +54,7 @@ NoValidateCabling = NoValidateCablingSential()
 #
 # -----------------------------------------------------------------------------
 
-from pydantic import Field
+
 class InterfaceCablingCheck(Check):
     check_type: str = "cabling"
 
@@ -71,8 +71,8 @@ class InterfaceCablingCheck(Check):
     def check_id(self) -> str:
         return str(self.check_params.interface)
 
-class InterfaceCablingCheckResult(CheckResult[InterfaceCablingCheck]):
 
+class InterfaceCablingCheckResult(CheckResult[InterfaceCablingCheck]):
     class Measurement(CheckMeasurement, InterfaceCablingCheck.Expect):
         pass
 

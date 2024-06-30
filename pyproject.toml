@@ -23,11 +23,10 @@
    aiofiles = "*"
    maya = "*"
    bracket-expansion = "^1.0.0"
-   pydantic-env = "^0.2.0"
    bidict = "^0.22.0"
    igraph = "^0.11.5"
    setuptools = "^70.1.1"
-pydantic = "^2.7.4"
+   pydantic = "^2.7.4"
 
 [tool.poetry.dev-dependencies]
    pytest = "*"
