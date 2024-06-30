@@ -53,7 +53,7 @@ class SwitchportCheck(Check):
         if_name: str
 
     class ExpectSwitchport(BaseModel):
-        switchport_mode: Optional[str]
+        switchport_mode: str
 
     class ExpectAccess(ExpectSwitchport):
         switchport_mode: str = "access"
@@ -83,14 +83,17 @@ class SwitchportCheckResult(CheckResult[SwitchportCheck]):
         pass
 
     class MeasuredAccess(CheckMeasurement, SwitchportCheck.ExpectAccess):
-        pass
+        switchport_mode: str = "access"
+        vlan: int
 
     class MeasuredTrunk(CheckMeasurement, SwitchportCheck.ExpectTrunk):
-        pass
+        switchport_mode: str = "trunk"
+        native_vlan: Optional[int]
+        trunk_allowed_vlans: str
 
     measurement: Measurement = None
 
-    @field_validator("measurement", mode="before")
+    @field_validator("measurement", mode="wrap")
     @classmethod
     def _on_measurement(cls, value, values):
         check = values["check"]
