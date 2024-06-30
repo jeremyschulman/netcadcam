@@ -88,14 +88,12 @@ class VlanCheck(Check):
         return str(self.check_params.vlan_id)
 
 
-VlanChecKA = Annotated[VlanCheck, "a vlan check"]
-
-
 class VlanCheckResult(CheckResult[VlanCheck]):
+
     class Measurement(VlanCheckExpect, CheckMeasurement):
         pass
 
-    measurement: Measurement | None = None
+    measurement: Measurement
 
 
 # -----------------------------------------------------------------------------

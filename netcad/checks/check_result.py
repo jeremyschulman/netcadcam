@@ -24,6 +24,7 @@ from netcad.device import Device
 from .check import Check
 from .check_status import CheckStatus, CheckStatusFlag
 from .check_result_log import CheckResultLogs
+from .check_measurement import CheckMeasurement
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -48,8 +49,9 @@ class MetaCheckResult(ModelMetaclass):
     """
 
     def __new__(mcs, name, bases, namespaces, **kwargs):
-        if not (annots := namespaces.get("__annotations__", {})):
+        if not (annots := namespaces.get("__annotations__")):
             return super().__new__(mcs, name, bases, namespaces, **kwargs)
+
 
         _field = "measurement"
 
@@ -59,14 +61,25 @@ class MetaCheckResult(ModelMetaclass):
                     f"Missing {name}, required annotation for measurement field"
                 )
 
-        if msrd_cls and not namespaces.get(_field):
-            if isinstance(msrd_cls, types.UnionType):
-                msrd_cls, _ = typing.get_args(msrd_cls)
+        t_args = typing.get_args(msrd_cls)
+        if t_args and t_args[0] == typing.Any:
+            return super().__new__(mcs, name, bases, namespaces, **kwargs)
 
-            annots[_field] = Optional[annots[_field]]
-            namespaces[_field] = Field(default_factory=msrd_cls)
+        annots[_field] = Optional[annots[_field]]
+        namespaces[_field] = Field(default_factory=msrd_cls)
 
-        return super().__new__(mcs, name, bases, namespaces, **kwargs)
+        # for field_name, field_info in msrd_cls.model_fields.items():
+        #     f_annot = field_info.annotation
+        #     field_info = Field(None)
+        #     field_info.annotation = f_annot
+        #
+        # if name == 'InterfaceCablingCheckResult':
+        #     breakpoint()
+        #     x=1
+
+
+        new_type = super().__new__(mcs, name, bases, namespaces, **kwargs)
+        return new_type
 
 
 CheckT = TypeVar("CheckT", bound=Check)

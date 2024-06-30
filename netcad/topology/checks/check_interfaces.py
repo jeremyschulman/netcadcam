@@ -86,6 +86,7 @@ class InterfaceCheck(Check):
     def check_id(self) -> str:
         return str(self.check_params.interface)
 
+from pydantic import Field
 
 class InterfaceCheckMeasurement(CheckMeasurement):
     """
@@ -119,6 +120,7 @@ class InterfacesListExpectedMesurement(InterfacesListExpected, CheckMeasurement)
 
 class InterfaceExclusiveListCheck(Check):
     check_type: str = "interfaces-exclusive"
+    check_params: Optional[BaseModel] = None
     expected_results: InterfacesListExpected
 
 
