@@ -112,7 +112,6 @@ class Device(Registry, registry_name="devices"):
     device_type_sepc: Optional[DeviceType] = None
 
     interfaces: DeviceInterfaces = None
-    interfaces_map: Dict[str, str] = dict()
 
     template: Optional[PathLike] = None
 
@@ -149,6 +148,7 @@ class Device(Registry, registry_name="devices"):
         # that happen in real-world networks.
 
         self.interfaces: DeviceInterfaces = deepcopy(self.__class__.interfaces)
+        self.interfaces_map: Dict[str, str] = dict()
 
         # TODO: not sure why the device_cls attribute was not copied as part of
         #       the deepcopy above; need to investigate.  But for now, put the

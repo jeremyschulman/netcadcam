@@ -6,6 +6,8 @@
 # -----------------------------------------------------------------------------
 
 from typing import Tuple
+from collections import defaultdict
+from itertools import chain
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -13,6 +15,7 @@ from typing import Tuple
 
 from rich.console import Console
 from rich.table import Table
+from rich.console import Pretty
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -20,7 +23,8 @@ from rich.table import Table
 
 from netcad.logger import get_logger
 from netcad.device import Device
-from netcad.vlans.profiles.l2_interfaces import InterfaceL2Access, InterfaceL2Trunk
+from netcad.feats.vlans.vlan_design_service import DeviceVlanDesignService
+
 from netcad.cli.device_inventory import get_devices_from_designs
 from netcad.cli.common_opts import opt_devices, opt_designs
 
@@ -43,12 +47,12 @@ __all__ = []
 # -----------------------------------------------------------------------------
 
 
-@clig_design_show.command(name="switchports")
+@clig_design_show.command(name="vlans")
 @opt_designs()
 @opt_devices()
 def cli_report_vlans(devices: Tuple[str], designs: Tuple[str]):
     """
-    show interface switchports used by design
+    show VLANs used by design
     """
     log = get_logger()
 
@@ -60,7 +64,7 @@ def cli_report_vlans(devices: Tuple[str], designs: Tuple[str]):
 
     print(f"Showing {len(dev_objs)} devices ...")
     for dev in dev_objs:
-        show_device_switchports_table(dev)
+        show_device_vlan_table(dev)
 
 
 # -----------------------------------------------------------------------------
@@ -70,66 +74,49 @@ def cli_report_vlans(devices: Tuple[str], designs: Tuple[str]):
 # -----------------------------------------------------------------------------
 
 
-def show_device_switchports_table(device: Device, quiet=True):
+def show_device_vlan_table(device: Device, quiet=True):
     # each device instance may have one or more device-vlan design features.
     # Typically, it will be one, but perhaps a Designer comes up with a usage
     # that does have more than one.  So handle that, just in case ;-)
 
     console = Console()
 
+    vlans = list(
+        chain.from_iterable(
+            svc.all_vlans() for svc in device.services_of(DeviceVlanDesignService)
+        )
+    )
+
+    title = f"Device: {device.name}, VLANS ({len(vlans)})"
+
+    if not vlans:
+        if not quiet:
+            console.print("\n", title)
+        return
+
     table = Table(
-        "Interface",
-        "Description",
-        "Profile",
-        "Switchport\nMode",
-        "Access/Native VLAN",
-        "Trunk Allowed VLANs",
+        "VLAN-ID",
+        "VLAN Name",
+        "Interfaces",
+        title=title,
         title_justify="left",
         show_header=True,
-        show_lines=True,
         header_style="bold magenta",
     )
 
-    def fmt_vlan(_vlan):
-        return f"{_vlan.vlan_id:>4} ({_vlan.name})"
+    # correlate the vlans to each used by interfaces
 
-    for intf_obj in sorted(device.interfaces.used().values()):
-        if isinstance(intf_obj.profile, InterfaceL2Access):
-            swp_p = intf_obj.profile
-            vlan = swp_p.vlan
-            table.add_row(
-                intf_obj.name,
-                intf_obj.desc,
-                intf_obj.profile.name,
-                "access",
-                fmt_vlan(vlan),
-                "",
-            )
+    vlan_interfaces = defaultdict(list)
+    for iface in device.interfaces.used().values():
+        if not (vlans_used := getattr(iface.profile, "vlans_used", None)):
             continue
+        for vlan in vlans_used():
+            vlan_interfaces[vlan].append(iface)
 
-        if isinstance(intf_obj.profile, InterfaceL2Trunk):
-            swp_p = intf_obj.profile
-            nvlan = getattr(swp_p, "native_vlan", None)
-            allowed = "\n".join(
-                [fmt_vlan(vlan) for vlan in sorted(swp_p.trunk_allowed_vlans())]
-            )
+    for vlan in vlans:
+        if interfaces := vlan_interfaces.get(vlan):
+            interfaces = [iface.name for iface in sorted(interfaces)]
 
-            table.add_row(
-                intf_obj.name,
-                intf_obj.desc,
-                intf_obj.profile.name,
-                "trunk",
-                fmt_vlan(nvlan) if nvlan else "None",
-                allowed,
-            )
-            continue
+        table.add_row(str(vlan.vlan_id), vlan.name, Pretty(interfaces))
 
-    table.title = f"Device: {device.name}, Switchports ({len(table.rows)})"
-    if table.rows:
-        console.print("\n", table)
-        return
-
-    if quiet:
-        return
-
-    console.print("\n", table.title)
+    console.print("\n", table)

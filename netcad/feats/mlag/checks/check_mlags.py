@@ -17,7 +17,7 @@ from pydantic import BaseModel
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.mlag import DeviceMLagPairMember, DeviceMLagPairGroup
+from netcad.feats.mlag import DeviceMLagPairMember, DeviceMLagPairGroup
 from netcad.device.profiles import InterfaceLag
 from netcad.checks import CheckCollection, Check
 from netcad.checks import register_collection

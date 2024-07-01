@@ -137,7 +137,7 @@ class VlanCheckCollection(CheckCollection):
             This is actually the _device_ vlan design service, and not
             the top-level vlan design service.
         """
-        from netcad.vlans.vlan_design_service import DeviceVlanDesignService
+        from netcad.feats.vlans.vlan_design_service import DeviceVlanDesignService
 
         device_vlans = list(
             chain.from_iterable(

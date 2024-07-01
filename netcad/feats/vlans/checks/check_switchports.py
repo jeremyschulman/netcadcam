@@ -18,8 +18,8 @@ from pydantic import BaseModel, field_validator
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device
-from netcad.vlans import VlanProfile
-from netcad.vlans.profiles.l2_interfaces import InterfaceL2Access, InterfaceL2Trunk
+from .. import VlanProfile
+from ..profiles.l2_interfaces import InterfaceL2Access, InterfaceL2Trunk
 
 if TYPE_CHECKING:
     from ..vlan_design_service import VlansDesignService
@@ -93,7 +93,7 @@ class SwitchportCheckResult(CheckResult[SwitchportCheck]):
 
     measurement: Measurement = None
 
-    @field_validator("measurement", mode="wrap")
+    @field_validator("measurement", mode="after")
     @classmethod
     def _on_measurement(cls, value, values):
         check = values["check"]

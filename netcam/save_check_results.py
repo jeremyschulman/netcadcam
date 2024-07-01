@@ -58,7 +58,9 @@ async def device_checks_save_results(
 
     for res in results:
         res.device = dut.device.name
-        json_payload.append(res.model_dump(warnings="none"))
+        payload = res.model_dump(warnings="none")
+        payload["check_id"] = res.check.check_id()
+        json_payload.append(payload)
 
     async with aiofiles.open(results_file, "w+") as ofile:
         await ofile.write(json.dumps(json_payload, indent=3))

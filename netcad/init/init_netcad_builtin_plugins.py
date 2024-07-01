@@ -4,7 +4,7 @@
 from netcad.plugins import NetcadPlugin
 
 
-BUILTIN_PLUGINS = ["netcad.topology", "netcad.vlans"]
+BUILTIN_PLUGINS = ["netcad.feats.topology", "netcad.feats.vlans"]
 
 
 def init_netcad_builtin_plugins():

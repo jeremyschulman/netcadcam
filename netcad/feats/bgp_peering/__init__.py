@@ -13,6 +13,7 @@ from .bgp_peering_design_service import (
 )
 from .bgp_peering_types import BGPSpeaker
 from .bgp_neighbors import BGPPeerNeighbors
+from .bgp_nei_state import BgpNeighborState
 from . import cli
 
 

@@ -12,7 +12,7 @@ from typing import Set, Optional, List
 # -----------------------------------------------------------------------------
 
 from netcad.device.profiles.interface_profile import InterfaceProfile
-from netcad.vlans import VlanProfile, VlanProfileRegistry
+from ..vlan_profile import VlanProfile, VlanProfileRegistry
 
 # -----------------------------------------------------------------------------
 # Exports

@@ -22,7 +22,7 @@ from operator import attrgetter
 
 from netcad.device import DeviceInterface
 from netcad.device.profiles.interface_profile import InterfaceProfile
-from netcad.vlans import VlanProfile
+from .vlan_profile import VlanProfile
 
 # -----------------------------------------------------------------------------
 # Exports
