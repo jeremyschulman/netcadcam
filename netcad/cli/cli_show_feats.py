@@ -69,25 +69,24 @@ def show_design_services(design: Design):
         title=f"Design: '{design.name}'",
     )
 
-    service_names = sorted(design.features)
+    feat_names = sorted(design.features)
 
-    for service_name in service_names:
-        service = design.features[service_name]
+    for feat_name in feat_names:
+        feat = design.features[feat_name]
 
         devices = sorted(
-            filterfalse(lambda _d: isinstance(_d, HostDevice), service.devices)
+            filterfalse(lambda _d: isinstance(_d, HostDevice), feat.devices)
         )
 
         if not devices:
             continue
 
-        device_svc = devices[0].features[service.name]
-        checks = sorted(check.get_name() for check in device_svc.check_collections)
+        checks = sorted(check.get_name() for check in feat.check_collections)
 
-        kind = service.__class__.__name__
+        kind = feat.__class__.__name__
 
         table.add_row(
-            service.name, kind, ", ".join(checks), ", ".join([d.name for d in devices])
+            feat.name, kind, ", ".join(checks), ", ".join([d.name for d in devices])
         )
 
     Console().print(table)

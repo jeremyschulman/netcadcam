@@ -23,6 +23,7 @@ from .vlan_feat import (
     DeviceVlanDesignServiceLike,
 )
 from .vlan_decl import build_vlans_from_decl
+from . import checks
 
 from . import cli
 

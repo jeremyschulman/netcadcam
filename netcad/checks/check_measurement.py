@@ -54,15 +54,15 @@ class MetaMeasurement(ModelMetaclass):
         if not annots:
             namespaces["__annotations__"] = annots
 
-        if annots:
-            for f_name, f_annot in annots.items():
-                namespaces[f_name] = Field(None)
-                namespaces[f_name].annotation = Optional[f_annot]
-
-        elif cls:
+        if cls:
             for f_name, f_info in cls.model_fields.items():
                 f_annot = f_info.annotation
                 annots[f_name] = f_info.annotation
+                namespaces[f_name] = Field(None)
+                namespaces[f_name].annotation = Optional[f_annot]
+
+        if annots:
+            for f_name, f_annot in annots.items():
                 namespaces[f_name] = Field(None)
                 namespaces[f_name].annotation = Optional[f_annot]
 

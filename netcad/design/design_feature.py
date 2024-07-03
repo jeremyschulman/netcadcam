@@ -5,7 +5,8 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import List, Type, Optional, Hashable, Dict, TypeVar, Iterable, Set
+from typing import Optional, Hashable, Dict, TypeVar, Iterable, Set
+from copy import deepcopy
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -13,7 +14,6 @@ from typing import List, Type, Optional, Hashable, Dict, TypeVar, Iterable, Set
 
 from netcad.device import Device, DeviceNonExclusive
 from netcad.registry import Registry
-from netcad.checks import CheckCollection
 
 from netcad.reporting import DesginReporting, ServiceReporting
 from netcad.checks import register_collection
@@ -57,7 +57,7 @@ class DesignFeature(Registry, registry_name="design_features"):
     """
 
     REPORTER = ServiceReporting
-    CHECK_COLLECTIONS = []
+    CHECK_COLLECTIONS = None
 
     def __init__(
         self,
@@ -91,7 +91,7 @@ class DesignFeature(Registry, registry_name="design_features"):
         if devices:
             self.add_devices(*devices)
 
-        self.check_collections: List[Type[CheckCollection]] = list()
+        self.check_collections = deepcopy(self.CHECK_COLLECTIONS)
 
     def add_devices(self, *devices: Device):
         """
@@ -132,6 +132,10 @@ class DesignFeature(Registry, registry_name="design_features"):
 
     def reporter(self, drg: DesginReporting) -> ServiceReporting:
         return self.REPORTER(drg=drg, service=self)
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        cls.CHECK_COLLECTIONS = list()
 
     @classmethod
     def register_check_collection(cls, collection):
