@@ -23,7 +23,7 @@ from rich.console import Pretty
 
 from netcad.logger import get_logger
 from netcad.device import Device
-from netcad.feats.vlans.vlan_design_service import DeviceVlanDesignService
+from netcad.feats.vlans.vlan_feat import DeviceVlanDesignFeature
 
 from netcad.cli.device_inventory import get_devices_from_designs
 from netcad.cli.common_opts import opt_devices, opt_designs
@@ -83,7 +83,7 @@ def show_device_vlan_table(device: Device, quiet=True):
 
     vlans = list(
         chain.from_iterable(
-            svc.all_vlans() for svc in device.services_of(DeviceVlanDesignService)
+            svc.all_vlans() for svc in device.services_of(DeviceVlanDesignFeature)
         )
     )
 

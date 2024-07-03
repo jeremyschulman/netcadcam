@@ -23,8 +23,6 @@ from netcad.design import DesignFeature
 # Module Private Imports
 # -----------------------------------------------------------------------------
 
-from .checks.check_vlans import VlanCheckCollection
-from .checks.check_switchports import SwitchportCheckCollection
 from .vlan_profile import VlanProfile
 from .vlan_ds_config import VlanDesignServiceConfig
 
@@ -33,8 +31,8 @@ from .vlan_ds_config import VlanDesignServiceConfig
 # -----------------------------------------------------------------------------
 
 __all__ = [
-    "VlansDesignService",
-    "DeviceVlanDesignService",
+    "VlansDesignFeature",
+    "DeviceVlanDesignFeature",
     "DeviceVlanDesignServiceLike",
 ]
 
@@ -46,14 +44,12 @@ __all__ = [
 # -----------------------------------------------------------------------------
 
 
-class DeviceVlanDesignService(DesignFeature):
+class DeviceVlanDesignFeature(DesignFeature):
     """
     The "Device Vlan" design service is used to manage the vlans on a per-device
     basis. This sevice, while all design features mataining a list of associated
     devices, has only one device.
     """
-
-    CHECKS = [VlanCheckCollection, SwitchportCheckCollection]
 
     def __init__(
         self,
@@ -63,7 +59,7 @@ class DeviceVlanDesignService(DesignFeature):
     ):
         super().__init__(feature_name=feature_name)
         self.device = device
-        self.check_collections = copy(self.__class__.CHECKS)
+        self.check_collections = copy(self.__class__.CHECK_COLLECTIONS)
         self.add_devices(device)
         self.alias_names = dict()
         self.config = config
@@ -103,27 +99,27 @@ class DeviceVlanDesignService(DesignFeature):
 
 
 DeviceVlanDesignServiceLike = TypeVar(
-    "DeviceVlanDesignServiceLike", DeviceVlanDesignService, DesignFeature
+    "DeviceVlanDesignServiceLike", DeviceVlanDesignFeature, DesignFeature
 )
 
 
-class VlansDesignService(
-    DesignFeature, UserDict, MutableMapping[Device, DeviceVlanDesignService]
+class VlansDesignFeature(
+    DesignFeature, UserDict, MutableMapping[Device, DeviceVlanDesignFeature]
 ):
     """
-    The VlansDesignService enables a Designer to manage the arrangement and
+    The VlansDesignFeature enables a Designer to manage the arrangement and
     behavior of the VlanProfiles used by a design.  A device-specific design
     service is also created & associated to devices as they are added to the
-    VlansDesignService.
+    VlansDesignFeature.
 
-    The VlansDesignService subclasses UserDict where each key is the Device
+    The VlansDesignFeature subclasses UserDict where each key is the Device
     instance and the value is the per-device Vlan design service.
     """
 
     # The per-device VLAN service class.  By default, will be the class defined
     # above.  A Designer may wish to subclass something different.
 
-    device_vlan_service = DeviceVlanDesignService
+    device_vlan_service = DeviceVlanDesignFeature
 
     def __init__(
         self,
@@ -156,7 +152,7 @@ class VlansDesignService(
 
     def add_devices(
         self, *devices: Device, config: Optional[VlanDesignServiceConfig] = None
-    ) -> "VlansDesignService":
+    ) -> "VlansDesignFeature":
         """
         Add the list of Device instances to the VlanDesignService.  As a result
         each device will also be associated with the `device_vlan_service` class
@@ -187,7 +183,7 @@ class VlansDesignService(
 
         return self
 
-    def build(self) -> "VlansDesignService":
+    def build(self) -> "VlansDesignFeature":
         """
         Runs the vlan service build process on each associated device.
 

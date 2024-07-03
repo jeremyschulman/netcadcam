@@ -5,7 +5,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import List, Optional, Union, TYPE_CHECKING, ClassVar, Any
+from typing import List, Optional, Union, ClassVar, Any
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -21,8 +21,7 @@ from netcad.device import Device
 from .. import VlanProfile
 from ..profiles.l2_interfaces import InterfaceL2Access, InterfaceL2Trunk
 
-if TYPE_CHECKING:
-    from ..vlan_design_service import VlansDesignService
+from ..vlan_feat import VlansDesignFeature
 
 
 from netcad.checks import (
@@ -30,7 +29,6 @@ from netcad.checks import (
     Check,
     CheckResult,
     CheckMeasurement,
-    register_collection,
 )
 
 
@@ -108,7 +106,7 @@ class SwitchportCheckResult(CheckResult[SwitchportCheck]):
 # -----------------------------------------------------------------------------
 
 
-@register_collection
+@VlansDesignFeature.register_check_collection
 class SwitchportCheckCollection(CheckCollection):
     name: ClassVar[str] = "switchports"
     checks: Optional[List[SwitchportCheck]]
@@ -116,7 +114,7 @@ class SwitchportCheckCollection(CheckCollection):
 
     @classmethod
     def build(
-        cls, device: Device, design_feature: "VlansDesignService"
+        cls, device: Device, design_feature: "VlansDesignFeature"
     ) -> "SwitchportCheckCollection":
         checks = list()
 

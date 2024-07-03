@@ -17,9 +17,9 @@ from .descriptor_vlan_all import VlansAll
 from .profiles.l2_interfaces import InterfaceL2, InterfaceL2Access, InterfaceL2Trunk
 from .profiles.vlan_interface import InterfaceVlan
 from .vlan_ds_config import VlanDesignServiceConfig
-from .vlan_design_service import (
-    VlansDesignService,
-    DeviceVlanDesignService,
+from .vlan_feat import (
+    VlansDesignFeature,
+    DeviceVlanDesignFeature,
     DeviceVlanDesignServiceLike,
 )
 from .vlan_decl import build_vlans_from_decl

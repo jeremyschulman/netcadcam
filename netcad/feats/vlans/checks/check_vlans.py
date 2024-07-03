@@ -6,7 +6,6 @@
 # -----------------------------------------------------------------------------
 
 from typing import List, Optional, ClassVar, Any
-from typing import TYPE_CHECKING
 from itertools import chain
 from operator import itemgetter
 
@@ -29,7 +28,6 @@ from netcad.checks import (
     CheckMeasurement,
     CheckExclusiveList,
     CheckExclusiveResult,
-    register_collection,
 )
 
 # -----------------------------------------------------------------------------
@@ -37,9 +35,7 @@ from netcad.checks import (
 # -----------------------------------------------------------------------------
 
 from ..profiles import InterfaceL2Access, InterfaceL2Trunk, InterfaceVlan
-
-if TYPE_CHECKING:
-    from ..vlan_design_service import VlansDesignService
+from ..vlan_feat import VlansDesignFeature
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -115,7 +111,7 @@ class VlanExclusiveListCheckResult(CheckExclusiveResult[VlanExclusiveListCheck])
 # -----------------------------------------------------------------------------
 
 
-@register_collection
+@VlansDesignFeature.register_check_collection
 class VlanCheckCollection(CheckCollection):
     name: ClassVar[str] = "vlans"
     checks: Optional[List[VlanCheck]]
@@ -123,7 +119,7 @@ class VlanCheckCollection(CheckCollection):
 
     @classmethod
     def build(
-        cls, device: Device, design_feature: "VlansDesignService"
+        cls, device: Device, design_feature: "VlansDesignFeature"
     ) -> "VlanCheckCollection":
         """
         Builds the VLAN checks for the given device.
@@ -133,15 +129,15 @@ class VlanCheckCollection(CheckCollection):
         device:
             The device instance
 
-        design_feature: DeviceVlanDesignService
+        design_feature: DeviceVlanDesignFeature
             This is actually the _device_ vlan design service, and not
             the top-level vlan design service.
         """
-        from netcad.feats.vlans.vlan_design_service import DeviceVlanDesignService
+        from netcad.feats.vlans.vlan_feat import DeviceVlanDesignFeature
 
         device_vlans = list(
             chain.from_iterable(
-                svc.all_vlans() for svc in device.services_of(DeviceVlanDesignService)
+                svc.all_vlans() for svc in device.services_of(DeviceVlanDesignFeature)
             )
         )
 
