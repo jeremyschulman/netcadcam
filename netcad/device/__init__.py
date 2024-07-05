@@ -9,3 +9,5 @@ from .peer_interface_id import PeerInterfaceId
 from .device_type import DeviceType, DeviceTypeRegistry
 from .device_type_factory import DeviceTypeFactory
 from .interface_ip import InterfaceIP, to_interface_ip
+from .device_decl import build_devices_from_decl, DeviceDecl
+from .build_device_ports_from_decl import build_device_ports_from_decl

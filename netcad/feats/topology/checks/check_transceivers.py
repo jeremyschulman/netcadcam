@@ -84,7 +84,7 @@ class TransceiverCheckResult(CheckResult[TransceiverCheck]):
 
 class TransceiverExclusiveListCheck(Check):
     check_type: str = "transceivers-exclusive"
-    expected_results: CheckExclusiveList[int]
+    expected_results: CheckExclusiveList[str | int]
 
 
 class TransceiverExclusiveListCheckResult(

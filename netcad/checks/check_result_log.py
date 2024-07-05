@@ -42,6 +42,12 @@ class CheckResultLogs(RootModel):
     def log(self, /, status, field, data):
         self.root.append([status, field, data])
 
+    def info(self, field, data):
+        self.log(CheckStatus.INFO, field, data)
+
+    def fail(self, field, data):
+        self.log(CheckStatus.FAIL, field, data)
+
     def __getattr__(self, item):
         """
         Define the getattr oberload so the caller can invite the logging methods
