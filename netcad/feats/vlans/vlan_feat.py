@@ -10,7 +10,6 @@ from itertools import filterfalse
 from operator import attrgetter
 from collections import UserDict
 from functools import lru_cache
-from copy import copy
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -55,11 +54,12 @@ class DeviceVlanDesignFeature(DesignFeature):
         self,
         device: Device,
         config: VlanDesignServiceConfig,
+        check_collections,
         feature_name: Optional[str] = "vlans",
     ):
         super().__init__(feature_name=feature_name)
         self.device = device
-        self.check_collections = copy(self.__class__.CHECK_COLLECTIONS)
+        self.check_collections = check_collections
         self.add_devices(device)
         self.alias_names = dict()
         self.config = config
@@ -146,9 +146,9 @@ class VlansDesignFeature(
             provided, then a configuration instance is created with the default
             settings.
         """
+        super().__init__(feature_name=feature_name, **kwargs)
         self._device_service_name = device_service_name
         self.config = config or VlanDesignServiceConfig()
-        super().__init__(feature_name=feature_name, **kwargs)
 
     def add_devices(
         self, *devices: Device, config: Optional[VlanDesignServiceConfig] = None
@@ -178,6 +178,7 @@ class VlansDesignFeature(
             self[each_dev] = self.device_vlan_service(
                 feature_name=self._device_service_name,
                 device=each_dev,
+                check_collections=self.check_collections,
                 config=config or self.config,
             )
 

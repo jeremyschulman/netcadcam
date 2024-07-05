@@ -13,3 +13,4 @@ from .l3_interfaces import (
     InterfaceIsInVRF,
 )
 from .lag_interfaces import InterfaceLag, InterfaceLagMember
+from .build_ifp_decl import build_interface_profile_from_decl

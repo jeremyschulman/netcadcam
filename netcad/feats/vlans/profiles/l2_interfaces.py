@@ -75,3 +75,19 @@ class InterfaceL2Trunk(InterfaceL2):
         """
         native = {self.native_vlan} if hasattr(self, "native_vlan") else set()
         return self.vlans_used() - native
+
+    @staticmethod
+    def attrs_from_decl(ifp_decl: dict):
+        allowed_vlan_list = [
+            VlanProfileRegistry.get(vlan_name)
+            for vlan_name in ifp_decl.get("allowed_vlans", [])
+        ]
+
+        n_vlan = (
+            VlanProfileRegistry[nvn] if (nvn := ifp_decl.get("native_vlan")) else None
+        )
+
+        return {
+            "native_vlan": n_vlan,
+            "allowed_vlans": allowed_vlan_list,
+        }
