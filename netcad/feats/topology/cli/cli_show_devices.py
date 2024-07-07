@@ -80,7 +80,12 @@ def cli_design_report_devices(designs: Tuple[str], **flags):
         log.error("No devices located in the given designs")
         return
 
-    log.info(f"Reporting on {len(designs)} designs, {len(device_objs)} devices.")
+    if not flags["include_pseudo"]:
+        c_devices = len({dev for dev in device_objs if not dev.is_pseudo})
+    else:
+        c_devices = len(device_objs)
+
+    log.info(f"Reporting on {len(designs)} designs, {c_devices} devices.")
 
     # sort the devices into their specific design groups so that we can produce
     # per-design tables.  This approach is needed since a "design" could
@@ -144,7 +149,7 @@ def show_network_devices(design: Design, **flags):
             dev_type = dev.__class__.__name__
 
             # if the device is pseudo, and the User requested these to be shown,
-            # then include them with a blue-color-style.  Otherwise skip this
+            # then include them with a blue-color-style.  Otherwise, skip this
             # device.
 
             if dev.is_pseudo:

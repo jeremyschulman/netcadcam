@@ -45,6 +45,9 @@ class CheckResultLogs(RootModel):
     def info(self, field, data):
         self.log(CheckStatus.INFO, field, data)
 
+    def warn(self, field, data):
+        self.log(CheckStatus.WARN, field, data)
+
     def fail(self, field, data):
         self.log(CheckStatus.FAIL, field, data)
 

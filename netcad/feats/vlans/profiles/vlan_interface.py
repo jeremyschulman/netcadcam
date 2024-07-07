@@ -6,7 +6,7 @@ from typing import Set
 from netcad.device.profiles.interface_profile import InterfaceVirtual
 from netcad.device.profiles.l3_interfaces import InterfaceL3
 
-from ..vlan_profile import VlanProfile
+from ..vlan_profile import VlanProfile, VlanProfileRegistry
 
 
 class InterfaceVlan(InterfaceVirtual, InterfaceL3):
@@ -19,3 +19,7 @@ class InterfaceVlan(InterfaceVirtual, InterfaceL3):
 
     def vlans_used(self) -> Set[VlanProfile]:
         return {self.vlan}
+
+    @staticmethod
+    def attrs_from_decl(ifp_decl: dict):
+        return {"vlan": VlanProfileRegistry.get(ifp_decl["vlan"])}

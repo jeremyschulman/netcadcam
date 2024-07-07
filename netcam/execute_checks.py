@@ -185,7 +185,7 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
                         CheckResult[Check](
                             device=device,
                             status=CheckStatus.SKIP,
-                            check=Check(check_type="skip", expected_results=None),
+                            check=Check(check_type="skip", expected_results={}),
                             measurement=(
                                 f"Missing: device {device.name} support for "
                                 f"Checks: {tc_name}",
