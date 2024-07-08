@@ -77,7 +77,7 @@ class InterfaceL2Trunk(InterfaceL2):
         used = self.vlans_used()
 
         # if the native VLAN is explicitly in the allowed list, then we will include it.
-        return used if native in used else used - {native}
+        return used if native in self.allowed_vlans else used - {native}
 
     @staticmethod
     def attrs_from_decl(ifp_decl: dict):
