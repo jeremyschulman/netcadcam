@@ -35,7 +35,7 @@ from netcad.checks import (
 # -----------------------------------------------------------------------------
 
 from ..profiles import InterfaceL2Access, InterfaceL2Trunk, InterfaceVlan
-from ..vlan_feat import VlansDesignFeature
+from ..vlan_feat import VlansDesignFeature, DeviceVlanDesignFeature
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -133,7 +133,7 @@ class VlanCheckCollection(CheckCollection):
             This is actually the _device_ vlan design service, and not
             the top-level vlan design service.
         """
-        from netcad.feats.vlans.vlan_feat import DeviceVlanDesignFeature
+
 
         device_vlans = list(
             chain.from_iterable(
@@ -151,10 +151,10 @@ class VlanCheckCollection(CheckCollection):
         for if_name, interface in device.interfaces.used().items():
             if_prof = interface.profile
 
-            if isinstance(if_prof, (InterfaceL2Access, InterfaceVlan)):
+            if isinstance(if_prof, (InterfaceL2Access, InterfaceL2Trunk, InterfaceVlan)):
                 vlans = if_prof.vlans_used()
-            elif isinstance(if_prof, InterfaceL2Trunk):
-                vlans = if_prof.trunk_allowed_vlans()
+            # elif isinstance(if_prof, InterfaceL2Trunk):
+            #     vlans = if_prof.trunk_allowed_vlans()
             else:
                 continue
 

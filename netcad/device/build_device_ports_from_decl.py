@@ -108,6 +108,17 @@ def build_device_ports_from_decl(host_port_assignments: dict, dev: Device):
                 if_eth.desc = desc
 
             # -----------------------------------------------------------------
+            # if 'profile_fields' is set then add each of the fields to the
+            # profile instance.
+            # -----------------------------------------------------------------
+
+            if profile_fields := assign_def.get("profile_fields"):
+                for field, value in profile_fields.items():
+                    # TODO: this should call the method to set attribute from
+                    #       decl on the profile instance.
+                    setattr(if_eth.profile, field, value)
+
+            # -----------------------------------------------------------------
             # set the enabled field if it is porvided.
             # -----------------------------------------------------------------
 

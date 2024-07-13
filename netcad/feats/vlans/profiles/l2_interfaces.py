@@ -73,11 +73,8 @@ class InterfaceL2Trunk(InterfaceL2):
         practice.  In these cases, the Designer must overload this method in the
         subclass profile definition.
         """
-        native = getattr(self, "native_vlan", None)
-        used = self.vlans_used()
-
-        # if the native VLAN is explicitly in the allowed list, then we will include it.
-        return used if native in self.allowed_vlans else used - {native}
+        # native = set(getattr(self, "native_vlan", None))
+        return set(self.allowed_vlans)
 
     @staticmethod
     def attrs_from_decl(ifp_decl: dict):
@@ -86,11 +83,12 @@ class InterfaceL2Trunk(InterfaceL2):
             for vlan_name in ifp_decl.get("allowed_vlans", [])
         ]
 
-        n_vlan = (
-            VlanProfileRegistry[nvn] if (nvn := ifp_decl.get("native_vlan")) else None
-        )
-
-        return {
-            "native_vlan": n_vlan,
-            "allowed_vlans": allowed_vlan_list,
-        }
+        if nvn := ifp_decl.get("native_vlan"):
+            return {
+                "native_vlan": VlanProfileRegistry[nvn],
+                "allowed_vlans": allowed_vlan_list,
+            }
+        else:
+            return {
+                "allowed_vlans": allowed_vlan_list,
+            }
