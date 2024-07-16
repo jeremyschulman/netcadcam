@@ -99,8 +99,12 @@ class InterfaceProfile(SafeIsAttribute):
         return self.__class__.__name__
 
     @staticmethod
-    def attrs_from_decl(ifp_decl: dict):
+    def fields_from_decl(ifp_decl: dict):
         ret = {"desc": ifp_decl.get("desc")}
+
+        for f_name, f_val in ifp_decl.items():
+            if f_name.startswith("is_"):
+                ret[f_name] = f_val
 
         if ifp_phy := ifp_decl.get("phy_profile"):
             ret["phy_profile"] = PhyProfileRegistry[ifp_phy]

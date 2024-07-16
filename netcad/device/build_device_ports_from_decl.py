@@ -113,10 +113,10 @@ def build_device_ports_from_decl(host_port_assignments: dict, dev: Device):
             # -----------------------------------------------------------------
 
             if profile_fields := assign_def.get("profile_fields"):
-                for field, value in profile_fields.items():
-                    # TODO: this should call the method to set attribute from
-                    #       decl on the profile instance.
-                    setattr(if_eth.profile, field, value)
+                for f_name, f_val in if_eth.profile.fields_from_decl(
+                    profile_fields
+                ).items():
+                    setattr(if_eth.profile, f_name, f_val)
 
             # -----------------------------------------------------------------
             # set the enabled field if it is porvided.

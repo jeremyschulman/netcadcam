@@ -39,7 +39,7 @@ class InterfaceL2Access(InterfaceL2):
         return {self.vlan}
 
     @staticmethod
-    def attrs_from_decl(ifp_decl: dict):
+    def fields_from_decl(ifp_decl: dict):
         if not (vlan_name := ifp_decl.get("vlan")):
             return {}
 
@@ -77,7 +77,7 @@ class InterfaceL2Trunk(InterfaceL2):
         return set(self.allowed_vlans)
 
     @staticmethod
-    def attrs_from_decl(ifp_decl: dict):
+    def fields_from_decl(ifp_decl: dict):
         allowed_vlan_list = [
             VlanProfileRegistry.get(vlan_name)
             for vlan_name in ifp_decl.get("allowed_vlans", [])

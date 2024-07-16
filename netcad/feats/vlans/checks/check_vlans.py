@@ -134,7 +134,6 @@ class VlanCheckCollection(CheckCollection):
             the top-level vlan design service.
         """
 
-
         device_vlans = list(
             chain.from_iterable(
                 svc.all_vlans() for svc in device.services_of(DeviceVlanDesignFeature)
@@ -151,7 +150,9 @@ class VlanCheckCollection(CheckCollection):
         for if_name, interface in device.interfaces.used().items():
             if_prof = interface.profile
 
-            if isinstance(if_prof, (InterfaceL2Access, InterfaceL2Trunk, InterfaceVlan)):
+            if isinstance(
+                if_prof, (InterfaceL2Access, InterfaceL2Trunk, InterfaceVlan)
+            ):
                 vlans = if_prof.vlans_used()
             # elif isinstance(if_prof, InterfaceL2Trunk):
             #     vlans = if_prof.trunk_allowed_vlans()

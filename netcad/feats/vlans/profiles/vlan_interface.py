@@ -21,5 +21,5 @@ class InterfaceVlan(InterfaceVirtual, InterfaceL3):
         return {self.vlan}
 
     @staticmethod
-    def attrs_from_decl(ifp_decl: dict):
+    def fields_from_decl(ifp_decl: dict):
         return {"vlan": VlanProfileRegistry.get(ifp_decl["vlan"])}
