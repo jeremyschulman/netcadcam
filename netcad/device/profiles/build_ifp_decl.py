@@ -41,14 +41,12 @@ def build_interface_profile_from_decl(ifp_decl: dict):
     # profiles by means of the "attrs from decl" method.
 
     def fields_from_decl(ifp_decl: dict):  # noqa
-        ret = dict()
+        ret = ifp_attrs.copy()
 
         for cls in (
             b for b in ifp_cls.mro() if b != ifp_cls and issubclass(b, InterfaceProfile)
         ):
             ret.update(cls.fields_from_decl(ifp_decl))
-
-        ret.update(ifp_attrs)
 
         return ret
 

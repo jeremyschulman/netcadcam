@@ -33,6 +33,7 @@ class IPNetworkMapDec(BaseModel):
 
 def build_ipam_from_decl(ipam_decl, ipam: IPAM):
     ip_nmap = IPNetworkMapDec(**ipam_decl)
+
     ip_net = ipam.network(ip_nmap.name, ip_network(ip_nmap.network))
 
     def add_hosts(_hosts, _addn_offset=0):

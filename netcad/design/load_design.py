@@ -75,7 +75,6 @@ def load_design(design_name: str) -> Design:
         )
 
     # if the User has defined an explicit package, then load the design as a sington.from
-
     if design_pkg:
         return load_design_singleton(
             design_name=design_name, pkg_name=design_pkg, design_decl=design_decl
@@ -119,7 +118,14 @@ def load_design_group(
 
     for design_name in group_members:
         d_site_obj = load_design(design_name=design_name)
-        group_design.devices.update(d_site_obj.devices)
+
+        # need to swap the use of alias as key for the name, since multiple
+        # sites will have the same alias values; and that results in only one
+        # (last) site.  doeh.  So use the device name as the key into the
+        # devices dict for this use-case.
+
+        devices = {d.name: d for alias, d in d_site_obj.devices.items()}
+        group_design.devices.update(devices)
 
     return group_design
 

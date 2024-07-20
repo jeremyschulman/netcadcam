@@ -21,6 +21,7 @@ import jinja2
 
 from netcad.phy_port.phy_port_profile import PhyPortProfile, PhyProfileRegistry
 from netcad.device.device_interface import DeviceInterface
+from netcad.device.peer_interface_id import PeerInterfaceId
 from netcad.helpers import SafeIsAttribute
 
 # -----------------------------------------------------------------------------
@@ -100,7 +101,10 @@ class InterfaceProfile(SafeIsAttribute):
 
     @staticmethod
     def fields_from_decl(ifp_decl: dict):
-        ret = {"desc": ifp_decl.get("desc")}
+        ret = {"desc": ifp_decl.get("desc", '')}
+
+        if ret['desc'] == '__PeerInterfaceId__':
+            ret['desc'] =  PeerInterfaceId()
 
         for f_name, f_val in ifp_decl.items():
             if f_name.startswith("is_"):

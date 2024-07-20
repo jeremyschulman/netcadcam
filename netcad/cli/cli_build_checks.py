@@ -72,9 +72,10 @@ def cli_build_tests(devices: Tuple[str], designs: Tuple[str], checks_dir: Path):
     # we can then iterate through.
 
     for design_name in designs:
-        load_design(design_name=design_name)
+        design = load_design(design_name=design_name)
 
-    device_objs = set(Device.registry_items(True).values())
+    device_objs = design.devices.values()       # noqa
+
     if devices:
         device_objs = [obj for obj in device_objs if obj.name in devices]
 
