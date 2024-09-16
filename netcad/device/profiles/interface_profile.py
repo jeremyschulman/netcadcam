@@ -5,7 +5,7 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Optional, Union, Dict
+from typing import Optional, Union, Dict, Type
 from pathlib import Path
 from functools import cached_property
 
@@ -19,24 +19,24 @@ import jinja2
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.phy_port.phy_port_profile import PhyPortProfile
+from netcad.phy_port.phy_port_profile import PhyPortProfile, PhyProfileRegistry
 from netcad.device.device_interface import DeviceInterface
+from netcad.device.peer_interface_id import PeerInterfaceId
 from netcad.helpers import SafeIsAttribute
 
 # -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = [
-    "InterfaceProfile",
-    "InterfaceVirtual",
-]
+__all__ = ["InterfaceProfile", "InterfaceVirtual", "InterfaceProfileRegistry"]
 
 # -----------------------------------------------------------------------------
 #
 #                                 CODE BEGINS
 #
 # -----------------------------------------------------------------------------
+
+InterfaceProfileRegistry: dict[str, "InterfaceProfileType"] = dict()
 
 
 class InterfaceProfile(SafeIsAttribute):
@@ -63,6 +63,9 @@ class InterfaceProfile(SafeIsAttribute):
 
         for attr, value in kwargs.items():
             setattr(self, attr, value)
+
+    def __init_subclass__(cls, **kwargs):
+        InterfaceProfileRegistry[cls.__name__] = cls
 
     def get_template(self, env: jinja2.Environment) -> jinja2.Template:
         if not self.template:
@@ -95,6 +98,28 @@ class InterfaceProfile(SafeIsAttribute):
     @property
     def name(self):
         return self.__class__.__name__
+
+    @staticmethod
+    def fields_from_decl(ifp_decl: dict):
+        ret = {"desc": ifp_decl.get("desc", '')}
+
+        if ret['desc'] == '__PeerInterfaceId__':
+            ret['desc'] =  PeerInterfaceId()
+
+        for f_name, f_val in ifp_decl.items():
+            if f_name.startswith("is_"):
+                ret[f_name] = f_val
+
+        if ifp_phy := ifp_decl.get("phy_profile"):
+            ret["phy_profile"] = PhyProfileRegistry[ifp_phy]
+
+        if ifp_template := ifp_decl.get("template"):
+            ret["template"] = Path(ifp_template)
+
+        return ret
+
+
+InterfaceProfileType = Type[InterfaceProfile]
 
 
 class InterfaceVirtual(InterfaceProfile):

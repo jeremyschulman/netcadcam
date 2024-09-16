@@ -23,7 +23,7 @@ class CheckRegistry(Registry, registry_name="check_services"):
                 ...
 
         The __call__ decorator will validate that the decorating class is of
-        type TestCases and has a "services" attribute defined.
+        type TestCases and has a "features" attribute defined.
 
         Parameters
         ----------
@@ -34,7 +34,6 @@ class CheckRegistry(Registry, registry_name="check_services"):
         -------
         cls - as is
         """
-
         if not issubclass(cls, CheckCollection):
             raise RuntimeError(
                 f"Forbidden use of TestingService registration on non {CheckCollection.__name__} class: {cls.__name__}"

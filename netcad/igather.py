@@ -42,7 +42,10 @@ async def as_completed(coros, limit=None):
             if _task:
                 v = await asyncio.wait_for(_task, None)
                 sem.release()
-                yield _task.get_coro(), v  # the yield will be Tuple(original-coro, task-result)
+                yield (
+                    _task.get_coro(),
+                    v,
+                )  # the yield will be Tuple(original-coro, task-result)
             else:
                 break
 

@@ -20,8 +20,8 @@ from netcad.device.profiles.interface_profile import InterfaceVirtual, Interface
 
 __all__ = [
     "InterfaceL3",
-    "InterfaceIsLoopback",
-    "InterfaceIsManagement",
+    "InterfaceLoopback",
+    "InterfaceManagement",
     "InterfaceIsInVRF",
 ]
 
@@ -38,7 +38,7 @@ class InterfaceL3(InterfaceProfile):
         self.if_ipaddr = if_ipaddr
 
 
-class InterfaceIsManagement(InterfaceL3):
+class InterfaceManagement(InterfaceL3):
     """
     An interface that is only used for out of band management
     """
@@ -46,7 +46,7 @@ class InterfaceIsManagement(InterfaceL3):
     is_mgmt_only = True
 
 
-class InterfaceIsLoopback(InterfaceVirtual, InterfaceL3):
+class InterfaceLoopback(InterfaceVirtual, InterfaceL3):
     """
     A loopback interface is a virtual IP address
     """

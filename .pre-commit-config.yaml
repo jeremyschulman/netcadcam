@@ -14,17 +14,18 @@ repos:
     -   id: check-toml
     -   id: check-added-large-files
 
--   repo: https://github.com/pycqa/flake8
-    rev: 3.9.2
-    hooks:
-    -   id: flake8
-        exclude: 'scratch-testing'
-        args: ['--ignore=E501,E203,W503,E731',
-               '--max-line-length=130',
-               '--per-file-ignores=__init__.py:F401']
+# Run the Ruff linter.
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  # Ruff version.
+  rev: v0.4.8
+  hooks:
+    - id: ruff
+      args: [--config,pyproject.toml]
 
--   repo: https://github.com/psf/black
-    rev: 22.3.0
-    hooks:
-    -   id: black
-        args: ["."]
+# Run the Ruff formatter.
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  # Ruff version.
+  rev: v0.4.8
+  hooks:
+    - id: ruff-format
+      args: [--config,pyproject.toml]

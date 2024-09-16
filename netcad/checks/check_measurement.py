@@ -6,14 +6,13 @@
 # -----------------------------------------------------------------------------
 
 from typing import Union, List, Dict, Optional
-from itertools import filterfalse
 
 # -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
 
-import pydantic
-from pydantic import BaseModel, Extra
+from pydantic import BaseModel, Field
+from pydantic._internal._model_construction import ModelMetaclass
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -44,26 +43,32 @@ from pydantic import BaseModel, Extra
 AnyMeasurementType = Union[bool, int, float, List, Dict, None, str]
 
 
-class MetaMeasurement(pydantic.main.ModelMetaclass):
+class MetaMeasurement(ModelMetaclass):
     def __new__(mcs, name, bases, namespaces, **kwargs):
-        annotations = namespaces.get("__annotations__", {})
+        annots = namespaces.get("__annotations__", {})
+        cls = next((cls for cls in bases if cls.model_fields), None)
 
-        for base in bases:
-            annotations.update(base.__annotations__)
+        if not cls and not annots:
+            return super().__new__(mcs, name, bases, namespaces, **kwargs)
 
-        for field in filterfalse(lambda _f: _f.startswith("__"), annotations):
-            annotations[field] = Optional[annotations[field]]
+        if not annots:
+            namespaces["__annotations__"] = annots
 
-            # if the field has a Field() designated, it will show in the
-            # namespace dictionary.  Need to set the default to None so that it
-            # is not required.
-            if field_ns := namespaces.get(field):
-                field_ns.default = None
+        if cls:
+            for f_name, f_info in cls.model_fields.items():
+                f_annot = f_info.annotation
+                annots[f_name] = f_info.annotation
+                namespaces[f_name] = Field(None)
+                namespaces[f_name].annotation = Optional[f_annot]
 
-        namespaces["__annotations__"] = annotations
+        if annots:
+            for f_name, f_annot in annots.items():
+                namespaces[f_name] = Field(None)
+                namespaces[f_name].annotation = Optional[f_annot]
+
         new_cls = super().__new__(mcs, name, bases, namespaces, **kwargs)
         return new_cls
 
 
-class CheckMeasurement(BaseModel, extra=Extra.allow, metaclass=MetaMeasurement):
+class CheckMeasurement(BaseModel, metaclass=MetaMeasurement):  # extra=Extra.allow
     pass

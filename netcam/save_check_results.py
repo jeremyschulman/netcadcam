@@ -56,16 +56,11 @@ async def device_checks_save_results(
     results_file = results_dir / f"{filename}.json"
     json_payload = list()
 
-    # we need to double-pump the pydantic data check results so that we can
-    # take advantage of the pydantic custom JSON serializers and encoder
-    # features; for example for the check-result logs.
-    # TODO: research if there is a way to avoid the double-pump;
-    #       probably need to create a pydantic object to represent a list of
-    #       check results ;-)
-
     for res in results:
         res.device = dut.device.name
-        json_payload.append(json.loads((res.json())))
+        payload = res.model_dump(warnings="none")
+        payload["check_id"] = res.check.check_id()
+        json_payload.append(payload)
 
     async with aiofiles.open(results_file, "w+") as ofile:
         await ofile.write(json.dumps(json_payload, indent=3))

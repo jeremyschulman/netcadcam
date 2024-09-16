@@ -7,15 +7,13 @@
 
 from typing import Optional, Any, List, TypeVar, Generic
 import typing
-import types
 
 # -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
 
-import pydantic
-from pydantic import BaseModel, Field, validator
-from pydantic.generics import GenericModel
+from pydantic import Field, field_validator, RootModel, BaseModel
+from pydantic._internal._model_construction import ModelMetaclass
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -32,6 +30,7 @@ from .check_result_log import CheckResultLogs
 
 __all__ = ["CheckResult", "CheckResultList", "CheckResultsCollection"]
 
+
 # -----------------------------------------------------------------------------
 #
 #                                 CODE BEGINS
@@ -39,7 +38,7 @@ __all__ = ["CheckResult", "CheckResultList", "CheckResultsCollection"]
 # -----------------------------------------------------------------------------
 
 
-class MetaCheckResult(pydantic.main.ModelMetaclass):
+class MetaCheckResult(ModelMetaclass):
     """
     This metaclass is used to default-factory the 'measurement' instance to the
     specific class-type designated in the measurement annotation.  This is done
@@ -48,8 +47,10 @@ class MetaCheckResult(pydantic.main.ModelMetaclass):
     """
 
     def __new__(mcs, name, bases, namespaces, **kwargs):
+        if not (annots := namespaces.get("__annotations__")):
+            return super().__new__(mcs, name, bases, namespaces, **kwargs)
+
         _field = "measurement"
-        annots = namespaces.get("__annotations__", {})
 
         if (msrd_cls := annots.get(_field)) is None:
             if Generic not in bases:
@@ -57,20 +58,21 @@ class MetaCheckResult(pydantic.main.ModelMetaclass):
                     f"Missing {name}, required annotation for measurement field"
                 )
 
-        if msrd_cls and not namespaces.get(_field):
-            if isinstance(msrd_cls, types.UnionType):
-                msrd_cls, _ = typing.get_args(msrd_cls)
+        t_args = typing.get_args(msrd_cls)
+        if t_args and t_args[0] == typing.Any:
+            return super().__new__(mcs, name, bases, namespaces, **kwargs)
 
-            annots[_field] = Optional[annots[_field]]
-            namespaces[_field] = Field(default_factory=msrd_cls)
+        annots[_field] = Optional[annots[_field]]
+        namespaces[_field] = Field(default_factory=msrd_cls)
 
-        return super().__new__(mcs, name, bases, namespaces, **kwargs)
+        new_type = super().__new__(mcs, name, bases, namespaces, **kwargs)
+        return new_type
 
 
 CheckT = TypeVar("CheckT", bound=Check)
 
 
-class CheckResult(GenericModel, Generic[CheckT], metaclass=MetaCheckResult):
+class CheckResult(BaseModel, Generic[CheckT], metaclass=MetaCheckResult):
     """
     The CheckResult is the base class for all Design service specific
     check-result definitions.  Each design service *SHOULD* define check
@@ -82,9 +84,8 @@ class CheckResult(GenericModel, Generic[CheckT], metaclass=MetaCheckResult):
     status: CheckStatus = Field(CheckStatus.PASS)
     device: Device | str
     check: CheckT
-    check_id: Optional[str]
-
-    field: Optional[str]
+    check_id: Optional[str] = Field(None)
+    field: Optional[str] = Field(None)
 
     # even though the default-factory here is provided as dict, the use of the
     # metaclass will instantiate measurement as an instance of the measurement
@@ -138,7 +139,8 @@ class CheckResult(GenericModel, Generic[CheckT], metaclass=MetaCheckResult):
         json_encoders = {CheckResultLogs: lambda log: log.data}
 
     # noinspection PyUnusedLocal
-    @validator("check_id", always=True)
+    @field_validator("check_id", mode="before")
+    @classmethod
     def _save_tc_id(cls, value, values: dict):
         return values["check"].check_id()
 
@@ -238,5 +240,5 @@ def _finalize_result(result: CheckResult, **kwargs) -> CheckResult:
 CheckResultsCollection = List[CheckResult]
 
 
-class CheckResultList(BaseModel):
-    __root__: Optional[List[CheckResult]] = Field(default_factory=list)
+class CheckResultList(RootModel):
+    root: Optional[List[CheckResult]] = Field(default_factory=list)

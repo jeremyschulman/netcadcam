@@ -1,6 +1,6 @@
 [tool.poetry]
     name = "netcad"
-    version = "0.14.0"
+    version = "1.0.0"
     description = "NetCAD/CAM - Network Automation by Design"
     authors = ["Jeremy Schulman"]
     readme = "README.md"
@@ -9,44 +9,53 @@
         { include = "netcam" },
     ]
 
-[tool.poetry.dependencies]
-python = "^3.10"
-click = "^8.1.0"
-rich = "^13.1.0"
-pydantic = "^1.8.2"
-Jinja2 = "^3.0.2"
-toml = "^0.10.2"
-aiofiles = "*"
-maya = "*"
-bracket-expansion = "^1.0.0"
-pydantic-env = "^0.2.0"
-igraph = "^0.9.11"
-bidict = "^0.22.0"
+[tool.poetry.scripts]
+    netcad = 'netcad.cli:script'
+    netcam = 'netcam.cli:script'
 
+
+[tool.poetry.dependencies]
+   python = "^3.10"
+   click = "^8.1.0"
+   rich = "^13.1.0"
+   Jinja2 = "^3.0.2"
+   toml = "^0.10.2"
+   aiofiles = "*"
+   maya = "*"
+   bracket-expansion = "^1.0.0"
+   bidict = "^0.22.0"
+   igraph = "^0.11.5"
+   setuptools = "^70.1.1"
+   pydantic = "^2.7.4"
 
 [tool.poetry.dev-dependencies]
-pytest = "*"
-invoke = "*"
-black = "*"
-flake8 = "*"
-flake8-breakpoint = "*"
-pytest-cov = "*"
-pytest-asyncio = "*"
-pre-commit = "*"
-interrogate = "*"
+   pytest = "*"
+   pytest-cov = "*"
+   pytest-asyncio = "*"
+   pre-commit = "*"
+   interrogate = "*"
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.7.1"
+ruff = "^0.5.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
 
 [tool.interrogate]
     fail-under = 0
     verbose = 1
     color = true
     ignore-module = true
-    exclude = ["tasks.py", "examples", "build", "venv"]
+    exclude = ["examples", "build"]
 
+[tool.ruff]
+    # Set the maximum line length to 132.
+    # line-length = 132
+    lint.ignore = ["E731", "F842"]
+    lint.exclude = ["examples"]
 
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.poetry.scripts]
-    netcad = 'netcad.cli:script'
-    netcam = 'netcam.cli:script'
+[tool.ruff.lint.extend-per-file-ignores]
+    "__init__.py" = ["F401", "E402"]

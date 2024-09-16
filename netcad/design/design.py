@@ -22,14 +22,14 @@ from netcad.ipam import IPAM
 # Private Module Imports
 # -----------------------------------------------------------------------------
 
-from .design_service import DesignService
+from .design_feature import DesignFeature
 
 
 # -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["Design", "DesignConfig", "DesignService"]
+__all__ = ["Design", "DesignConfig", "DesignFeature"]
 
 # -----------------------------------------------------------------------------
 #
@@ -54,7 +54,7 @@ class Design(Registry, registry_name="designs"):
 
     Attributes
     ----------
-    services: dict
+    features: dict
     devices: dict
     ipams: dict
     """
@@ -81,12 +81,12 @@ class Design(Registry, registry_name="designs"):
 
         self.config = deepcopy(config or {})
 
-        # Caller designated named design services.  For example a designer could
+        # Caller designated named design features.  For example a designer could
         # call the VlanDesignService "vlans" or "my_vlans". The netcad system
         # does not hardcode any  speific names and leaves those decisions to the
         # designer.
 
-        self.services: Dict[str, DesignService] = dict()
+        self.features: Dict[str, DesignFeature] = dict()
 
         self.devices: Dict[str, Device] = dict()
 
@@ -106,24 +106,24 @@ class Design(Registry, registry_name="designs"):
         """
 
         for dev in devices:
-            self.devices[dev.name] = dev
+            self.devices[dev.alias] = dev
             dev.design = self
 
         # for method chaining
         return self
 
-    def add_services(self, *design_services: DesignService) -> "Design":
+    def add_services(self, *design_services: DesignFeature) -> "Design":
         for svc in design_services:
-            self.services[svc.name] = svc
+            self.features[svc.name] = svc
 
         # for method chaining
         return self
 
     def build(self) -> "Design":
         """
-        Execute the `build` methods for all services in the design.
+        Execute the `build` methods for all features in the design.
         """
-        for svc in self.services.values():
+        for svc in self.features.values():
             svc.build()
 
         # for method chaining
@@ -131,21 +131,21 @@ class Design(Registry, registry_name="designs"):
 
     def validate(self):
         """
-        Execute the `validate` methods for all services in the design.
+        Execute the `validate` methods for all features in the design.
         """
-        for svc in self.services.values():
+        for svc in self.features.values():
             svc.validate()
 
     def update(self):
         """
-        This "helper" method is used to rebuild all services and then
-        re-validate all services.  The expected use-case is when a Designer
+        This "helper" method is used to rebuild all features and then
+        re-validate all features.  The expected use-case is when a Designer
         needs to update an existing design instance after it has already been
         gone through an original build+validate cycle.
         """
         self.build()
         self.validate()
 
-    def services_of(self, svc_cls: Type[DesignService]) -> List[DesignService]:
-        """Return the services that are of the given service type"""
-        return [svc for svc in self.services.values() if isinstance(svc, svc_cls)]
+    def services_of(self, svc_cls: Type[DesignFeature]) -> List[DesignFeature]:
+        """Return the features that are of the given service type"""
+        return [svc for svc in self.features.values() if isinstance(svc, svc_cls)]

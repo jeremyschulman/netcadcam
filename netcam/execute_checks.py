@@ -134,14 +134,14 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
     check_service_list = cv_check_list.get()
     service_list = cv_service_list.get()
 
-    for ds_name, design_service in device.services.items():
+    for ds_name, design_service in device.features.items():
         # Handle User provided service list, if provided; only execute the
-        # services the User requested explicitly.
+        # features the User requested explicitly.
 
         if service_list and ds_name not in service_list:
             continue
 
-        # there could be design services without defined testing services, so
+        # there could be design features without defined testing features, so
         # skip if that is the case.
 
         if not design_service.check_collections:
@@ -185,7 +185,7 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
                         CheckResult[Check](
                             device=device,
                             status=CheckStatus.SKIP,
-                            check=Check(check_type="skip", expected_results=None),
+                            check=Check(check_type="skip", expected_results={}),
                             measurement=(
                                 f"Missing: device {device.name} support for "
                                 f"Checks: {tc_name}",

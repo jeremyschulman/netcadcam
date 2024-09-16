@@ -66,7 +66,7 @@ __all__ = []
     help="execute only these design checks",
 )
 @click.option(
-    "--service",
+    "--feature",
     "service_list",
     multiple=True,
     help="execute only these design checks",

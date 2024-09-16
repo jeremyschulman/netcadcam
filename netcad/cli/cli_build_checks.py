@@ -72,9 +72,10 @@ def cli_build_tests(devices: Tuple[str], designs: Tuple[str], checks_dir: Path):
     # we can then iterate through.
 
     for design_name in designs:
-        load_design(design_name=design_name)
+        design = load_design(design_name=design_name)
 
-    device_objs = set(Device.registry_items(True).values())
+    device_objs = design.devices.values()       # noqa
+
     if devices:
         device_objs = [obj for obj in device_objs if obj.name in devices]
 
@@ -135,11 +136,10 @@ async def _build_device_checks(device: Device, tc_dir: Path):
     dev_tc_dir.mkdir(parents=True, exist_ok=True)
 
     # for each service that is bound on the device, iterate over each of the
-    # testing services associated with that service; build the test-cases for
+    # testing features associated with that service; build the test-cases for
     # the device and save to a JSON data file.
-
-    for service_obj in device.services.values():
+    for service_obj in device.features.values():
         for tc_svccls in service_obj.check_collections:
-            if not (test_cases := tc_svccls.build(device, design_service=service_obj)):
+            if not (test_cases := tc_svccls.build(device, design_feature=service_obj)):
                 continue
             await test_cases.save(dev_tc_dir)
