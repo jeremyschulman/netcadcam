@@ -125,7 +125,7 @@ def build_device_ports_from_decl(host_port_assignments: dict, dev: Device):
             if (enabled_ctrl := assign_def.get("enabled")) is not None:
                 if_eth.enabled = enabled_ctrl
 
-            # if the assignment sets the interface speed to a know override
+            # if the assignment sets the interface speed to a known override
             # value, then override the profile here.
 
             if phy_ovrd_name := assign_def.get("phy_profile", ""):

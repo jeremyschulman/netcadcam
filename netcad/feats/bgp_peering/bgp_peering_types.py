@@ -1,7 +1,9 @@
 import dataclasses
 from typing import Optional
 from operator import attrgetter
+from pathlib import Path
 
+import jinja2
 from netcad.peering import Peer, PeeringEndpoint
 from netcad.device import Device, to_interface_ip
 from netcad.device import InterfaceIP
@@ -10,7 +12,12 @@ from netcad.device import InterfaceIP
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["BGPSpeaker", "BGPSpeakerName", "BGPPeeringEndpoint"]
+__all__ = [
+    "BGPSpeaker",
+    "BGPSpeakerName",
+    "BGPPeeringEndpoint",
+    "BGPPeeringEndpointConfig",
+]
 
 # -----------------------------------------------------------------------------
 #
@@ -27,6 +34,12 @@ class BGPSpeakerName:
     vrf: Optional[str] = None
 
 
+@dataclasses.dataclass
+class BGPPeeringEndpointConfig:
+    template: Path
+    fields: dict = dataclasses.field(default_factory=dict)
+
+
 class BGPPeeringEndpoint(PeeringEndpoint["BGPSpeaker", "BGPPeeringEndpoint"]):
     EBGP_TOKEN = "eBGP"
     IBGP_TOKEN = "iBGP"
@@ -36,10 +49,12 @@ class BGPPeeringEndpoint(PeeringEndpoint["BGPSpeaker", "BGPPeeringEndpoint"]):
         via_ip: InterfaceIP,
         enabled: Optional[bool] = True,
         desc: Optional[str] = None,
+        config: Optional[BGPPeeringEndpointConfig] = None,
     ):
         self.enabled = enabled
         self.via_ip = via_ip
         self._desc = desc
+        self.config = config
 
     @property
     def speaker(self) -> "BGPSpeaker":
@@ -59,6 +74,14 @@ class BGPPeeringEndpoint(PeeringEndpoint["BGPSpeaker", "BGPPeeringEndpoint"]):
     @property
     def desc(self) -> str:
         return self._desc or self.default_desc
+
+    @jinja2.pass_context
+    def render(self, ctx: jinja2.runtime.Context) -> str:
+        if not self.config:
+            return ""
+
+        template = ctx.environment.get_template(str(self.config.template))
+        return template.render(nei_endp=self).rstrip()
 
 
 class BGPSpeaker(Peer[Device, BGPPeeringEndpoint]):
@@ -133,7 +156,12 @@ class BGPSpeaker(Peer[Device, BGPPeeringEndpoint]):
     def make_peer_id(self, other: "BGPSpeaker") -> str:
         return "+".join(sorted((self.speaker_id, other.speaker_id)))
 
-    def add_neighbor(self, bgp_nei: "BGPSpeaker", via: str):
+    def add_neighbor(
+        self,
+        bgp_nei: "BGPSpeaker",
+        via: str,
+        config: Optional[BGPPeeringEndpointConfig] = None,
+    ):
         """
         Adds a new BGP neighbor endpoint to this speaker.
 
@@ -150,6 +178,12 @@ class BGPSpeaker(Peer[Device, BGPPeeringEndpoint]):
         via: str
             The interface name that is hosting the BGP session connect. The
             interface profile must be an InterfaceL3 instance.
+
+        config:
+            The configuration to be applied to the BGP neighbor. It is a
+            dictionary with the keys being the field name and the values being
+            the field values. The template is the Jinja2 template file that
+            will be used to render the configuration.
 
         Returns
         -------
@@ -168,7 +202,8 @@ class BGPSpeaker(Peer[Device, BGPPeeringEndpoint]):
         ip = to_interface_ip(ip=ip, interface=iface)
 
         self.add_endpoint(
-            peer_id=self.make_peer_id(bgp_nei), endpoint=BGPPeeringEndpoint(via_ip=ip)
+            peer_id=self.make_peer_id(bgp_nei),
+            endpoint=BGPPeeringEndpoint(via_ip=ip, config=config),
         )
 
         return self

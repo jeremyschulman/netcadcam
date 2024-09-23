@@ -80,11 +80,12 @@ class InterfaceL2Trunk(InterfaceL2):
     def fields_from_decl(ifp_decl: dict):
         ret = dict()
 
-        if alwd := ifp_decl.get('allowed_vlans'):
-            ret['allowed_vlans'] = [VlanProfileRegistry.get(vlan_name) for vlan_name in alwd]
+        if alwd := ifp_decl.get("allowed_vlans"):
+            ret["allowed_vlans"] = [
+                VlanProfileRegistry.get(vlan_name) for vlan_name in alwd
+            ]
 
         if nvn := ifp_decl.get("native_vlan"):
-            ret['native_vlan'] = VlanProfileRegistry[nvn]
+            ret["native_vlan"] = VlanProfileRegistry[nvn]
 
         return ret
-
