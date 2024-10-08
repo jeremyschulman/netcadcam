@@ -24,7 +24,7 @@ from .mlag_cabling import CableMLagsByCableId
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["MLagDesignService", "MLagServiceLike"]
+__all__ = ["MLagDesignFeature", "MLagServiceLike"]
 
 # -----------------------------------------------------------------------------
 #
@@ -33,7 +33,7 @@ __all__ = ["MLagDesignService", "MLagServiceLike"]
 # -----------------------------------------------------------------------------
 
 
-class MLagDesignService(DesignFeature, registry_name="mlags"):
+class MLagDesignFeature(DesignFeature, registry_name="mlags"):
     CHECK_COLLECTIONS = []  # none for now
 
     def __init__(self, feature_name: str, **kwargs):
@@ -44,12 +44,12 @@ class MLagDesignService(DesignFeature, registry_name="mlags"):
 
         # set up the design service with the User provided service name
 
-        super(MLagDesignService, self).__init__(feature_name=feature_name, **kwargs)
+        super(MLagDesignFeature, self).__init__(feature_name=feature_name, **kwargs)
         self.registry_add(name=feature_name, obj=self)
         self.check_collections = copy(self.__class__.CHECK_COLLECTIONS)
 
     def add_devices(self, *devices):
-        super(MLagDesignService, self).add_devices(*devices)
+        super(MLagDesignFeature, self).add_devices(*devices)
         self.cabling.add_devices(*devices)
 
     def build(self):
@@ -71,4 +71,4 @@ class MLagDesignService(DesignFeature, registry_name="mlags"):
         pass
 
 
-MLagServiceLike = TypeVar("MLagServiceLike", MLagDesignService, DesignFeature)
+MLagServiceLike = TypeVar("MLagServiceLike", MLagDesignFeature, DesignFeature)

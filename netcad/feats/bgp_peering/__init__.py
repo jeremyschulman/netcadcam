@@ -7,8 +7,9 @@
 
 from netcad import __version__ as plugin_version  # noqa
 
-from .bgp_peering_design_service import (
-    BgpPeeringDesignService,
+from . import checks
+from .bgp_peering_design_feature import (
+    BgpPeeringDesignFeature,
     BgpPeeringDesignServiceLike,
 )
 from .bgp_peering_types import BGPSpeaker, BGPPeeringEndpointConfig

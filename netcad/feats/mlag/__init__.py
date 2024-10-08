@@ -1,2 +1,4 @@
-from .mlag_design_service import MLagDesignService
-from .mlag_device_group import DeviceMLagPairGroup, DeviceMLagGroupMember
+from .mlag_design_feature import MLagDesignFeature
+from .mlag_device_group import (
+    DeviceMLagPairGroup, DeviceMLagGroupMember, DeviceMLagPairGroupConfig
+)

@@ -7,18 +7,25 @@
 
 from typing import Optional, Sequence
 from copy import deepcopy
+from dataclasses import dataclass
+from ipaddress import IPv4Interface
+from pathlib import Path
 
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
+from netcad.device.profiles import InterfaceL3
 from netcad.device.device_group import DeviceGroup, DeviceGroupMember
 
 # -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["DeviceMLagPairGroup", "DeviceMLagGroupMember"]
+__all__ = [
+    "DeviceMLagPairGroup", "DeviceMLagGroupMember", "DeviceMLagPairGroupConfig",
+    "DeviceMLagPairGroupLocalInterfaceConfig"
+]
 
 
 # -----------------------------------------------------------------------------
@@ -29,7 +36,30 @@ __all__ = ["DeviceMLagPairGroup", "DeviceMLagGroupMember"]
 
 
 class DeviceMLagGroupMember(DeviceGroupMember):
+    device_id: int
     is_mlag_device = True
+
+#
+# @dataclass
+# class DeviceMLagPairGroupLocalInterfaceConfig:
+#     name: str
+#     vlan_id: int
+#     subnet: IPv4Interface
+#     template: Path
+
+@dataclass
+class DeviceMLagPairGroupConfig:
+
+    @dataclass
+    class LocalInterface:
+        name: str
+        vlan_id: int
+        subnet: IPv4Interface
+        template: Path
+
+    domain_id: str
+    local_interface: LocalInterface
+    peer_link: str
 
 
 class DeviceMLagPairGroup(DeviceGroup):
@@ -38,12 +68,34 @@ class DeviceMLagPairGroup(DeviceGroup):
     def __init__(
         self,
         name: str,
+        config: DeviceMLagPairGroupConfig,
         devices: Optional[Sequence["DeviceMLagGroupMember"]] = None,
         **kwargs,
     ):
         super(DeviceMLagPairGroup, self).__init__(name, **kwargs)
-        for dev in devices:
+        self.config = config
+        for device_id, dev in enumerate(devices, start=1):
+            dev.device_id = device_id
             self.add_group_member(dev)
+
+        self.set_local_interface()
+
+    def set_local_interface(self):
+        if_name = self.config.local_interface.name
+
+        for dev in self.group_members:
+            with dev.interfaces[if_name] as if_lcl:
+                if_subnet = self.config.local_interface.subnet
+                if_ipaddr = IPv4Interface((if_subnet.ip + dev.device_id, if_subnet.network.prefixlen))
+                if_lcl.profile = InterfaceL3(
+                    desc="MLAG peering interface",
+                    if_ipaddr=if_ipaddr,
+                    template=self.config.local_interface.template,
+            )
+
+        dev1, dev2 = self.group_members
+        dev1.interfaces[if_name].cable_peer = dev2.interfaces[if_name]
+        dev2.interfaces[if_name].cable_peer = dev1.interfaces[if_name]
 
     def build(self):
         """

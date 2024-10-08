@@ -6,7 +6,6 @@
 # -----------------------------------------------------------------------------
 
 from typing import List, Optional, ClassVar
-from typing import TYPE_CHECKING
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -20,11 +19,9 @@ from pydantic import BaseModel, Field
 
 from netcad.device import Device
 from netcad.checks import CheckCollection, Check, CheckResult, CheckMeasurement
-from netcad.checks.check_registry import register_collection
 from netcad.logger import get_logger
 
-if TYPE_CHECKING:
-    from ..bgp_peering_design_service import BgpPeeringDesignService
+from ..bgp_peering_design_feature import BgpPeeringDesignFeature
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -82,20 +79,20 @@ class BgpRouterCheckResult(CheckResult[BgpRouterCheck]):
 # -----------------------------------------------------------------------------
 
 
-@register_collection
+@BgpPeeringDesignFeature.register_check_collection
 class BgpRoutersCheckCollection(CheckCollection):
     name: ClassVar[str] = "bgp-routers"
     checks: List[BgpRouterCheck]
 
     @classmethod
     def build(
-        cls, device: Device, design_feature: "BgpPeeringDesignService"
+        cls, device: Device, design_feature: "BgpPeeringDesignFeature"
     ) -> "BgpRoutersCheckCollection":
         # import here to avoid circular imports
-        from ..bgp_peering_design_service import BgpPeeringDesignService
+        from ..bgp_peering_design_feature import BgpPeeringDesignFeature
 
-        services: List[BgpPeeringDesignService] = device.services_of(
-            BgpPeeringDesignService
+        services: List[BgpPeeringDesignFeature] = device.services_of(
+            BgpPeeringDesignFeature
         )
 
         rtr_checks = list()
