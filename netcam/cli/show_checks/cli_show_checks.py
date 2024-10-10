@@ -76,7 +76,7 @@ __all__ = []
     help="display only logs from <test>",
 )
 @click.option(
-    "--service",
+    "--feature",
     "service_list",
     multiple=True,
     help="execute only these design checks",

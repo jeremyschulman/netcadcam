@@ -58,7 +58,7 @@ def cli_show_services(designs: Tuple[str]):
 
 def show_design_services(design: Design):
     table = Table(
-        "Service Name",
+        "Feature",
         "Kind",
         "Checks",
         "Devices",
