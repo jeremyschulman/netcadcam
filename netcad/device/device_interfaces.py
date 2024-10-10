@@ -161,3 +161,25 @@ class DeviceInterfaces(defaultdict, DefaultDict[str, DeviceInterface]):
             # if both used and iface.used are the same
             elif used == iface.used:
                 yield iface
+
+    def alias(self, if_alias):
+        """
+        This helper function returns the DeviceInterface object that matches
+        the given interface alias.  If the alias is not found, then a
+        ValueError is raised.
+
+        Parameters
+        ----------
+        if_alias: str
+            The interface alias to match
+
+        Returns
+        -------
+        DeviceInterface
+        """
+        if not (if_name := self.device.interfaces_map.get(if_alias)):
+            raise ValueError(
+                f"{self.device.name}: Interface alias not found: {if_alias}"
+            )
+
+        return self.device.interfaces[if_name]
