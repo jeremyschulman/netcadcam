@@ -6,7 +6,6 @@
 # -----------------------------------------------------------------------------
 
 from typing import List, Optional, ClassVar
-from typing import TYPE_CHECKING
 from ipaddress import ip_address
 
 # -----------------------------------------------------------------------------
@@ -21,13 +20,10 @@ from pydantic import BaseModel, Field
 
 from netcad.device import Device
 from netcad.checks import CheckCollection, Check, CheckResult, CheckMeasurement
-from netcad.checks.check_registry import register_collection
 from netcad.logger import get_logger
 
+from ..bgp_peering_design_feature import BgpPeeringDesignFeature
 from ..bgp_nei_state import BgpNeighborState
-
-if TYPE_CHECKING:
-    from ..bgp_peering_design_service import BgpPeeringDesignService
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -104,20 +100,20 @@ class BgpNeighborExclusiveListCheck(Check):
 # -----------------------------------------------------------------------------
 
 
-@register_collection
+@BgpPeeringDesignFeature.register_check_collection
 class BgpNeighborsCheckCollection(CheckCollection):
     name: ClassVar[str] = "bgp-peering"
     checks: List[BgpNeighborCheck]
 
     @classmethod
     def build(
-        cls, device: Device, design_feature: "BgpPeeringDesignService"
+        cls, device: Device, design_feature: "BgpPeeringDesignFeature"
     ) -> "BgpNeighborsCheckCollection":
         # import here to avoid circular imports
-        from ..bgp_peering_design_service import BgpPeeringDesignService
+        from ..bgp_peering_design_feature import BgpPeeringDesignFeature
 
-        services: List[BgpPeeringDesignService] = device.services_of(
-            BgpPeeringDesignService
+        services: List[BgpPeeringDesignFeature] = device.services_of(
+            BgpPeeringDesignFeature
         )
 
         nei_checks = list()

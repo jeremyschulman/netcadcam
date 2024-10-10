@@ -16,7 +16,7 @@ from collections import defaultdict
 from netcad.design import Design
 from netcad.logger import get_logger
 
-from ..bgp_peering_design_service import BgpPeeringDesignService
+from ..bgp_peering_design_feature import BgpPeeringDesignFeature
 from ..bgp_peering_types import BGPSpeaker
 
 
@@ -27,7 +27,7 @@ def find_design_bgp_speakers(
 
     bgp_svc_insts = set()
     for design in design_insts:
-        bgp_svc_insts.update(design.services_of(BgpPeeringDesignService))
+        bgp_svc_insts.update(design.services_of(BgpPeeringDesignFeature))
 
     if not bgp_svc_insts:
         log.error("No BGP features found")
@@ -40,7 +40,7 @@ def find_design_bgp_speakers(
     # -------------------------------------------------------------------------
 
     map_dev_bgp_spkrs = defaultdict(list)
-    bgp_svc: BgpPeeringDesignService
+    bgp_svc: BgpPeeringDesignFeature
 
     for bgp_svc in bgp_svc_insts:
         for spkr in bgp_svc.speakers.values():

@@ -74,7 +74,7 @@ def cli_build_tests(devices: Tuple[str], designs: Tuple[str], checks_dir: Path):
     for design_name in designs:
         design = load_design(design_name=design_name)
 
-    device_objs = design.devices.values()       # noqa
+    device_objs = design.devices.values()  # noqa
 
     if devices:
         device_objs = [obj for obj in device_objs if obj.name in devices]

@@ -20,14 +20,12 @@ from netcad.peering import PeeringPlanner
 # -----------------------------------------------------------------------------
 
 from .bgp_peering_types import BGPSpeaker, BGPPeeringEndpoint, BGPSpeakerName
-from .checks import BgpNeighborsCheckCollection, BgpRoutersCheckCollection
-from .bgp_peering_results_graph import BgpPeeringResultsGrapher
 
 # -----------------------------------------------------------------------------
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["BgpPeeringDesignService", "BgpPeeringDesignServiceLike"]
+__all__ = ["BgpPeeringDesignFeature", "BgpPeeringDesignServiceLike"]
 
 # -----------------------------------------------------------------------------
 #
@@ -40,22 +38,24 @@ class BgpPeeringPlanner(PeeringPlanner[BGPSpeaker, BGPSpeakerName, BGPPeeringEnd
     pass
 
 
-class BgpPeeringDesignService(DesignFeature, registry_name="bgp_peering"):
+class BgpPeeringDesignFeature(DesignFeature, registry_name="bgp_peering"):
     """
     The VARP Design Service is specific to Arista EOS.
     """
 
     DEFAULT_SERVICE_NAME = "bgp_peering"
 
-    CHECK_COLLECTIONS = [BgpRoutersCheckCollection, BgpNeighborsCheckCollection]
-    REPORTER = BgpPeeringResultsGrapher
-
     def __init__(self, feature_name: Optional[str] = None, **kwargs):
-        super(BgpPeeringDesignService, self).__init__(
+        super(BgpPeeringDesignFeature, self).__init__(
             feature_name=feature_name or self.DEFAULT_SERVICE_NAME, **kwargs
         )
         self.check_collections = copy(self.__class__.CHECK_COLLECTIONS)
         self.peering = BgpPeeringPlanner(name=feature_name)
+
+        # to avoid circular imports, we import the reporter here
+        from .bgp_peering_results_graph import BgpPeeringResultsGrapher
+
+        self.REPORTER = BgpPeeringResultsGrapher
 
     def get_speaker(self, hostname: str, vrf: Optional[str] = None) -> "BGPSpeaker":
         """
@@ -96,5 +96,5 @@ class BgpPeeringDesignService(DesignFeature, registry_name="bgp_peering"):
 
 
 BgpPeeringDesignServiceLike = TypeVar(
-    "BgpPeeringDesignServiceLike", BgpPeeringDesignService, DesignFeature
+    "BgpPeeringDesignServiceLike", BgpPeeringDesignFeature, DesignFeature
 )
