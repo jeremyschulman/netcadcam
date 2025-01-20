@@ -15,7 +15,7 @@ import json
 # Public Imports
 # -----------------------------------------------------------------------------
 
-from pydantic import BaseModel, Field, parse_obj_as
+from pydantic import BaseModel, Field
 import aiofiles
 
 # -----------------------------------------------------------------------------
@@ -66,7 +66,7 @@ class CheckCollection(BaseModel):
 
     async def save(self, testcase_dir: Path):
         async with aiofiles.open(self.filepath(testcase_dir, self.name), "w+") as ofile:
-            await ofile.write(json.dumps(self.dict(), indent=3))
+            await ofile.write(json.dumps(self.model_dump(), indent=3))
 
     @classmethod
     def get_name(cls):
@@ -76,7 +76,8 @@ class CheckCollection(BaseModel):
     @classmethod
     async def load(cls, testcase_dir: Path):
         async with aiofiles.open(cls.filepath(testcase_dir, cls.get_name())) as infile:
-            return parse_obj_as(cls, json.loads(await infile.read()))
+            content = json.loads(await infile.read())
+            return cls.model_validate(content)
 
     @classmethod
     def build(cls, obj: Any, design_feature: "DesignFeature") -> "CheckCollection":
@@ -116,7 +117,7 @@ class CheckCollection(BaseModel):
                 f"This check collection does not have bound check-type: {check_type}"
             )
 
-        return cls_type.parse_obj(result)
+        return cls_type.model_construct(**result)
 
     def __init_subclass__(cls, **kwargs):
         mod = sys.modules.get(cls.__module__)

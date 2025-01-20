@@ -146,8 +146,8 @@ class ServiceReporting:
 
     @staticmethod
     def default_edge_kind(source, target):
-        f_ct = source.check.check_type
-        t_ct = target.check.check_type
+        f_ct = source.check["check_type"]
+        t_ct = target.check["check_type"]
         return f"checked,{f_ct},{t_ct}"
 
     def add_graph_edge(
@@ -214,11 +214,12 @@ class ServiceReporting:
 
     def load_results_files(
         self, device: Device, check_type: CheckCollectionT
-    ) -> Iterator[CheckResult]:
+    ) -> Iterator[dict]:
         # if the check results file does not exist, then return an empty
         # iterator so the calling scope is AOK.
 
         results_file = self.device_results_file(device, check_type)
+
         if not results_file.exists():
             return ()
 
@@ -235,7 +236,7 @@ class ServiceReporting:
     def _add_result_nodes(self, device: Device, results: Iterator[CheckResult]):
         for res_obj in results:
             check = res_obj.check
-            check_type = check.check_type
+            check_type = check["check_type"]
 
             # add the node in the graph instance
             node: igraph.Vertex = self.graph.add_vertex(

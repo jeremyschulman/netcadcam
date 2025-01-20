@@ -14,6 +14,7 @@ import typing
 
 from pydantic import Field, field_validator, RootModel, BaseModel
 from pydantic._internal._model_construction import ModelMetaclass
+from pydantic_core.core_schema import ValidationInfo
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -141,8 +142,11 @@ class CheckResult(BaseModel, Generic[CheckT], metaclass=MetaCheckResult):
     # noinspection PyUnusedLocal
     @field_validator("check_id", mode="before")
     @classmethod
-    def _save_tc_id(cls, value, values: dict):
-        return values["check"].check_id()
+    def _save_tc_id(cls, value, values: ValidationInfo):
+        try:
+            return values.data["check"].check_id()
+        except KeyError:
+            return value
 
     # -------------------------------------------------------------------------
     #                       Public Methods
