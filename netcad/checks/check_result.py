@@ -143,10 +143,7 @@ class CheckResult(BaseModel, Generic[CheckT], metaclass=MetaCheckResult):
     @field_validator("check_id", mode="before")
     @classmethod
     def _save_tc_id(cls, value, values: ValidationInfo):
-        try:
-            return values.data["check"].check_id()
-        except KeyError:
-            return value
+        return values.data["check"].check_id()
 
     # -------------------------------------------------------------------------
     #                       Public Methods
