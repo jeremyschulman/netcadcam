@@ -49,8 +49,8 @@ class BgpPeeringResultsGrapher(ServiceReporting):
                 # status of the edge so that the value can be filtered against
                 # in graph analysis.
 
-                rmt_dev_name = nei_r.check["check_params"]["nei_name"]
-                rmt_nei_ip = nei_r.check["check_params"]["via_ip"]
+                rmt_dev_name = nei_r.check.check_params.nei_name
+                rmt_nei_ip = nei_r.check.check_params.via_ip
 
                 rmt_dev = self.design.devices.get(hn_to_alias[rmt_dev_name])
 

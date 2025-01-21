@@ -146,8 +146,8 @@ class ServiceReporting:
 
     @staticmethod
     def default_edge_kind(source, target):
-        f_ct = source.check["check_type"]
-        t_ct = target.check["check_type"]
+        f_ct = source.check.check_type
+        t_ct = target.check.check_type
         return f"checked,{f_ct},{t_ct}"
 
     def add_graph_edge(
@@ -236,7 +236,7 @@ class ServiceReporting:
     def _add_result_nodes(self, device: Device, results: Iterator[CheckResult]):
         for res_obj in results:
             check = res_obj.check
-            check_type = check["check_type"]
+            check_type = check.check_type
 
             # add the node in the graph instance
             node: igraph.Vertex = self.graph.add_vertex(

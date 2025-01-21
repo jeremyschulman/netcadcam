@@ -15,7 +15,7 @@ import json
 # Public Imports
 # -----------------------------------------------------------------------------
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, TypeAdapter
 import aiofiles
 
 # -----------------------------------------------------------------------------
@@ -117,7 +117,7 @@ class CheckCollection(BaseModel):
                 f"This check collection does not have bound check-type: {check_type}"
             )
 
-        return cls_type.model_construct(**result)
+        return TypeAdapter(cls_type).validate_python(result)
 
     def __init_subclass__(cls, **kwargs):
         mod = sys.modules.get(cls.__module__)

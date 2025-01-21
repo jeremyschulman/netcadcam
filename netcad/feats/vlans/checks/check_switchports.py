@@ -62,12 +62,12 @@ class SwitchportCheck(Check):
 
     class ExpectAccess(ExpectSwitchport):
         switchport_mode: Literal["access"] = Field("access")
-        vlan: VlanProfile
+        vlan: VlanProfile | int
 
     class ExpectTrunk(ExpectSwitchport):
         switchport_mode: Literal["trunk"] = Field("trunk")
-        native_vlan: Optional[VlanProfile]
-        trunk_allowed_vlans: List[VlanProfile]
+        native_vlan: Optional[VlanProfile | int]
+        trunk_allowed_vlans: List[VlanProfile | int] | str
 
     check_params: Params
     expected_results: Union[ExpectAccess, ExpectTrunk] = Field(
