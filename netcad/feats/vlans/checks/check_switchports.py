@@ -105,18 +105,6 @@ class SwitchportCheckResult(CheckResult[SwitchportCheck]):
         MeasurementSwitchPortAccess, MeasurementSwitchPortTrunk | None
     ] = Field(..., discriminator="switchport_mode")
 
-    # @field_validator("measurement", mode="after")
-    # @classmethod
-    # def _on_measurement(cls, value):
-    #     breakpoint()
-    #     check = value
-    #     msrd_type = (
-    #         MeasurementSwitchPortAccess
-    #         if check.expected_results.switchport_mode == "access"
-    #         else MeasurementSwitchPortTrunk
-    #     )
-    #     return msrd_type.model_validate({})
-
 
 # -----------------------------------------------------------------------------
 

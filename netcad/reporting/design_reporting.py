@@ -39,8 +39,13 @@ class DesginReporting:
     def __init__(self, design: "Design"):
         self.graph = igraph.Graph(directed=True)
         self.design = design
+
+        # map device to its collection of check results
         self.results_map: ResultMapT = defaultdict(lambda: defaultdict(dict))
+
+        # maps check result to a graph-ID (int)
         self.nodes_map: NodeObjIDMapT = bidict()
+
         self.reporters: List[ServiceReporting] = list()
 
     def build(self):

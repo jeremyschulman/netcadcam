@@ -1,7 +1,8 @@
 from typing import Tuple
+import asyncio
 
 from netcad.design import load_design
-from netcad.reporting import DesginReporting
+from netcad.services import ServicesAnalyzer
 from netcad.cli.common_opts import opt_designs
 from ..cli_netcam_main import cli
 
@@ -14,7 +15,8 @@ def clig_reports(designs: Tuple[str]):
     design_name = designs[0]
     design = load_design(design_name=design_name)
 
-    reporter = DesginReporting(design=design)
-    reporter.build()
-    reporter.run_reports()
-    reporter.graph.write_graphml(f"{design.name}.graphml")
+    ai = ServicesAnalyzer(design=design)
+    ai.build()
+    asyncio.run(ai.check())
+
+    ai.graph.write_graphml(f"{design.name}.graphml")

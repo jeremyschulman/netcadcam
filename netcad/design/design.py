@@ -23,7 +23,7 @@ from netcad.ipam import IPAM
 # -----------------------------------------------------------------------------
 
 from .design_feature import DesignFeature
-
+from netcad.services.design_service import DesignService
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -88,6 +88,13 @@ class Design(Registry, registry_name="designs"):
 
         self.features: Dict[str, DesignFeature] = dict()
 
+        # Design services, key=name, value=service instance.  These are the services that the
+        # designer has defined to be used in the design.  The netcad system does
+        # not hardcode any specific names and leaves those decisions to the designer.
+
+        self.services: Dict[str, DesignService] = dict()
+
+        # key=device.alias, value=Device instance
         self.devices: Dict[str, Device] = dict()
 
         self.ipams: Dict[Any, IPAM] = dict()
@@ -112,7 +119,7 @@ class Design(Registry, registry_name="designs"):
         # for method chaining
         return self
 
-    def add_services(self, *design_services: DesignFeature) -> "Design":
+    def add_feature(self, *design_services: DesignFeature) -> "Design":
         for svc in design_services:
             self.features[svc.name] = svc
 
@@ -146,6 +153,6 @@ class Design(Registry, registry_name="designs"):
         self.build()
         self.validate()
 
-    def services_of(self, svc_cls: Type[DesignFeature]) -> List[DesignFeature]:
+    def feature_of(self, svc_cls: Type[DesignFeature]) -> List[DesignFeature]:
         """Return the features that are of the given service type"""
         return [svc for svc in self.features.values() if isinstance(svc, svc_cls)]
