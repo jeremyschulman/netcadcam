@@ -93,15 +93,10 @@ class ServicesAnalyzer:
         self.analyze_walk_results(svc, svc_node)
 
     def analyze_walk_design(self, svc: "DesignService", start_node: igraph.Vertex):
-        walk = [self.nodes_map[svc]]
-
-        while walk:
-            node = walk.pop()
-            self.analyze_walk_results(svc, node)
-
-            for out_e in filter(lambda e: e["kind"] == "d", node.out_edges()):
-                e_target = out_e.target_vertex
-                walk.append(e_target)
+        edges = list(filter(lambda e: e["kind"] == "d", start_node.out_edges()))
+        targets = [edge.target_vertex for edge in edges]
+        for target in targets:
+            self.analyze_walk_results(svc, target)
 
     def analyze_walk_results(self, svc: "DesignService", start_node: igraph.Vertex):
         """
@@ -114,15 +109,28 @@ class ServicesAnalyzer:
 
         while walk:
             node = walk.pop()
+            edges = list(filter(lambda e: e["kind"] == "r", node.out_edges()))
+            targets = [edge.target_vertex for edge in edges]
 
-            for out_e in filter(lambda e: e["kind"] == "r", node.out_edges()):
-                e_target = out_e.target_vertex
+            for e_target in targets:
+                # if the target node has a status of "FAIL", then we set the
+                # overall service to "FAIL", set the starting node status to
+                # FAIL, and add the failure check object to the list of failed
+                # checks.
 
                 if e_target["status"] == "FAIL":
                     self.nodes_map[svc]["status"] = "FAIL"
                     start_node["status"] = "FAIL"
                     check = self.nodes_map.inv[e_target]
                     svc.failed.append(check)
+
+                # if we've reached a design node, then stop this part of the walk.
+
+                if e_target["kind"] == "d":
+                    continue
+
+                # otherwise add the target to the walk list to continue the
+                # traversal.
 
                 walk.append(e_target)
 

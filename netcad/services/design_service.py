@@ -1,5 +1,6 @@
 from typing import Any, TYPE_CHECKING
 
+from netcad.checks import CheckResult
 
 if TYPE_CHECKING:
     from .services_analyzer import ServicesAnalyzer
@@ -11,7 +12,9 @@ class DesignService:
         self.name = name
         self.owner = owner
         self.config = config
-        self.failed = list()
+        self.failed: list[CheckResult] = list()
+
+        self.design.services[name] = self
 
     def build(self, ai: "ServicesAnalyzer"):
         # add a root level service node to th graph.  This will be used for

@@ -54,6 +54,8 @@ class TopologyCheckCabling(BaseModel):
 
 
 class TopologyService(DesignService):
+    CHECKS = [TopologyCheckCabling]
+
     def __init__(self, *vargs, config: TopologyServiceConfig, **kwargs):
         super().__init__(*vargs, **kwargs)
         self.config = config
@@ -77,7 +79,6 @@ class TopologyService(DesignService):
             return False
 
         self.devices = set(if_obj.device for if_obj in self.interfaces)
-
         return True
 
     def build_design_graph(self, ai: ServicesAnalyzer):
@@ -111,12 +112,9 @@ class TopologyService(DesignService):
                 status="PASS",
             )
             ai.add_edge(if_obj.device, if_obj, kind="d")
+            ai.add_edge(self, if_obj, kind="d")
 
     def build_results_graph(self, ai: ServicesAnalyzer):
-        # create a mapping of device object to the device-information check
-        # result object.  We will use this check result a number of times in
-        # this function.
-
         devinfo_checks_map = {
             dev_obj: ai.results_map[dev_obj][DeviceInformationCheck.check_type_()][
                 dev_obj.name
@@ -129,7 +127,6 @@ class TopologyService(DesignService):
         # -----------------------------------------------------------------------------
 
         for dev_obj, check_r_obj in devinfo_checks_map.items():
-            ai.nodes_map[check_r_obj]["service"] = self.name
             ai.add_edge(dev_obj, check_r_obj, kind="r")
             ai.add_edge(check_r_obj, dev_obj, kind="d")
 
@@ -156,9 +153,6 @@ class TopologyService(DesignService):
                 ai.nodes_map[if_check_obj]["service"] = self.name
                 ai.add_edge(if_obj, if_check_obj, kind="r")
                 ai.add_edge(if_check_obj, if_obj, kind="d")
-
-                # device-info check -> interface check
-                ai.add_edge(devinfo_checks_map[if_obj.device], if_check_obj, kind="r")
 
     async def check(self, ai: ServicesAnalyzer):
         # use the cabling from the topology feature to create the "topology
