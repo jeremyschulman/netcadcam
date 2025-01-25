@@ -11,7 +11,7 @@ from typing import List, Optional, Union, Literal, ClassVar
 # Public Imports
 # -----------------------------------------------------------------------------
 
-from pydantic import BaseModel, NonNegativeInt, RootModel, Field
+from pydantic import BaseModel, NonNegativeInt, RootModel
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -66,7 +66,7 @@ class InterfaceCheckUsedExpectations(BaseModel):
     used: Literal[True]
     desc: str
     oper_up: Optional[bool]
-    speed: Optional[NonNegativeInt] = Field(0)
+    speed: Optional[NonNegativeInt]
 
 
 class InterfaceCheckNotUsedExpectations(BaseModel):
@@ -96,7 +96,7 @@ class InterfaceCheckMeasurement(CheckMeasurement):
     used: bool
     desc: str
     oper_up: bool
-    speed: Optional[NonNegativeInt] = Field(0)
+    speed: Optional[NonNegativeInt]
 
 
 class InterfaceCheckResult(CheckResult):
@@ -182,7 +182,7 @@ class InterfaceCheckCollection(CheckCollection):
                     used=True,
                     desc=iface.desc,
                     oper_up=iface.enabled,
-                    speed=port_profile.speed if port_profile else 0,
+                    speed=port_profile.speed if port_profile else None,
                 )
 
                 if iface.profile.is_reserved:

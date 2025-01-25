@@ -22,8 +22,8 @@ from netcad.ipam import IPAM
 # Private Module Imports
 # -----------------------------------------------------------------------------
 
-from .design_feature import DesignFeature
 from netcad.services.design_service import DesignService
+from .design_feature import DesignFeature
 
 # -----------------------------------------------------------------------------
 # Exports

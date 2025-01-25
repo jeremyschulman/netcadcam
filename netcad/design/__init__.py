@@ -4,4 +4,3 @@
 from .design import Design, DesignConfig
 from .design_feature import DesignFeature, DesignFeatureCatalog, DesignFeatureLike
 from .load_design import load_design
-from ..services import DesignService
