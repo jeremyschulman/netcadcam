@@ -43,8 +43,6 @@ def clig_reports(designs: Tuple[str]):
 
     ai = ServicesAnalyzer(design=design)
     ai.build()
-
     asyncio.run(ai.check())
-
     ai.show_report(console=Console())
     ai.graph.write_graphml(f"{design.name}.graphml")
