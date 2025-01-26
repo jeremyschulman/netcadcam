@@ -51,6 +51,7 @@ def show_design_services(design: Design):
     table = Table(
         "Service",
         "Kind",
+        "Owner",
         show_header=True,
         header_style="bold magenta",
         title_justify="left",
@@ -60,9 +61,9 @@ def show_design_services(design: Design):
 
     service_names = sorted(design.services)
 
-    for feat_name in service_names:
-        feat = design.services[feat_name]
-        kind = feat.__class__.__name__
-        table.add_row(feat.name, kind)
+    for name in service_names:
+        svc = design.services[name]
+        kind = svc.__class__.__name__
+        table.add_row(svc.name, kind, svc.owner)
 
     Console().print(table)

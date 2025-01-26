@@ -114,7 +114,7 @@ class DesignService:
     def build_report(self, ai: "ServicesAnalyzer"):
         pass
 
-    def show_report(self, console: Console):
+    def show_report(self, ai: "ServicesAnalyzer", console: Console):
         pass
 
     async def check(self, ai: "ServicesAnalyzer"):

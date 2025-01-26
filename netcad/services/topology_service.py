@@ -287,7 +287,7 @@ class TopologyService(DesignService):
             cabling_failures=cabling_fail,
         )
 
-    def show_report(self, console: Console):
+    def show_report(self, ai: ServicesAnalyzer, console: Console):
         if not self.report:
             return
 
