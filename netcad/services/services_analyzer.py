@@ -16,6 +16,7 @@ from pathlib import Path
 
 from bidict import bidict
 import igraph
+from rich.console import Console
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -34,10 +35,16 @@ from .services_typedefs import ResultMapT, NodeObjIDMapT
 
 class ServicesAnalyzer:
     def __init__(self, design: "Design"):
+        self.design = design
+
+        # initalize the top level status to pass.  Could be set to FAIL if any
+        # managed service status is "FAIL".
+        # TODO: migth move this to a property.
+
+        self.status = "PASS"
+
         # analysis graph
         self.graph = igraph.Graph(directed=True)
-
-        self.design = design
 
         # maintain a set of devices that have results.  A design could have
         # pseudo-devices, for example, that do not have results.
@@ -59,15 +66,23 @@ class ServicesAnalyzer:
 
         self.results_map: ResultMapT = defaultdict(lambda: defaultdict(dict))
 
-        # maps anything to a graph-node
+        # maps any object to a graph-node.
         self.nodes_map: NodeObjIDMapT = bidict()
 
         # load all check results so they can be incorporated into the analysis graph.
-        self._load_results()
+        self._load_feature_results()
 
-    def add_node(self, obj, **kwargs):
-        if obj not in self.nodes_map:
-            self.nodes_map[obj] = self.graph.add_vertex(obj, **kwargs)
+    def add_node(self, obj, **kwargs) -> igraph.Vertex:
+        """
+        Ensures that a node for the given object exists in the graph.  If it
+        does exist the existing node is returned.  If it does not exist, a new
+        node is created and returned.
+        """
+        if has_node := self.nodes_map.get(obj):
+            return has_node
+
+        self.nodes_map[obj] = node = self.graph.add_vertex(obj, **kwargs)
+        return node
 
     def add_edge(self, source, target, **kwargs):
         self.graph.add_edge(
@@ -87,18 +102,29 @@ class ServicesAnalyzer:
             await svc.check(ai=self)
             self.analyze(svc)
 
+    def show_report(self, console: Console):
+        for svc in self.design.services.values():
+            svc.build_report(ai=self)
+            svc.show_report(console)
+
+    # -------------------------------------------------------------------------
+    #
+    #                                Analyzer
+    #
+    # -------------------------------------------------------------------------
+
     def analyze(self, svc: "DesignService"):
         svc_node = self.nodes_map[svc]
-        self.analyze_walk_design(svc, svc_node)
-        self.analyze_walk_results(svc, svc_node)
+        self._analyze_walk_design(svc, svc_node)
+        self._analyze_walk_results(svc, svc_node)
 
-    def analyze_walk_design(self, svc: "DesignService", start_node: igraph.Vertex):
-        edges = list(filter(lambda e: e["kind"] == "d", start_node.out_edges()))
+    def _analyze_walk_design(self, svc: "DesignService", start_node: igraph.Vertex):
+        edges = list(filter(lambda e: e["kind"] == "s", start_node.out_edges()))
         targets = [edge.target_vertex for edge in edges]
         for target in targets:
-            self.analyze_walk_results(svc, target)
+            self._analyze_walk_results(svc, target)
 
-    def analyze_walk_results(self, svc: "DesignService", start_node: igraph.Vertex):
+    def _analyze_walk_results(self, svc: "DesignService", start_node: igraph.Vertex):
         """
         Walk a design node set of result relationships.  If any of the results
         are FAIL, then set the design node status to "FAIL" and return.
@@ -121,6 +147,8 @@ class ServicesAnalyzer:
                 if e_target["status"] == "FAIL":
                     self.nodes_map[svc]["status"] = "FAIL"
                     start_node["status"] = "FAIL"
+
+                    # add the feature check to the failed list.
                     check = self.nodes_map.inv[e_target]
                     svc.failed.append(check)
 
@@ -140,7 +168,7 @@ class ServicesAnalyzer:
     #
     # -------------------------------------------------------------------------
 
-    def _load_results(self):
+    def _load_feature_results(self):
         for feat in self.design.features.values():
             for check_type in feat.check_collections:
                 for device in self.devices:
