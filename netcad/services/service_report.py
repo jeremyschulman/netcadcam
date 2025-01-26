@@ -19,4 +19,7 @@ class DesignServiceReport:
         )
 
     def add(self, item, check: DesignServiceCheck):
-        self.table.add_row(item, self.condition(check), Pretty(check.details()))
+        deets = check.details()
+        self.table.add_row(
+            item, self.condition(check), Pretty(deets) if deets else None
+        )

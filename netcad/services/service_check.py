@@ -13,7 +13,7 @@ class DesignServiceCheck(BaseModel):
         return self.status == "PASS"
 
     def details(self):  # noqa
-        return ""
+        return None
 
     def __bool__(self) -> bool:
         return self.ok()
