@@ -2,16 +2,14 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import Callable, Literal
-from dataclasses import dataclass
+from typing import Callable, ClassVar, Any
+
 # -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
 
 from pydantic import BaseModel, ConfigDict
 from rich.console import Console
-from rich.table import Table
-from rich.text import Text, Style
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -27,6 +25,8 @@ from netcad.feats.topology.checks.check_cabling_nei import InterfaceCablingCheck
 from netcad.feats.topology.checks.check_ipaddrs import IPInterfaceCheck
 from netcad.feats.topology.checks.check_transceivers import TransceiverCheck
 
+from .service_check import DesignServiceCheck
+from .service_report import DesignServiceReport
 from .design_service import DesignService
 from .services_analyzer import ServicesAnalyzer
 
@@ -55,33 +55,20 @@ class TopologyServiceConfig(BaseModel):
     match_interface_profile: Callable
 
 
-class TopologyCheckCabling(BaseModel):
-    service: str
-    feature: str
-    kind: str = "r"
-    kind_type: str = "topology.cabling"
-    status: Literal["PASS", "FAIL"]
+class TopologyCheckCabling(DesignServiceCheck):
+    check_type: ClassVar[str] = "topology.cabling"
+    msrd: Any = None
 
-    def __hash__(self):
-        return id(self)
-
-
-@dataclass
-class TopologyServiceReport:
-    device_failures: list[Device]
-    interface_failures: list[DeviceInterface]
-    cabling_failures: list[TopologyCheckCabling]
+    def details(self):
+        return self.msrd
 
 
 class TopologyService(DesignService):
-    CHECKS = [TopologyCheckCabling]
-
     def __init__(self, *vargs, config: TopologyServiceConfig, **kwargs):
         super().__init__(*vargs, **kwargs)
         self.config = config
         self.devices: set[Device] = None
         self.interfaces: set[DeviceInterface] = None
-        self.report = None
 
         if not self.match_interfaces():
             raise ValueError(f"No interfaces found for service: {self.name}")
@@ -151,6 +138,10 @@ class TopologyService(DesignService):
             ai.add_edge(self, if_obj, kind="s", service=self.name)
 
     def build_results_graph(self, ai: ServicesAnalyzer):
+        self._build_results_deviceinfo(ai)
+        self._build_results_interfaces(ai)
+
+    def _build_results_deviceinfo(self, ai: ServicesAnalyzer):
         devinfo_checks_map = {
             dev_obj: ai.results_map[dev_obj][DeviceInformationCheck.check_type_()][
                 dev_obj.name
@@ -166,6 +157,7 @@ class TopologyService(DesignService):
             ai.add_edge(dev_obj, check_r_obj, kind="r", service=self.name)
             ai.add_edge(check_r_obj, dev_obj, kind="d", service=self.name)
 
+    def _build_results_interfaces(self, ai: ServicesAnalyzer):
         # -----------------------------------------------------------------------------
         # add all interface checks to the interface node.
         # -----------------------------------------------------------------------------
@@ -189,6 +181,12 @@ class TopologyService(DesignService):
                 ai.add_edge(if_obj, if_check_obj, kind="r", service=self.name)
                 ai.add_edge(if_check_obj, if_obj, kind="d", service=self.name)
 
+    # -------------------------------------------------------------------------
+    #
+    #                             Checks
+    #
+    # -------------------------------------------------------------------------
+
     async def check(self, ai: ServicesAnalyzer):
         """
         This function is used to generate service-level checkss.  The only
@@ -196,16 +194,31 @@ class TopologyService(DesignService):
         interfaces are correct.
         """
 
-        # use the cabling from the topology feature to create the "topology
-        # interface peer check".
+        self._check_devices(ai)
+        self._check_interfaces(ai)
+        self._check_cabling(ai)
 
-        feat = self.config.topology_feature
+    def _check_devices(self, ai: ServicesAnalyzer):
+        pass
+
+    def _check_interfaces(self, ai: ServicesAnalyzer):
+        pass
+
+    def _check_cabling(self, ai: ServicesAnalyzer):
+        # create the top level cabling check node that will be the parent to
+        # each of the individual interface cabling checks.
+
+        top_node = TopologyCheckCabling()
+        ai.add_node(top_node, kind="r", service=self.name)
+        ai.add_edge(self, top_node, kind="r", service=self.name)
 
         # -----------------------------------------------------------------------------
         # first step is to filter the list of cabling to only those with
         # interfaces matching the topology service interfaces set and are not
         # virtual interfaces, like port-channels.
         # -----------------------------------------------------------------------------
+
+        feat = self.config.topology_feature
 
         def if_ok(if_obj: DeviceInterface) -> bool:
             return if_obj in self.interfaces and not if_obj.profile.is_virtual
@@ -222,22 +235,29 @@ class TopologyService(DesignService):
         if_cable_check = InterfaceCablingCheck.check_type_()
 
         for if_a, if_b in cables:
+            # TODO: not sure the checks are missing, the but measurement could
+            #       be missing.  May need to account for that scenario.
+
             if_a_r = ai.results_map[if_a.device][if_cable_check].get(if_a.name)
             if_b_r = ai.results_map[if_b.device][if_cable_check].get(if_b.name)
 
             if not (if_a_r and if_b_r):
-                ifp_r = TopologyCheckCabling(
-                    status="FAIL", service=self.name, feature=feat.name
+                ifp_r = TopologyCheckCabling(ok=False, msrd={"error": "Missing checks"})
+                ai.add_node(
+                    ifp_r, kind="r", check_type=ifp_r.check_type, service=self.name
                 )
-                ai.add_node(ifp_r, **ifp_r.model_dump())
+                ai.add_edge(top_node, ifp_r, kind="r", service=self.name)
                 continue
 
             # check passes if for interface checks pass.
-            ok = if_a_r.status == CheckStatus.PASS and if_b_r.status == CheckStatus.PASS
 
-            ifp_r = TopologyCheckCabling(
-                status="PASS" if ok else "FAIL", service=self.name, feature=feat.name
-            )
+            if not (
+                ok := if_a_r.status == CheckStatus.PASS
+                and if_b_r.status == CheckStatus.PASS
+            ):
+                top_node.ok = False
+
+            ifp_r = TopologyCheckCabling(ok=ok)
 
             # -----------------------------------------------------------------
             # create the graph relationship between the service level check and
@@ -245,67 +265,30 @@ class TopologyService(DesignService):
             # betweent the service check and the top-level service node object.
             # -----------------------------------------------------------------
 
-            ai.add_node(ifp_r, **ifp_r.model_dump())
+            ai.add_node(ifp_r, kind="r", check_type=ifp_r.check_type, service=self.name)
             ai.add_edge(ifp_r, if_a_r, kind="r", service=self.name)
             ai.add_edge(ifp_r, if_b_r, kind="r", service=self.name)
-            ai.add_edge(self, ifp_r, kind="r", service=self.name)
-
-    def build_report(self, ai: "ServicesAnalyzer"):
-        """
-        The topology design service report will check the following items:
-            (1) Are all the devices OK
-            (2) Are all the interfaces OK
-            (3) Are all the cabling OK
-        """
-
-        if devices_fail := [
-            node
-            for dev_obj in self.devices
-            if (node := ai.nodes_map[dev_obj])["status"] == "FAIL"
-        ]:
-            self.status = "FAIL"
-
-        if interfaces_fail := [
-            node
-            for if_obj in self.interfaces
-            if (node := ai.nodes_map[if_obj])["status"] == "FAIL"
-        ]:
-            self.status = "FAIL"
-
-        if cabling_fail := [
-            node
-            for edge in ai.nodes_map[self].out_edges()
-            if edge["kind"] == "r"
-            and edge.target_vertex["kind_type"] == "topology.cabling"
-            if (node := edge.target_vertex)["status"] == "FAIL"
-        ]:
-            self.status = "FAIL"
-
-        self.report = TopologyServiceReport(
-            device_failures=devices_fail,
-            interface_failures=interfaces_fail,
-            cabling_failures=cabling_fail,
-        )
+            ai.add_edge(top_node, ifp_r, kind="r", service=self.name)
 
     def show_report(self, ai: ServicesAnalyzer, console: Console):
-        if not self.report:
-            return
+        svc_node = ai.nodes_map[self]
 
-        did_pass = Text("PASS", Style(color="green"))
-        did_fail = Text("FAIL", Style(color="red"))
+        check_nodes = {
+            t["name"].__class__: ai.nodes_map.inv[t]
+            for t in [e.target_vertex for e in svc_node.out_edges() if e["kind"] == "r"]
+        }
 
-        def condition(item):
-            return did_pass if item else did_fail
+        report = DesignServiceReport(title=f"Topology Service Report: {self.name}")
+        # report.add("All devices OK", not self.report.device_failures)
+        # report.add("All interfaces OK", not self.report.device_failures)
 
-        table = Table("Item", "Report", title=f"Service: {self.name} Topology Report")
-        table.add_row("Service Status", condition(self.status == "PASS"))
-        table.add_row("All devices ok?", condition(not self.report.device_failures))
-        table.add_row(
-            "All interfaces ok?", condition(not self.report.interface_failures)
-        )
-        table.add_row("All cabling ok?", condition(not self.report.cabling_failures))
+        svc_cable_check = check_nodes[TopologyCheckCabling]
+        report.add("All cabling OK", svc_cable_check)
 
-        console.print(table)
+        # if not self.status == "PASS":
+        if True:
+            report.add(
+                "Feature Issues", False, details=self.build_features_report_table()
+            )
 
-        if not self.status == "PASS":
-            console.print(self.build_features_report_table())
+        console.print(report.table)

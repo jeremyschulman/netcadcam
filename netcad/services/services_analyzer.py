@@ -106,6 +106,7 @@ class ServicesAnalyzer:
         for svc in self.design.services.values():
             svc.build_report(ai=self)
             svc.show_report(ai=self, console=console)
+            console.print("\n\n")
 
     # -------------------------------------------------------------------------
     #
