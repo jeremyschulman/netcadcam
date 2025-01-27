@@ -84,14 +84,13 @@ class ServicesAnalyzer:
         self.nodes_map[obj] = node = self.graph.add_vertex(obj, **kwargs)
         return node
 
-    def add_design_node(self, svc, obj, kind_type, **kwargs):
+    def add_design_node(self, obj, kind_type, **kwargs):
         self.add_node(
             obj,
             kind="d",
             pass_count=0,
             fail_count=0,
             kind_type=kind_type,
-            service=svc.name,
             status="PASS",
             **kwargs,
         )
@@ -107,6 +106,10 @@ class ServicesAnalyzer:
             status="PASS",
             **kwargs,
         )
+
+    def add_service_check(self, svc, obj, **kwargs):
+        self.add_check_node(svc, obj, **kwargs)
+        self.add_edge(svc, obj, kind="s", service=svc.name)
 
     def add_edge(self, source, target, **kwargs):
         self.graph.add_edge(
@@ -129,7 +132,7 @@ class ServicesAnalyzer:
     def show_report(self, console: Console):
         for svc in self.design.services.values():
             svc.build_report(ai=self)
-            console.print(svc.report.table, "\n\n")
+            console.print("\n\n", svc.report.table)
 
     # -------------------------------------------------------------------------
     #
@@ -150,10 +153,19 @@ class ServicesAnalyzer:
         targets = [edge.target_vertex for edge in edges]
 
         for target in targets:
+            if target["check_id"] and target["status"] == "FAIL":
+                svc.failed.append(target)
+
             self._analyze_service_node(svc, target)
 
-            start_node["pass_count"] += target["pass_count"]
-            start_node["fail_count"] += target["fail_count"]
+            try:
+                start_node["pass_count"] += target["pass_count"]
+                start_node["fail_count"] += target["fail_count"]
+
+            except TypeError:
+                raise ValueError(
+                    f"Analyzer failed due to missing counters in node: {target.attributes()}"
+                )
 
             if start_node["fail_count"]:
                 start_node["status"] = "FAIL"

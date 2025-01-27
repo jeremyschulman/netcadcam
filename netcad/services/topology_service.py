@@ -115,12 +115,11 @@ class TopologyService(DesignService):
         # -----------------------------------------------------------------------------
 
         for dev_obj in self.devices:
-            ai.add_design_node(self, dev_obj, kind_type="device")
+            ai.add_design_node(dev_obj, kind_type="device")
             ai.add_edge(self, dev_obj, kind="s", service=self.name)
 
         for if_obj in self.interfaces:
             ai.add_design_node(
-                self,
                 if_obj,
                 kind_type="interface",
                 device=if_obj.device.name,
@@ -192,8 +191,7 @@ class TopologyService(DesignService):
         # each of the individual interface cabling checks.
 
         top_node = TopologyCheckCabling()
-        ai.add_check_node(self, top_node)
-        ai.add_edge(self, top_node, kind="s", service=self.name)
+        ai.add_service_check(self, top_node)
 
         # -----------------------------------------------------------------------------
         # first step is to filter the list of cabling to only those that could
@@ -221,14 +219,6 @@ class TopologyService(DesignService):
 
             if_a_r = ai.results_map[if_a.device][if_cable_check][if_a.name]
             if_b_r = ai.results_map[if_b.device][if_cable_check][if_b.name]
-
-            # if not (if_a_r and if_b_r):
-            #     ifp_r = TopologyCheckCabling(ok=False, msrd={"error": "Missing checks"})
-            #     ai.add_node(
-            #         ifp_r, kind="r", check_type=ifp_r.check_type, service=self.name
-            #     )
-            #     ai.add_edge(top_node, ifp_r, kind="r", service=self.name)
-            #     continue
 
             # check passes if for interface checks pass.
 
@@ -270,20 +260,32 @@ class TopologyService(DesignService):
         # Cabling report
         # ---------------------------------------------------------------------
 
-        svc_cable_check = check_nodes[TopologyCheckCabling]
-        self.report.add("All cabling OK", svc_cable_check, {"count": "N/A"})
+        svc_cable_node = ai.nodes_map[check_nodes[TopologyCheckCabling]]
 
-        if not self.status == "PASS":
+        if pass_c := svc_cable_node["pass_count"]:
+            self.report.add("Cabling", True, {"count": pass_c})
+
+        if fail_c := svc_cable_node["fail_count"]:
+            self.report.add("Cabling", False, {"count": fail_c})
+
+        if self.failed:
+            self.failed = [err for err in self.failed if not err["reported"]]
+
+        if self.failed:
             self.report.add(
-                "Feature Issues", False, details=self.build_features_report_table()
+                "Unreported Feature Issues",
+                False,
+                details=self.build_features_report_table(),
             )
 
     def _build_report_devices(self, ai: ServicesAnalyzer, report: DesignServiceReport):
-        # for device checks, we only care about the directly associated
-        # results, and not the associated interface results.  This means that a
-        # device may be in a "FAIL" status because of the associated interfaces
-        # errors.  But we do not want to report that condition; only the
-        # condition of specifically device results.
+        """
+        For device checks, we only care about the directly associated results,
+        and not the associated interface results.  This means that a device may
+        be in a "FAIL" status because of the associated interfaces errors.  But
+        we do not want to report that condition; only the condition of
+        specifically device results.
+        """
 
         devices_ok = defaultdict(list)
 
@@ -346,6 +348,9 @@ class TopologyService(DesignService):
                 if edge["kind"] == "r"
                 if edge.target_vertex["status"] == "FAIL"
             ]
+
+            for if_check in if_checks:
+                ai.nodes_map[if_check]["reported"] = True
 
             fail_logs = [
                 (if_check.check.check_type, log[1:])
