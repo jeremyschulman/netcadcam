@@ -22,8 +22,9 @@ from first import first
 # -----------------------------------------------------------------------------
 
 from netcad.device import DeviceInterface
-from netcad.device.profiles import InterfaceL3, InterfaceProfile
+from netcad.device.profiles import InterfaceProfile
 from netcad.device.device_group import DeviceGroup, DeviceGroupMember
+from netcad.feats.vlans import InterfaceVlan, VlanProfile
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -48,21 +49,13 @@ class DeviceMLagGroupMember(DeviceGroupMember):
     is_mlag_device = True
 
 
-#
-# @dataclass
-# class DeviceMLagPairGroupLocalInterfaceConfig:
-#     name: str
-#     vlan_id: int
-#     subnet: IPv4Interface
-#     template: Path
-
 
 @dataclass
 class DeviceMLagPairGroupConfig:
     @dataclass
     class LocalInterface:
         name: str
-        vlan_id: int
+        vlan: VlanProfile
         subnet: IPv4Interface
         template: Path
 
@@ -98,8 +91,9 @@ class DeviceMLagPairGroup(DeviceGroup):
                 if_ipaddr = IPv4Interface(
                     (if_subnet.ip + dev.device_id, if_subnet.network.prefixlen)
                 )
-                if_lcl.profile = InterfaceL3(
+                if_lcl.profile = InterfaceVlan(
                     desc="MLAG peering interface",
+                    vlan=self.config.local_interface.vlan,
                     if_ipaddr=if_ipaddr,
                     template=self.config.local_interface.template,
                 )
