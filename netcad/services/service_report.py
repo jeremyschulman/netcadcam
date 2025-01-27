@@ -15,11 +15,19 @@ class DesignServiceReport:
 
     def __init__(self, title: str):
         self.table = Table(
-            "Item", "Status", "Details", title=title, title_justify="left"
+            "Item",
+            "Status",
+            "Details",
+            title=title,
+            title_justify="left",
+            show_lines=True,
         )
 
-    def add(self, item, check: DesignServiceCheck):
-        deets = check.details()
-        self.table.add_row(
-            item, self.condition(check), Pretty(deets) if deets else None
+    def add(self, item, check: DesignServiceCheck, details=None):
+        deets = (
+            details
+            if isinstance(details, Table)
+            else (Pretty(deets) if (deets := details or check.details()) else None)
         )
+
+        self.table.add_row(item, self.condition(check), deets)
