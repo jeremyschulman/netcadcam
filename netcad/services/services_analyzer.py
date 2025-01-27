@@ -23,7 +23,7 @@ from rich.console import Console
 # -----------------------------------------------------------------------------
 
 from ..config import netcad_globals
-from ..checks import CheckCollectionT, CheckResult
+from ..checks import CheckCollectionT, CheckResult, CheckStatus
 
 if TYPE_CHECKING:
     from netcad.device import Device
@@ -84,6 +84,30 @@ class ServicesAnalyzer:
         self.nodes_map[obj] = node = self.graph.add_vertex(obj, **kwargs)
         return node
 
+    def add_design_node(self, svc, obj, kind_type, **kwargs):
+        self.add_node(
+            obj,
+            kind="d",
+            pass_count=0,
+            fail_count=0,
+            kind_type=kind_type,
+            service=svc.name,
+            status="PASS",
+            **kwargs,
+        )
+
+    def add_check_node(self, svc, obj, **kwargs):
+        self.add_node(
+            obj,
+            kind="r",
+            pass_count=0,
+            fail_count=0,
+            check_type=obj.check_type,
+            service=svc.name,
+            status="PASS",
+            **kwargs,
+        )
+
     def add_edge(self, source, target, **kwargs):
         self.graph.add_edge(
             self.nodes_map[source].index, self.nodes_map[target].index, **kwargs
@@ -105,8 +129,7 @@ class ServicesAnalyzer:
     def show_report(self, console: Console):
         for svc in self.design.services.values():
             svc.build_report(ai=self)
-            svc.show_report(ai=self, console=console)
-            console.print("\n\n")
+            console.print(svc.report.table, "\n\n")
 
     # -------------------------------------------------------------------------
     #
@@ -115,53 +138,25 @@ class ServicesAnalyzer:
     # -------------------------------------------------------------------------
 
     def analyze(self, svc: "DesignService"):
-        svc_node = self.nodes_map[svc]
-        self._analyze_walk_design(svc, svc_node)
-        self._analyze_walk_results(svc, svc_node)
+        node = self.nodes_map[svc]
 
-    def _analyze_walk_design(self, svc: "DesignService", start_node: igraph.Vertex):
-        edges = list(filter(lambda e: e["kind"] == "s", start_node.out_edges()))
+        self._analyze_service_node(svc, node)
+
+        if node["fail_count"]:
+            svc.status = "FAIL"
+
+    def _analyze_service_node(self, svc: "DesignService", start_node: igraph.Vertex):
+        edges = [edge for edge in start_node.out_edges() if edge["service"] == svc.name]
         targets = [edge.target_vertex for edge in edges]
+
         for target in targets:
-            self._analyze_walk_results(svc, target)
+            self._analyze_service_node(svc, target)
 
-    def _analyze_walk_results(self, svc: "DesignService", start_node: igraph.Vertex):
-        """
-        Walk a design node set of result relationships.  If any of the results
-        are FAIL, then set the design node status to "FAIL" and return.
+            start_node["pass_count"] += target["pass_count"]
+            start_node["fail_count"] += target["fail_count"]
 
-
-        """
-        walk = [start_node]
-
-        while walk:
-            node = walk.pop()
-            edges = list(filter(lambda e: e["kind"] == "r", node.out_edges()))
-            targets = [edge.target_vertex for edge in edges]
-
-            for e_target in targets:
-                # if the target node has a status of "FAIL", then we set the
-                # overall service to "FAIL", set the starting node status to
-                # FAIL, and add the failure check object to the list of failed
-                # checks.
-
-                if e_target["status"] == "FAIL":
-                    self.nodes_map[svc]["status"] = "FAIL"
-                    start_node["status"] = "FAIL"
-
-                    # add the feature check to the failed list.
-                    check = self.nodes_map.inv[e_target]
-                    svc.failed.append(check)
-
-                # if we've reached a design node, then stop this part of the walk.
-
-                if e_target["kind"] == "d":
-                    continue
-
-                # otherwise add the target to the walk list to continue the
-                # traversal.
-
-                walk.append(e_target)
+            if start_node["fail_count"]:
+                start_node["status"] = "FAIL"
 
     # -------------------------------------------------------------------------
     #
@@ -206,13 +201,19 @@ class ServicesAnalyzer:
 
             # add the node to the design results-graph so features can
             # cross-functionally use them.
+            if res_obj.status == CheckStatus.PASS:
+                counts = {"pass_count": 1, "fail_count": 0}
+            else:
+                counts = {"pass_count": 0, "fail_count": 1}
+
             self.nodes_map[res_obj] = self.graph.add_vertex(
                 feature=feature.name,
                 check_type=check_type,
                 check_id=res_obj.check_id,
-                status=res_obj.status,
+                status=str(res_obj.status),
                 device=res_obj.device,
                 kind="r",
+                **counts,
             )
 
             self.results_map[device][check_type][res_obj.check_id] = res_obj

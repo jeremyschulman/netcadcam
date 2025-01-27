@@ -8,7 +8,6 @@ from typing import Any, TYPE_CHECKING
 # Public Imports
 # -----------------------------------------------------------------------------
 
-from rich.console import Console
 from rich.table import Table
 from rich.pretty import Pretty
 
@@ -17,6 +16,8 @@ from rich.pretty import Pretty
 # -----------------------------------------------------------------------------
 
 from netcad.checks import CheckResult
+
+from .service_report import DesignServiceReport
 
 if TYPE_CHECKING:
     from .services_analyzer import ServicesAnalyzer
@@ -75,8 +76,9 @@ class DesignService:
 
         # initialize the design service status to PASS.  This value will be set
         # to "FAIL" should any element in the service be knownn to be "FAIL".
-
         self.status = "PASS"
+
+        self.report: DesignServiceReport = None
 
     def build(self, ai: "ServicesAnalyzer"):
         # add a root level service node to th graph.  This will be used for
@@ -88,6 +90,8 @@ class DesignService:
             kind="s",
             kind_type=self.__class__.__name__,
             service=self.name,
+            pass_count=0,
+            fail_count=0,
             status="PASS",
         )
 
@@ -112,9 +116,6 @@ class DesignService:
         pass
 
     def build_report(self, ai: "ServicesAnalyzer"):
-        pass
-
-    def show_report(self, ai: "ServicesAnalyzer", console: Console):
         pass
 
     async def check(self, ai: "ServicesAnalyzer"):
