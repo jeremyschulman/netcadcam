@@ -10,6 +10,7 @@ from typing import Any, TYPE_CHECKING
 
 from rich.table import Table
 from rich.pretty import Pretty
+from rich.text import Text, Style
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -136,5 +137,31 @@ class DesignService:
             device = check.device
             check_id = check.check_id
             table.add_row(device, check.check.check_type, check_id, Pretty(fail_logs))
+
+        return table
+
+    @staticmethod
+    def build_feature_logs_table(check, title=None) -> Table:
+        green = Style(color="green")
+        red = Style(color="red")
+
+        table = Table(
+            "Status",
+            "Field",
+            "Details",
+            title=title,
+            title_justify="left",
+        )
+
+        for log in check.logs.root:
+            match log[0]:
+                case "PASS":
+                    color = green
+                case "FAIL":
+                    color = red
+                case _:
+                    color = None
+
+            table.add_row(Text(log[0], color), log[1], Pretty(log[2]))
 
         return table

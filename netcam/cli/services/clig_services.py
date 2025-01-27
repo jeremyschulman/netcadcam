@@ -5,6 +5,7 @@
 from typing import Tuple
 import asyncio
 
+import click
 # -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
@@ -35,7 +36,8 @@ def clig_services():
 
 @clig_services.command(name="check")
 @opt_designs()
-def clig_reports(designs: Tuple[str]):
+@click.option("--service", "service_name", type=str, help="service name")
+def clig_reports(designs: Tuple[str], service_name: str):
     """generate report"""
 
     design_name = designs[0]
@@ -44,5 +46,12 @@ def clig_reports(designs: Tuple[str]):
     ai = ServicesAnalyzer(design=design)
     ai.build()
     asyncio.run(ai.check())
-    ai.show_report(console=Console())
+
+    if not service_name:
+        ai.show_report(console=Console())
+    else:
+        svc = design.services[service_name]
+        svc.build_report(ai=ai)
+        Console().print("\n\n", svc.report.table)
+
     ai.graph.write_graphml(f"{design.name}.graphml")
