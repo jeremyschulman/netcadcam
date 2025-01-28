@@ -7,13 +7,13 @@
 
 from typing import Callable, ClassVar, Any
 from collections import defaultdict
+from dataclasses import dataclass
 
 # -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
 
 from first import first
-from pydantic import BaseModel, ConfigDict
 from rich.table import Table
 from rich.pretty import Pretty
 
@@ -43,10 +43,9 @@ from .services_analyzer import ServicesAnalyzer
 # -----------------------------------------------------------------------------
 
 
-class TopologyServiceConfig(BaseModel):
+@dataclass
+class TopologyServiceConfig:
     """This class is used to configure the topology service."""
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     # reference to the topology design feature
     topology_feature: TopologyDesignFeature

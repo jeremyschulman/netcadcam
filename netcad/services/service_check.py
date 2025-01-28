@@ -9,6 +9,9 @@ class DesignServiceCheck(BaseModel):
     check_type: ClassVar[str] = "service_check"
     ok: bool = True
 
+    def check(self):
+        pass
+
     def details(self):  # noqa
         return None
 
