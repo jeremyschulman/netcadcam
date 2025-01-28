@@ -43,23 +43,6 @@ from .services_analyzer import ServicesAnalyzer
 # -----------------------------------------------------------------------------
 
 
-@dataclass
-class TopologyServiceConfig:
-    """This class is used to configure the topology service."""
-
-    # reference to the topology design feature
-    topology_feature: TopologyDesignFeature
-
-    # function used to match interfaces that should be included in the service
-    # generally, this will be a function that checks the interface profile
-    # attributes, like "is_network".  The example callable in that case could
-    # be a simple lambda function like:
-    #
-    #       lambda ifp: ifp.is_network
-
-    match_interface_profile: Callable
-
-
 class TopologyCheckCabling(DesignServiceCheck):
     """
     This check serves to validate the cabling between two interfaces.  While
@@ -102,7 +85,23 @@ class TopologyService(DesignService):
 
     """
 
-    def __init__(self, *vargs, config: TopologyServiceConfig, **kwargs):
+    @dataclass
+    class Config:
+        """This class is used to configure the topology service."""
+
+        # reference to the topology design feature
+        topology_feature: TopologyDesignFeature
+
+        # function used to match interfaces that should be included in the service
+        # generally, this will be a function that checks the interface profile
+        # attributes, like "is_network".  The example callable in that case could
+        # be a simple lambda function like:
+        #
+        #       lambda ifp: ifp.is_network
+
+        match_interface_profile: Callable
+
+    def __init__(self, *vargs, config: Config, **kwargs):
         super().__init__(*vargs, **kwargs)
         self.config = config
         self.devices: set[Device] = None
