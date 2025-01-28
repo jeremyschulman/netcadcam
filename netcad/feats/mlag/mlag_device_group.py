@@ -49,7 +49,6 @@ class DeviceMLagGroupMember(DeviceGroupMember):
     is_mlag_device = True
 
 
-
 @dataclass
 class DeviceMLagPairGroupConfig:
     @dataclass

@@ -1,14 +1,18 @@
+#  Copyright (c) 2025 Jeremy Schulman
+#  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
 # -----------------------------------------------------------------------------
 # System Imports
 # -----------------------------------------------------------------------------
 
 from typing import Callable, ClassVar, Any
+from collections import defaultdict
 
-from black.trans import defaultdict
 # -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
 
+from first import first
 from pydantic import BaseModel, ConfigDict
 from rich.table import Table
 from rich.pretty import Pretty
@@ -58,6 +62,13 @@ class TopologyServiceConfig(BaseModel):
 
 
 class TopologyCheckCabling(DesignServiceCheck):
+    """
+    This check serves to validate the cabling between two interfaces.  While
+    there are two separate checks on a feature basis, this service level check
+    creates a relationship between the two so that we can reason about the
+    overall status of the cabling.
+    """
+
     check_type: ClassVar[str] = "topology.cabling"
     msrd: Any = None
 
@@ -66,6 +77,32 @@ class TopologyCheckCabling(DesignServiceCheck):
 
 
 class TopologyService(DesignService):
+    """
+    The purpose of the TopologyService class is to provide a service level view
+    of the topology related to the set of interfaces that match the criteria
+    defined in the config object passed to the constructor.
+
+    The service design graph relates the
+        (1) all device nodes to the Design node
+        (2) all interface nodes to their respective Device node
+
+    The service check graph relates:
+        (1) all device feature checks to each Device node,
+        (2) all interface feature checks to each Interface node.
+
+    Attributes
+    ----------
+    config : TopologyServiceConfig
+        The configuration object that defines the service criteria.
+
+    devices : set[Device]
+        The set of devices that are part of this specific topology
+
+    interfaces : set[DeviceInterface]
+        The set of device interfaces that are part of this specific topology
+
+    """
+
     def __init__(self, *vargs, config: TopologyServiceConfig, **kwargs):
         super().__init__(*vargs, **kwargs)
         self.config = config
@@ -108,15 +145,9 @@ class TopologyService(DesignService):
                 (D) -> (I)
         """
 
-        # -----------------------------------------------------------------------------
-        # build the device -> interface design graph.  Initialize the status
-        # value for each design node to "PASS".  This status will be updated
-        # should the analyzer find that any related checks fail.
-        # -----------------------------------------------------------------------------
-
         for dev_obj in self.devices:
             ai.add_design_node(dev_obj, kind_type="device")
-            ai.add_edge(self, dev_obj, kind="s", service=self.name)
+            ai.add_service_edge(self, self, dev_obj)
 
         for if_obj in self.interfaces:
             ai.add_design_node(
@@ -127,10 +158,10 @@ class TopologyService(DesignService):
             )
 
             # design edge between device and interface
-            ai.add_edge(if_obj.device, if_obj, kind="d")
+            ai.add_design_edge(if_obj.device, if_obj)
 
             # service edge between device and interface
-            ai.add_edge(if_obj.device, if_obj, kind="s", service=self.name)
+            ai.add_service_edge(self, if_obj.device, if_obj)
 
     # --------------------------------------------------------------------------
     #
@@ -139,10 +170,14 @@ class TopologyService(DesignService):
     # --------------------------------------------------------------------------
 
     def build_results_graph(self, ai: ServicesAnalyzer):
-        self._build_results_deviceinfo(ai)
+        """
+        This function is used to create the topology results graph relating the
+        feature checks to the device and interface design nodes.
+        """
+        self._build_results_devices(ai)
         self._build_results_interfaces(ai)
 
-    def _build_results_deviceinfo(self, ai: ServicesAnalyzer):
+    def _build_results_devices(self, ai: ServicesAnalyzer):
         """
         Associate the device-info check result to the device design node
         """
@@ -167,6 +202,9 @@ class TopologyService(DesignService):
 
         for if_obj in self.interfaces:
             for check_type in if_check_types:
+                # if the interface does not have this specific check, for
+                # example not all interfaces have transceivers, then we skip.
+
                 if not (
                     if_check_obj := ai.results_map[if_obj.device][check_type].get(
                         if_obj.name
@@ -174,7 +212,7 @@ class TopologyService(DesignService):
                 ):
                     continue
 
-                ai.add_edge(if_obj, if_check_obj, kind="r", service=self.name)
+                ai.add_check_edge(self, if_obj, if_check_obj)
 
     # -------------------------------------------------------------------------
     #
@@ -231,11 +269,11 @@ class TopologyService(DesignService):
             # -----------------------------------------------------------------
 
             ai.add_check_node(self, ifp_r)
-            ai.add_edge(ifp_r, if_a_r, kind="r", service=self.name)
-            ai.add_edge(ifp_r, if_b_r, kind="r", service=self.name)
+            ai.add_check_edge(self, ifp_r, if_a_r)
+            ai.add_check_edge(self, ifp_r, if_b_r)
 
             # add the cable-check node to the top-node for traveral later.
-            ai.add_edge(top_node, ifp_r, kind="r", service=self.name)
+            ai.add_check_edge(self, top_node, ifp_r)
 
     # -------------------------------------------------------------------------
     #
@@ -244,23 +282,27 @@ class TopologyService(DesignService):
     # -------------------------------------------------------------------------
 
     def build_report(self, ai: ServicesAnalyzer):
-        svc_node = ai.nodes_map[self]
-
-        check_nodes = {
-            t["name"].__class__: ai.nodes_map.inv[t]
-            for t in [e.target_vertex for e in svc_node.out_edges() if e["kind"] == "s"]
-        }
-
         self.report = DesignServiceReport(title=f"Topology Service Report: {self.name}")
+        self._build_report_devices(ai)
+        self._build_report_interfaces(ai)
+        self._build_report_cabling(ai)
 
-        self._build_report_devices(ai, self.report)
-        self._build_report_interfaces(ai, self.report)
+    def _build_report_cabling(self, ai: ServicesAnalyzer):
+        # ---------------------------------------------------------------------
+        # get the top level topology cabling check node to determine the
+        # overall status of the cabling checks.
+        # ---------------------------------------------------------------------
+
+        svc_cable_node = first(
+            node
+            for edge in ai.nodes_map[self].out_edges()
+            if (node := edge.target_vertex)["check_type"]
+            == TopologyCheckCabling.check_type
+        )
 
         # ---------------------------------------------------------------------
         # Cabling report
         # ---------------------------------------------------------------------
-
-        svc_cable_node = ai.nodes_map[check_nodes[TopologyCheckCabling]]
 
         if pass_c := svc_cable_node["pass_count"]:
             self.report.add("Cabling", True, {"count": pass_c})
@@ -268,17 +310,7 @@ class TopologyService(DesignService):
         if fail_c := svc_cable_node["fail_count"]:
             self.report.add("Cabling", False, {"count": fail_c})
 
-        if self.failed:
-            self.failed = [err for err in self.failed if not err["reported"]]
-
-        if self.failed:
-            self.report.add(
-                "Unreported Feature Issues",
-                False,
-                details=self.build_features_report_table(),
-            )
-
-    def _build_report_devices(self, ai: ServicesAnalyzer, report: DesignServiceReport):
+    def _build_report_devices(self, ai: ServicesAnalyzer):
         """
         For device checks, we only care about the directly associated results,
         and not the associated interface results.  This means that a device may
@@ -298,7 +330,7 @@ class TopologyService(DesignService):
             ]
             devices_ok[not dev_checks_fail].append(dev_obj)
 
-        report.add("Devices", True, {"count": len(devices_ok[True])})
+        self.report.add("Devices", True, {"count": len(devices_ok[True])})
 
         if not (devs_failed := devices_ok[False]):
             return
@@ -306,11 +338,9 @@ class TopologyService(DesignService):
         # TODO: need to add more detailed failure reporting.  For now just
         #       going to show the count of failed devices.
 
-        report.add("Devices", False, {"count": len(devs_failed)})
+        self.report.add("Devices", False, {"count": len(devs_failed)})
 
-    def _build_report_interfaces(
-        self, ai: ServicesAnalyzer, report: DesignServiceReport
-    ):
+    def _build_report_interfaces(self, ai: ServicesAnalyzer):
         # ---------------------------------------------------------------------
         # The "interfaces report" checks the interface design nodes for
         # PASS/FAIL. If all are OK, then this report check passes.
@@ -321,7 +351,7 @@ class TopologyService(DesignService):
             node = ai.nodes_map[if_obj]
             interfaces_ok[node["status"] == "PASS"].append(if_obj)
 
-        report.add("Interfaces", True, {"count": len(interfaces_ok[True])})
+        self.report.add("Interfaces", True, {"count": len(interfaces_ok[True])})
 
         if not (ifs_failed := interfaces_ok[False]):
             return
@@ -367,4 +397,4 @@ class TopologyService(DesignService):
                 Pretty(fail_logs),
             )
 
-        report.add("Interfaces", False, table)
+        self.report.add("Interfaces", False, table)

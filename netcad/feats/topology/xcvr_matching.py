@@ -43,12 +43,16 @@ def get_transciver_model_alias(model: str) -> str | None:
 
 @lru_cache()
 def transceiver_model_matches(given_mdoel, expected_model) -> bool:
-
     if given_mdoel == expected_model:
         return True
 
     options = get_transciver_model_alias(given_mdoel)
-    return expected_model in options if isinstance(options, list) else (options == expected_model)
+    return (
+        expected_model in options
+        if isinstance(options, list)
+        else (options == expected_model)
+    )
+
 
 @lru_cache()
 def get_transciver_type_alias(xcvr_type: str) -> str | None:

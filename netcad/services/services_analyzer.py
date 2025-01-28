@@ -116,6 +116,15 @@ class ServicesAnalyzer:
             self.nodes_map[source].index, self.nodes_map[target].index, **kwargs
         )
 
+    def add_design_edge(self, source, target, **kwargs):
+        self.add_edge(source, target, kind="d", **kwargs)
+
+    def add_service_edge(self, svc, source, target, **kwargs):
+        self.add_edge(source, target, kind="s", service=svc.name, **kwargs)
+
+    def add_check_edge(self, svc, source, target, **kwargs):
+        self.add_edge(source, target, kind="r", service=svc.name, **kwargs)
+
     def build(self):
         """
         This function is responsible for producing the services results graphs
