@@ -1,8 +1,22 @@
+#  Copyright (c) 2025 Jeremy Schulman
+#  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+# -----------------------------------------------------------------------------
+# System Imports
+# -----------------------------------------------------------------------------
+
 from typing import ClassVar
 from dataclasses import dataclass
 
+# -----------------------------------------------------------------------------
+# Public Imports
+# -----------------------------------------------------------------------------
+
 from rich.table import Table
 
+# -----------------------------------------------------------------------------
+# Private Imports
+# -----------------------------------------------------------------------------
 
 from netcad.feats.vlans import InterfaceL2
 from netcad.feats.vlans.checks.check_switchports import SwitchportCheck
@@ -13,6 +27,13 @@ from .service_check import DesignServiceCheck
 from .topology_service import TopologyService
 from .services_analyzer import ServicesAnalyzer
 from ..device import DeviceInterface
+
+
+# -----------------------------------------------------------------------------
+#
+#                                 CODE BEGINS
+#
+# -----------------------------------------------------------------------------
 
 
 class SwitchportService(DesignService):
@@ -63,6 +84,7 @@ class SwitchportService(DesignService):
         Create a relationship between each of the switchport feature checks to
         the switchport design nodes.
         """
+
         service_check = SwitchportService.CheckSwitchports()
         ai.add_service_check(self, service_check)
 
@@ -79,13 +101,6 @@ class SwitchportService(DesignService):
             # Switchport ->[r]-> CheckResult
             ai.add_results_edge(self, if_obj.profile, checkr_obj)
 
-    async def check(self, ai: "ServicesAnalyzer"):
-        """
-        nothing to be done here since the analyzer will summarize the
-        switchport check results.
-        """
-        pass
-
     def build_report(self, ai: "ServicesAnalyzer"):
         self.report = DesignServiceReport(
             title=f"Switchport Report: {self.name} - {len(self.interfaces)} total ports"
@@ -93,6 +108,9 @@ class SwitchportService(DesignService):
         svc_node = ai.nodes_map[self]
 
         self.report.add("Switchports", True, {"count": svc_node["pass_count"]})
+
+        # starting with the service level check node, find all switchport
+        # checks that are in the failed state.
 
         svc_check = ai.graph.vs.select(
             service=self.name,
@@ -104,12 +122,14 @@ class SwitchportService(DesignService):
             lambda x: x["status"] == "FAIL", svc_check.neighbors(mode="out")
         )
 
-        if svc_node["fail_count"]:
-            table = Table("Device", "Interface", "Report")
-            for node in failed:
-                obj = ai.nodes_map.inv[node]
-                table.add_row(
-                    obj.device, obj.check_id, self.build_feature_logs_table(obj)
-                )
+        # if there are failed switchport nodes then create a table of these errors.
 
-            self.report.add("Switchports", False, table)
+        if not svc_node["fail_count"]:
+            return
+
+        table = Table("Device", "Interface", "Report")
+        for node in failed:
+            obj = ai.nodes_map.inv[node]
+            table.add_row(obj.device, obj.check_id, self.build_feature_logs_table(obj))
+
+        self.report.add("Switchports", False, table)
