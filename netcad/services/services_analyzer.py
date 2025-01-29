@@ -72,6 +72,10 @@ class ServicesAnalyzer:
         # load all check results so they can be incorporated into the analysis graph.
         self._load_feature_results()
 
+    # -------------------------------------------------------------------------
+    # node methods
+    # -------------------------------------------------------------------------
+
     def add_node(self, obj, **kwargs) -> igraph.Vertex:
         """
         Ensures that a node for the given object exists in the graph.  If it
@@ -111,6 +115,10 @@ class ServicesAnalyzer:
         self.add_check_node(svc, obj, **kwargs)
         self.add_edge(svc, obj, kind="s", service=svc.name)
 
+    # -------------------------------------------------------------------------
+    # edge methods
+    # -------------------------------------------------------------------------
+
     def add_edge(self, source, target, **kwargs):
         self.graph.add_edge(
             self.nodes_map[source].index, self.nodes_map[target].index, **kwargs
@@ -122,8 +130,14 @@ class ServicesAnalyzer:
     def add_service_edge(self, svc, source, target, **kwargs):
         self.add_edge(source, target, kind="s", service=svc.name, **kwargs)
 
-    def add_check_edge(self, svc, source, target, **kwargs):
+    def add_results_edge(self, svc, source, target, **kwargs):
         self.add_edge(source, target, kind="r", service=svc.name, **kwargs)
+
+    # -------------------------------------------------------------------------
+    #
+    #                          Primary Analyzer Actions
+    #
+    # -------------------------------------------------------------------------
 
     def build(self):
         """
@@ -138,9 +152,12 @@ class ServicesAnalyzer:
             await svc.check(ai=self)
             self.analyze(svc)
 
-    def show_report(self, console: Console):
+    def build_reports(self):
         for svc in self.design.services.values():
             svc.build_report(ai=self)
+
+    def show_reports(self, console: Console):
+        for svc in self.design.services.values():
             console.print("\n\n", svc.report.table)
 
     # -------------------------------------------------------------------------

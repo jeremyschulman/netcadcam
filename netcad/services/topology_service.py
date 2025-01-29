@@ -184,7 +184,7 @@ class TopologyService(DesignService):
             check_obj = ai.results_map[dev_obj][DeviceInformationCheck.check_type_()][
                 dev_obj.name
             ]
-            ai.add_edge(dev_obj, check_obj, kind="r", service=self.name)
+            ai.add_results_edge(self, dev_obj, check_obj)
 
     def _build_results_interfaces(self, ai: ServicesAnalyzer):
         """
@@ -210,7 +210,7 @@ class TopologyService(DesignService):
                 ):
                     continue
 
-                ai.add_check_edge(self, if_obj, if_check_obj)
+                ai.add_results_edge(self, if_obj, if_check_obj)
 
     # -------------------------------------------------------------------------
     #
@@ -267,11 +267,11 @@ class TopologyService(DesignService):
             # -----------------------------------------------------------------
 
             ai.add_check_node(self, ifp_r)
-            ai.add_check_edge(self, ifp_r, if_a_r)
-            ai.add_check_edge(self, ifp_r, if_b_r)
+            ai.add_results_edge(self, ifp_r, if_a_r)
+            ai.add_results_edge(self, ifp_r, if_b_r)
 
             # add the cable-check node to the top-node for traveral later.
-            ai.add_check_edge(self, top_node, ifp_r)
+            ai.add_results_edge(self, top_node, ifp_r)
 
     # -------------------------------------------------------------------------
     #
@@ -306,6 +306,7 @@ class TopologyService(DesignService):
             self.report.add("Cabling", True, {"count": pass_c})
 
         if fail_c := svc_cable_node["fail_count"]:
+            # TODO: add more details to the cabling failure report
             self.report.add("Cabling", False, {"count": fail_c})
 
     def _build_report_devices(self, ai: ServicesAnalyzer):
@@ -326,6 +327,7 @@ class TopologyService(DesignService):
                 if edge["kind"] == "r" and edge["service"] == self.name
                 if (node := edge.target_vertex)["status"] == "FAIL"
             ]
+
             devices_ok[not dev_checks_fail].append(dev_obj)
 
         self.report.add("Devices", True, {"count": len(devices_ok[True])})
