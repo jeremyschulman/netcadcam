@@ -127,8 +127,8 @@ class ServicesAnalyzer:
     def add_design_edge(self, source, target, **kwargs):
         self.add_edge(source, target, kind="d", **kwargs)
 
-    def add_service_edge(self, svc, source, target, **kwargs):
-        self.add_edge(source, target, kind="s", service=svc.name, **kwargs)
+    def add_service_edge(self, service, source, target, **kwargs):
+        self.add_edge(source, target, kind="s", service=service.name, **kwargs)
 
     def add_results_edge(self, svc, source, target, **kwargs):
         self.add_edge(source, target, kind="r", service=svc.name, **kwargs)
@@ -172,6 +172,7 @@ class ServicesAnalyzer:
         self._analyze_service_node(svc, node)
 
         if node["fail_count"]:
+            node["status"] = "FAIL"
             svc.status = "FAIL"
 
     def _analyze_service_node(self, svc: "DesignService", start_node: igraph.Vertex):
@@ -192,9 +193,6 @@ class ServicesAnalyzer:
                 raise ValueError(
                     f"Analyzer failed due to missing counters in node: {target.attributes()}"
                 )
-
-            if start_node["fail_count"]:
-                start_node["status"] = "FAIL"
 
     # -------------------------------------------------------------------------
     #

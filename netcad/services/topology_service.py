@@ -144,8 +144,8 @@ class TopologyService(DesignService):
         """
 
         for dev_obj in self.devices:
-            ai.add_design_node(dev_obj, kind_type="device")
-            ai.add_service_edge(self, self, dev_obj)
+            ai.add_design_node(dev_obj, kind_type="device", device=dev_obj.name)
+            ai.add_service_edge(service=self, source=self, target=dev_obj)
 
         for if_obj in self.interfaces:
             ai.add_design_node(
@@ -340,21 +340,12 @@ class TopologyService(DesignService):
 
         self.report.add("Devices", False, {"count": len(devs_failed)})
 
-    def _build_report_interfaces(self, ai: ServicesAnalyzer):
-        # ---------------------------------------------------------------------
-        # The "interfaces report" checks the interface design nodes for
-        # PASS/FAIL. If all are OK, then this report check passes.
-        # ---------------------------------------------------------------------
-
-        interfaces_ok = defaultdict(list)
-        for if_obj in self.interfaces:
-            node = ai.nodes_map[if_obj]
-            interfaces_ok[node["status"] == "PASS"].append(if_obj)
-
-        self.report.add("Interfaces", True, {"count": len(interfaces_ok[True])})
-
-        if not (ifs_failed := interfaces_ok[False]):
-            return
+    def build_report_interfaces_errors_table(self, ai: ServicesAnalyzer) -> Table:
+        ifs_failed = [
+            if_obj
+            for if_obj in self.interfaces
+            if ai.nodes_map[if_obj]["fail_count"] != 0
+        ]
 
         # ------------------------------------------------------------------
         # Create a table for interface specific failure results
@@ -397,4 +388,20 @@ class TopologyService(DesignService):
                 Pretty(fail_logs),
             )
 
+        return table
+
+    def _build_report_interfaces(self, ai: ServicesAnalyzer):
+        # ---------------------------------------------------------------------
+        # The "interfaces report" checks the interface design nodes for
+        # PASS/FAIL. If all are OK, then this report check passes.
+        # ---------------------------------------------------------------------
+
+        interfaces_ok = defaultdict(list)
+        for if_obj in self.interfaces:
+            node = ai.nodes_map[if_obj]
+            interfaces_ok[node["fail_count"] == 0].append(if_obj)
+
+        self.report.add("Interfaces", True, {"count": len(interfaces_ok[True])})
+
+        table = self.build_report_interfaces_errors_table(ai=ai)
         self.report.add("Interfaces", False, table)
