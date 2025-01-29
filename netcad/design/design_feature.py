@@ -14,8 +14,6 @@ from copy import deepcopy
 
 from netcad.device import Device, DeviceNonExclusive
 from netcad.registry import Registry
-
-from netcad.reporting import DesginReporting, ServiceReporting
 from netcad.checks import register_collection
 
 # -----------------------------------------------------------------------------
@@ -56,7 +54,6 @@ class DesignFeature(Registry, registry_name="design_features"):
         design service against the operatiional state of the network.
     """
 
-    REPORTER = ServiceReporting
     CHECK_COLLECTIONS = None
 
     def __init__(
@@ -129,9 +126,6 @@ class DesignFeature(Registry, registry_name="design_features"):
             exclusive = not isinstance(device, DeviceNonExclusive)
 
         return exclusive
-
-    def reporter(self, drg: DesginReporting) -> ServiceReporting:
-        return self.REPORTER(drg=drg, service=self)
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)

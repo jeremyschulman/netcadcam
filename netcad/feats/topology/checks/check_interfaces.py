@@ -96,7 +96,7 @@ class InterfaceCheckMeasurement(CheckMeasurement):
     used: bool
     desc: str
     oper_up: bool
-    speed: NonNegativeInt
+    speed: Optional[NonNegativeInt]
 
 
 class InterfaceCheckResult(CheckResult):

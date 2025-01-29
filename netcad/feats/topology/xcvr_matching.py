@@ -35,15 +35,22 @@ def get_transciver_model_alias(model: str) -> str | None:
     The mapped model name, if the model value exists in their `netcad.toml`
     configuration file; None otherwise.
     """
-    config = netcad_globals.g_config.get("transceivers", {}).get("models")
-    return None if not config else config.get(model)
+    if not (config := netcad_globals.g_config.get("transceivers", {}).get("models")):
+        return None
+
+    return config.get(model)
 
 
 @lru_cache()
 def transceiver_model_matches(given_mdoel, expected_model) -> bool:
+    if given_mdoel == expected_model:
+        return True
+
+    options = get_transciver_model_alias(given_mdoel)
     return (
-        given_mdoel == expected_model
-        or get_transciver_model_alias(given_mdoel) == expected_model
+        expected_model in options
+        if isinstance(options, list)
+        else (options == expected_model)
     )
 
 

@@ -52,11 +52,6 @@ class BgpPeeringDesignFeature(DesignFeature, registry_name="bgp_peering"):
         self.check_collections = copy(self.__class__.CHECK_COLLECTIONS)
         self.peering = BgpPeeringPlanner(name=feature_name)
 
-        # to avoid circular imports, we import the reporter here
-        from .bgp_peering_results_graph import BgpPeeringResultsGrapher
-
-        self.REPORTER = BgpPeeringResultsGrapher
-
     def get_speaker(self, hostname: str, vrf: Optional[str] = None) -> "BGPSpeaker":
         """
         This function is used to retrieve the BGPSpeaker defined by the device

@@ -5,13 +5,13 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
-from typing import List, Optional, Union, ClassVar, Any
+from typing import List, Optional, Union, ClassVar, Any, Literal
 
 # -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -36,7 +36,14 @@ from netcad.checks import (
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ["SwitchportCheckCollection", "SwitchportCheck", "SwitchportCheckResult"]
+__all__ = [
+    "SwitchportCheckCollection",
+    "SwitchportCheck",
+    "SwitchportCheckResult",
+    "MeasurementSwitchPort",
+    "MeasurementSwitchPortAccess",
+    "MeasurementSwitchPortTrunk",
+]
 
 
 # -----------------------------------------------------------------------------
@@ -54,19 +61,36 @@ class SwitchportCheck(Check):
         switchport_mode: str
 
     class ExpectAccess(ExpectSwitchport):
-        switchport_mode: str = "access"
-        vlan: VlanProfile
+        switchport_mode: Literal["access"] = Field("access")
+        vlan: VlanProfile | int
 
     class ExpectTrunk(ExpectSwitchport):
-        switchport_mode: str = "trunk"
-        native_vlan: Optional[VlanProfile]
-        trunk_allowed_vlans: List[VlanProfile]
+        switchport_mode: Literal["trunk"] = Field("trunk")
+        native_vlan: Optional[VlanProfile | int]
+        trunk_allowed_vlans: List[VlanProfile | int] | str
 
     check_params: Params
-    expected_results: Union[ExpectAccess, ExpectTrunk]
+    expected_results: Union[ExpectAccess, ExpectTrunk] = Field(
+        ..., discriminator="switchport_mode"
+    )
 
     def check_id(self) -> str:
         return str(self.check_params.if_name)
+
+
+class MeasurementSwitchPort(CheckMeasurement, SwitchportCheck.ExpectSwitchport):
+    switchport_mode: str = Field(..., description="The switchport mode")
+
+
+class MeasurementSwitchPortAccess(MeasurementSwitchPort):
+    switchport_mode: str = Field("access")
+    vlan: int
+
+
+class MeasurementSwitchPortTrunk(MeasurementSwitchPort):
+    switchport_mode: str = Field("trunk")
+    native_vlan: Optional[int]
+    trunk_allowed_vlans: str
 
 
 class SwitchportCheckResult(CheckResult[SwitchportCheck]):
@@ -77,30 +101,9 @@ class SwitchportCheckResult(CheckResult[SwitchportCheck]):
 
     """
 
-    class Measurement(CheckMeasurement, SwitchportCheck.ExpectSwitchport):
-        pass
-
-    class MeasuredAccess(CheckMeasurement, SwitchportCheck.ExpectAccess):
-        switchport_mode: str = "access"
-        vlan: int
-
-    class MeasuredTrunk(CheckMeasurement, SwitchportCheck.ExpectTrunk):
-        switchport_mode: str = "trunk"
-        native_vlan: Optional[int]
-        trunk_allowed_vlans: str
-
-    measurement: Measurement = None
-
-    @field_validator("measurement", mode="after")
-    @classmethod
-    def _on_measurement(cls, value, values):
-        check = values["check"]
-        msrd_type = (
-            SwitchportCheckResult.MeasuredAccess
-            if check.expected_results.switchport_mode == "access"
-            else SwitchportCheckResult.MeasuredTrunk
-        )
-        return msrd_type.parse_obj({})
+    measurement: Union[
+        MeasurementSwitchPortAccess, MeasurementSwitchPortTrunk | None
+    ] = Field(..., discriminator="switchport_mode")
 
 
 # -----------------------------------------------------------------------------

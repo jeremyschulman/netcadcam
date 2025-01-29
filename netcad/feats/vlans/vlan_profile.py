@@ -32,7 +32,7 @@ __all__ = ["VlanProfile", "VlanProfileLike", "VlanProfileRegistry"]
 #
 # -----------------------------------------------------------------------------
 
-VlanProfileRegistry: dict[str, "VlanProfileType"] = dict()
+VlanProfileRegistry: dict[str, "VlanProfile"] = dict()
 
 
 class VlanProfile(HashableModel):

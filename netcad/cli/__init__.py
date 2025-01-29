@@ -10,3 +10,4 @@ from . import cli_build_hostsfile
 from . import cli_list_designs
 from . import cli_show_feats
 from . import cli_show_notes
+from . import cli_show_services

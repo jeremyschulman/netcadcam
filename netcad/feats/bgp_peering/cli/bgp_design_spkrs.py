@@ -27,7 +27,7 @@ def find_design_bgp_speakers(
 
     bgp_svc_insts = set()
     for design in design_insts:
-        bgp_svc_insts.update(design.services_of(BgpPeeringDesignFeature))
+        bgp_svc_insts.update(design.feature_of(BgpPeeringDesignFeature))
 
     if not bgp_svc_insts:
         log.error("No BGP features found")
