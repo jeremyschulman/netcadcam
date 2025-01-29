@@ -8,6 +8,7 @@
 from typing import Callable, ClassVar, Any
 from collections import defaultdict
 from dataclasses import dataclass
+from itertools import tee
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -330,7 +331,7 @@ class TopologyService(DesignService):
 
             devices_ok[not dev_checks_fail].append(dev_obj)
 
-        self.report.add("Devices", True, {"count": len(devices_ok[True])})
+        self.report.add("Devices", True, [d.name for d in devices_ok[True]])
 
         if not (devs_failed := devices_ok[False]):
             return
@@ -402,10 +403,18 @@ class TopologyService(DesignService):
         PASS/FAIL. If all are OK, then this report check passes.
         """
 
-        count = sum(
-            ai.nodes_map[if_obj]["fail_count"] == 0 for if_obj in self.interfaces
+        if_good_objs = filter(
+            lambda i: ai.nodes_map[i]["fail_count"] == 0,
+            self.interfaces
         )
-        self.report.add("Interfaces", True, {"count": count})
+
+        if_table = Table("Device", "Interface", "Description", "Profile")
+
+        for if_obj in sorted(if_good_objs, key=lambda i: i.device.name):
+            if_table.add_row(if_obj.device.name, if_obj.name, if_obj.desc, if_obj.profile.name)
+
+        self.report.add("Interfaces", True, if_table)
 
         table = self.build_report_interfaces_errors_table(ai=ai)
-        self.report.add("Interfaces", False, table)
+        if table.rows:
+            self.report.add("Interfaces", False, table)
