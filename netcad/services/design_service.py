@@ -117,13 +117,13 @@ class DesignService:
         pass
 
     def build_results_graph(self, ai: "ServicesAnalyzer"):
-        raise NotImplementedError()
+        pass
 
     async def check(self, ai: "ServicesAnalyzer"):
-        raise NotImplementedError()
+        pass
 
     def build_report(self, ai: "ServicesAnalyzer"):
-        raise NotImplementedError()
+        pass
 
     def build_features_report_table(self) -> Table:
         table = Table(

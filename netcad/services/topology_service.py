@@ -341,6 +341,12 @@ class TopologyService(DesignService):
         self.report.add("Devices", False, {"count": len(devs_failed)})
 
     def build_report_interfaces_errors_table(self, ai: ServicesAnalyzer) -> Table:
+        """
+        This method is used to produce a Rich Table that contains the list of
+        interface errors found on this topology.  This function is exposed so
+        that other services can use it to build their own reports.
+        """
+
         ifs_failed = [
             if_obj
             for if_obj in self.interfaces
@@ -391,17 +397,15 @@ class TopologyService(DesignService):
         return table
 
     def _build_report_interfaces(self, ai: ServicesAnalyzer):
-        # ---------------------------------------------------------------------
-        # The "interfaces report" checks the interface design nodes for
-        # PASS/FAIL. If all are OK, then this report check passes.
-        # ---------------------------------------------------------------------
+        """
+        The "interfaces report" checks the interface design nodes for
+        PASS/FAIL. If all are OK, then this report check passes.
+        """
 
-        interfaces_ok = defaultdict(list)
-        for if_obj in self.interfaces:
-            node = ai.nodes_map[if_obj]
-            interfaces_ok[node["fail_count"] == 0].append(if_obj)
-
-        self.report.add("Interfaces", True, {"count": len(interfaces_ok[True])})
+        count = sum(
+            ai.nodes_map[if_obj]["fail_count"] == 0 for if_obj in self.interfaces
+        )
+        self.report.add("Interfaces", True, {"count": count})
 
         table = self.build_report_interfaces_errors_table(ai=ai)
         self.report.add("Interfaces", False, table)

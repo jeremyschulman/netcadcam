@@ -158,6 +158,9 @@ class ServicesAnalyzer:
 
     def show_reports(self, console: Console):
         for svc in self.design.services.values():
+            if svc.is_subservice:
+                continue
+
             console.print("\n\n", svc.report.table)
 
     # -------------------------------------------------------------------------
