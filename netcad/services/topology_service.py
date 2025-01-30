@@ -340,10 +340,10 @@ class TopologyService(DesignService):
 
             devices_ok[not bool(any_fail_results)].append(dev_obj)
 
-        self.report.add("Devices", True, [d.name for d in devices_ok[True]])
+        self.report.add("Devices", True, ', '.join(sorted([d.name for d in devices_ok[True]])))
 
         if failed := devices_ok[False]:
-            self.report.add("Devices", False, [d.name for d in failed])
+            self.report.add("Devices", False, ', '.join(sorted([d.name for d in failed])))
 
     def build_report_interfaces_errors_table(self, ai: ServicesAnalyzer) -> Table:
         """

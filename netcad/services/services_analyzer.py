@@ -179,7 +179,7 @@ class ServicesAnalyzer:
             svc.status = "FAIL"
 
     def _analyze_service_node(self, svc: "DesignService", start_node: igraph.Vertex):
-        edges = [edge for edge in start_node.out_edges() if edge["service"] == svc.name]
+        edges = [edge for edge in start_node.out_edges() if edge["service"] == svc.name and not edge['stop']]
         targets = [edge.target_vertex for edge in edges]
 
         for target in targets:
