@@ -109,7 +109,6 @@ class TopologyService(DesignService):
         def details(self):
             return self.msrd
 
-
     def __init__(self, *vargs, config: Config, **kwargs):
         super().__init__(*vargs, **kwargs)
         self.config = config
@@ -330,7 +329,6 @@ class TopologyService(DesignService):
         devices_ok = defaultdict(list)
 
         for dev_obj in self.devices:
-
             any_fail_results = (
                 GraphQuery(ai.graph)(ai.nodes_map[dev_obj])
                 .out_(kind="r", service=self.name)
@@ -340,10 +338,14 @@ class TopologyService(DesignService):
 
             devices_ok[not bool(any_fail_results)].append(dev_obj)
 
-        self.report.add("Devices", True, ', '.join(sorted([d.name for d in devices_ok[True]])))
+        self.report.add(
+            "Devices", True, ", ".join(sorted([d.name for d in devices_ok[True]]))
+        )
 
         if failed := devices_ok[False]:
-            self.report.add("Devices", False, ', '.join(sorted([d.name for d in failed])))
+            self.report.add(
+                "Devices", False, ", ".join(sorted([d.name for d in failed]))
+            )
 
     def build_report_interfaces_errors_table(self, ai: ServicesAnalyzer) -> Table:
         """
@@ -374,7 +376,6 @@ class TopologyService(DesignService):
         )
 
         for if_obj in ifs_failed:
-
             if_checks = [
                 ai.nodes_map.inv[edge.target_vertex]
                 for edge in ai.nodes_map[if_obj].out_edges()

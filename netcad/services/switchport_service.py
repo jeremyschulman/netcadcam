@@ -7,6 +7,7 @@
 
 from typing import ClassVar
 from dataclasses import dataclass
+from operator import itemgetter
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -22,6 +23,7 @@ from netcad.feats.vlans import InterfaceL2
 from netcad.feats.vlans.checks.check_switchports import SwitchportCheck
 
 from .design_service import DesignService
+from .graph_query import GraphQuery
 from .service_report import DesignServiceReport
 from .service_check import DesignServiceCheck
 from .topology_service import TopologyService
@@ -46,7 +48,7 @@ class SwitchportService(DesignService):
 
     def __init__(self, *vargs, config: Config, **kwargs):
         super().__init__(*vargs, config=config, **kwargs)
-        self.interfaces: list[DeviceInterface] = None
+        self.interfaces: dict[str, DeviceInterface] = None
 
     def build_design_graph(self, ai: "ServicesAnalyzer"):
         """
@@ -55,13 +57,13 @@ class SwitchportService(DesignService):
         switchport mode.  So we need to filter the list of interfaces.
         """
 
-        self.interfaces = [
-            if_obj
+        self.interfaces = {
+            if_obj.name: if_obj
             for if_obj in self.config.topology.interfaces
             if if_obj.profile and isinstance(if_obj.profile, InterfaceL2)
-        ]
+        }
 
-        for if_obj in self.interfaces:
+        for if_obj in self.interfaces.values():
             # using the interface profile as "switchport" anchoring instance
             # object for the graph vertext relationship.
 
@@ -88,7 +90,7 @@ class SwitchportService(DesignService):
         service_check = SwitchportService.CheckSwitchports()
         ai.add_service_check(self, service_check)
 
-        for if_obj in self.interfaces:
+        for if_obj in self.interfaces.values():
             # get the switchport check result object for the interface
             checkr_obj = ai.results_map[if_obj.device][SwitchportCheck.check_type_()][
                 if_obj.name
@@ -105,31 +107,50 @@ class SwitchportService(DesignService):
         self.report = DesignServiceReport(
             title=f"Switchport Report: {self.name} - {len(self.interfaces)} total ports"
         )
-        svc_node = ai.nodes_map[self]
-
-        self.report.add("Switchports", True, {"count": svc_node["pass_count"]})
 
         # starting with the service level check node, find all switchport
-        # checks that are in the failed state.
+        # checks and group them by "PASS" / "FAIL"
 
-        svc_check = ai.graph.vs.select(
-            service=self.name,
-            kind="r",
-            check_type=SwitchportService.CheckSwitchports.check_type,
-        )[0]
-
-        failed = filter(
-            lambda x: x["status"] == "FAIL", svc_check.neighbors(mode="out")
+        pass_fail = (
+            GraphQuery(ai.graph)(
+                *ai.graph.vs.select(
+                    service=self.name,
+                    check_type=self.CheckSwitchports.check_type,
+                )
+            )
+            .out_()
+            .groupby(itemgetter("status"))
         )
+
+        pass_objs = map(ai.nodes_map.inv.__getitem__, pass_fail["PASS"])
+        fail_objs = map(ai.nodes_map.inv.__getitem__, pass_fail["FAIL"])
+
+        table = Table("Device", "Interface", "Desc", "Results")
+
+        for chk_obj in pass_objs:
+            if_obj = self.interfaces[chk_obj.check_id]
+            table.add_row(
+                chk_obj.device,
+                chk_obj.check_id,
+                if_obj.desc,
+                self.build_feature_logs_table(chk_obj),
+            )
+
+        self.report.add("Switchports", True, table)
 
         # if there are failed switchport nodes then create a table of these errors.
 
-        if not svc_node["fail_count"]:
+        if not pass_fail["FAIL"]:
             return
 
-        table = Table("Device", "Interface", "Report")
-        for node in failed:
-            obj = ai.nodes_map.inv[node]
-            table.add_row(obj.device, obj.check_id, self.build_feature_logs_table(obj))
+        table = Table("Device", "Interface", "Desc", "Results")
+        for chk_obj in fail_objs:
+            if_obj = self.interfaces[chk_obj.check_id]
+            table.add_row(
+                chk_obj.device,
+                chk_obj.check_id,
+                if_obj.desc,
+                self.build_feature_logs_table(chk_obj),
+            )
 
         self.report.add("Switchports", False, table)
