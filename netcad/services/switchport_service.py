@@ -96,10 +96,10 @@ class SwitchportService(DesignService):
 
             # Add a relation to the service level check to each of the underlying
             # device feature checks
-            ai.add_results_edge(self, service_check, checkr_obj)
+            ai.add_check_edge(self, service_check, checkr_obj)
 
             # Switchport ->[r]-> CheckResult
-            ai.add_results_edge(self, if_obj.profile, checkr_obj)
+            ai.add_check_edge(self, if_obj.profile, checkr_obj)
 
     def build_report(self, ai: "ServicesAnalyzer"):
         self.report = DesignServiceReport(

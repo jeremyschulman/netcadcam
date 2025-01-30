@@ -8,7 +8,6 @@
 from typing import Callable, ClassVar, Any
 from collections import defaultdict
 from dataclasses import dataclass
-from itertools import tee
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -32,6 +31,7 @@ from netcad.feats.topology.checks.check_cabling_nei import InterfaceCablingCheck
 from netcad.feats.topology.checks.check_ipaddrs import IPInterfaceCheck
 from netcad.feats.topology.checks.check_transceivers import TransceiverCheck
 
+from .graph_query import GraphQuery
 from .service_check import DesignServiceCheck
 from .service_report import DesignServiceReport
 from .design_service import DesignService
@@ -185,7 +185,7 @@ class TopologyService(DesignService):
             check_obj = ai.results_map[dev_obj][DeviceInformationCheck.check_type_()][
                 dev_obj.name
             ]
-            ai.add_results_edge(self, dev_obj, check_obj)
+            ai.add_check_edge(self, dev_obj, check_obj)
 
     def _build_results_interfaces(self, ai: ServicesAnalyzer):
         """
@@ -211,7 +211,7 @@ class TopologyService(DesignService):
                 ):
                     continue
 
-                ai.add_results_edge(self, if_obj, if_check_obj)
+                ai.add_check_edge(self, if_obj, if_check_obj)
 
     # -------------------------------------------------------------------------
     #
@@ -268,11 +268,11 @@ class TopologyService(DesignService):
             # -----------------------------------------------------------------
 
             ai.add_check_node(self, ifp_r)
-            ai.add_results_edge(self, ifp_r, if_a_r)
-            ai.add_results_edge(self, ifp_r, if_b_r)
+            ai.add_check_edge(self, ifp_r, if_a_r)
+            ai.add_check_edge(self, ifp_r, if_b_r)
 
             # add the cable-check node to the top-node for traveral later.
-            ai.add_results_edge(self, top_node, ifp_r)
+            ai.add_check_edge(self, top_node, ifp_r)
 
     # -------------------------------------------------------------------------
     #
@@ -322,14 +322,14 @@ class TopologyService(DesignService):
         devices_ok = defaultdict(list)
 
         for dev_obj in self.devices:
-            dev_checks_fail = [
-                ai.nodes_map.inv[node]
-                for edge in ai.nodes_map[dev_obj].out_edges()
-                if edge["kind"] == "r" and edge["service"] == self.name
-                if (node := edge.target_vertex)["status"] == "FAIL"
-            ]
+            any_fails = (
+                GraphQuery(ai.graph)(ai.nodes_map[dev_obj])
+                .out_(kind="r", service=self.name)
+                .node(status="FAIL")
+                .nodes
+            )
 
-            devices_ok[not dev_checks_fail].append(dev_obj)
+            devices_ok[not bool(any_fails)].append(dev_obj)
 
         self.report.add("Devices", True, [d.name for d in devices_ok[True]])
 
@@ -404,14 +404,15 @@ class TopologyService(DesignService):
         """
 
         if_good_objs = filter(
-            lambda i: ai.nodes_map[i]["fail_count"] == 0,
-            self.interfaces
+            lambda i: ai.nodes_map[i]["fail_count"] == 0, self.interfaces
         )
 
         if_table = Table("Device", "Interface", "Description", "Profile")
 
         for if_obj in sorted(if_good_objs, key=lambda i: i.device.name):
-            if_table.add_row(if_obj.device.name, if_obj.name, if_obj.desc, if_obj.profile.name)
+            if_table.add_row(
+                if_obj.device.name, if_obj.name, if_obj.desc, if_obj.profile.name
+            )
 
         self.report.add("Interfaces", True, if_table)
 

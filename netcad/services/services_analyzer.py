@@ -130,7 +130,7 @@ class ServicesAnalyzer:
     def add_service_edge(self, service, source, target, **kwargs):
         self.add_edge(source, target, kind="s", service=service.name, **kwargs)
 
-    def add_results_edge(self, svc, source, target, **kwargs):
+    def add_check_edge(self, svc, source, target, **kwargs):
         self.add_edge(source, target, kind="r", service=svc.name, **kwargs)
 
     # -------------------------------------------------------------------------
