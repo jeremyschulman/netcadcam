@@ -1,12 +1,39 @@
+#  Copyright (c) 2025 Jeremy Schulman
+#  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+# -----------------------------------------------------------------------------
+# System Imports
+# -----------------------------------------------------------------------------
+
 from operator import attrgetter
 from collections import deque
-from collections.abc import Iterable
+
+# -----------------------------------------------------------------------------
+# Public Imports
+# -----------------------------------------------------------------------------
 
 from first import first
 import igraph
 
+# -----------------------------------------------------------------------------
+# Exports
+# -----------------------------------------------------------------------------
+
+__all__ = ['GraphQuery']
+
+# -----------------------------------------------------------------------------
+#
+#                                 CODE BEGINS
+#
+# -----------------------------------------------------------------------------
+
 
 class GraphQuery:
+    """
+    A class to query an igraph graph using a very simplified gremlin inspired
+    syntax.
+    """
+
     target_vertex = attrgetter("target_vertex")
     source_vertex = attrgetter("source_vertex")
     index = attrgetter("index")
@@ -15,10 +42,15 @@ class GraphQuery:
         self.graph = graph
         self.nodes: deque[igraph.Vertex] = deque()
 
-    def first(self):
+    def first(self) -> igraph.Vertex | None:
+        """returns the first node in the current set of nodes, or None"""
         return first(self.nodes)
 
-    def out_(self, **query):
+    def out_(self, **query) -> "GraphQuery":
+        """
+        Query the current set of graph nodes that are connected to the current
+        nodes by an outgoing edge that matches the query.
+        """
         found_nodes = deque()
         while True:
             try:
@@ -36,7 +68,11 @@ class GraphQuery:
         self.nodes = found_nodes
         return self
 
-    def in_(self, **query):
+    def in_(self, **query) -> "GraphQuery":
+        """
+        Query the current set of graph nodes that are connected to the current
+        nodes by an incoming edge that matches the query.
+        """
         found_nodes = deque()
         while True:
             try:
@@ -54,17 +90,22 @@ class GraphQuery:
         self.nodes = found_nodes
         return self
 
-    def node(self, **query):
+    def node(self, **query) -> "GraphQuery":
+        """
+        Query the current set of nodes that match the query.
+        """
         self.nodes = deque(self.graph.vs.select(map(self.index, self.nodes), **query))
         return self
 
-    def __call__(self, start_node: igraph.Vertex | Iterable[igraph.Vertex]):
-        self.nodes = (
-            deque(start_node)
-            if isinstance(start_node, Iterable)
-            else deque([start_node])
-        )
+    def __call__(self, *start_nodes: igraph.Vertex):
+        """
+        Set the starting nodes for the query.
+        """
+        self.nodes = deque(start_nodes)
         return self
 
     def __len__(self):
+        """
+        Get the number of nodes in the current set of nodes.
+        """
         return len(self.nodes)
