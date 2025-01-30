@@ -130,7 +130,7 @@ class ServicesAnalyzer:
     def add_service_edge(self, service, source, target, **kwargs):
         self.add_edge(source, target, kind="s", service=service.name, **kwargs)
 
-    def add_results_edge(self, svc, source, target, **kwargs):
+    def add_check_edge(self, svc, source, target, **kwargs):
         self.add_edge(source, target, kind="r", service=svc.name, **kwargs)
 
     # -------------------------------------------------------------------------
@@ -179,7 +179,7 @@ class ServicesAnalyzer:
             svc.status = "FAIL"
 
     def _analyze_service_node(self, svc: "DesignService", start_node: igraph.Vertex):
-        edges = [edge for edge in start_node.out_edges() if edge["service"] == svc.name]
+        edges = [edge for edge in start_node.out_edges() if edge["service"] == svc.name and not edge['stop']]
         targets = [edge.target_vertex for edge in edges]
 
         for target in targets:

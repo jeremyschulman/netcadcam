@@ -31,6 +31,7 @@ from netcad.feats.topology.checks.check_cabling_nei import InterfaceCablingCheck
 from netcad.feats.topology.checks.check_ipaddrs import IPInterfaceCheck
 from netcad.feats.topology.checks.check_transceivers import TransceiverCheck
 
+from .graph_query import GraphQuery
 from .service_check import DesignServiceCheck
 from .service_report import DesignServiceReport
 from .design_service import DesignService
@@ -41,21 +42,6 @@ from .services_analyzer import ServicesAnalyzer
 #                                 CODE BEGINS
 #
 # -----------------------------------------------------------------------------
-
-
-class TopologyCheckCabling(DesignServiceCheck):
-    """
-    This check serves to validate the cabling between two interfaces.  While
-    there are two separate checks on a feature basis, this service level check
-    creates a relationship between the two so that we can reason about the
-    overall status of the cabling.
-    """
-
-    check_type: ClassVar[str] = "topology.cabling"
-    msrd: Any = None
-
-    def details(self):
-        return self.msrd
 
 
 class TopologyService(DesignService):
@@ -85,6 +71,10 @@ class TopologyService(DesignService):
 
     """
 
+    # -------------------------------------------------------------------------
+    # Service Configuration
+    # -------------------------------------------------------------------------
+
     @dataclass
     class Config:
         """This class is used to configure the topology service."""
@@ -100,6 +90,25 @@ class TopologyService(DesignService):
         #       lambda ifp: ifp.is_network
 
         match_interface_profile: Callable
+
+    # -------------------------------------------------------------------------
+    # Service Check Types
+    # -------------------------------------------------------------------------
+
+    class CheckCabling(DesignServiceCheck):
+        """
+        This check serves to validate the cabling between two interfaces.  While
+        there are two separate checks on a feature basis, this service level check
+        creates a relationship between the two so that we can reason about the
+        overall status of the cabling.
+        """
+
+        check_type: ClassVar[str] = "topology.cabling"
+        msrd: Any = None
+
+        def details(self):
+            return self.msrd
+
 
     def __init__(self, *vargs, config: Config, **kwargs):
         super().__init__(*vargs, **kwargs)
@@ -184,7 +193,7 @@ class TopologyService(DesignService):
             check_obj = ai.results_map[dev_obj][DeviceInformationCheck.check_type_()][
                 dev_obj.name
             ]
-            ai.add_results_edge(self, dev_obj, check_obj)
+            ai.add_check_edge(self, dev_obj, check_obj)
 
     def _build_results_interfaces(self, ai: ServicesAnalyzer):
         """
@@ -210,7 +219,7 @@ class TopologyService(DesignService):
                 ):
                     continue
 
-                ai.add_results_edge(self, if_obj, if_check_obj)
+                ai.add_check_edge(self, if_obj, if_check_obj)
 
     # -------------------------------------------------------------------------
     #
@@ -226,7 +235,7 @@ class TopologyService(DesignService):
         # create the top level cabling check node that will be the parent to
         # each of the individual interface cabling checks.
 
-        top_node = TopologyCheckCabling()
+        top_node = self.CheckCabling()
         ai.add_service_check(self, top_node)
 
         # -----------------------------------------------------------------------------
@@ -259,7 +268,7 @@ class TopologyService(DesignService):
             # check passes if for interface checks pass.
 
             ok = if_a_r.status == CheckStatus.PASS and if_b_r.status == CheckStatus.PASS
-            ifp_r = TopologyCheckCabling(ok=ok)
+            ifp_r = self.CheckCabling(ok=ok)
 
             # -----------------------------------------------------------------
             # create the graph relationship between the service level check and
@@ -267,11 +276,11 @@ class TopologyService(DesignService):
             # -----------------------------------------------------------------
 
             ai.add_check_node(self, ifp_r)
-            ai.add_results_edge(self, ifp_r, if_a_r)
-            ai.add_results_edge(self, ifp_r, if_b_r)
+            ai.add_check_edge(self, ifp_r, if_a_r)
+            ai.add_check_edge(self, ifp_r, if_b_r)
 
             # add the cable-check node to the top-node for traveral later.
-            ai.add_results_edge(self, top_node, ifp_r)
+            ai.add_check_edge(self, top_node, ifp_r)
 
     # -------------------------------------------------------------------------
     #
@@ -295,7 +304,7 @@ class TopologyService(DesignService):
             node
             for edge in ai.nodes_map[self].out_edges()
             if (node := edge.target_vertex)["check_type"]
-            == TopologyCheckCabling.check_type
+            == self.CheckCabling.check_type
         )
 
         # ---------------------------------------------------------------------
@@ -321,24 +330,20 @@ class TopologyService(DesignService):
         devices_ok = defaultdict(list)
 
         for dev_obj in self.devices:
-            dev_checks_fail = [
-                ai.nodes_map.inv[node]
-                for edge in ai.nodes_map[dev_obj].out_edges()
-                if edge["kind"] == "r" and edge["service"] == self.name
-                if (node := edge.target_vertex)["status"] == "FAIL"
-            ]
 
-            devices_ok[not dev_checks_fail].append(dev_obj)
+            any_fail_results = (
+                GraphQuery(ai.graph)(ai.nodes_map[dev_obj])
+                .out_(kind="r", service=self.name)
+                .node(status="FAIL")
+                .nodes
+            )
 
-        self.report.add("Devices", True, {"count": len(devices_ok[True])})
+            devices_ok[not bool(any_fail_results)].append(dev_obj)
 
-        if not (devs_failed := devices_ok[False]):
-            return
+        self.report.add("Devices", True, ', '.join(sorted([d.name for d in devices_ok[True]])))
 
-        # TODO: need to add more detailed failure reporting.  For now just
-        #       going to show the count of failed devices.
-
-        self.report.add("Devices", False, {"count": len(devs_failed)})
+        if failed := devices_ok[False]:
+            self.report.add("Devices", False, ', '.join(sorted([d.name for d in failed])))
 
     def build_report_interfaces_errors_table(self, ai: ServicesAnalyzer) -> Table:
         """
@@ -369,6 +374,7 @@ class TopologyService(DesignService):
         )
 
         for if_obj in ifs_failed:
+
             if_checks = [
                 ai.nodes_map.inv[edge.target_vertex]
                 for edge in ai.nodes_map[if_obj].out_edges()
@@ -402,10 +408,19 @@ class TopologyService(DesignService):
         PASS/FAIL. If all are OK, then this report check passes.
         """
 
-        count = sum(
-            ai.nodes_map[if_obj]["fail_count"] == 0 for if_obj in self.interfaces
+        if_good_objs = filter(
+            lambda i: ai.nodes_map[i]["fail_count"] == 0, self.interfaces
         )
-        self.report.add("Interfaces", True, {"count": count})
+
+        if_table = Table("Device", "Interface", "Description", "Profile")
+
+        for if_obj in sorted(if_good_objs, key=lambda i: i.device.name):
+            if_table.add_row(
+                if_obj.device.name, if_obj.name, if_obj.desc, if_obj.profile.name
+            )
+
+        self.report.add("Interfaces", True, if_table)
 
         table = self.build_report_interfaces_errors_table(ai=ai)
-        self.report.add("Interfaces", False, table)
+        if table.rows:
+            self.report.add("Interfaces", False, table)
