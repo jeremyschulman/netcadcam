@@ -5,9 +5,11 @@
 # System Imports
 # -----------------------------------------------------------------------------
 
+from typing import Callable
 from operator import attrgetter
 from collections import deque
 
+from black.trans import defaultdict
 # -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
@@ -19,7 +21,7 @@ import igraph
 # Exports
 # -----------------------------------------------------------------------------
 
-__all__ = ['GraphQuery']
+__all__ = ["GraphQuery"]
 
 # -----------------------------------------------------------------------------
 #
@@ -41,6 +43,12 @@ class GraphQuery:
     def __init__(self, graph):
         self.graph = graph
         self.nodes: deque[igraph.Vertex] = deque()
+
+    def groupby(self, key: Callable):
+        pf = defaultdict(list)
+        for node in self.nodes:
+            pf[key(node)].append(node)
+        return pf
 
     def first(self) -> igraph.Vertex | None:
         """returns the first node in the current set of nodes, or None"""

@@ -57,7 +57,7 @@ def clig_reports(designs: Tuple[str], service_names: Sequence[str], **flags):
 
     for name in service_names:
         if not (svc := design.services.get(name)):
-            pass
+            continue
 
         _show_specific_service(ai, svc, flags)
 

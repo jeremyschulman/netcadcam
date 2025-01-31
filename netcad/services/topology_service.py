@@ -1,12 +1,11 @@
 #  Copyright (c) 2025 Jeremy Schulman
 #  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
-
+from operator import attrgetter, itemgetter
 # -----------------------------------------------------------------------------
 # System Imports
 # -----------------------------------------------------------------------------
 
 from typing import Callable, ClassVar, Any
-from collections import defaultdict
 from dataclasses import dataclass
 
 # -----------------------------------------------------------------------------
@@ -23,6 +22,7 @@ from rich.pretty import Pretty
 
 from netcad.checks import CheckStatus
 from netcad.device import Device, DeviceInterface
+from netcad.device.profiles import InterfaceL3
 
 from netcad.feats.topology import TopologyDesignFeature
 from netcad.feats.topology.checks.check_device_info import DeviceInformationCheck
@@ -33,7 +33,7 @@ from netcad.feats.topology.checks.check_transceivers import TransceiverCheck
 
 from .graph_query import GraphQuery
 from .service_check import DesignServiceCheck
-from .service_report import DesignServiceReport
+from .service_report import DesignServiceReport, color_pass_fail
 from .design_service import DesignService
 from .services_analyzer import ServicesAnalyzer
 
@@ -109,7 +109,6 @@ class TopologyService(DesignService):
         def details(self):
             return self.msrd
 
-
     def __init__(self, *vargs, config: Config, **kwargs):
         super().__init__(*vargs, **kwargs)
         self.config = config
@@ -140,7 +139,7 @@ class TopologyService(DesignService):
 
     # --------------------------------------------------------------------------
     #
-    #                             Design
+    #                            Design Graph
     #
     # --------------------------------------------------------------------------
 
@@ -149,30 +148,64 @@ class TopologyService(DesignService):
         This function is used to create the topology design graph relating
         devices to their respective interfaces.  The graph is directed from
         device to interfaces:
-                (D) -> (I)
+                (D) -[has]-> (I)
+                (I.profile) -[is assigned to]> (I)
+                (I.profile) -[has]-> (IP_addr)
         """
 
         for dev_obj in self.devices:
             ai.add_design_node(dev_obj, kind_type="device", device=dev_obj.name)
-            ai.add_service_edge(service=self, source=self, target=dev_obj)
+            # DO NOT create a service edge between the device and interface
+            # because we do not want "any device error" cause the service to
+            # report a failure.  The service should only fail if the device
+            # interfaces have errors.
 
+        self._build_design_interfaces(ai)
+
+    def _build_design_interfaces(self, ai: ServicesAnalyzer):
         for if_obj in self.interfaces:
-            ai.add_design_node(
+            # design edge between device and interface (only once)
+            if ai.add_design_node(
                 if_obj,
                 kind_type="interface",
                 device=if_obj.device.name,
                 if_name=if_obj.name,
-            )
+            ):
+                ai.add_design_edge(if_obj.device, if_obj)
 
-            # design edge between device and interface
-            ai.add_design_edge(if_obj.device, if_obj)
-
-            # service edge between device and interface
+            # always add service edge between device and interface
             ai.add_service_edge(self, if_obj.device, if_obj)
+
+            # design edge betwee the interface profile and the interface
+            if ai.add_design_node(
+                if_obj.profile,
+                kind_type="interface.profile",
+                profile=if_obj.profile.name,
+                device=if_obj.device.name,
+                if_name=if_obj.name,
+            ):
+                # if.profile -> Interface
+                ai.add_design_edge(if_obj.profile, if_obj)
+
+            # always add service edge between the service and the interface
+            # object.
+            ai.add_service_edge(self, self, if_obj)
+
+            # always add service edge between interface profile and interface
+            ai.add_service_edge(self, if_obj.profile, if_obj)
+
+            # if there is an interface assigned to the profile, then add that
+            # IP objec as a node in the graph child to the interface profile.
+
+            if isinstance(if_obj.profile, InterfaceL3):
+                if ai.add_design_node(if_obj.profile.if_ipaddr, kind_type="ipaddr"):
+                    ai.add_design_edge(if_obj.profile, if_obj.profile.if_ipaddr)
+
+                ai.add_service_edge(self, if_obj.profile, if_obj.profile.if_ipaddr)
 
     # --------------------------------------------------------------------------
     #
-    #                             Results
+    #                             Results Graph
     #
     # --------------------------------------------------------------------------
 
@@ -291,8 +324,12 @@ class TopologyService(DesignService):
     def build_report(self, ai: ServicesAnalyzer):
         self.report = DesignServiceReport(title=f"Topology Service Report: {self.name}")
         self._build_report_devices(ai)
-        self._build_report_interfaces(ai)
+
+        ok, table = self.build_report_interfaces_table(ai=ai)
+        self.report.add("Interfaces", ok, table)
+
         self._build_report_cabling(ai)
+        self._build_report_ipaddrs(ai)
 
     def _build_report_cabling(self, ai: ServicesAnalyzer):
         # ---------------------------------------------------------------------
@@ -327,100 +364,103 @@ class TopologyService(DesignService):
         specifically device results.
         """
 
-        devices_ok = defaultdict(list)
+        table = Table("Status", "Device", "Model")
+        ok = True
 
-        for dev_obj in self.devices:
+        for dev_obj in sorted(self.devices, key=attrgetter("name")):
+            dev_node = ai.nodes_map[dev_obj]
 
-            any_fail_results = (
-                GraphQuery(ai.graph)(ai.nodes_map[dev_obj])
-                .out_(kind="r", service=self.name)
-                .node(status="FAIL")
-                .nodes
+            # find all the device specific checks (really only one right now,
+            # but could be more in the future).
+
+            pass_fail = (
+                GraphQuery(ai.graph)(dev_node).out_().groupby(itemgetter("status"))
             )
+            if pass_fail.get("FAIL"):
+                ok = False
 
-            devices_ok[not bool(any_fail_results)].append(dev_obj)
+            table.add_row(color_pass_fail(ok), dev_obj.name, dev_obj.device_type)
 
-        self.report.add("Devices", True, ', '.join(sorted([d.name for d in devices_ok[True]])))
+        self.report.add("Devices", ok, table)
 
-        if failed := devices_ok[False]:
-            self.report.add("Devices", False, ', '.join(sorted([d.name for d in failed])))
-
-    def build_report_interfaces_errors_table(self, ai: ServicesAnalyzer) -> Table:
-        """
-        This method is used to produce a Rich Table that contains the list of
-        interface errors found on this topology.  This function is exposed so
-        that other services can use it to build their own reports.
-        """
-
-        ifs_failed = [
-            if_obj
-            for if_obj in self.interfaces
-            if ai.nodes_map[if_obj]["fail_count"] != 0
-        ]
-
-        # ------------------------------------------------------------------
-        # Create a table for interface specific failure results
-        # ------------------------------------------------------------------
-
-        table = Table(
-            "Device",
-            "Interface",
-            "Description",
-            "Profile",
-            "Status",
-            show_lines=True,
-            title=f"{len(ifs_failed)} Interfaces with issues",
-            title_justify="left",
-        )
-
-        for if_obj in ifs_failed:
-
-            if_checks = [
-                ai.nodes_map.inv[edge.target_vertex]
-                for edge in ai.nodes_map[if_obj].out_edges()
-                if edge["kind"] == "r"
-                if edge.target_vertex["status"] == "FAIL"
-            ]
-
-            for if_check in if_checks:
-                ai.nodes_map[if_check]["reported"] = True
-
-            fail_logs = [
-                (if_check.check.check_type, log[1:])
-                for if_check in if_checks
-                for log in if_check.logs.root
-                if log[0] == "FAIL"
-            ]
-
-            table.add_row(
-                if_obj.device.name,
-                if_obj.name,
-                if_obj.desc,
-                if_obj.profile.name,
-                Pretty(fail_logs),
-            )
-
-        return table
-
-    def _build_report_interfaces(self, ai: ServicesAnalyzer):
+    def build_report_interfaces_table(
+        self, ai: ServicesAnalyzer, only_fail: bool = False
+    ) -> tuple[bool, Table]:
         """
         The "interfaces report" checks the interface design nodes for
         PASS/FAIL. If all are OK, then this report check passes.
         """
 
-        if_good_objs = filter(
-            lambda i: ai.nodes_map[i]["fail_count"] == 0, self.interfaces
+        ok = True
+
+        table = Table("Statue", "Device", "Interface", "Desc", "Profile", "Details")
+        if_nodes = map(ai.nodes_map.__getitem__, self.interfaces)
+
+        # sort the table by FAIL first, then by device name
+        items = sorted(
+            zip(self.interfaces, if_nodes),
+            key=lambda i: (i[1]["fail_count"] == 0, i[0].device.name),
         )
 
-        if_table = Table("Device", "Interface", "Description", "Profile")
+        for if_obj, if_node in items:
+            fail_logs = None
 
-        for if_obj in sorted(if_good_objs, key=lambda i: i.device.name):
-            if_table.add_row(
-                if_obj.device.name, if_obj.name, if_obj.desc, if_obj.profile.name
+            if if_node["fail_count"]:
+                pass_fail = (
+                    GraphQuery(ai.graph)(if_node).out_().groupby(itemgetter("status"))
+                )
+
+                fail_logs = [
+                    (if_check.check.check_type, log[1:])
+                    for if_check in map(ai.nodes_map.inv.__getitem__, pass_fail["FAIL"])
+                    for log in if_check.logs.root
+                    if log[0] == "FAIL"
+                ]
+
+                ok = False
+
+            if only_fail and not fail_logs:
+                continue
+
+            table.add_row(
+                color_pass_fail(if_node["fail_count"] == 0),
+                if_obj.device.name,
+                if_obj.name,
+                if_obj.desc,
+                if_obj.profile.name,
+                Pretty(fail_logs) if fail_logs else None,
             )
 
-        self.report.add("Interfaces", True, if_table)
+        return ok, table
 
-        table = self.build_report_interfaces_errors_table(ai=ai)
-        if table.rows:
-            self.report.add("Interfaces", False, table)
+    def _build_report_ipaddrs(self, ai: ServicesAnalyzer):
+        # list of [(dev_obj, if_check)] for all IPInterfaceCheck results
+
+        ipaddrs_checks = sorted(
+            [
+                (
+                    if_obj.device,
+                    ai.results_map[if_obj.device][IPInterfaceCheck.check_type_()][
+                        if_obj.name
+                    ],
+                )
+                for if_obj in self.interfaces
+                if isinstance(if_obj.profile, InterfaceL3)
+            ],
+            key=lambda i: (i[0].name, i[1].check_id),
+        )
+
+        ok = True
+        table = Table("Status", "Device", "Interface", "IP Address")
+        for dev_obj, if_check in ipaddrs_checks:
+            if if_check.status == "FAIL":
+                ok = False
+
+            table.add_row(
+                color_pass_fail(if_check.status == "PASS"),
+                dev_obj.name,
+                if_check.check_id,
+                if_check.check.expected_results.if_ipaddr,
+            )
+
+        self.report.add("IP Addresses", ok, table)

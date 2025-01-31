@@ -76,20 +76,27 @@ class ServicesAnalyzer:
     # node methods
     # -------------------------------------------------------------------------
 
-    def add_node(self, obj, **kwargs) -> igraph.Vertex:
+    def add_node(self, obj, **kwargs) -> bool:
         """
-        Ensures that a node for the given object exists in the graph.  If it
-        does exist the existing node is returned.  If it does not exist, a new
-        node is created and returned.
-        """
-        if has_node := self.nodes_map.get(obj):
-            return has_node
+        Ensures that a node for the given object exists in the graph.  This
+        function returns True when the node is created and False when the
+        existing node is found.
 
-        self.nodes_map[obj] = node = self.graph.add_vertex(obj, **kwargs)
-        return node
+        When created the node is added to the nodes_map dictionary.
+
+        Returns
+        -------
+        True when the node was created
+        False when the node already existed
+        """
+        if self.nodes_map.get(obj):
+            return False
+
+        self.nodes_map[obj] = self.graph.add_vertex(obj, **kwargs)
+        return True
 
     def add_design_node(self, obj, kind_type, **kwargs):
-        self.add_node(
+        return self.add_node(
             obj,
             kind="d",
             pass_count=0,
@@ -179,7 +186,11 @@ class ServicesAnalyzer:
             svc.status = "FAIL"
 
     def _analyze_service_node(self, svc: "DesignService", start_node: igraph.Vertex):
-        edges = [edge for edge in start_node.out_edges() if edge["service"] == svc.name and not edge['stop']]
+        edges = [
+            edge
+            for edge in start_node.out_edges()
+            if edge["service"] == svc.name and not edge["stop"]
+        ]
         targets = [edge.target_vertex for edge in edges]
 
         for target in targets:
