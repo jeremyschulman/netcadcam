@@ -155,19 +155,22 @@ class TopologyService(DesignService):
 
         for dev_obj in self.devices:
             ai.add_design_node(dev_obj, kind_type="device", device=dev_obj.name)
-            ai.add_service_edge(service=self, source=self, target=dev_obj)
+            # DO NOT create a service edge between the device and interface
+            # because we do not want "any device error" cause the service to
+            # report a failure.  The service should only fail if the device
+            # interfaces have errors.
 
         self._build_design_interfaces(ai)
 
     def _build_design_interfaces(self, ai: ServicesAnalyzer):
         for if_obj in self.interfaces:
+            # design edge between device and interface (only once)
             if ai.add_design_node(
                 if_obj,
                 kind_type="interface",
                 device=if_obj.device.name,
                 if_name=if_obj.name,
             ):
-                # design edge between device and interface
                 ai.add_design_edge(if_obj.device, if_obj)
 
             # always add service edge between device and interface
@@ -183,6 +186,10 @@ class TopologyService(DesignService):
             ):
                 # if.profile -> Interface
                 ai.add_design_edge(if_obj.profile, if_obj)
+
+            # always add service edge between the service and the interface
+            # object.
+            ai.add_service_edge(self, self, if_obj)
 
             # always add service edge between interface profile and interface
             ai.add_service_edge(self, if_obj.profile, if_obj)
