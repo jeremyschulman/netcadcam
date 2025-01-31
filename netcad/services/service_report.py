@@ -8,6 +8,12 @@ from rich.text import Text, Style
 from .service_check import DesignServiceCheck
 
 
+def color_pass_fail(item):
+    return (
+        Text("PASS", Style(color="green")) if item else Text("FAIL", Style(color="red"))
+    )
+
+
 class DesignServiceReport:
     did_pass = Text("PASS", Style(color="green"))
     did_fail = Text("FAIL", Style(color="red"))
