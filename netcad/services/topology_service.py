@@ -8,6 +8,7 @@
 from typing import Callable, ClassVar, Any
 from collections import defaultdict
 from dataclasses import dataclass
+from itertools import chain
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -16,13 +17,14 @@ from dataclasses import dataclass
 from first import first
 from rich.table import Table
 from rich.pretty import Pretty
-
+from rich.text import Text, Style
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
 from netcad.checks import CheckStatus
 from netcad.device import Device, DeviceInterface
+from netcad.device.profiles import InterfaceL3
 
 from netcad.feats.topology import TopologyDesignFeature
 from netcad.feats.topology.checks.check_device_info import DeviceInformationCheck
@@ -155,23 +157,49 @@ class TopologyService(DesignService):
             ai.add_design_node(dev_obj, kind_type="device", device=dev_obj.name)
             ai.add_service_edge(service=self, source=self, target=dev_obj)
 
+        self._build_design_interfaces(ai)
+
+    def _build_design_interfaces(self, ai: ServicesAnalyzer):
         for if_obj in self.interfaces:
-            ai.add_design_node(
+            if ai.add_design_node(
                 if_obj,
                 kind_type="interface",
                 device=if_obj.device.name,
                 if_name=if_obj.name,
-            )
+            ):
+                # design edge between device and interface
+                ai.add_design_edge(if_obj.device, if_obj)
 
-            # design edge between device and interface
-            ai.add_design_edge(if_obj.device, if_obj)
-
-            # service edge between device and interface
+            # always add service edge between device and interface
             ai.add_service_edge(self, if_obj.device, if_obj)
+
+            # design edge betwee the interface profile and the interface
+            if ai.add_design_node(
+                if_obj.profile,
+                kind_type="interface.profile",
+                profile=if_obj.profile.name,
+                device=if_obj.device.name,
+                if_name=if_obj.name,
+            ):
+                # if.profile -> Interface
+                ai.add_design_edge(if_obj.profile, if_obj)
+
+            # always add service edge between interface profile and interface
+            ai.add_service_edge(self, if_obj.profile, if_obj)
+
+            # if there is an interface assigned to the profile, then add that
+            # as a node in the graph.
+            #
+            # ipaddr -> if.profile
+
+            if isinstance(if_obj.profile, InterfaceL3):
+                if ai.add_design_node(if_obj.profile.if_ipaddr, kind_type="ipaddr"):
+                    ai.add_design_edge(if_obj.profile.if_ipaddr, if_obj.profile)
+                ai.add_service_edge(self, if_obj.profile.if_ipaddr, if_obj.profile)
 
     # --------------------------------------------------------------------------
     #
-    #                             Results
+    #                             Results Graph
     #
     # --------------------------------------------------------------------------
 
@@ -292,6 +320,7 @@ class TopologyService(DesignService):
         self._build_report_devices(ai)
         self._build_report_interfaces(ai)
         self._build_report_cabling(ai)
+        self._build_report_ipaddrs(ai)
 
     def _build_report_cabling(self, ai: ServicesAnalyzer):
         # ---------------------------------------------------------------------
@@ -425,3 +454,30 @@ class TopologyService(DesignService):
         table = self.build_report_interfaces_errors_table(ai=ai)
         if table.rows:
             self.report.add("Interfaces", False, table)
+
+    def _build_report_ipaddrs(self, ai: ServicesAnalyzer):
+        ipaddrs_ok = defaultdict(list)
+
+        # collect the L3 interface check results
+        for if_obj in self.interfaces:
+            if isinstance(if_obj.profile, InterfaceL3):
+                if_check = ai.results_map[if_obj.device][
+                    IPInterfaceCheck.check_type_()
+                ][if_obj.name]
+                ipaddrs_ok[if_check.status].append(if_check)
+
+        table = Table("Status", "Device", "Interface", "IP Address")
+        for if_check in chain(
+            ipaddrs_ok[CheckStatus.FAIL], ipaddrs_ok[CheckStatus.PASS]
+        ):
+            table.add_row(
+                Text(
+                    if_check.status,
+                    Style(color="green" if if_check.status == "PASS" else "red"),
+                ),
+                if_check.device,
+                if_check.check_id,
+                if_check.check.expected_results.if_ipaddr,
+            )
+
+        self.report.add("IP Addresses", len(ipaddrs_ok[CheckStatus.FAIL]) == 0, table)

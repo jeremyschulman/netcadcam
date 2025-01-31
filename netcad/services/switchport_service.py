@@ -19,7 +19,7 @@ from rich.table import Table
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.feats.vlans import InterfaceL2
+from netcad.feats.vlans import InterfaceL2, VlanProfile
 from netcad.feats.vlans.checks.check_switchports import SwitchportCheck
 
 from .design_service import DesignService
@@ -39,6 +39,22 @@ from ..device import DeviceInterface
 
 
 class SwitchportService(DesignService):
+    """
+    The SwitchportService class is a DesignService that is responsible for
+    managing the switchport feature checks originating from the topology
+    provided.
+
+    Graph Relationships
+    -------------------
+    # Design Relationships
+        Interface.profile ->[d]-> Interface
+        Device -[s]-> Interface
+
+    # Service Relationships
+        service ->[s]-> CheckSwitchports ->[r]-> swichport check result
+
+    """
+
     @dataclass
     class Config:
         topology: TopologyService
@@ -48,7 +64,10 @@ class SwitchportService(DesignService):
 
     def __init__(self, *vargs, config: Config, **kwargs):
         super().__init__(*vargs, config=config, **kwargs)
+
+        # key=if_name, value=if_obj
         self.interfaces: dict[str, DeviceInterface] = None
+        self.vlans: set[VlanProfile] = set()
 
     def build_design_graph(self, ai: "ServicesAnalyzer"):
         """
@@ -64,22 +83,18 @@ class SwitchportService(DesignService):
         }
 
         for if_obj in self.interfaces.values():
-            # using the interface profile as "switchport" anchoring instance
-            # object for the graph vertext relationship.
+            self.vlans.update(if_obj.profile.vlans_used())
+            # Interface Profile ->[s]-> Interface
+            ai.add_service_edge(self, if_obj.profile, if_obj)
 
-            ai.add_design_node(
-                if_obj.profile,
-                kind_type="interface.l2",
-                device=if_obj.device,
-                interface=if_obj.name,
-            )
-
-            # Switchport ->[d]-> Interface
-            ai.add_design_edge(if_obj.profile, if_obj)
-
-            # Create a design service edge between the Device and Interface
             # Device ->[s]-> Interface
             ai.add_service_edge(self, if_obj.device, if_obj)
+
+    # -------------------------------------------------------------------------
+    #
+    #                             Reports
+    #
+    # -------------------------------------------------------------------------
 
     def build_results_graph(self, ai: "ServicesAnalyzer"):
         """
@@ -108,8 +123,20 @@ class SwitchportService(DesignService):
             title=f"Switchport Report: {self.name} - {len(self.interfaces)} total ports"
         )
 
+        # ---------------------------------------------------------------------
+        # Show the Vlans used
+        # ---------------------------------------------------------------------
+
+        table = Table("VLAN ID", "Name", "Description")
+        for vlan in sorted(self.vlans, key=lambda i: i.vlan_id):
+            table.add_row(str(vlan.vlan_id), vlan.name, vlan.description or "")
+
+        self.report.add("VLANs", True, table)
+
+        # ---------------------------------------------------------------------
         # starting with the service level check node, find all switchport
         # checks and group them by "PASS" / "FAIL"
+        # ---------------------------------------------------------------------
 
         pass_fail = (
             GraphQuery(ai.graph)(
@@ -125,6 +152,10 @@ class SwitchportService(DesignService):
         pass_objs = map(ai.nodes_map.inv.__getitem__, pass_fail["PASS"])
         fail_objs = map(ai.nodes_map.inv.__getitem__, pass_fail["FAIL"])
 
+        # ---------------------------------------------------------------------
+        # Show the details of the passing ports
+        # ---------------------------------------------------------------------
+
         table = Table("Device", "Interface", "Desc", "Results")
 
         for chk_obj in pass_objs:
@@ -138,7 +169,9 @@ class SwitchportService(DesignService):
 
         self.report.add("Switchports", True, table)
 
+        # ---------------------------------------------------------------------
         # if there are failed switchport nodes then create a table of these errors.
+        # ---------------------------------------------------------------------
 
         if not pass_fail["FAIL"]:
             return
