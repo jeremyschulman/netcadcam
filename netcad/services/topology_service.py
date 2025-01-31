@@ -317,7 +317,10 @@ class TopologyService(DesignService):
     def build_report(self, ai: ServicesAnalyzer):
         self.report = DesignServiceReport(title=f"Topology Service Report: {self.name}")
         self._build_report_devices(ai)
-        self._build_report_interfaces(ai)
+
+        ok, table = self.build_report_interfaces_table(ai=ai)
+        self.report.add("Interfaces", ok, table)
+
         self._build_report_cabling(ai)
         self._build_report_ipaddrs(ai)
 
@@ -373,7 +376,9 @@ class TopologyService(DesignService):
 
         self.report.add("Devices", ok, table)
 
-    def _build_report_interfaces(self, ai: ServicesAnalyzer):
+    def build_report_interfaces_table(
+        self, ai: ServicesAnalyzer, only_fail: bool = False
+    ) -> tuple[bool, Table]:
         """
         The "interfaces report" checks the interface design nodes for
         PASS/FAIL. If all are OK, then this report check passes.
@@ -407,6 +412,9 @@ class TopologyService(DesignService):
 
                 ok = False
 
+            if only_fail and not fail_logs:
+                continue
+
             table.add_row(
                 color_pass_fail(if_node["fail_count"] == 0),
                 if_obj.device.name,
@@ -416,21 +424,24 @@ class TopologyService(DesignService):
                 Pretty(fail_logs) if fail_logs else None,
             )
 
-        self.report.add("Interfaces", ok, table)
+        return ok, table
 
     def _build_report_ipaddrs(self, ai: ServicesAnalyzer):
         # list of [(dev_obj, if_check)] for all IPInterfaceCheck results
 
-        ipaddrs_checks = [
-            (
-                if_obj.device,
-                ai.results_map[if_obj.device][IPInterfaceCheck.check_type_()][
-                    if_obj.name
-                ],
-            )
-            for if_obj in self.interfaces
-            if isinstance(if_obj.profile, InterfaceL3)
-        ]
+        ipaddrs_checks = sorted(
+            [
+                (
+                    if_obj.device,
+                    ai.results_map[if_obj.device][IPInterfaceCheck.check_type_()][
+                        if_obj.name
+                    ],
+                )
+                for if_obj in self.interfaces
+                if isinstance(if_obj.profile, InterfaceL3)
+            ],
+            key=lambda i: (i[0].name, i[1].check_id),
+        )
 
         ok = True
         table = Table("Status", "Device", "Interface", "IP Address")
