@@ -7,9 +7,8 @@
 
 from typing import Callable
 from operator import attrgetter
-from collections import deque
+from collections import deque, defaultdict
 
-from black.trans import defaultdict
 # -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
