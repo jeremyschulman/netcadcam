@@ -118,7 +118,7 @@ class SwitchportService(DesignService):
             # Switchport ->[r]-> CheckResult
             ai.add_check_edge(self, if_obj.profile, checkr_obj)
 
-    def build_report(self, ai: "ServicesAnalyzer"):
+    def build_report(self, ai: "ServicesAnalyzer", flags: dict):
         self.report = DesignServiceReport(
             title=f"Switchport Report: {self.name} - {len(self.interfaces)} total ports"
         )

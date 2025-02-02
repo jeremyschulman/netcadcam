@@ -50,14 +50,6 @@ class TopologyService(DesignService):
     of the topology related to the set of interfaces that match the criteria
     defined in the config object passed to the constructor.
 
-    The service design graph relates the
-        (1) all device nodes to the Design node
-        (2) all interface nodes to their respective Device node
-
-    The service check graph relates:
-        (1) all device feature checks to each Device node,
-        (2) all interface feature checks to each Interface node.
-
     Attributes
     ----------
     config : TopologyServiceConfig
@@ -68,6 +60,20 @@ class TopologyService(DesignService):
 
     interfaces : set[DeviceInterface]
         The set of device interfaces that are part of this specific topology
+
+    Graph Relationships:
+    ---------------------
+        service -> [s] -> Interface
+        service -> [c] -> CheckCabling
+
+        Device -> [d] -> Interface
+        Device -> [s] -> Interface
+        Device -> [c] -> DeviceInformationCheck
+
+        Interface -> [c] -> each of the inteferface checks
+        Interface.profile -> [s] -> Interface
+        Interface.profile -> [d] -> IP Addr
+        Interface.profile -> [s] -> IP Addr
 
     """
 
@@ -321,17 +327,17 @@ class TopologyService(DesignService):
     #
     # -------------------------------------------------------------------------
 
-    def build_report(self, ai: ServicesAnalyzer):
+    def build_report(self, ai: ServicesAnalyzer, flags):
         self.report = DesignServiceReport(title=f"Topology Service Report: {self.name}")
         self._build_report_devices(ai)
 
-        ok, table = self.build_report_interfaces_table(ai=ai)
-        self.report.add("Interfaces", ok, table)
+        ok, table = self.build_report_interfaces_table(ai, flags)
+        self.report.add("Interfaces", ok, table if table.rows else None)
 
-        self._build_report_cabling(ai)
-        self._build_report_ipaddrs(ai)
+        self._build_report_cabling(ai, flags)
+        self._build_report_ipaddrs(ai, flags)
 
-    def _build_report_cabling(self, ai: ServicesAnalyzer):
+    def _build_report_cabling(self, ai: ServicesAnalyzer, flags):
         # ---------------------------------------------------------------------
         # get the top level topology cabling check node to determine the
         # overall status of the cabling checks.
@@ -384,7 +390,9 @@ class TopologyService(DesignService):
         self.report.add("Devices", ok, table)
 
     def build_report_interfaces_table(
-        self, ai: ServicesAnalyzer, only_fail: bool = False
+        self,
+        ai: ServicesAnalyzer,
+        flags,
     ) -> tuple[bool, Table]:
         """
         The "interfaces report" checks the interface design nodes for
@@ -419,7 +427,7 @@ class TopologyService(DesignService):
 
                 ok = False
 
-            if only_fail and not fail_logs:
+            if not flags.get("all_results"):
                 continue
 
             table.add_row(
@@ -433,7 +441,7 @@ class TopologyService(DesignService):
 
         return ok, table
 
-    def _build_report_ipaddrs(self, ai: ServicesAnalyzer):
+    def _build_report_ipaddrs(self, ai: ServicesAnalyzer, flags):
         # list of [(dev_obj, if_check)] for all IPInterfaceCheck results
 
         ipaddrs_checks = sorted(
@@ -455,6 +463,8 @@ class TopologyService(DesignService):
         for dev_obj, if_check in ipaddrs_checks:
             if if_check.status == "FAIL":
                 ok = False
+            elif not flags.get("all_results"):
+                continue
 
             table.add_row(
                 color_pass_fail(if_check.status == "PASS"),
@@ -463,4 +473,4 @@ class TopologyService(DesignService):
                 if_check.check.expected_results.if_ipaddr,
             )
 
-        self.report.add("IP Addresses", ok, table)
+        self.report.add("IP Addresses", ok, table if table.rows else None)

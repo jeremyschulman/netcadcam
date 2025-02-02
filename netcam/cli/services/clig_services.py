@@ -39,6 +39,9 @@ def clig_services():
 @opt_designs()
 @click.option("--service", "service_names", multiple=True, help="service name(s)")
 @click.option("--brief", is_flag=True, help="show brief status only")
+@click.option(
+    "--all", "all_results", is_flag=True, help="show all results, not just failed"
+)
 def clig_reports(designs: Tuple[str], service_names: Sequence[str], **flags):
     """generate report"""
 
@@ -65,7 +68,7 @@ def clig_reports(designs: Tuple[str], service_names: Sequence[str], **flags):
 def _show_all(ai, flags):
     console = Console()
 
-    ai.build_reports()
+    ai.build_reports(flags=flags)
 
     if flags.get("brief"):
         table = Table("Service", "Status")
@@ -84,5 +87,5 @@ def _show_all(ai, flags):
 
 
 def _show_specific_service(ai, svc: DesignService, flags):
-    svc.build_report(ai=ai)
+    svc.build_report(ai=ai, flags=flags)
     Console().print("\n\n", svc.report.table)
