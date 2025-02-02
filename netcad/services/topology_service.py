@@ -331,7 +331,7 @@ class TopologyService(DesignService):
 
     def build_report(self, ai: ServicesAnalyzer, flags):
         self.report = DesignServiceReport(title=f"Topology Service Report: {self.name}")
-        self._build_report_devices(ai)
+        self._build_report_devices(ai, flags)
 
         ok, table = self.build_report_interfaces_table(ai, flags)
         self.report.add("Interfaces", ok, table)
@@ -363,7 +363,7 @@ class TopologyService(DesignService):
             # TODO: add more details to the cabling failure report
             self.report.add("Cabling", False, {"count": fail_c})
 
-    def _build_report_devices(self, ai: ServicesAnalyzer):
+    def _build_report_devices(self, ai: ServicesAnalyzer, flags: dict):
         """
         For device checks, we only care about the directly associated results,
         and not the associated interface results.  This means that a device may
@@ -372,8 +372,9 @@ class TopologyService(DesignService):
         specifically device results.
         """
 
+        pass_fail_c = Counter()
+
         table = Table("Status", "Device", "Model")
-        ok = True
 
         for dev_obj in sorted(self.devices, key=attrgetter("name")):
             dev_node = ai.nodes_map[dev_obj]
@@ -384,12 +385,22 @@ class TopologyService(DesignService):
             pass_fail = (
                 GraphQuery(ai.graph)(dev_node).out_().groupby(itemgetter("status"))
             )
-            if pass_fail.get("FAIL"):
-                ok = False
+            dev_fail = bool(pass_fail["FAIL"])
+            pass_fail_c[not dev_fail] += 1
 
-            table.add_row(color_pass_fail(ok), dev_obj.name, dev_obj.device_type)
+            if not dev_fail and not flags.get("all_results"):
+                continue
 
-        self.report.add("Devices", ok, table)
+            table.add_row(
+                color_pass_fail(not dev_fail), dev_obj.name, dev_obj.device_type
+            )
+
+        ok = pass_fail_c[False] == 0
+
+        if flags.get("all_results") or table.rows:
+            self.report.add("Devices", ok, table)
+        else:
+            self.report.add("Devices", ok, {"count": pass_fail_c[True]})
 
     def build_report_interfaces_table(
         self,
