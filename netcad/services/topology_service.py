@@ -1,12 +1,14 @@
 #  Copyright (c) 2025 Jeremy Schulman
 #  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
-from operator import attrgetter, itemgetter
+
 # -----------------------------------------------------------------------------
 # System Imports
 # -----------------------------------------------------------------------------
 
 from typing import Callable, ClassVar, Any
 from dataclasses import dataclass
+from operator import attrgetter, itemgetter
+from collections import Counter
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -332,7 +334,7 @@ class TopologyService(DesignService):
         self._build_report_devices(ai)
 
         ok, table = self.build_report_interfaces_table(ai, flags)
-        self.report.add("Interfaces", ok, table if table.rows else None)
+        self.report.add("Interfaces", ok, table)
 
         self._build_report_cabling(ai, flags)
         self._build_report_ipaddrs(ai, flags)
@@ -399,7 +401,7 @@ class TopologyService(DesignService):
         PASS/FAIL. If all are OK, then this report check passes.
         """
 
-        ok = True
+        pass_fail_c = Counter()
 
         table = Table("Statue", "Device", "Interface", "Desc", "Profile", "Details")
         if_nodes = map(ai.nodes_map.__getitem__, self.interfaces)
@@ -413,6 +415,8 @@ class TopologyService(DesignService):
         for if_obj, if_node in items:
             fail_logs = None
 
+            pass_fail_c[if_node["fail_count"] == 0] += 1
+
             if if_node["fail_count"]:
                 pass_fail = (
                     GraphQuery(ai.graph)(if_node).out_().groupby(itemgetter("status"))
@@ -425,9 +429,7 @@ class TopologyService(DesignService):
                     if log[0] == "FAIL"
                 ]
 
-                ok = False
-
-            if not flags.get("all_results"):
+            elif not flags.get("all_results"):
                 continue
 
             table.add_row(
@@ -439,7 +441,13 @@ class TopologyService(DesignService):
                 Pretty(fail_logs) if fail_logs else None,
             )
 
-        return ok, table
+        ok = pass_fail_c[False] == 0
+
+        if flags.get("all_results") or table.rows:
+            return ok, table
+
+        # if here, then only display the number of passing (all) interfaces
+        return ok, {"count": pass_fail_c[True]}
 
     def _build_report_ipaddrs(self, ai: ServicesAnalyzer, flags):
         # list of [(dev_obj, if_check)] for all IPInterfaceCheck results
@@ -458,12 +466,13 @@ class TopologyService(DesignService):
             key=lambda i: (i[0].name, i[1].check_id),
         )
 
-        ok = True
         table = Table("Status", "Device", "Interface", "IP Address")
+        pass_fail_c = Counter()
+
         for dev_obj, if_check in ipaddrs_checks:
-            if if_check.status == "FAIL":
-                ok = False
-            elif not flags.get("all_results"):
+            pass_fail_c[if_check.status] += 1
+
+            if if_check.status == "PASS" and not flags.get("all_results"):
                 continue
 
             table.add_row(
@@ -473,4 +482,7 @@ class TopologyService(DesignService):
                 if_check.check.expected_results.if_ipaddr,
             )
 
-        self.report.add("IP Addresses", ok, table if table.rows else None)
+        ok = pass_fail_c["FAIL"] == 0
+        self.report.add(
+            "IP Addresses", ok, table if table.rows else {"count": pass_fail_c["PASS"]}
+        )
