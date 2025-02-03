@@ -126,14 +126,14 @@ class SwitchportService(DesignService):
     # -------------------------------------------------------------------------
 
     def build_report(self, ai: "ServicesAnalyzer", flags: dict):
+        self.report = DesignServiceReport(
+            title=f"Switchport Report: {self.name} - {len(self.interfaces)} total ports"
+        )
         self._build_report_vlans(flags)
         self._build_report_switchports(ai, flags)
         self._build_report_svi(ai, flags)
 
     def _build_report_vlans(self, flags):
-        self.report = DesignServiceReport(
-            title=f"Switchport Report: {self.name} - {len(self.interfaces)} total ports"
-        )
 
         # ---------------------------------------------------------------------
         # if we do not want to see the details on the VLANs, then show a count
