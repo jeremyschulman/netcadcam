@@ -33,10 +33,13 @@ class DesignServiceReport:
         )
 
     def add(self, item, check: DesignServiceCheck, details=None):
-        deets = (
-            details
-            if isinstance(details, Table)
-            else (Pretty(deets) if (deets := details or check.details()) else None)
-        )
+        if isinstance(details, Table):
+            deets = details
+        elif isinstance(check, DesignServiceCheck):
+            deets = Pretty(check.details())
+        elif details is not None:
+            deets = Pretty(details)
+        else:
+            deets = None
 
         self.table.add_row(item, self.condition(check), deets)

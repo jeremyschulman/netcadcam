@@ -159,9 +159,9 @@ class ServicesAnalyzer:
             await svc.check(ai=self)
             self.analyze(svc)
 
-    def build_reports(self):
+    def build_reports(self, flags):
         for svc in self.design.services.values():
-            svc.build_report(ai=self)
+            svc.build_report(ai=self, flags=flags)
 
     def show_reports(self, console: Console):
         for svc in self.design.services.values():

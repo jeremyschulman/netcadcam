@@ -122,7 +122,7 @@ class DesignService:
     async def check(self, ai: "ServicesAnalyzer"):
         pass
 
-    def build_report(self, ai: "ServicesAnalyzer"):
+    def build_report(self, ai: "ServicesAnalyzer", flags: dict):
         pass
 
     def build_features_report_table(self) -> Table:
