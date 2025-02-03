@@ -388,6 +388,9 @@ class TopologyService(DesignService):
             dev_fail = bool(pass_fail["FAIL"])
             pass_fail_c[not dev_fail] += 1
 
+            # if the device passes, and we do not want to see details, then do
+            # not add anything to the table.
+
             if not dev_fail and not flags.get("all_results"):
                 continue
 
@@ -410,6 +413,10 @@ class TopologyService(DesignService):
         """
         The "interfaces report" checks the interface design nodes for
         PASS/FAIL. If all are OK, then this report check passes.
+
+        Returns
+        -------
+        pass_table, fail_table
         """
 
         pass_fail_nodes = defaultdict(list)
@@ -475,6 +482,7 @@ class TopologyService(DesignService):
                 for if_obj in self.interfaces
                 if isinstance(if_obj.profile, InterfaceL3)
             ],
+            # sorted by device.name, interface.name
             key=lambda i: (i[0].name, i[1].check_id),
         )
 
