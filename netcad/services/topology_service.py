@@ -8,14 +8,13 @@
 from typing import Callable, ClassVar, Any
 from dataclasses import dataclass
 from operator import attrgetter, itemgetter
-from collections import Counter
+from collections import Counter, defaultdict
 
 # -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
 
 from rich.table import Table
-from rich.pretty import Pretty
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -125,7 +124,7 @@ class TopologyService(DesignService):
         self.match_interfaces()
 
         if not self.interfaces:
-            raise ValueError(f"No interfaces found for service: {self.name}")
+            raise ValueError(f"No interfaces found for topology service: {self.name}")
 
     def match_interfaces(self) -> bool:
         """
@@ -332,13 +331,16 @@ class TopologyService(DesignService):
         self.report = DesignServiceReport(title=f"Topology Service Report: {self.name}")
         self._build_report_devices(ai, flags)
 
-        ok, table = self.build_report_interfaces_table(ai, flags)
-        self.report.add("Interfaces", ok, table)
+        pass_table, fail_table = self.build_report_interfaces_table(ai, flags)
+        self.report.add("Interfaces", True, pass_table)
 
-        self._build_report_cabling(ai, flags)
+        if fail_table.rows:
+            self.report.add("Interfaces", False, fail_table)
+
+        self._build_report_cabling(ai)
         self._build_report_ipaddrs(ai, flags)
 
-    def _build_report_cabling(self, ai: ServicesAnalyzer, flags):
+    def _build_report_cabling(self, ai: ServicesAnalyzer):
         # ---------------------------------------------------------------------
         # get the top level topology cabling check node to determine the
         # overall status of the cabling checks.
@@ -404,59 +406,60 @@ class TopologyService(DesignService):
         self,
         ai: ServicesAnalyzer,
         flags,
-    ) -> tuple[bool, Table]:
+    ) -> tuple[Table, Table]:
         """
         The "interfaces report" checks the interface design nodes for
         PASS/FAIL. If all are OK, then this report check passes.
         """
 
-        pass_fail_c = Counter()
+        pass_fail_nodes = defaultdict(list)
+        fail_table = Table("Device", "Interface", "Desc", "Profile", "Logs")
 
-        table = Table("Statue", "Device", "Interface", "Desc", "Profile", "Details")
-        if_nodes = map(ai.nodes_map.__getitem__, self.interfaces)
+        for if_obj in self.interfaces:
+            if_node = ai.nodes_map[if_obj]
+            pass_fail_nodes[if_node["fail_count"] == 0].append((if_obj, if_node))
 
-        # sort the table by FAIL first, then by device name
-        items = sorted(
-            zip(self.interfaces, if_nodes),
-            key=lambda i: (i[1]["fail_count"] == 0, i[0].device.name),
-        )
+        # ---------------------------------------------------------------------
+        # create a table of failure interfaces
+        # ---------------------------------------------------------------------
 
-        for if_obj, if_node in items:
-            fail_logs = None
+        for if_obj, if_node in pass_fail_nodes[False]:
+            table = Table()
 
-            pass_fail_c[if_node["fail_count"] == 0] += 1
+            check_nodes = GraphQuery(ai.graph)(if_node).out_(kind="r").nodes
+            for check_obj in map(ai.nodes_map.inv.__getitem__, check_nodes):
+                table.add_row(self.build_feature_logs_table(check_obj))
 
-            if if_node["fail_count"]:
-                pass_fail = (
-                    GraphQuery(ai.graph)(if_node).out_().groupby(itemgetter("status"))
-                )
-
-                fail_logs = [
-                    (if_check.check.check_type, log[1:])
-                    for if_check in map(ai.nodes_map.inv.__getitem__, pass_fail["FAIL"])
-                    for log in if_check.logs.root
-                    if log[0] == "FAIL"
-                ]
-
-            elif not flags.get("all_results"):
-                continue
-
-            table.add_row(
-                color_pass_fail(if_node["fail_count"] == 0),
-                if_obj.device.name,
-                if_obj.name,
-                if_obj.desc,
-                if_obj.profile.name,
-                Pretty(fail_logs) if fail_logs else None,
+            fail_table.add_row(
+                if_obj.device.name, if_obj.name, if_obj.desc, if_obj.profile.name, table
             )
 
-        ok = pass_fail_c[False] == 0
+        # ---------------------------------------------------------------------
+        # if we do not want to see the details of the passing interfaces, then
+        # just return the pass count as the "pass table".
+        # ---------------------------------------------------------------------
 
-        if flags.get("all_results") or table.rows:
-            return ok, table
+        if not flags.get("all_results"):
+            pass_table = {"count": len(pass_fail_nodes[True])}
+            return pass_table, fail_table
 
-        # if here, then only display the number of passing (all) interfaces
-        return ok, {"count": pass_fail_c[True]}
+        # ---------------------------------------------------------------------
+        # if we are here, then we want to see the details of the passing
+        # interfaces.
+        # ---------------------------------------------------------------------
+
+        pass_table = Table("Device", "Interface", "Desc", "Profile", "Logs")
+        for if_obj, if_node in pass_fail_nodes[True]:
+            table = Table()
+            check_nodes = GraphQuery(ai.graph)(if_node).out_(kind="r").nodes
+            for check_obj in map(ai.nodes_map.inv.__getitem__, check_nodes):
+                table.add_row(self.build_feature_logs_table(check_obj))
+
+            pass_table.add_row(
+                if_obj.device.name, if_obj.name, if_obj.desc, if_obj.profile.name, table
+            )
+
+        return pass_table, fail_table
 
     def _build_report_ipaddrs(self, ai: ServicesAnalyzer, flags):
         # list of [(dev_obj, if_check)] for all IPInterfaceCheck results
