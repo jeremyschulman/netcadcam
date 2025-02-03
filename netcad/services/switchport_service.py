@@ -129,6 +129,12 @@ class SwitchportService(DesignService):
         self.report = DesignServiceReport(
             title=f"Switchport Report: {self.name} - {len(self.interfaces)} total ports"
         )
+
+        self._build_report_vlans(flags)
+        self._build_report_switchports(ai, flags)
+        self._build_report_svi(ai, flags)
+
+    def _build_report_vlans(self, flags):
         self._build_report_vlans(flags)
         self._build_report_switchports(ai, flags)
         self._build_report_svi(ai, flags)
