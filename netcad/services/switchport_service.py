@@ -214,6 +214,9 @@ class SwitchportService(DesignService):
         self.report.add("Switchports", False, table)
 
     def _build_report_svi(self, ai: ServicesAnalyzer, flags: dict):
+        # find all the IP address check nodes for this service and group them
+        # by "PASS" / "FAIL"
+
         ipaddr_check_nodes = (
             GraphQuery(ai.graph)(ai.nodes_map[self.config.topology])
             .out_()
@@ -230,10 +233,19 @@ class SwitchportService(DesignService):
             self.report.add("SVIs", True, {"count": len(ipaddr_check_nodes["PASS"])})
             return
 
+        # if we are here, then it means we either have failures or we want to
+        # see the details of all SVIs checks.  We are going to have two
+        # separaete line items in the report table, one for PASS and another.
+        # for fail.
+
         for status, chk_nodes in chain(ipaddr_check_nodes.items()):
             table = Table("Device", "Interface", "IP Address", "Logs")
             chk_objs = map(ai.nodes_map.inv.__getitem__, chk_nodes)
+
+            # sort the checks by device name
             for chk_obj in sorted(chk_objs, key=lambda c: c.device):
+                # only show details for failed checks.
+
                 deets = (
                     self.build_feature_logs_table(chk_obj) if status == "FAIL" else None
                 )
