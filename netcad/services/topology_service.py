@@ -14,7 +14,6 @@ from collections import Counter
 # Public Imports
 # -----------------------------------------------------------------------------
 
-from first import first
 from rich.table import Table
 from rich.pretty import Pretty
 
@@ -345,11 +344,11 @@ class TopologyService(DesignService):
         # overall status of the cabling checks.
         # ---------------------------------------------------------------------
 
-        svc_cable_node = first(
-            node
-            for edge in ai.nodes_map[self].out_edges()
-            if (node := edge.target_vertex)["check_type"]
-            == self.CheckCabling.check_type
+        svc_cable_node = (
+            GraphQuery(ai.graph)(ai.nodes_map[self])
+            .out_()
+            .node(check_type=self.CheckCabling.check_type)
+            .first()
         )
 
         # ---------------------------------------------------------------------
@@ -360,7 +359,6 @@ class TopologyService(DesignService):
             self.report.add("Cabling", True, {"count": pass_c})
 
         if fail_c := svc_cable_node["fail_count"]:
-            # TODO: add more details to the cabling failure report
             self.report.add("Cabling", False, {"count": fail_c})
 
     def _build_report_devices(self, ai: ServicesAnalyzer, flags: dict):

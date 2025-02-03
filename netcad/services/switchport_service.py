@@ -1,6 +1,5 @@
 #  Copyright (c) 2025 Jeremy Schulman
 #  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
-
 # -----------------------------------------------------------------------------
 # System Imports
 # -----------------------------------------------------------------------------
@@ -8,6 +7,7 @@
 from typing import ClassVar
 from dataclasses import dataclass
 from operator import itemgetter
+from itertools import chain
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -21,6 +21,7 @@ from rich.table import Table
 
 from netcad.feats.vlans import InterfaceL2, VlanProfile
 from netcad.feats.vlans.checks.check_switchports import SwitchportCheck
+from netcad.feats.topology.checks.check_ipaddrs import IPInterfaceCheck
 
 from .design_service import DesignService
 from .graph_query import GraphQuery
@@ -92,7 +93,7 @@ class SwitchportService(DesignService):
 
     # -------------------------------------------------------------------------
     #
-    #                             Reports
+    #                             Results Graph
     #
     # -------------------------------------------------------------------------
 
@@ -118,10 +119,25 @@ class SwitchportService(DesignService):
             # Switchport ->[r]-> CheckResult
             ai.add_check_edge(self, if_obj.profile, checkr_obj)
 
+    # -------------------------------------------------------------------------
+    #
+    #                             Reports Table
+    #
+    # -------------------------------------------------------------------------
+
     def build_report(self, ai: "ServicesAnalyzer", flags: dict):
+        self._build_report_vlans(flags)
+        self._build_report_switchports(ai, flags)
+        self._build_report_svi(ai, flags)
+
+    def _build_report_vlans(self, flags):
         self.report = DesignServiceReport(
             title=f"Switchport Report: {self.name} - {len(self.interfaces)} total ports"
         )
+
+        if not flags.get("all_results"):
+            self.report.add("VLANs", True, {"count": len(self.vlans)})
+            return
 
         # ---------------------------------------------------------------------
         # Show the Vlans used
@@ -133,6 +149,7 @@ class SwitchportService(DesignService):
 
         self.report.add("VLANs", True, table)
 
+    def _build_report_switchports(self, ai: "ServicesAnalyzer", flags: dict):
         # ---------------------------------------------------------------------
         # starting with the service level check node, find all switchport
         # checks and group them by "PASS" / "FAIL"
@@ -156,18 +173,21 @@ class SwitchportService(DesignService):
         # Show the details of the passing ports
         # ---------------------------------------------------------------------
 
-        table = Table("Device", "Interface", "Desc", "Results")
+        if not flags.get("all_results"):
+            self.report.add("Switchports", True, {"count": len(set(pass_objs))})
+        else:
+            table = Table("Device", "Interface", "Desc", "Results")
 
-        for chk_obj in pass_objs:
-            if_obj = self.interfaces[chk_obj.check_id]
-            table.add_row(
-                chk_obj.device,
-                chk_obj.check_id,
-                if_obj.desc,
-                self.build_feature_logs_table(chk_obj),
-            )
+            for chk_obj in pass_objs:
+                if_obj = self.interfaces[chk_obj.check_id]
+                table.add_row(
+                    chk_obj.device,
+                    chk_obj.check_id,
+                    if_obj.desc,
+                    self.build_feature_logs_table(chk_obj),
+                )
 
-        self.report.add("Switchports", True, table)
+            self.report.add("Switchports", True, table)
 
         # ---------------------------------------------------------------------
         # if there are failed switchport nodes then create a table of these errors.
@@ -187,3 +207,38 @@ class SwitchportService(DesignService):
             )
 
         self.report.add("Switchports", False, table)
+
+    def _build_report_svi(self, ai: ServicesAnalyzer, flags: dict):
+        ipaddr_check_nodes = (
+            GraphQuery(ai.graph)(ai.nodes_map[self.config.topology])
+            .out_()
+            .node(kind_type="interface")
+            .out_(kind="r")
+            .node(check_type=IPInterfaceCheck.check_type_())
+            .groupby(itemgetter("status"))
+        )
+
+        # if everything passes, but we do not want to see the details, then
+        # simply show the pass count.
+
+        if not ipaddr_check_nodes["FAIL"] and not flags.get("all_results"):
+            self.report.add("SVI", True, {"count": len(ipaddr_check_nodes["PASS"])})
+            return
+
+        for status, chk_nodes in chain(ipaddr_check_nodes.items()):
+            table = Table("Device", "Interface", "IP Address", "Logs")
+            chk_objs = map(ai.nodes_map.inv.__getitem__, chk_nodes)
+            for chk_obj in sorted(chk_objs, key=lambda c: c.device):
+                deets = (
+                    self.build_feature_logs_table(chk_obj) if status == "FAIL" else None
+                )
+
+                table.add_row(
+                    chk_obj.device,
+                    chk_obj.check_id,
+                    chk_obj.measurement.if_ipaddr,
+                    deets,
+                )
+
+            if table.rows:
+                self.report.add("SVI", status == "PASS", table)
