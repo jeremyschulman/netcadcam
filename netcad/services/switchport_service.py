@@ -135,12 +135,17 @@ class SwitchportService(DesignService):
             title=f"Switchport Report: {self.name} - {len(self.interfaces)} total ports"
         )
 
+        # ---------------------------------------------------------------------
+        # if we do not want to see the details on the VLANs, then show a count
+        # of the VLANs.
+        # ---------------------------------------------------------------------
+
         if not flags.get("all_results"):
             self.report.add("VLANs", True, {"count": len(self.vlans)})
             return
 
         # ---------------------------------------------------------------------
-        # Show the Vlans used
+        # Oterwise, show the details on Vlans used
         # ---------------------------------------------------------------------
 
         table = Table("VLAN ID", "Name", "Description")
@@ -176,7 +181,7 @@ class SwitchportService(DesignService):
         if not flags.get("all_results"):
             self.report.add("Switchports", True, {"count": len(set(pass_objs))})
         else:
-            table = Table("Device", "Interface", "Desc", "Results")
+            table = Table("Device", "Interface", "Desc", "Logs")
 
             for chk_obj in pass_objs:
                 if_obj = self.interfaces[chk_obj.check_id]
@@ -196,7 +201,7 @@ class SwitchportService(DesignService):
         if not pass_fail["FAIL"]:
             return
 
-        table = Table("Device", "Interface", "Desc", "Results")
+        table = Table("Device", "Interface", "Desc", "Logs")
         for chk_obj in fail_objs:
             if_obj = self.interfaces[chk_obj.check_id]
             table.add_row(
@@ -222,7 +227,7 @@ class SwitchportService(DesignService):
         # simply show the pass count.
 
         if not ipaddr_check_nodes["FAIL"] and not flags.get("all_results"):
-            self.report.add("SVI", True, {"count": len(ipaddr_check_nodes["PASS"])})
+            self.report.add("SVIs", True, {"count": len(ipaddr_check_nodes["PASS"])})
             return
 
         for status, chk_nodes in chain(ipaddr_check_nodes.items()):
@@ -241,4 +246,4 @@ class SwitchportService(DesignService):
                 )
 
             if table.rows:
-                self.report.add("SVI", status == "PASS", table)
+                self.report.add("SVIs", status == "PASS", table)
