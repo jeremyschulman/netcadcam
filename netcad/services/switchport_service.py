@@ -83,6 +83,14 @@ class SwitchportService(DesignService):
         interfaces.  Not all interfaces in the topology are running in Layer2
         switchport mode.  So we need to filter the list of interfaces.
         """
+        # create a parent-child relationship between this service and the
+        # topology service.
+
+        ai.add_service_edge(service=self, source=self.config.topology, target=self)
+
+        # ---------------------------------------------------------------------
+        # Add all the switchport interface profiles to the service graph
+        # ---------------------------------------------------------------------
 
         self.interfaces = {
             if_obj.name: if_obj
@@ -111,7 +119,7 @@ class SwitchportService(DesignService):
 
         self.svi_topology = TopologyService(
             design=self.design,
-            name=f"{self.name}.topology.svi",
+            name=f"{self.name}.svi",
             owner=self.owner,
             is_subservice=True,
             config=TopologyService.Config(
@@ -120,6 +128,11 @@ class SwitchportService(DesignService):
             ),
         )
 
+        # create the service relationship between this service and the SVI
+        # topology, then add the SVI topology service to the processing queue.
+
+        ai.add_service_node(self.svi_topology)
+        ai.add_service_edge(service=self, source=self, target=self.svi_topology)
         ai.services_queue.appendleft(self.svi_topology)
 
     # -------------------------------------------------------------------------

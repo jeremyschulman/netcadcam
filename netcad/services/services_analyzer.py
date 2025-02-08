@@ -100,6 +100,17 @@ class ServicesAnalyzer:
         self.nodes_map[obj] = self.graph.add_vertex(obj, **kwargs)
         return True
 
+    def add_service_node(self, service: "DesignService"):
+        self.add_node(
+            service,
+            kind="s",
+            kind_type=service.__class__.__name__,
+            service=service.name,
+            pass_count=0,
+            fail_count=0,
+            status="PASS",
+        )
+
     def add_design_node(self, obj, kind_type, **kwargs):
         return self.add_node(
             obj,

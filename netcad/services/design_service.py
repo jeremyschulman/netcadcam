@@ -89,15 +89,7 @@ class DesignService:
         # root level analysis later.  Init the status to PASS.  It could be
         # updated to FAIL after the analysis is complete.
 
-        ai.add_node(
-            self,
-            kind="s",
-            kind_type=self.__class__.__name__,
-            service=self.name,
-            pass_count=0,
-            fail_count=0,
-            status="PASS",
-        )
+        ai.add_service_node(service=self)
 
         # build the design aspects into the analysis graph
         self.build_design_graph(ai)
