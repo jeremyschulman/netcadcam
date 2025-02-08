@@ -13,6 +13,7 @@ from typing import Sequence
 
 from rich.table import Table
 from rich.console import Console
+from rich.pretty import Pretty
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -52,6 +53,7 @@ def show_design_services(design: Design):
         "Service",
         "Kind",
         "Owner",
+        "Top",
         show_header=True,
         header_style="bold magenta",
         title_justify="left",
@@ -64,6 +66,6 @@ def show_design_services(design: Design):
     for name in service_names:
         svc = design.services[name]
         kind = svc.__class__.__name__
-        table.add_row(svc.name, kind, svc.owner)
+        table.add_row(svc.name, kind, svc.owner, Pretty(not svc.is_subservice))
 
     Console().print(table)
