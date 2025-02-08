@@ -6,7 +6,7 @@
 # -----------------------------------------------------------------------------
 
 from typing import TYPE_CHECKING, Iterator
-from collections import defaultdict
+from collections import defaultdict, deque
 import json
 from pathlib import Path
 
@@ -56,11 +56,11 @@ class ServicesAnalyzer:
         # -----------------------------------------------------------------------------
         # Results-Map Data Structure
         # -----------------------------------------------------------------------------
-        # key=device (object),
+        # key=device (Device),
         # value=dict
-        #   key=check-type,
+        #   key=check-type (str),
         #   value=dict
-        #       key=check-id,
+        #       key=check-id (str),
         #       value=CheckResult
         # -----------------------------------------------------------------------------
 
@@ -68,6 +68,11 @@ class ServicesAnalyzer:
 
         # maps any object to a graph-node.
         self.nodes_map: NodeObjIDMapT = bidict()
+
+        # this queue is used for processing services; so that a service can
+        # define a subservice within itself, and the subservice can be
+        # processed after the parent service is processed.
+        self.services_queue = deque()
 
         # load all check results so they can be incorporated into the analysis graph.
         self._load_feature_results()
@@ -151,7 +156,12 @@ class ServicesAnalyzer:
         This function is responsible for producing the services results graphs
         for each service in the design.
         """
-        for svc in self.design.services.values():
+        self.services_queue.extend(self.design.services.values())
+        while True:
+            try:
+                svc = self.services_queue.popleft()
+            except IndexError:
+                break
             svc.build(ai=self)
 
     async def check(self):

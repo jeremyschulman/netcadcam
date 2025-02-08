@@ -19,7 +19,8 @@ from rich.table import Table
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.feats.vlans import InterfaceL2, VlanProfile
+from netcad.device.profiles import InterfaceProfile
+from netcad.feats.vlans import InterfaceL2, VlanProfile, InterfaceVlan
 from netcad.feats.vlans.checks.check_switchports import SwitchportCheck
 from netcad.feats.topology.checks.check_ipaddrs import IPInterfaceCheck
 
@@ -64,11 +65,17 @@ class SwitchportService(DesignService):
         check_type: ClassVar[str] = "switchport"
 
     def __init__(self, *vargs, config: Config, **kwargs):
+        self.config: SwitchportService.Config = config
         super().__init__(*vargs, config=config, **kwargs)
 
         # key=if_name, value=if_obj
         self.interfaces: dict[str, DeviceInterface] = None
+
+        # set of all VLANs used by the switchports
         self.vlans: set[VlanProfile] = set()
+
+        # the topology service that is used to find the SVI interfaces
+        self.svi_topology: TopologyService = None
 
     def build_design_graph(self, ai: "ServicesAnalyzer"):
         """
@@ -84,12 +91,36 @@ class SwitchportService(DesignService):
         }
 
         for if_obj in self.interfaces.values():
+            # keep track of all VLANs used by the switchports
             self.vlans.update(if_obj.profile.vlans_used())
+
             # Interface Profile ->[s]-> Interface
             ai.add_service_edge(self, if_obj.profile, if_obj)
 
             # Device ->[s]-> Interface
             ai.add_service_edge(self, if_obj.device, if_obj)
+
+        # ---------------------------------------------------------------------
+        # now that we have the VLANs, we can go back and find all the VLAN SVI
+        # interfaces.  We will create an "internal" topology service of just
+        # the SVIs so that we can validate the IP address configuration.
+        # ---------------------------------------------------------------------
+
+        def is_my_svi(_ipf: InterfaceProfile):
+            return isinstance(_ipf, InterfaceVlan) and _ipf.vlan in self.vlans
+
+        self.svi_topology = TopologyService(
+            design=self.design,
+            name=f"{self.name}.topology.svi",
+            owner=self.owner,
+            is_subservice=True,
+            config=TopologyService.Config(
+                topology_feature=self.config.topology.config.topology_feature,
+                match_interface_profile=is_my_svi,
+            ),
+        )
+
+        ai.services_queue.appendleft(self.svi_topology)
 
     # -------------------------------------------------------------------------
     #
@@ -135,12 +166,6 @@ class SwitchportService(DesignService):
         self._build_report_svi(ai, flags)
 
     def _build_report_vlans(self, flags):
-        self._build_report_vlans(flags)
-        self._build_report_switchports(ai, flags)
-        self._build_report_svi(ai, flags)
-
-    def _build_report_vlans(self, flags):
-
         # ---------------------------------------------------------------------
         # if we do not want to see the details on the VLANs, then show a count
         # of the VLANs.
