@@ -7,7 +7,6 @@
 from typing import ClassVar
 from dataclasses import dataclass
 from operator import itemgetter
-from itertools import chain
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -22,7 +21,6 @@ from rich.table import Table
 from netcad.device.profiles import InterfaceProfile
 from netcad.feats.vlans import InterfaceL2, VlanProfile, InterfaceVlan
 from netcad.feats.vlans.checks.check_switchports import SwitchportCheck
-from netcad.feats.topology.checks.check_ipaddrs import IPInterfaceCheck
 
 from .design_service import DesignService
 from .graph_query import GraphQuery
@@ -258,48 +256,7 @@ class SwitchportService(DesignService):
         self.report.add("Switchports", False, table)
 
     def _build_report_svi(self, ai: ServicesAnalyzer, flags: dict):
-        # find all the IP address check nodes for this service and group them
-        # by "PASS" / "FAIL"
-
-        ipaddr_check_nodes = (
-            GraphQuery(ai.graph)(ai.nodes_map[self.config.topology])
-            .out_()
-            .node(kind_type="interface")
-            .out_(kind="r")
-            .node(check_type=IPInterfaceCheck.check_type_())
-            .groupby(itemgetter("status"))
+        self.svi_topology.build_report(ai, flags)
+        self.report.add(
+            "SVIs", self.svi_topology.status == "PASS", self.svi_topology.report.table
         )
-
-        # if everything passes, but we do not want to see the details, then
-        # simply show the pass count.
-
-        if not ipaddr_check_nodes["FAIL"] and not flags.get("all_results"):
-            self.report.add("SVIs", True, {"count": len(ipaddr_check_nodes["PASS"])})
-            return
-
-        # if we are here, then it means we either have failures or we want to
-        # see the details of all SVIs checks.  We are going to have two
-        # separaete line items in the report table, one for PASS and another.
-        # for fail.
-
-        for status, chk_nodes in chain(ipaddr_check_nodes.items()):
-            table = Table("Device", "Interface", "IP Address", "Logs")
-            chk_objs = map(ai.nodes_map.inv.__getitem__, chk_nodes)
-
-            # sort the checks by device name
-            for chk_obj in sorted(chk_objs, key=lambda c: c.device):
-                # only show details for failed checks.
-
-                deets = (
-                    self.build_feature_logs_table(chk_obj) if status == "FAIL" else None
-                )
-
-                table.add_row(
-                    chk_obj.device,
-                    chk_obj.check_id,
-                    chk_obj.measurement.if_ipaddr,
-                    deets,
-                )
-
-            if table.rows:
-                self.report.add("SVIs", status == "PASS", table)
