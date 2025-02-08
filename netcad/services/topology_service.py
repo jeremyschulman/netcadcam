@@ -433,7 +433,10 @@ class TopologyService(DesignService):
         for if_obj, if_node in pass_fail_nodes[False]:
             table = Table()
 
-            check_nodes = GraphQuery(ai.graph)(if_node).out_(kind="r").nodes
+            check_nodes = (
+                GraphQuery(ai.graph)(if_node).out_(service=self.name, kind="r").nodes
+            )
+
             for check_obj in map(ai.nodes_map.inv.__getitem__, check_nodes):
                 table.add_row(self.build_feature_logs_table(check_obj))
 
@@ -458,7 +461,9 @@ class TopologyService(DesignService):
         pass_table = Table("Device", "Interface", "Desc", "Profile", "Logs")
         for if_obj, if_node in pass_fail_nodes[True]:
             table = Table()
-            check_nodes = GraphQuery(ai.graph)(if_node).out_(kind="r").nodes
+            check_nodes = (
+                GraphQuery(ai.graph)(if_node).out_(service=self.name, kind="r").nodes
+            )
             for check_obj in map(ai.nodes_map.inv.__getitem__, check_nodes):
                 table.add_row(self.build_feature_logs_table(check_obj))
 

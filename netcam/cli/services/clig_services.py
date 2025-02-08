@@ -73,6 +73,9 @@ def _show_all(ai, flags):
     if flags.get("brief"):
         table = Table("Service", "Status")
         for svc in ai.design.services.values():
+            if svc.is_subservice and not flags.get("all_results"):
+                continue
+
             table.add_row(
                 svc.name,
                 Text(
@@ -86,6 +89,22 @@ def _show_all(ai, flags):
     ai.show_reports(console)
 
 
-def _show_specific_service(ai, svc: DesignService, flags):
+def _show_specific_service(ai: ServicesAnalyzer, svc: DesignService, flags):
+    if flags.get("brief"):
+        all_svcs = ai.service_graph(svc)
+
+        table = Table("Serice", "Status")
+        for each_svc in all_svcs:
+            table.add_row(
+                each_svc.name,
+                Text(
+                    each_svc.status,
+                    Style(color="red" if each_svc.status == "FAIL" else "green"),
+                ),
+            )
+
+        Console().print(table)
+        return
+
     svc.build_report(ai=ai, flags=flags)
     Console().print("\n\n", svc.report.table)

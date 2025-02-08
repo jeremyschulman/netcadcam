@@ -7,7 +7,6 @@
 from typing import ClassVar
 from dataclasses import dataclass
 from operator import itemgetter
-from itertools import chain
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -19,9 +18,9 @@ from rich.table import Table
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from netcad.feats.vlans import InterfaceL2, VlanProfile
+from netcad.device.profiles import InterfaceProfile
+from netcad.feats.vlans import InterfaceL2, VlanProfile, InterfaceVlan
 from netcad.feats.vlans.checks.check_switchports import SwitchportCheck
-from netcad.feats.topology.checks.check_ipaddrs import IPInterfaceCheck
 
 from .design_service import DesignService
 from .graph_query import GraphQuery
@@ -64,11 +63,17 @@ class SwitchportService(DesignService):
         check_type: ClassVar[str] = "switchport"
 
     def __init__(self, *vargs, config: Config, **kwargs):
+        self.config: SwitchportService.Config = config
         super().__init__(*vargs, config=config, **kwargs)
 
         # key=if_name, value=if_obj
         self.interfaces: dict[str, DeviceInterface] = None
+
+        # set of all VLANs used by the switchports
         self.vlans: set[VlanProfile] = set()
+
+        # the topology service that is used to find the SVI interfaces
+        self.svi_topology: TopologyService = None
 
     def build_design_graph(self, ai: "ServicesAnalyzer"):
         """
@@ -76,6 +81,14 @@ class SwitchportService(DesignService):
         interfaces.  Not all interfaces in the topology are running in Layer2
         switchport mode.  So we need to filter the list of interfaces.
         """
+        # create a parent-child relationship between this service and the
+        # topology service.
+
+        ai.add_service_edge(service=self, source=self.config.topology, target=self)
+
+        # ---------------------------------------------------------------------
+        # Add all the switchport interface profiles to the service graph
+        # ---------------------------------------------------------------------
 
         self.interfaces = {
             if_obj.name: if_obj
@@ -84,12 +97,41 @@ class SwitchportService(DesignService):
         }
 
         for if_obj in self.interfaces.values():
+            # keep track of all VLANs used by the switchports
             self.vlans.update(if_obj.profile.vlans_used())
+
             # Interface Profile ->[s]-> Interface
             ai.add_service_edge(self, if_obj.profile, if_obj)
 
             # Device ->[s]-> Interface
             ai.add_service_edge(self, if_obj.device, if_obj)
+
+        # ---------------------------------------------------------------------
+        # now that we have the VLANs, we can go back and find all the VLAN SVI
+        # interfaces.  We will create an "internal" topology service of just
+        # the SVIs so that we can validate the IP address configuration.
+        # ---------------------------------------------------------------------
+
+        def is_my_svi(_ipf: InterfaceProfile):
+            return isinstance(_ipf, InterfaceVlan) and _ipf.vlan in self.vlans
+
+        self.svi_topology = TopologyService(
+            design=self.design,
+            name=f"{self.name}.svi",
+            owner=self.owner,
+            is_subservice=True,
+            config=TopologyService.Config(
+                topology_feature=self.config.topology.config.topology_feature,
+                match_interface_profile=is_my_svi,
+            ),
+        )
+
+        # create the service relationship between this service and the SVI
+        # topology, then add the SVI topology service to the processing queue.
+
+        ai.add_service_node(self.svi_topology)
+        ai.add_service_edge(service=self, source=self, target=self.svi_topology)
+        ai.services_queue.appendleft(self.svi_topology)
 
     # -------------------------------------------------------------------------
     #
@@ -135,12 +177,6 @@ class SwitchportService(DesignService):
         self._build_report_svi(ai, flags)
 
     def _build_report_vlans(self, flags):
-        self._build_report_vlans(flags)
-        self._build_report_switchports(ai, flags)
-        self._build_report_svi(ai, flags)
-
-    def _build_report_vlans(self, flags):
-
         # ---------------------------------------------------------------------
         # if we do not want to see the details on the VLANs, then show a count
         # of the VLANs.
@@ -220,48 +256,7 @@ class SwitchportService(DesignService):
         self.report.add("Switchports", False, table)
 
     def _build_report_svi(self, ai: ServicesAnalyzer, flags: dict):
-        # find all the IP address check nodes for this service and group them
-        # by "PASS" / "FAIL"
-
-        ipaddr_check_nodes = (
-            GraphQuery(ai.graph)(ai.nodes_map[self.config.topology])
-            .out_()
-            .node(kind_type="interface")
-            .out_(kind="r")
-            .node(check_type=IPInterfaceCheck.check_type_())
-            .groupby(itemgetter("status"))
+        self.svi_topology.build_report(ai, flags)
+        self.report.add(
+            "SVIs", self.svi_topology.status == "PASS", self.svi_topology.report.table
         )
-
-        # if everything passes, but we do not want to see the details, then
-        # simply show the pass count.
-
-        if not ipaddr_check_nodes["FAIL"] and not flags.get("all_results"):
-            self.report.add("SVIs", True, {"count": len(ipaddr_check_nodes["PASS"])})
-            return
-
-        # if we are here, then it means we either have failures or we want to
-        # see the details of all SVIs checks.  We are going to have two
-        # separaete line items in the report table, one for PASS and another.
-        # for fail.
-
-        for status, chk_nodes in chain(ipaddr_check_nodes.items()):
-            table = Table("Device", "Interface", "IP Address", "Logs")
-            chk_objs = map(ai.nodes_map.inv.__getitem__, chk_nodes)
-
-            # sort the checks by device name
-            for chk_obj in sorted(chk_objs, key=lambda c: c.device):
-                # only show details for failed checks.
-
-                deets = (
-                    self.build_feature_logs_table(chk_obj) if status == "FAIL" else None
-                )
-
-                table.add_row(
-                    chk_obj.device,
-                    chk_obj.check_id,
-                    chk_obj.measurement.if_ipaddr,
-                    deets,
-                )
-
-            if table.rows:
-                self.report.add("SVIs", status == "PASS", table)

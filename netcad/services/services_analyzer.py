@@ -6,7 +6,7 @@
 # -----------------------------------------------------------------------------
 
 from typing import TYPE_CHECKING, Iterator
-from collections import defaultdict
+from collections import defaultdict, deque
 import json
 from pathlib import Path
 
@@ -56,11 +56,11 @@ class ServicesAnalyzer:
         # -----------------------------------------------------------------------------
         # Results-Map Data Structure
         # -----------------------------------------------------------------------------
-        # key=device (object),
+        # key=device (Device),
         # value=dict
-        #   key=check-type,
+        #   key=check-type (str),
         #   value=dict
-        #       key=check-id,
+        #       key=check-id (str),
         #       value=CheckResult
         # -----------------------------------------------------------------------------
 
@@ -68,6 +68,11 @@ class ServicesAnalyzer:
 
         # maps any object to a graph-node.
         self.nodes_map: NodeObjIDMapT = bidict()
+
+        # this queue is used for processing services; so that a service can
+        # define a subservice within itself, and the subservice can be
+        # processed after the parent service is processed.
+        self.services_queue = deque()
 
         # load all check results so they can be incorporated into the analysis graph.
         self._load_feature_results()
@@ -94,6 +99,17 @@ class ServicesAnalyzer:
 
         self.nodes_map[obj] = self.graph.add_vertex(obj, **kwargs)
         return True
+
+    def add_service_node(self, service: "DesignService"):
+        self.add_node(
+            service,
+            kind="s",
+            kind_type=service.__class__.__name__,
+            service=service.name,
+            pass_count=0,
+            fail_count=0,
+            status="PASS",
+        )
 
     def add_design_node(self, obj, kind_type, **kwargs):
         return self.add_node(
@@ -151,7 +167,12 @@ class ServicesAnalyzer:
         This function is responsible for producing the services results graphs
         for each service in the design.
         """
-        for svc in self.design.services.values():
+        self.services_queue.extend(self.design.services.values())
+        while True:
+            try:
+                svc = self.services_queue.popleft()
+            except IndexError:
+                break
             svc.build(ai=self)
 
     async def check(self):
@@ -207,6 +228,37 @@ class ServicesAnalyzer:
                 raise ValueError(
                     f"Analyzer failed due to missing counters in node: {target.attributes()}"
                 )
+
+    def service_graph(self, svc: "DesignService") -> Iterator[DesignService]:
+        """
+        This function returns the set of service nodes that are associated with the given service.
+        """
+        walk_nodes = [self.nodes_map[svc]]
+        svc_nodes = list()
+
+        while walk_nodes:
+            if (node := walk_nodes.pop()) in svc_nodes:
+                continue
+
+            svc_name = node["service"]
+            svc_nodes.append(node)
+
+            edges = (
+                edge
+                for edge in node.all_edges()
+                if edge["kind"] == "s" and edge["service"] == svc_name
+            )
+
+            next_nodes = (
+                vertex
+                for edge in edges
+                for vertex in edge.vertex_tuple
+                if vertex["kind"] == "s" and vertex not in svc_nodes
+            )
+
+            walk_nodes.extend(next_nodes)
+
+        return map(self.nodes_map.inverse.get, svc_nodes)
 
     # -------------------------------------------------------------------------
     #
