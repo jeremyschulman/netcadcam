@@ -8,12 +8,14 @@
 from typing import Tuple, List
 import asyncio
 from pathlib import Path
+import toml
 
 # -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
 
 import click
+import aiofiles
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -138,8 +140,17 @@ async def _build_device_checks(device: Device, tc_dir: Path):
     # for each service that is bound on the device, iterate over each of the
     # testing features associated with that service; build the test-cases for
     # the device and save to a JSON data file.
+
+    feature_checks = dict()
+
     for service_obj in device.features.values():
         for tc_svccls in service_obj.check_collections:
             if not (test_cases := tc_svccls.build(device, design_feature=service_obj)):
                 continue
+
+            feature_checks[tc_svccls.name] = service_obj.name
+
             await test_cases.save(dev_tc_dir)
+
+    async with aiofiles.open(dev_tc_dir / "feature-checks.toml", "w") as f:
+        await f.write(toml.dumps(feature_checks))
