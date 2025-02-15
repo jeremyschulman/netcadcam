@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, UniqueConstraint
+from sqlalchemy import Column, Integer, String, UniqueConstraint, Index
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.dialects.postgresql import JSONB
 
@@ -17,6 +17,7 @@ class CheckResultTable(TableBase):
     result = Column(JSONB)
 
     __table_args__ = (
+        Index("device", "feature", "check_type", "check_id"),
         UniqueConstraint(
             "device",
             "feature",
