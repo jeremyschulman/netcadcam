@@ -279,8 +279,8 @@ class ServicesAnalyzer:
 
         db.close()
 
+    @staticmethod
     def _load_check_type_results(
-        self,
         db: sqlalchemy.Engine,
         feature: "DesignFeature",
         device: "Device",
