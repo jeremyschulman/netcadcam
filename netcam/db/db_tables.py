@@ -1,3 +1,7 @@
+#  Copyright (c) 2025 Jeremy Schulman
+#  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+
 from sqlalchemy import Column, Integer, String, UniqueConstraint, Index
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.dialects.postgresql import JSONB
@@ -10,6 +14,7 @@ class CheckResultTable(TableBase):
 
     id = Column(Integer, primary_key=True)
     feature = Column(String, nullable=False)
+    collection = Column(String, nullable=False)
     device = Column(String, nullable=False)
     check_type = Column(String, nullable=False)
     check_id = Column(String, nullable=False)

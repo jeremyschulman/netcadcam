@@ -76,5 +76,6 @@ async def device_checks_save_results(
         db_check_results_save,
         device=dut.device,
         feature_name=feat_name,
+        collection=filename,
         results=json_payload,
     )

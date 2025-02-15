@@ -7,8 +7,6 @@
 
 from typing import TYPE_CHECKING, Iterator
 from collections import defaultdict, deque
-import json
-from pathlib import Path
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -17,18 +15,20 @@ from pathlib import Path
 from bidict import bidict
 import igraph
 from rich.console import Console
+import sqlalchemy
 
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from ..config import netcad_globals
-from ..checks import CheckCollectionT, CheckResult, CheckStatus
-
 if TYPE_CHECKING:
     from netcad.device import Device
     from netcad.design import Design, DesignFeature
 
+from netcam.db import db_connect
+from netcam.db.db_check_results import db_check_results_get
+
+from ..checks import CheckCollectionT, CheckResult, CheckStatus
 from .design_service import DesignService
 from .services_typedefs import ResultMapT, NodeObjIDMapT
 
@@ -267,30 +267,39 @@ class ServicesAnalyzer:
     # -------------------------------------------------------------------------
 
     def _load_feature_results(self):
+        db = db_connect(db_name=self.design.name)
+
         for feat in self.design.features.values():
-            for check_type in feat.check_collections:
+            for collection in feat.check_collections:
                 for device in self.devices:
-                    result_objs = self._load_check_type_results(device, check_type)
+                    result_objs = self._load_check_type_results(
+                        db, feat, device, collection
+                    )
                     self._add_result_nodes(device, feature=feat, results=result_objs)
 
+        db.close()
+
     def _load_check_type_results(
-        self, device: "Device", check_type: CheckCollectionT
+        self,
+        db: sqlalchemy.Engine,
+        feature: "DesignFeature",
+        device: "Device",
+        collection: CheckCollectionT,
     ) -> Iterator[dict]:
         # if the check results file does not exist, then return an empty
         # iterator so the calling scope is AOK.
 
-        results_file = self._device_results_file(device, check_type)
-
-        if not results_file.exists():
-            return ()
+        results = db_check_results_get(
+            db, device.name, feature.name, collection=collection.name
+        )
 
         # TODO: for now only include the PASS/FAIL status results.  We should
         #       add the INFO nodes to the graph as there could be meaningful
         #       use of these nodes for report processing.
 
         return (
-            check_type.parse_result(res_obj)
-            for res_obj in json.load(results_file.open())
+            collection.parse_result(res_obj)
+            for res_obj in results
             if res_obj["status"] in ("PASS", "FAIL")
         )
 
@@ -319,15 +328,3 @@ class ServicesAnalyzer:
             )
 
             self.results_map[device][check_type][res_obj.check_id] = res_obj
-
-    @staticmethod
-    def _device_results_file(device: "Device", check_type: CheckCollectionT) -> Path:
-        check_name = check_type.get_name()
-        base_dir = netcad_globals.g_netcad_checks_dir
-        return (
-            base_dir
-            / device.design.name
-            / device.name
-            / "results"
-            / f"{check_name}.json"
-        )

@@ -1,8 +1,25 @@
+#  Copyright (c) 2025 Jeremy Schulman
+#  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+
+# -----------------------------------------------------------------------------
+# System Imports
+# -----------------------------------------------------------------------------
+
 import os
 from functools import cache
-import sqlalchemy
+
+# -----------------------------------------------------------------------------
+# Public Imports
+# -----------------------------------------------------------------------------
+
 from sqlalchemy import create_engine, text, MetaData
 from sqlalchemy.orm import sessionmaker
+
+# -----------------------------------------------------------------------------
+# Private Imports
+# -----------------------------------------------------------------------------
+
 from .db_tables import TableBase
 
 
@@ -29,8 +46,8 @@ def db_init(db_name: str):
     TableBase.metadata.create_all(eng)
 
 
-def db_connect(db_name: str) -> sqlalchemy.Engine:
-    return create_engine(db_url(db_name))
+def db_connect(db_name: str):
+    return sessionmaker(bind=create_engine(db_url(db_name)))()
 
 
 def db_delete(db_name: str):
