@@ -77,9 +77,12 @@ def get_transciver_type_alias(xcvr_type: str) -> str | None:
 
 @lru_cache()
 def transceiver_type_matches(given_type: str, expected_type: str) -> bool:
+    options = get_transciver_type_alias(given_type)
+
     return (
-        given_type == expected_type
-        or get_transciver_type_alias(given_type) == expected_type
+        expected_type in options
+        if isinstance(options, list)
+        else (options == expected_type)
     )
 
 
