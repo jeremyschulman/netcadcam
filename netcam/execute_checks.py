@@ -246,5 +246,9 @@ async def run_tests(dut: AsyncDeviceUnderTest, log: Logger):
                 )
 
             await device_checks_save_results(
-                dut, tc_name, results, results_dir=dev_resuls_dir
+                dut,
+                feat_name=ds_name,
+                filename=tc_name,
+                results=results,
+                results_dir=dev_resuls_dir,
             )

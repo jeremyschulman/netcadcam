@@ -8,7 +8,7 @@
 import json
 from typing import List
 from pathlib import Path
-
+import asyncio
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -22,6 +22,7 @@ import aiofiles
 
 from netcad.checks import CheckResult
 from .dut import AsyncDeviceUnderTest
+from netcam.db.db_check_results import db_check_results_save
 
 # -----------------------------------------------------------------------------
 # Exports
@@ -32,6 +33,7 @@ __all__ = ["device_checks_save_results"]
 
 async def device_checks_save_results(
     dut: AsyncDeviceUnderTest,
+    feat_name: str,
     filename: str,
     results: List[CheckResult],
     results_dir: Path,
@@ -42,6 +44,9 @@ async def device_checks_save_results(
     ----------
     dut:
         The device under test.
+
+    feat_name:
+        The design feature name, "topology" for example.
 
     filename:
         The name of the JSON file to save, without the .json extension.
@@ -62,5 +67,14 @@ async def device_checks_save_results(
         payload["check_id"] = res.check.check_id()
         json_payload.append(payload)
 
+    # save the results to a local JSON file.
+
     async with aiofiles.open(results_file, "w+") as ofile:
         await ofile.write(json.dumps(json_payload, indent=3))
+
+    await asyncio.to_thread(
+        db_check_results_save,
+        device=dut.device,
+        feature_name=feat_name,
+        results=json_payload,
+    )
