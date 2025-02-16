@@ -21,6 +21,8 @@ from sqlalchemy.dialects.postgresql import insert
 # Private Imports
 # -----------------------------------------------------------------------------
 
+from netcad.logger import get_logger
+
 if TYPE_CHECKING:
     from netcad.device import Device
     from netcad.design import Design, DesignFeature
@@ -168,6 +170,8 @@ class ServicesAnalyzer:
         This function is responsible for producing the services results graphs
         for each service in the design.
         """
+        log = get_logger()
+
         self._load_feature_results()
 
         self.services_queue.extend(self.design.services.values())
@@ -177,10 +181,14 @@ class ServicesAnalyzer:
                 svc = self.services_queue.popleft()
             except IndexError:
                 break
+            log.info("Building service: %s", svc.name)
             svc.build(ai=self)
 
     async def check(self):
+        log = get_logger()
+
         for svc in self.design.services.values():
+            log.info("Checking service: %s", svc.name)
             await svc.check(ai=self)
             self.analyze(svc)
 
@@ -297,6 +305,9 @@ class ServicesAnalyzer:
 
     def db_find(self, table, **filter_by):
         return self.db.query(table).filter_by(**filter_by).first()
+
+    def db_find_all(self, table, **filter_by):
+        return self.db.query(table).filter_by(**filter_by).all()
 
     # -------------------------------------------------------------------------
     #

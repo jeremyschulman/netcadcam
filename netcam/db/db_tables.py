@@ -2,7 +2,15 @@
 #  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 
-from sqlalchemy import Column, Integer, String, UniqueConstraint, Index, ForeignKey
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    UniqueConstraint,
+    Index,
+    ForeignKey,
+    Boolean,
+)
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.dialects.postgresql import JSONB
 
@@ -75,4 +83,20 @@ class CheckResultTable(TableBase):
             "status",
             name="uix_device_feature_check",
         ),
+    )
+
+
+class ServiceCheckResultTable(TableBase):
+    __tablename__ = "service_check_results"
+
+    id = Column(Integer, primary_key=True)
+    node_id = Column(Integer, nullable=False)
+    service = Column(String, nullable=False)
+    check_type = Column(String, nullable=False)
+    check_id = Column(String, nullable=False, default="0")
+    ok = Column(Boolean)
+    result = Column(JSONB)
+
+    __table_args__ = (
+        UniqueConstraint("service", "check_type", name="unq_service_check"),
     )

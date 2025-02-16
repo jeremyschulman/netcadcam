@@ -20,6 +20,8 @@ from igraph import Graph
 from netcad.design import load_design
 from netcad.services import ServicesAnalyzer, DesignService
 from netcad.cli.common_opts import opt_designs
+from netcam.db import db_tables
+
 from ..cli_netcam_show import clig_show
 
 # -----------------------------------------------------------------------------
@@ -66,10 +68,14 @@ def _show_all(ai, flags):
             if svc.is_subservice and not flags.get("all_results"):
                 continue
 
+            svc_rec = ai.db_find(table=db_tables.ServicesTable, name=svc.name)
+            svc_node = ai.graph.vs[svc_rec.node_id]
+            svc_status = svc_node["status"]
+
             table.add_row(
                 svc.name,
                 Text(
-                    svc.status, Style(color="red" if svc.status == "FAIL" else "green")
+                    svc.status, Style(color="red" if svc_status == "FAIL" else "green")
                 ),
             )
 
