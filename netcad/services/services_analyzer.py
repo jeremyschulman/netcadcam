@@ -25,10 +25,10 @@ if TYPE_CHECKING:
     from netcad.device import Device
     from netcad.design import Design, DesignFeature
 
-from netcam.db import db_connect
+from netcam.db import db_connect, db_tables
 from netcam.db.db_check_results import db_check_results_get
 
-from ..checks import CheckCollectionT, CheckResult, CheckStatus
+from ..checks import CheckCollectionT, CheckStatus
 from .design_service import DesignService
 from .services_typedefs import ResultMapT, NodeObjIDMapT
 
@@ -76,9 +76,6 @@ class ServicesAnalyzer:
 
         self.db = db_connect(db_name=self.design.name)
         self.db_obj_map = bidict()
-
-        # load all check results so they can be incorporated into the analysis graph.
-        self._load_feature_results()
 
     # -------------------------------------------------------------------------
     # node methods
@@ -171,7 +168,10 @@ class ServicesAnalyzer:
         This function is responsible for producing the services results graphs
         for each service in the design.
         """
+        self._load_feature_results()
+
         self.services_queue.extend(self.design.services.values())
+
         while True:
             try:
                 svc = self.services_queue.popleft()
@@ -185,7 +185,16 @@ class ServicesAnalyzer:
             self.analyze(svc)
 
     def build_reports(self, flags):
-        for svc in self.design.services.values():
+        self._import_feature_results()
+
+        self.services_queue.extend(self.design.services.values())
+
+        while True:
+            try:
+                svc = self.services_queue.popleft()
+            except IndexError:
+                break
+
             svc.build_report(ai=self, flags=flags)
 
     def show_reports(self, console: Console):
@@ -286,10 +295,6 @@ class ServicesAnalyzer:
         filter_by = {k: kwargs[k] for k in key}
         return self.db.query(table).filter_by(**filter_by).first()
 
-    def db_add(self, table, **kwargs):
-        self.db.add(table(**kwargs))
-        self.db.commit()
-
     def db_find(self, table, **filter_by):
         return self.db.query(table).filter_by(**filter_by).first()
 
@@ -299,42 +304,68 @@ class ServicesAnalyzer:
     #
     # -------------------------------------------------------------------------
 
+    def _import_feature_results(self):
+        for feat in self.design.features.values():
+            for collection in feat.check_collections:
+                for device in self.devices:
+                    records = db_check_results_get(
+                        self.db, device.name, feat.name, collection=collection.name
+                    )
+
+                    self._import_result_nodes(
+                        device, feature=feat, collection=collection, records=records
+                    )
+
+    def _import_result_nodes(
+        self,
+        device: "Device",
+        feature: "DesignFeature",
+        collection: CheckCollectionT,
+        records: Iterator[db_tables.CheckResultTable],
+    ):
+        for rec in records:
+            if rec.result["status"] not in ("PASS", "FAIL"):
+                continue
+
+            res_obj = collection.parse_result(rec.result)
+            check = res_obj.check
+            check_type = check.check_type
+
+            found = self.graph.vs.select(
+                device=device.name,
+                feature=feature.name,
+                check_type=check_type,
+                check_id=res_obj.check_id,
+                kind="r",
+            )
+
+            self.nodes_map[res_obj] = found[0]
+            self.results_map[device][check_type][res_obj.check_id] = res_obj
+
     def _load_feature_results(self):
         for feat in self.design.features.values():
             for collection in feat.check_collections:
                 for device in self.devices:
-                    result_objs = self._load_check_type_results(
-                        feat, device, collection
+                    records = db_check_results_get(
+                        self.db, device.name, feat.name, collection=collection.name
                     )
-                    self._add_result_nodes(device, feature=feat, results=result_objs)
 
-    def _load_check_type_results(
-        self,
-        feature: "DesignFeature",
-        device: "Device",
-        collection: CheckCollectionT,
-    ) -> Iterator[dict]:
-        # if the check results file does not exist, then return an empty
-        # iterator so the calling scope is AOK.
-
-        results = db_check_results_get(
-            self.db, device.name, feature.name, collection=collection.name
-        )
-
-        # TODO: for now only include the PASS/FAIL status results.  We should
-        #       add the INFO nodes to the graph as there could be meaningful
-        #       use of these nodes for report processing.
-
-        return (
-            collection.parse_result(res_obj)
-            for res_obj in results
-            if res_obj["status"] in ("PASS", "FAIL")
-        )
+                    self._add_result_nodes(
+                        device, feature=feat, collection=collection, records=records
+                    )
 
     def _add_result_nodes(
-        self, device: "Device", feature: "DesignFeature", results: Iterator[CheckResult]
+        self,
+        device: "Device",
+        feature: "DesignFeature",
+        collection: CheckCollectionT,
+        records: Iterator[db_tables.CheckResultTable],
     ):
-        for res_obj in results:
+        for rec in records:
+            if rec.result["status"] not in ("PASS", "FAIL"):
+                continue
+
+            res_obj = collection.parse_result(rec.result)
             check = res_obj.check
             check_type = check.check_type
 
@@ -352,6 +383,7 @@ class ServicesAnalyzer:
                 status=str(res_obj.status),
                 device=res_obj.device,
                 kind="r",
+                rec_id=rec.id,
                 **counts,
             )
 

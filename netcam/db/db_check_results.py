@@ -18,7 +18,6 @@ from sqlalchemy.dialects.postgresql import insert
 # -----------------------------------------------------------------------------
 
 from netcad.device import Device
-
 from .db_funcs import db_connect
 from .db_tables import CheckResultTable
 
@@ -56,11 +55,9 @@ def db_check_results_save(
 
 def db_check_results_get(
     session, device: str, feature: str, collection: str
-) -> Iterator[dict]:
-    records = session.query(CheckResultTable).filter(
+) -> Iterator[CheckResultTable]:
+    return session.query(CheckResultTable).filter(
         CheckResultTable.device == device,
         CheckResultTable.feature == feature,
         CheckResultTable.collection == collection,
     )
-
-    return (rec.result for rec in records)

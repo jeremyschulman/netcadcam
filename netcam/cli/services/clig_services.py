@@ -54,15 +54,15 @@ def clig_reports(designs: Tuple[str], service_names: Sequence[str], **flags):
 
     ai.graph.write_graphml(f"{design.name}.graphml")
 
-    if not service_names:
-        _show_all(ai, flags)
-        return
-
-    for name in service_names:
-        if not (svc := design.services.get(name)):
-            continue
-
-        _show_specific_service(ai, svc, flags)
+    # if not service_names:
+    #     _show_all(ai, flags)
+    #     return
+    #
+    # for name in service_names:
+    #     if not (svc := design.services.get(name)):
+    #         continue
+    #
+    #     _show_specific_service(ai, svc, flags)
 
 
 def _show_all(ai, flags):

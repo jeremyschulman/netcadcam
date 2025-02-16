@@ -351,7 +351,7 @@ class TopologyService(DesignService):
     #
     # -------------------------------------------------------------------------
 
-    def _load_db(self, ai: ServicesAnalyzer):
+    def load_db(self, ai: ServicesAnalyzer):
         svc_rec = ai.db_find(table=db_tables.ServicesTable, name=self.name)
         ai.db_obj_map[self] = svc_rec
 
@@ -367,7 +367,7 @@ class TopologyService(DesignService):
             ai.db_obj_map[if_obj] = if_rec
 
     def build_report(self, ai: ServicesAnalyzer, flags):
-        self._load_db(ai)
+        self.load_db(ai)
 
         self.report = DesignServiceReport(title=f"Topology Service Report: {self.name}")
         self._build_report_devices(ai, flags)

@@ -60,8 +60,6 @@ def clig_reports(designs: Tuple[str], service_names: Sequence[str], **flags):
 def _show_all(ai, flags):
     console = Console()
 
-    ai.build_reports(flags=flags)
-
     if flags.get("brief"):
         table = Table("Service", "Status")
         for svc in ai.design.services.values():

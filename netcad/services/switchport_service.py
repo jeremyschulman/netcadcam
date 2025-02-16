@@ -28,8 +28,6 @@ from .service_report import DesignServiceReport
 from .service_check import DesignServiceCheck
 from .topology_service import TopologyService
 from .services_analyzer import ServicesAnalyzer
-from ..device import DeviceInterface
-
 
 # -----------------------------------------------------------------------------
 #
@@ -67,10 +65,17 @@ class SwitchportService(DesignService):
         super().__init__(*vargs, config=config, **kwargs)
 
         # key=if_name, value=if_obj
-        self.interfaces: dict[str, DeviceInterface] = None
+        self.interfaces = {
+            if_obj.name: if_obj
+            for if_obj in self.config.topology.interfaces
+            if if_obj.profile and isinstance(if_obj.profile, InterfaceL2)
+        }
 
         # set of all VLANs used by the switchports
         self.vlans: set[VlanProfile] = set()
+
+        for if_obj in self.interfaces.values():
+            self.vlans.update(if_obj.profile.vlans_used())
 
         # the topology service that is used to find the SVI interfaces
         self.svi_topology: TopologyService = None
@@ -90,16 +95,7 @@ class SwitchportService(DesignService):
         # Add all the switchport interface profiles to the service graph
         # ---------------------------------------------------------------------
 
-        self.interfaces = {
-            if_obj.name: if_obj
-            for if_obj in self.config.topology.interfaces
-            if if_obj.profile and isinstance(if_obj.profile, InterfaceL2)
-        }
-
         for if_obj in self.interfaces.values():
-            # keep track of all VLANs used by the switchports
-            self.vlans.update(if_obj.profile.vlans_used())
-
             # Interface Profile ->[s]-> Interface
             ai.add_service_edge(self, if_obj.profile, if_obj)
 
@@ -112,6 +108,15 @@ class SwitchportService(DesignService):
         # the SVIs so that we can validate the IP address configuration.
         # ---------------------------------------------------------------------
 
+        self._build_svi_topology(ai)
+
+        # create the service relationship between this service and the SVI
+        # topology, then add the SVI topology service to the processing queue.
+
+        ai.add_service_node(self.svi_topology)
+        ai.add_service_edge(service=self, source=self, target=self.svi_topology)
+
+    def _build_svi_topology(self, ai: ServicesAnalyzer):
         def is_my_svi(_ipf: InterfaceProfile):
             return isinstance(_ipf, InterfaceVlan) and _ipf.vlan in self.vlans
 
@@ -126,11 +131,6 @@ class SwitchportService(DesignService):
             ),
         )
 
-        # create the service relationship between this service and the SVI
-        # topology, then add the SVI topology service to the processing queue.
-
-        ai.add_service_node(self.svi_topology)
-        ai.add_service_edge(service=self, source=self, target=self.svi_topology)
         ai.services_queue.appendleft(self.svi_topology)
 
     # -------------------------------------------------------------------------
@@ -222,6 +222,7 @@ class SwitchportService(DesignService):
 
         if not flags.get("all_results"):
             self.report.add("Switchports", True, {"count": len(set(pass_objs))})
+
         else:
             table = Table("Device", "Interface", "Desc", "Logs")
 
@@ -256,6 +257,7 @@ class SwitchportService(DesignService):
         self.report.add("Switchports", False, table)
 
     def _build_report_svi(self, ai: ServicesAnalyzer, flags: dict):
+        self._build_svi_topology(ai)
         self.svi_topology.build_report(ai, flags)
         self.report.add(
             "SVIs", self.svi_topology.status == "PASS", self.svi_topology.report.table
