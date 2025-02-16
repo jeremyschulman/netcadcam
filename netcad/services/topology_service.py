@@ -15,6 +15,7 @@ from collections import Counter, defaultdict
 # -----------------------------------------------------------------------------
 
 from rich.table import Table
+from sqlalchemy.dialects.postgresql import Insert
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -30,7 +31,7 @@ from netcad.feats.topology.checks.check_interfaces import InterfaceCheck
 from netcad.feats.topology.checks.check_cabling_nei import InterfaceCablingCheck
 from netcad.feats.topology.checks.check_ipaddrs import IPInterfaceCheck
 from netcad.feats.topology.checks.check_transceivers import TransceiverCheck
-
+from netcam.db import db_tables
 from .graph_query import GraphQuery
 from .service_check import DesignServiceCheck
 from .service_report import DesignServiceReport, color_pass_fail
@@ -158,25 +159,60 @@ class TopologyService(DesignService):
                 (I.profile) -[is assigned to]> (I)
                 (I.profile) -[has]-> (IP_addr)
         """
-
         for dev_obj in self.devices:
-            ai.add_design_node(dev_obj, kind_type="device", device=dev_obj.name)
-            # DO NOT create a service edge between the device and interface
-            # because we do not want "any device error" cause the service to
-            # report a failure.  The service should only fail if the device
-            # interfaces have errors.
+            ai.db.execute(
+                Insert(db_tables.DeviceTable)
+                .values(
+                    name=dev_obj.name,
+                    alias=dev_obj.alias,
+                    os=dev_obj.os_name,
+                    device_type=dev_obj.device_type,
+                )
+                .on_conflict_do_nothing(index_elements=["name"])
+            )
+
+            ai.db.commit()
+
+            dev_rec = (
+                ai.db.query(db_tables.DeviceTable).filter_by(name=dev_obj.name).first()
+            )
+            ai.db_obj_map[dev_obj] = dev_rec
+
+            ai.add_design_node(dev_obj, kind_type="device", rec_id=dev_rec.id)
+
+            # NOTE:  DO NOT create a service edge between the device and
+            # interface because we do not want "any device error" cause the
+            # service to report a failure.  The service should only fail if the
+            # device interfaces have errors.
 
         self._build_design_interfaces(ai)
 
     def _build_design_interfaces(self, ai: ServicesAnalyzer):
         for if_obj in self.interfaces:
+            dev_rec = ai.db_obj_map[if_obj.device]
+
+            ai.db.execute(
+                Insert(db_tables.InterfacesTable)
+                .values(
+                    name=if_obj.name,
+                    desc=if_obj.desc,
+                    profile=if_obj.profile.name,
+                    device_id=dev_rec.id,
+                )
+                .on_conflict_do_nothing(index_elements=["device_id", "name"])
+            )
+
+            ai.db.commit()
+            if_rec = (
+                ai.db.query(db_tables.InterfacesTable)
+                .filter_by(name=if_obj.name, device=dev_rec)
+                .first()
+            )
+            ai.db_obj_map[if_obj] = if_rec
+
             # design edge between device and interface (only once)
-            if ai.add_design_node(
-                if_obj,
-                kind_type="interface",
-                device=if_obj.device.name,
-                if_name=if_obj.name,
-            ):
+
+            if ai.add_design_node(if_obj, kind_type="interface", rec_id=if_rec.id):
                 ai.add_design_edge(if_obj.device, if_obj)
 
             # always add service edge between device and interface

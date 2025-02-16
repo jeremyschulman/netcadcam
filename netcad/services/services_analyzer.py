@@ -15,7 +15,6 @@ from collections import defaultdict, deque
 from bidict import bidict
 import igraph
 from rich.console import Console
-import sqlalchemy
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -73,6 +72,9 @@ class ServicesAnalyzer:
         # define a subservice within itself, and the subservice can be
         # processed after the parent service is processed.
         self.services_queue = deque()
+
+        self.db = db_connect(db_name=self.design.name)
+        self.db_obj_map = bidict()
 
         # load all check results so they can be incorporated into the analysis graph.
         self._load_feature_results()
@@ -267,21 +269,16 @@ class ServicesAnalyzer:
     # -------------------------------------------------------------------------
 
     def _load_feature_results(self):
-        db = db_connect(db_name=self.design.name)
-
         for feat in self.design.features.values():
             for collection in feat.check_collections:
                 for device in self.devices:
                     result_objs = self._load_check_type_results(
-                        db, feat, device, collection
+                        feat, device, collection
                     )
                     self._add_result_nodes(device, feature=feat, results=result_objs)
 
-        db.close()
-
-    @staticmethod
     def _load_check_type_results(
-        db: sqlalchemy.Engine,
+        self,
         feature: "DesignFeature",
         device: "Device",
         collection: CheckCollectionT,
@@ -290,7 +287,7 @@ class ServicesAnalyzer:
         # iterator so the calling scope is AOK.
 
         results = db_check_results_get(
-            db, device.name, feature.name, collection=collection.name
+            self.db, device.name, feature.name, collection=collection.name
         )
 
         # TODO: for now only include the PASS/FAIL status results.  We should

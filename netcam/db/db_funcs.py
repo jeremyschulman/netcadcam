@@ -51,7 +51,7 @@ def db_connect(db_name: str):
 
 
 def db_delete(db_name: str):
-    eng = create_engine(db_url(""), isolation_level="AUTOCOMMIT")
+    eng = create_engine(db_url("postgres"), isolation_level="AUTOCOMMIT")
 
     with eng.connect() as conn:
         conn.execute(text(f"DROP DATABASE {db_name}"))
