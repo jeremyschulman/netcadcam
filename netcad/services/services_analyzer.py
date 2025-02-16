@@ -15,6 +15,7 @@ from collections import defaultdict, deque
 from bidict import bidict
 import igraph
 from rich.console import Console
+from sqlalchemy.dialects.postgresql import insert
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -261,6 +262,34 @@ class ServicesAnalyzer:
             walk_nodes.extend(next_nodes)
 
         return map(self.nodes_map.inverse.get, svc_nodes)
+
+    # -------------------------------------------------------------------------
+    #
+    #                             Database Methods
+    #
+    # -------------------------------------------------------------------------
+
+    def db_upsert(self, table, key, **kwargs):
+        stmt = insert(table).values(**kwargs)
+
+        stmt = stmt.on_conflict_do_update(
+            index_elements=key,
+            set_={"node_id": stmt.excluded.node_id},
+            where=(table.node_id != stmt.excluded.node_id),
+        )
+
+        self.db.execute(stmt)
+        self.db.commit()
+
+        filter_by = {k: kwargs[k] for k in key}
+        return self.db.query(table).filter_by(**filter_by).first()
+
+    def db_add(self, table, **kwargs):
+        self.db.add(table(**kwargs))
+        self.db.commit()
+
+    def db_find(self, table, **filter_by):
+        return self.db.query(table).filter_by(**filter_by).first()
 
     # -------------------------------------------------------------------------
     #

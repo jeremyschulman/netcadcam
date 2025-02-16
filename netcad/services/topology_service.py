@@ -15,7 +15,6 @@ from collections import Counter, defaultdict
 # -----------------------------------------------------------------------------
 
 from rich.table import Table
-from sqlalchemy.dialects.postgresql import Insert
 
 # -----------------------------------------------------------------------------
 # Private Imports
@@ -160,30 +159,25 @@ class TopologyService(DesignService):
                 (I.profile) -[has]-> (IP_addr)
         """
         for dev_obj in self.devices:
-            ai.db.execute(
-                Insert(db_tables.DeviceTable)
-                .values(
-                    name=dev_obj.name,
-                    alias=dev_obj.alias,
-                    os=dev_obj.os_name,
-                    device_type=dev_obj.device_type,
-                )
-                .on_conflict_do_nothing(index_elements=["name"])
-            )
-
-            ai.db.commit()
-
-            dev_rec = (
-                ai.db.query(db_tables.DeviceTable).filter_by(name=dev_obj.name).first()
-            )
-            ai.db_obj_map[dev_obj] = dev_rec
-
-            ai.add_design_node(dev_obj, kind_type="device", rec_id=dev_rec.id)
+            ai.add_design_node(dev_obj, kind_type="device")
+            dev_node = ai.nodes_map[dev_obj]
 
             # NOTE:  DO NOT create a service edge between the device and
             # interface because we do not want "any device error" cause the
             # service to report a failure.  The service should only fail if the
             # device interfaces have errors.
+
+            dev_rec = ai.db_upsert(
+                table=db_tables.DeviceTable,
+                key=["name"],
+                name=dev_obj.name,
+                alias=dev_obj.alias,
+                os=dev_obj.os_name,
+                device_type=dev_obj.device_type,
+                node_id=dev_node.index,
+            )
+
+            ai.db_obj_map[dev_obj] = dev_rec
 
         self._build_design_interfaces(ai)
 
@@ -191,29 +185,23 @@ class TopologyService(DesignService):
         for if_obj in self.interfaces:
             dev_rec = ai.db_obj_map[if_obj.device]
 
-            ai.db.execute(
-                Insert(db_tables.InterfacesTable)
-                .values(
+            # design edge between device and interface (only once)
+
+            if ai.add_design_node(if_obj, kind_type="interface"):
+                ai.add_design_edge(if_obj.device, if_obj)
+                if_node = ai.nodes_map[if_obj]
+
+                if_rec = ai.db_upsert(
+                    table=db_tables.InterfacesTable,
+                    key=["device_id", "name"],
                     name=if_obj.name,
                     desc=if_obj.desc,
                     profile=if_obj.profile.name,
                     device_id=dev_rec.id,
+                    node_id=if_node.index,
                 )
-                .on_conflict_do_nothing(index_elements=["device_id", "name"])
-            )
 
-            ai.db.commit()
-            if_rec = (
-                ai.db.query(db_tables.InterfacesTable)
-                .filter_by(name=if_obj.name, device=dev_rec)
-                .first()
-            )
-            ai.db_obj_map[if_obj] = if_rec
-
-            # design edge between device and interface (only once)
-
-            if ai.add_design_node(if_obj, kind_type="interface", rec_id=if_rec.id):
-                ai.add_design_edge(if_obj.device, if_obj)
+                ai.db_obj_map[if_obj] = if_rec
 
             # always add service edge between device and interface
             ai.add_service_edge(self, if_obj.device, if_obj)
@@ -363,7 +351,24 @@ class TopologyService(DesignService):
     #
     # -------------------------------------------------------------------------
 
+    def _load_db(self, ai: ServicesAnalyzer):
+        svc_rec = ai.db_find(table=db_tables.ServicesTable, name=self.name)
+        ai.db_obj_map[self] = svc_rec
+
+        for dev in self.devices:
+            dev_rec = ai.db_find(table=db_tables.DeviceTable, name=dev.name)
+            ai.db_obj_map[dev] = dev_rec
+
+        for if_obj in self.interfaces:
+            dev_rec = ai.db_obj_map[if_obj.device]
+            if_rec = ai.db_find(
+                table=db_tables.InterfacesTable, device=dev_rec, name=if_obj.name
+            )
+            ai.db_obj_map[if_obj] = if_rec
+
     def build_report(self, ai: ServicesAnalyzer, flags):
+        self._load_db(ai)
+
         self.report = DesignServiceReport(title=f"Topology Service Report: {self.name}")
         self._build_report_devices(ai, flags)
 
@@ -382,8 +387,10 @@ class TopologyService(DesignService):
         # overall status of the cabling checks.
         # ---------------------------------------------------------------------
 
+        svc_node = ai.graph.vs[ai.db_obj_map[self].node_id]
+
         svc_cable_node = (
-            GraphQuery(ai.graph)(ai.nodes_map[self])
+            GraphQuery(ai.graph)(svc_node)
             .out_()
             .node(check_type=self.CheckCabling.check_type)
             .first()
@@ -413,7 +420,8 @@ class TopologyService(DesignService):
         table = Table("Status", "Device", "Model")
 
         for dev_obj in sorted(self.devices, key=attrgetter("name")):
-            dev_node = ai.nodes_map[dev_obj]
+            dev_rec = ai.db_obj_map[dev_obj]
+            dev_node = ai.graph.vs[dev_rec.node_id]
 
             # find all the device specific checks (really only one right now,
             # but could be more in the future).
@@ -431,7 +439,7 @@ class TopologyService(DesignService):
                 continue
 
             table.add_row(
-                color_pass_fail(not dev_fail), dev_obj.name, dev_obj.device_type
+                color_pass_fail(not dev_fail), dev_rec.name, dev_rec.device_type
             )
 
         ok = pass_fail_c[False] == 0
@@ -459,7 +467,8 @@ class TopologyService(DesignService):
         fail_table = Table("Device", "Interface", "Desc", "Profile", "Logs")
 
         for if_obj in self.interfaces:
-            if_node = ai.nodes_map[if_obj]
+            if_node = ai.graph.vs[ai.db_obj_map[if_obj].node_id]
+
             pass_fail_nodes[if_node["fail_count"] == 0].append((if_obj, if_node))
 
         # ---------------------------------------------------------------------

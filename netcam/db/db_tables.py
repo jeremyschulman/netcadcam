@@ -9,6 +9,15 @@ from sqlalchemy.dialects.postgresql import JSONB
 TableBase = declarative_base()
 
 
+class ServicesTable(TableBase):
+    __tablename__ = "services"
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    node_id = Column(Integer, nullable=False)
+
+    __table_args__ = (UniqueConstraint("name", name="uq_service_name"),)
+
+
 class DeviceTable(TableBase):
     __tablename__ = "devices"
     id = Column(Integer, primary_key=True)
@@ -16,6 +25,7 @@ class DeviceTable(TableBase):
     alias = Column(String, nullable=False)
     os = Column(String, nullable=False)
     device_type = Column(String, nullable=False)
+    node_id = Column(Integer, nullable=False)
 
     __table_args__ = (UniqueConstraint("name", name="uq_device_name"),)
 
@@ -29,6 +39,7 @@ class InterfacesTable(TableBase):
     name = Column(String, nullable=False)
     desc = Column(String, nullable=False)
     profile = Column(String, nullable=False)
+    node_id = Column(Integer, nullable=False)
 
     # Foreign key linking this interface to a device
     device_id = Column(Integer, ForeignKey("devices.id"), nullable=False)

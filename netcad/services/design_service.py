@@ -20,6 +20,7 @@ from rich.text import Text, Style
 # -----------------------------------------------------------------------------
 
 from netcad.checks import CheckResult
+from netcam.db import db_tables
 
 from .service_report import DesignServiceReport
 
@@ -90,6 +91,14 @@ class DesignService:
         # updated to FAIL after the analysis is complete.
 
         ai.add_service_node(service=self)
+        node = ai.nodes_map[self]
+
+        ai.db_upsert(
+            table=db_tables.ServicesTable,
+            key=["name"],
+            name=self.name,
+            node_id=node.index,
+        )
 
         # build the design aspects into the analysis graph
         self.build_design_graph(ai)
