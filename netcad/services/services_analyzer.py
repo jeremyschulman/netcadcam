@@ -157,6 +157,7 @@ class ServicesAnalyzer:
         self.add_edge(source, target, kind="s", service=service.name, **kwargs)
 
     def add_check_edge(self, service, source, target, **kwargs):
+        kwargs.setdefault("stop", False)
         self.add_edge(source, target, kind="r", service=service.name, **kwargs)
 
     # -------------------------------------------------------------------------
@@ -215,6 +216,7 @@ class ServicesAnalyzer:
             for edge in start_node.out_edges()
             if edge["service"] == svc.name and not edge["stop"]
         ]
+
         targets = [edge.target_vertex for edge in edges]
 
         for target in targets:
