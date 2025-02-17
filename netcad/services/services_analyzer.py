@@ -191,11 +191,13 @@ class ServicesAnalyzer:
             log.info("Checking service: %s", svc.name)
             await svc.check(ai=self)
             self.analyze(svc)
+            svc.db_save(ai=self)
 
     def build_reports(self, flags):
         self._import_feature_results()
 
         self.services_queue.extend(self.design.services.values())
+        services = deque()
 
         while True:
             try:
@@ -203,7 +205,13 @@ class ServicesAnalyzer:
             except IndexError:
                 break
 
-            svc.build_report(ai=self, flags=flags)
+            svc.db_load(ai=self)
+            services.append(svc)
+
+        root_services = [s for s in services if not s.is_subservice]
+        for root_svc in root_services:
+            for svc in reversed(list(self.service_graph(root_svc))):
+                svc.build_report(ai=self, flags=flags)
 
     def show_reports(self, console: Console):
         for svc in self.design.services.values():

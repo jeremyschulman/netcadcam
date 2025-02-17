@@ -47,6 +47,7 @@ def clig_reports(designs: Tuple[str], service_names: Sequence[str], **flags):
 
     ai = ServicesAnalyzer(design=design)
     ai.graph = Graph.Read_GraphML(f"{design.name}.graphml")
+
     ai.build_reports(flags=flags)
 
     if not service_names:

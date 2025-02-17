@@ -160,48 +160,20 @@ class TopologyService(DesignService):
         """
         for dev_obj in self.devices:
             ai.add_design_node(dev_obj, kind_type="device")
-            dev_node = ai.nodes_map[dev_obj]
 
             # NOTE:  DO NOT create a service edge between the device and
             # interface because we do not want "any device error" cause the
             # service to report a failure.  The service should only fail if the
             # device interfaces have errors.
 
-            dev_rec = ai.db_upsert(
-                table=db_tables.DeviceTable,
-                key=["name"],
-                name=dev_obj.name,
-                alias=dev_obj.alias,
-                os=dev_obj.os_name,
-                device_type=dev_obj.device_type,
-                node_id=dev_node.index,
-            )
-
-            ai.db_obj_map[dev_obj] = dev_rec
-
         self._build_design_interfaces(ai)
 
     def _build_design_interfaces(self, ai: ServicesAnalyzer):
         for if_obj in self.interfaces:
-            dev_rec = ai.db_obj_map[if_obj.device]
-
             # design edge between device and interface (only once)
 
             if ai.add_design_node(if_obj, kind_type="interface"):
                 ai.add_design_edge(if_obj.device, if_obj)
-                if_node = ai.nodes_map[if_obj]
-
-                if_rec = ai.db_upsert(
-                    table=db_tables.InterfacesTable,
-                    key=["device_id", "name"],
-                    name=if_obj.name,
-                    desc=if_obj.desc,
-                    profile=if_obj.profile.name,
-                    device_id=dev_rec.id,
-                    node_id=if_node.index,
-                )
-
-                ai.db_obj_map[if_obj] = if_rec
 
             # always add service edge between device and interface
             ai.add_service_edge(self, if_obj.device, if_obj)
@@ -347,33 +319,67 @@ class TopologyService(DesignService):
 
     # -------------------------------------------------------------------------
     #
+    #                             Database Methods
+    #
+    # -------------------------------------------------------------------------
+
+    def db_save(self, ai: ServicesAnalyzer):
+        super().db_save(ai)
+
+        dev_obj_to_rec = dict()
+
+        for dev_obj in self.devices:
+            dev_rec = ai.db_upsert(
+                table=db_tables.DeviceTable,
+                key=["name"],
+                name=dev_obj.name,
+                alias=dev_obj.alias,
+                os=dev_obj.os_name,
+                device_type=dev_obj.device_type,
+                node_id=ai.nodes_map[dev_obj].index,
+            )
+
+            dev_obj_to_rec[dev_obj] = dev_rec
+
+        for if_obj in self.interfaces:
+            ai.db_upsert(
+                table=db_tables.InterfacesTable,
+                key=["device_id", "name"],
+                name=if_obj.name,
+                desc=if_obj.desc,
+                profile=if_obj.profile.name,
+                device_id=dev_obj_to_rec[if_obj.device].id,
+                node_id=ai.nodes_map[if_obj].index,
+            )
+
+    def db_load(self, ai: ServicesAnalyzer):
+        super().db_load(ai)
+
+        dev_obj_to_rec = dict()
+
+        for dev_obj in self.devices:
+            # TODO: could avoid the DB lookup, but would still need to set the
+            #       object in dev_obj_to_rec
+
+            dev_rec = ai.db_find(table=db_tables.DeviceTable, name=dev_obj.name)
+            ai.nodes_map[dev_obj] = ai.graph.vs[dev_rec.node_id]
+            dev_obj_to_rec[dev_obj] = dev_rec
+
+        for if_obj in self.interfaces:
+            if_rec = ai.db_find(
+                table=db_tables.InterfacesTable,
+                device=dev_obj_to_rec[if_obj.device],
+                name=if_obj.name,
+            )
+            ai.nodes_map[if_obj] = ai.graph.vs[if_rec.node_id]
+
+    # -------------------------------------------------------------------------
+    #
     #                             Reports
     #
     # -------------------------------------------------------------------------
 
-    def load_db(self, ai: ServicesAnalyzer):
-        # ---------------------------------------------------------------------
-        # load the service node
-        # ---------------------------------------------------------------------
-
-        svc_rec = ai.db_find(table=db_tables.ServicesTable, name=self.name)
-        ai.nodes_map[self] = ai.graph.vs[svc_rec.node_id]
-        ai.db_obj_map[self] = svc_rec
-
-        for dev in self.devices:
-            dev_rec = ai.db_find(table=db_tables.DeviceTable, name=dev.name)
-            ai.db_obj_map[dev] = dev_rec
-
-        for if_obj in self.interfaces:
-            dev_rec = ai.db_obj_map[if_obj.device]
-            if_rec = ai.db_find(
-                table=db_tables.InterfacesTable, device=dev_rec, name=if_obj.name
-            )
-            ai.db_obj_map[if_obj] = if_rec
-
     def build_report(self, ai: ServicesAnalyzer, flags):
-        self.load_db(ai)
-
         self.report = DesignServiceReport(title=f"Topology Service Report: {self.name}")
         self._build_report_devices(ai, flags)
 
@@ -386,13 +392,15 @@ class TopologyService(DesignService):
         self._build_report_cabling(ai)
         self._build_report_ipaddrs(ai, flags)
 
+    # -------------------------------------------------------------------------
+
     def _build_report_cabling(self, ai: ServicesAnalyzer):
         # ---------------------------------------------------------------------
         # get the top level topology cabling check node to determine the
         # overall status of the cabling checks.
         # ---------------------------------------------------------------------
 
-        svc_node = ai.graph.vs[ai.db_obj_map[self].node_id]
+        svc_node = ai.nodes_map[self]
 
         svc_cable_node = (
             GraphQuery(ai.graph)(svc_node)
@@ -411,6 +419,8 @@ class TopologyService(DesignService):
         if fail_c := svc_cable_node["fail_count"]:
             self.report.add("Cabling", False, {"count": fail_c})
 
+    # -------------------------------------------------------------------------
+
     def _build_report_devices(self, ai: ServicesAnalyzer, flags: dict):
         """
         For device checks, we only care about the directly associated results,
@@ -425,8 +435,7 @@ class TopologyService(DesignService):
         table = Table("Status", "Device", "Model")
 
         for dev_obj in sorted(self.devices, key=attrgetter("name")):
-            dev_rec = ai.db_obj_map[dev_obj]
-            dev_node = ai.graph.vs[dev_rec.node_id]
+            dev_node = ai.nodes_map[dev_obj]
 
             # find all the device specific checks (really only one right now,
             # but could be more in the future).
@@ -444,7 +453,7 @@ class TopologyService(DesignService):
                 continue
 
             table.add_row(
-                color_pass_fail(not dev_fail), dev_rec.name, dev_rec.device_type
+                color_pass_fail(not dev_fail), dev_obj.name, dev_obj.device_type
             )
 
         ok = pass_fail_c[False] == 0
@@ -453,6 +462,8 @@ class TopologyService(DesignService):
             self.report.add("Devices", ok, table)
         else:
             self.report.add("Devices", ok, {"count": pass_fail_c[True]})
+
+    # -------------------------------------------------------------------------
 
     def build_report_interfaces_table(
         self,
@@ -472,7 +483,7 @@ class TopologyService(DesignService):
         fail_table = Table("Device", "Interface", "Desc", "Profile", "Logs")
 
         for if_obj in self.interfaces:
-            if_node = ai.graph.vs[ai.db_obj_map[if_obj].node_id]
+            if_node = ai.nodes_map[if_obj]
 
             pass_fail_nodes[if_node["fail_count"] == 0].append((if_obj, if_node))
 

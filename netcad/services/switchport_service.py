@@ -21,7 +21,6 @@ from rich.table import Table
 from netcad.device.profiles import InterfaceProfile
 from netcad.feats.vlans import InterfaceL2, VlanProfile, InterfaceVlan
 from netcad.feats.vlans.checks.check_switchports import SwitchportCheck
-from netcam.db import db_tables
 
 from .design_service import DesignService
 from .graph_query import GraphQuery
@@ -117,7 +116,7 @@ class SwitchportService(DesignService):
         ai.add_service_node(self.svi_topology)
         ai.add_service_edge(service=self, source=self, target=self.svi_topology)
 
-    def _build_svi_topology(self, ai: ServicesAnalyzer):
+    def _build_svi_topology(self, ai: ServicesAnalyzer) -> TopologyService:
         def is_my_svi(_ipf: InterfaceProfile):
             return isinstance(_ipf, InterfaceVlan) and _ipf.vlan in self.vlans
 
@@ -168,17 +167,11 @@ class SwitchportService(DesignService):
     #
     # -------------------------------------------------------------------------
 
-    def load_db(self, ai: ServicesAnalyzer):
-        # ---------------------------------------------------------------------
-        # load the service node
-        # ---------------------------------------------------------------------
-
-        svc_rec = ai.db_find(table=db_tables.ServicesTable, name=self.name)
-        ai.nodes_map[self] = ai.graph.vs[svc_rec.node_id]
+    def db_load(self, ai: "ServicesAnalyzer"):
+        super().db_load(ai)
+        self._build_svi_topology(ai)
 
     def build_report(self, ai: "ServicesAnalyzer", flags: dict):
-        self.load_db(ai)
-
         self.report = DesignServiceReport(
             title=f"Switchport Report: {self.name} - {len(self.interfaces)} total ports"
         )
@@ -268,7 +261,6 @@ class SwitchportService(DesignService):
         self.report.add("Switchports", False, table)
 
     def _build_report_svi(self, ai: ServicesAnalyzer, flags: dict):
-        self._build_svi_topology(ai)
         self.svi_topology.build_report(ai, flags)
         self.report.add(
             "SVIs", self.svi_topology.status == "PASS", self.svi_topology.report.table
