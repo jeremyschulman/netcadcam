@@ -20,6 +20,7 @@ from rich.text import Text, Style
 # -----------------------------------------------------------------------------
 
 from netcad.checks import CheckResult
+from netcam.db import db_tables
 
 from .service_report import DesignServiceReport
 
@@ -113,6 +114,38 @@ class DesignService:
 
     async def check(self, ai: "ServicesAnalyzer"):
         pass
+
+    def db_save(self, ai: "ServicesAnalyzer"):
+        """
+        This function is called after the check/analyze methods have been
+        called. The purpose of this function is to store data into the database
+        that will be later retrieved for reporing purposes.
+        """
+
+        # save the service node into the database.
+
+        node = ai.nodes_map[self]
+
+        ai.db_upsert(
+            table=db_tables.ServicesTable,
+            key=["name"],
+            name=self.name,
+            owner=self.owner,
+            status=self.status,
+            node_id=node.index,
+        )
+
+    def db_load(self, ai: "ServicesAnalyzer"):
+        """
+        This function is called to load the data from the database into the
+        nodes_map so that reporting can be performed.
+        """
+
+        # load the service node from the database.
+        svc_rec = ai.db_find(table=db_tables.ServicesTable, name=self.name)
+        svc_node = ai.graph.vs[svc_rec.node_id]
+        ai.nodes_map[self] = svc_node
+        self.status = svc_node["status"]
 
     def build_report(self, ai: "ServicesAnalyzer", flags: dict):
         pass

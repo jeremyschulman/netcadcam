@@ -7,8 +7,6 @@
 
 from typing import TYPE_CHECKING, Iterator
 from collections import defaultdict, deque
-import json
-from pathlib import Path
 
 # -----------------------------------------------------------------------------
 # Public Imports
@@ -17,20 +15,31 @@ from pathlib import Path
 from bidict import bidict
 import igraph
 from rich.console import Console
+from sqlalchemy.dialects.postgresql import insert
 
 # -----------------------------------------------------------------------------
 # Private Imports
 # -----------------------------------------------------------------------------
 
-from ..config import netcad_globals
-from ..checks import CheckCollectionT, CheckResult, CheckStatus
+from netcad.logger import get_logger
 
 if TYPE_CHECKING:
     from netcad.device import Device
     from netcad.design import Design, DesignFeature
 
+from netcam.db import db_connect, db_tables
+from netcam.db.db_check_results import db_check_results_get
+
+from ..checks import CheckCollectionT, CheckStatus
 from .design_service import DesignService
 from .services_typedefs import ResultMapT, NodeObjIDMapT
+
+
+# -----------------------------------------------------------------------------
+#
+#                                 CODE BEGINS
+#
+# -----------------------------------------------------------------------------
 
 
 class ServicesAnalyzer:
@@ -74,8 +83,8 @@ class ServicesAnalyzer:
         # processed after the parent service is processed.
         self.services_queue = deque()
 
-        # load all check results so they can be incorporated into the analysis graph.
-        self._load_feature_results()
+        # database session
+        self.db = db_connect(db_name=self.design.name)
 
     # -------------------------------------------------------------------------
     # node methods
@@ -154,6 +163,7 @@ class ServicesAnalyzer:
         self.add_edge(source, target, kind="s", service=service.name, **kwargs)
 
     def add_check_edge(self, service, source, target, **kwargs):
+        kwargs.setdefault("stop", False)
         self.add_edge(source, target, kind="r", service=service.name, **kwargs)
 
     # -------------------------------------------------------------------------
@@ -167,22 +177,48 @@ class ServicesAnalyzer:
         This function is responsible for producing the services results graphs
         for each service in the design.
         """
+        log = get_logger()
+
+        self._load_feature_results()
+
         self.services_queue.extend(self.design.services.values())
+
         while True:
             try:
                 svc = self.services_queue.popleft()
             except IndexError:
                 break
+            log.info("Building service: %s", svc.name)
             svc.build(ai=self)
 
     async def check(self):
+        log = get_logger()
+
         for svc in self.design.services.values():
+            log.info("Checking service: %s", svc.name)
             await svc.check(ai=self)
             self.analyze(svc)
+            svc.db_save(ai=self)
 
     def build_reports(self, flags):
-        for svc in self.design.services.values():
-            svc.build_report(ai=self, flags=flags)
+        self._import_feature_results()
+
+        self.services_queue.extend(self.design.services.values())
+        services = deque()
+
+        while True:
+            try:
+                svc = self.services_queue.popleft()
+            except IndexError:
+                break
+
+            svc.db_load(ai=self)
+            services.append(svc)
+
+        root_services = [s for s in services if not s.is_subservice]
+        for root_svc in root_services:
+            for svc in reversed(list(self.service_graph(root_svc))):
+                svc.build_report(ai=self, flags=flags)
 
     def show_reports(self, console: Console):
         for svc in self.design.services.values():
@@ -212,6 +248,7 @@ class ServicesAnalyzer:
             for edge in start_node.out_edges()
             if edge["service"] == svc.name and not edge["stop"]
         ]
+
         targets = [edge.target_vertex for edge in edges]
 
         for target in targets:
@@ -262,42 +299,99 @@ class ServicesAnalyzer:
 
     # -------------------------------------------------------------------------
     #
+    #                             Database Methods
+    #
+    # -------------------------------------------------------------------------
+
+    def db_upsert(self, table, key, **kwargs):
+        stmt = insert(table).values(**kwargs)
+
+        stmt = stmt.on_conflict_do_update(
+            index_elements=key,
+            set_={"node_id": stmt.excluded.node_id},
+            where=(table.node_id != stmt.excluded.node_id),
+        )
+
+        self.db.execute(stmt)
+        self.db.commit()
+
+        filter_by = {k: kwargs[k] for k in key}
+        return self.db.query(table).filter_by(**filter_by).first()
+
+    def db_find(self, table, **filter_by):
+        return self.db.query(table).filter_by(**filter_by).first()
+
+    def db_find_all(self, table, **filter_by):
+        return self.db.query(table).filter_by(**filter_by).all()
+
+    # -------------------------------------------------------------------------
+    #
     #                             PRIVATE METHODS
     #
     # -------------------------------------------------------------------------
 
+    def _import_feature_results(self):
+        for feat in self.design.features.values():
+            for collection in feat.check_collections:
+                for device in self.devices:
+                    records = db_check_results_get(
+                        self.db, device.name, feat.name, collection=collection.name
+                    )
+
+                    self._import_result_nodes(
+                        device, feature=feat, collection=collection, records=records
+                    )
+
+    def _import_result_nodes(
+        self,
+        device: "Device",
+        feature: "DesignFeature",
+        collection: CheckCollectionT,
+        records: Iterator[db_tables.CheckResultTable],
+    ):
+        for rec in records:
+            if rec.result["status"] not in ("PASS", "FAIL"):
+                continue
+
+            res_obj = collection.parse_result(rec.result)
+            check = res_obj.check
+            check_type = check.check_type
+
+            found = self.graph.vs.select(
+                device=device.name,
+                feature=feature.name,
+                check_type=check_type,
+                check_id=res_obj.check_id,
+                kind="r",
+            )
+
+            self.nodes_map[res_obj] = found[0]
+            self.results_map[device][check_type][res_obj.check_id] = res_obj
+
     def _load_feature_results(self):
         for feat in self.design.features.values():
-            for check_type in feat.check_collections:
+            for collection in feat.check_collections:
                 for device in self.devices:
-                    result_objs = self._load_check_type_results(device, check_type)
-                    self._add_result_nodes(device, feature=feat, results=result_objs)
+                    records = db_check_results_get(
+                        self.db, device.name, feat.name, collection=collection.name
+                    )
 
-    def _load_check_type_results(
-        self, device: "Device", check_type: CheckCollectionT
-    ) -> Iterator[dict]:
-        # if the check results file does not exist, then return an empty
-        # iterator so the calling scope is AOK.
-
-        results_file = self._device_results_file(device, check_type)
-
-        if not results_file.exists():
-            return ()
-
-        # TODO: for now only include the PASS/FAIL status results.  We should
-        #       add the INFO nodes to the graph as there could be meaningful
-        #       use of these nodes for report processing.
-
-        return (
-            check_type.parse_result(res_obj)
-            for res_obj in json.load(results_file.open())
-            if res_obj["status"] in ("PASS", "FAIL")
-        )
+                    self._add_result_nodes(
+                        device, feature=feat, collection=collection, records=records
+                    )
 
     def _add_result_nodes(
-        self, device: "Device", feature: "DesignFeature", results: Iterator[CheckResult]
+        self,
+        device: "Device",
+        feature: "DesignFeature",
+        collection: CheckCollectionT,
+        records: Iterator[db_tables.CheckResultTable],
     ):
-        for res_obj in results:
+        for rec in records:
+            if rec.result["status"] not in ("PASS", "FAIL"):
+                continue
+
+            res_obj = collection.parse_result(rec.result)
             check = res_obj.check
             check_type = check.check_type
 
@@ -315,19 +409,8 @@ class ServicesAnalyzer:
                 status=str(res_obj.status),
                 device=res_obj.device,
                 kind="r",
+                rec_id=rec.id,
                 **counts,
             )
 
             self.results_map[device][check_type][res_obj.check_id] = res_obj
-
-    @staticmethod
-    def _device_results_file(device: "Device", check_type: CheckCollectionT) -> Path:
-        check_name = check_type.get_name()
-        base_dir = netcad_globals.g_netcad_checks_dir
-        return (
-            base_dir
-            / device.design.name
-            / device.name
-            / "results"
-            / f"{check_name}.json"
-        )

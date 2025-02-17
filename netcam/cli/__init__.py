@@ -4,3 +4,4 @@ from . import cli_check_devices
 from . import config
 from . import show_checks
 from . import services
+from . import cli_db
