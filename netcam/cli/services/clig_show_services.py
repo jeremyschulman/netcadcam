@@ -1,3 +1,6 @@
+#  Copyright (c) 2025 Jeremy Schulman
+#  GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
 # -----------------------------------------------------------------------------
 # System Imports
 # -----------------------------------------------------------------------------
@@ -21,8 +24,6 @@ from netcad.logger import get_logger
 from netcad.design import load_design
 from netcad.services import ServicesAnalyzer, DesignService
 from netcad.cli.common_opts import opt_designs
-from netcam.db import db_tables
-
 from ..cli_netcam_show import clig_show
 
 # -----------------------------------------------------------------------------
@@ -47,7 +48,6 @@ def clig_reports(designs: Tuple[str], service_names: Sequence[str], **flags):
 
     ai = ServicesAnalyzer(design=design)
     ai.graph = Graph.Read_GraphML(f"{design.name}.graphml")
-
     ai.build_reports(flags=flags)
 
     if not service_names:
@@ -65,49 +65,51 @@ def clig_reports(designs: Tuple[str], service_names: Sequence[str], **flags):
 def _show_all(ai, flags):
     console = Console()
 
-    if flags.get("brief"):
-        table = Table("Service", "Status")
-        for svc in ai.design.services.values():
-            if svc.is_subservice and not flags.get("all_results"):
-                continue
-
-            svc_rec = ai.db_find(table=db_tables.ServicesTable, name=svc.name)
-            svc_node = ai.graph.vs[svc_rec.node_id]
-            svc_status = svc_node["status"]
-
-            table.add_row(
-                svc.name,
-                Text(
-                    svc.status, Style(color="red" if svc_status == "FAIL" else "green")
-                ),
-            )
-
-        console.print(table)
+    if not flags.get("brief"):
+        ai.show_reports(console)
         return
 
-    ai.show_reports(console)
+    # -------------------------------------------------------------------------
+    # brief mode
+    # -------------------------------------------------------------------------
+
+    table = Table("Service", "Status")
+    for svc in ai.design.services.values():
+        if svc.is_subservice and not flags.get("all_results"):
+            continue
+
+        # svc_rec = ai.db_find(table=db_tables.ServicesTable, name=svc.name)
+        # svc_node = ai.graph.vs[svc_rec.node_id]
+        # svc_status = svc_node["status"]
+
+        table.add_row(
+            svc.name,
+            Text(svc.status, Style(color="red" if svc.status == "FAIL" else "green")),
+        )
+
+    console.print(table)
 
 
 def _show_specific_service(ai: ServicesAnalyzer, service: DesignService, flags):
-    if flags.get("brief"):
-        all_svcs = ai.service_graph(service)
-
-        table = Table("Serice", "Status")
-        for svc in all_svcs:
-            svc_rec = ai.db_find(table=db_tables.ServicesTable, name=svc.name)
-            svc_node = ai.graph.vs[svc_rec.node_id]
-            svc_status = svc_node["status"]
-
-            table.add_row(
-                svc.name,
-                Text(
-                    svc_status,
-                    Style(color="red" if svc_status == "FAIL" else "green"),
-                ),
-            )
-
-        Console().print(table)
+    if not flags.get("brief"):
+        service.build_report(ai=ai, flags=flags)
+        Console().print("\n\n", service.report.table)
         return
 
-    service.build_report(ai=ai, flags=flags)
-    Console().print("\n\n", service.report.table)
+    # -------------------------------------------------------------------------
+    # brief mode
+    # -------------------------------------------------------------------------
+
+    all_svcs = ai.service_graph(service)
+
+    table = Table("Serice", "Status")
+    for svc in all_svcs:
+        table.add_row(
+            svc.name,
+            Text(
+                svc.status,
+                Style(color="red" if svc.status == "FAIL" else "green"),
+            ),
+        )
+
+    Console().print(table)

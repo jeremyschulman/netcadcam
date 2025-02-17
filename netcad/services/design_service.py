@@ -143,6 +143,7 @@ class DesignService:
         svc_rec = ai.db_find(table=db_tables.ServicesTable, name=self.name)
         svc_node = ai.graph.vs[svc_rec.node_id]
         ai.nodes_map[self] = svc_node
+        self.status = svc_node["status"]
 
     def build_report(self, ai: "ServicesAnalyzer", flags: dict):
         pass
