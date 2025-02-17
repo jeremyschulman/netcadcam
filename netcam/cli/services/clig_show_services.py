@@ -73,7 +73,7 @@ def _show_all(ai, flags):
     # brief mode
     # -------------------------------------------------------------------------
 
-    table = Table("Service", "Status")
+    table = Table("Service", "Status", "Owner")
     for svc in ai.design.services.values():
         if svc.is_subservice and not flags.get("all_results"):
             continue
@@ -85,6 +85,7 @@ def _show_all(ai, flags):
         table.add_row(
             svc.name,
             Text(svc.status, Style(color="red" if svc.status == "FAIL" else "green")),
+            svc.owner
         )
 
     console.print(table)

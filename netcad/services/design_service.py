@@ -130,6 +130,8 @@ class DesignService:
             table=db_tables.ServicesTable,
             key=["name"],
             name=self.name,
+            owner=self.owner,
+            status=self.status,
             node_id=node.index,
         )
 

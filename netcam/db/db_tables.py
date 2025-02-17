@@ -22,6 +22,8 @@ class ServicesTable(TableBase):
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
     node_id = Column(Integer, nullable=False)
+    owner = Column(String, nullable=False)
+    status = Column(String)
 
     __table_args__ = (UniqueConstraint("name", name="uq_service_name"),)
 
