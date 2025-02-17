@@ -35,6 +35,13 @@ from .design_service import DesignService
 from .services_typedefs import ResultMapT, NodeObjIDMapT
 
 
+# -----------------------------------------------------------------------------
+#
+#                                 CODE BEGINS
+#
+# -----------------------------------------------------------------------------
+
+
 class ServicesAnalyzer:
     def __init__(self, design: "Design"):
         self.design = design
@@ -76,8 +83,8 @@ class ServicesAnalyzer:
         # processed after the parent service is processed.
         self.services_queue = deque()
 
+        # database session
         self.db = db_connect(db_name=self.design.name)
-        self.db_obj_map = bidict()
 
     # -------------------------------------------------------------------------
     # node methods
