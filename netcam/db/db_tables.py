@@ -93,10 +93,10 @@ class ServiceCheckResultTable(TableBase):
     node_id = Column(Integer, nullable=False)
     service = Column(String, nullable=False)
     check_type = Column(String, nullable=False)
-    check_id = Column(String, nullable=False, default="0")
+    check_id = Column(String, nullable=False)
     ok = Column(Boolean)
     result = Column(JSONB)
 
     __table_args__ = (
-        UniqueConstraint("service", "check_type", name="unq_service_check"),
+        UniqueConstraint("service", "check_type", "check_id", name="unq_service_check"),
     )

@@ -21,6 +21,7 @@ from rich.table import Table
 from netcad.device.profiles import InterfaceProfile
 from netcad.feats.vlans import InterfaceL2, VlanProfile, InterfaceVlan
 from netcad.feats.vlans.checks.check_switchports import SwitchportCheck
+from netcam.db import db_tables
 
 from .design_service import DesignService
 from .graph_query import GraphQuery
@@ -167,7 +168,17 @@ class SwitchportService(DesignService):
     #
     # -------------------------------------------------------------------------
 
+    def load_db(self, ai: ServicesAnalyzer):
+        # ---------------------------------------------------------------------
+        # load the service node
+        # ---------------------------------------------------------------------
+
+        svc_rec = ai.db_find(table=db_tables.ServicesTable, name=self.name)
+        ai.nodes_map[self] = ai.graph.vs[svc_rec.node_id]
+
     def build_report(self, ai: "ServicesAnalyzer", flags: dict):
+        self.load_db(ai)
+
         self.report = DesignServiceReport(
             title=f"Switchport Report: {self.name} - {len(self.interfaces)} total ports"
         )

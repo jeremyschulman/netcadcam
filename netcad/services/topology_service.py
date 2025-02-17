@@ -352,7 +352,12 @@ class TopologyService(DesignService):
     # -------------------------------------------------------------------------
 
     def load_db(self, ai: ServicesAnalyzer):
+        # ---------------------------------------------------------------------
+        # load the service node
+        # ---------------------------------------------------------------------
+
         svc_rec = ai.db_find(table=db_tables.ServicesTable, name=self.name)
+        ai.nodes_map[self] = ai.graph.vs[svc_rec.node_id]
         ai.db_obj_map[self] = svc_rec
 
         for dev in self.devices:

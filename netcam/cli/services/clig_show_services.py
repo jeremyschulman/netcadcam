@@ -17,6 +17,7 @@ from igraph import Graph
 # Private Imports
 # -----------------------------------------------------------------------------
 
+from netcad.logger import get_logger
 from netcad.design import load_design
 from netcad.services import ServicesAnalyzer, DesignService
 from netcad.cli.common_opts import opt_designs
@@ -54,6 +55,7 @@ def clig_reports(designs: Tuple[str], service_names: Sequence[str], **flags):
 
     for name in service_names:
         if not (svc := design.services.get(name)):
+            get_logger().error(f"Service {name} not found")
             continue
 
         _show_specific_service(ai, svc, flags)
@@ -85,22 +87,26 @@ def _show_all(ai, flags):
     ai.show_reports(console)
 
 
-def _show_specific_service(ai: ServicesAnalyzer, svc: DesignService, flags):
+def _show_specific_service(ai: ServicesAnalyzer, service: DesignService, flags):
     if flags.get("brief"):
-        all_svcs = ai.service_graph(svc)
+        all_svcs = ai.service_graph(service)
 
         table = Table("Serice", "Status")
-        for each_svc in all_svcs:
+        for svc in all_svcs:
+            svc_rec = ai.db_find(table=db_tables.ServicesTable, name=svc.name)
+            svc_node = ai.graph.vs[svc_rec.node_id]
+            svc_status = svc_node["status"]
+
             table.add_row(
-                each_svc.name,
+                svc.name,
                 Text(
-                    each_svc.status,
-                    Style(color="red" if each_svc.status == "FAIL" else "green"),
+                    svc_status,
+                    Style(color="red" if svc_status == "FAIL" else "green"),
                 ),
             )
 
         Console().print(table)
         return
 
-    svc.build_report(ai=ai, flags=flags)
-    Console().print("\n\n", svc.report.table)
+    service.build_report(ai=ai, flags=flags)
+    Console().print("\n\n", service.report.table)
