@@ -326,16 +326,6 @@ class ServicesAnalyzer:
         db_service_check_save(
             db=self.db, service=service, check=check, node=self.nodes_map[check]
         )
-        # self.db_upsert(
-        #     table=db_tables.ServiceCheckResultTable,
-        #     key=["service", "check_type", "check_id"],
-        #     node_id=node.index,
-        #     service=service.name,
-        #     check_type=check.check_type,
-        #     check_id=check.check_id,
-        #     ok=check.ok,
-        #     result=check.model_dump(),
-        # )
 
     def db_find(self, table, **filter_by):
         return self.db.query(table).filter_by(**filter_by).first()
