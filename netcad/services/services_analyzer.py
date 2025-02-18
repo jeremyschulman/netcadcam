@@ -369,9 +369,6 @@ class ServicesAnalyzer:
         records: Iterator[db_tables.CheckResultTable],
     ):
         for rec in records:
-            if rec.result["status"] not in ("PASS", "FAIL"):
-                continue
-
             res_obj = collection.parse_result(rec.result)
             check = res_obj.check
             check_type = check.check_type

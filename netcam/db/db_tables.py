@@ -53,6 +53,7 @@ class InterfacesTable(TableBase):
 
     # Foreign key linking this interface to a device
     device_id = Column(Integer, ForeignKey("devices.id"), nullable=False)
+
     # Set up back reference to the DeviceTable
     device = relationship("DeviceTable", back_populates="interfaces")
 
@@ -82,7 +83,6 @@ class CheckResultTable(TableBase):
             "feature",
             "check_type",
             "check_id",
-            "status",
             name="uix_device_feature_check",
         ),
     )

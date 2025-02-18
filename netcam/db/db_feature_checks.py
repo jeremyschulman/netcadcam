@@ -38,14 +38,15 @@ def db_check_results_save(
             result=res,
         )
         for res in results
+        if res["status"] in ("PASS", "FAIL")
     ]
 
     session = db_connect(db_name)
 
     stmt = insert(CheckResultTable).values(records)
     stmt = stmt.on_conflict_do_update(
-        index_elements=["device", "feature", "check_type", "check_id", "status"],
-        set_={"result": stmt.excluded.result},
+        index_elements=["device", "feature", "check_type", "check_id"],
+        set_={"result": stmt.excluded.result, "status": stmt.excluded.status},
         where=CheckResultTable.result != stmt.excluded.result,
     )
 
