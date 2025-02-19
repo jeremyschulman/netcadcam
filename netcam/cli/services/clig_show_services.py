@@ -85,7 +85,7 @@ def _show_all(ai, flags):
         table.add_row(
             svc.name,
             Text(svc.status, Style(color="red" if svc.status == "FAIL" else "green")),
-            svc.owner
+            svc.owner,
         )
 
     console.print(table)

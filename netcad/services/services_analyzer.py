@@ -28,10 +28,12 @@ if TYPE_CHECKING:
     from netcad.design import Design, DesignFeature
 
 from netcam.db import db_connect, db_tables
-from netcam.db.db_check_results import db_check_results_get
+from netcam.db.db_feature_checks import db_check_results_get
+from netcam.db.db_service_checks import db_service_check_save
 
 from ..checks import CheckCollectionT, CheckStatus
 from .design_service import DesignService
+from .service_check import DesignServiceCheck
 from .services_typedefs import ResultMapT, NodeObjIDMapT
 
 
@@ -318,6 +320,13 @@ class ServicesAnalyzer:
         filter_by = {k: kwargs[k] for k in key}
         return self.db.query(table).filter_by(**filter_by).first()
 
+    def db_save_service_check(
+        self, service: DesignService, check: "DesignServiceCheck"
+    ):
+        db_service_check_save(
+            db=self.db, service=service, check=check, node=self.nodes_map[check]
+        )
+
     def db_find(self, table, **filter_by):
         return self.db.query(table).filter_by(**filter_by).first()
 
@@ -347,12 +356,9 @@ class ServicesAnalyzer:
         device: "Device",
         feature: "DesignFeature",
         collection: CheckCollectionT,
-        records: Iterator[db_tables.CheckResultTable],
+        records: Iterator[db_tables.FeatureCheckResultTable],
     ):
         for rec in records:
-            if rec.result["status"] not in ("PASS", "FAIL"):
-                continue
-
             res_obj = collection.parse_result(rec.result)
             check = res_obj.check
             check_type = check.check_type
@@ -385,12 +391,9 @@ class ServicesAnalyzer:
         device: "Device",
         feature: "DesignFeature",
         collection: CheckCollectionT,
-        records: Iterator[db_tables.CheckResultTable],
+        records: Iterator[db_tables.FeatureCheckResultTable],
     ):
         for rec in records:
-            if rec.result["status"] not in ("PASS", "FAIL"):
-                continue
-
             res_obj = collection.parse_result(rec.result)
             check = res_obj.check
             check_type = check.check_type

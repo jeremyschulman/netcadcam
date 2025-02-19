@@ -22,7 +22,7 @@ import aiofiles
 
 from netcad.checks import CheckResult
 from .dut import AsyncDeviceUnderTest
-from netcam.db.db_check_results import db_check_results_save
+from netcam.db.db_feature_checks import db_check_results_save
 
 # -----------------------------------------------------------------------------
 # Exports

@@ -19,7 +19,7 @@ from sqlalchemy.dialects.postgresql import insert
 
 from netcad.device import Device
 from .db_funcs import db_connect
-from .db_tables import CheckResultTable
+from .db_tables import FeatureCheckResultTable
 
 
 def db_check_results_save(
@@ -38,15 +38,16 @@ def db_check_results_save(
             result=res,
         )
         for res in results
+        if res["status"] in ("PASS", "FAIL")
     ]
 
     session = db_connect(db_name)
 
-    stmt = insert(CheckResultTable).values(records)
+    stmt = insert(FeatureCheckResultTable).values(records)
     stmt = stmt.on_conflict_do_update(
-        index_elements=["device", "feature", "check_type", "check_id", "status"],
-        set_={"result": stmt.excluded.result},
-        where=CheckResultTable.result != stmt.excluded.result,
+        index_elements=["device", "feature", "check_type", "check_id"],
+        set_={"result": stmt.excluded.result, "status": stmt.excluded.status},
+        where=FeatureCheckResultTable.result != stmt.excluded.result,
     )
 
     session.execute(stmt)
@@ -55,9 +56,9 @@ def db_check_results_save(
 
 def db_check_results_get(
     session, device: str, feature: str, collection: str
-) -> Iterator[CheckResultTable]:
-    return session.query(CheckResultTable).filter(
-        CheckResultTable.device == device,
-        CheckResultTable.feature == feature,
-        CheckResultTable.collection == collection,
+) -> Iterator[FeatureCheckResultTable]:
+    return session.query(FeatureCheckResultTable).filter(
+        FeatureCheckResultTable.device == device,
+        FeatureCheckResultTable.feature == feature,
+        FeatureCheckResultTable.collection == collection,
     )
