@@ -64,8 +64,8 @@ class InterfacesTable(TableBase):
     )
 
 
-class CheckResultTable(TableBase):
-    __tablename__ = "check_results"
+class FeatureCheckResultTable(TableBase):
+    __tablename__ = "feature_check_results"
 
     id = Column(Integer, primary_key=True)
     feature = Column(String, nullable=False)

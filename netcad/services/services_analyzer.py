@@ -356,7 +356,7 @@ class ServicesAnalyzer:
         device: "Device",
         feature: "DesignFeature",
         collection: CheckCollectionT,
-        records: Iterator[db_tables.CheckResultTable],
+        records: Iterator[db_tables.FeatureCheckResultTable],
     ):
         for rec in records:
             res_obj = collection.parse_result(rec.result)
@@ -391,12 +391,9 @@ class ServicesAnalyzer:
         device: "Device",
         feature: "DesignFeature",
         collection: CheckCollectionT,
-        records: Iterator[db_tables.CheckResultTable],
+        records: Iterator[db_tables.FeatureCheckResultTable],
     ):
         for rec in records:
-            if rec.result["status"] not in ("PASS", "FAIL"):
-                continue
-
             res_obj = collection.parse_result(rec.result)
             check = res_obj.check
             check_type = check.check_type
